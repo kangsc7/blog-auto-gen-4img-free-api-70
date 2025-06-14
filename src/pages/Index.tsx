@@ -86,12 +86,9 @@ const Index = () => {
 
   const initializeUsers = () => {
     try {
-      const existingUsers = localStorage.getItem('blog_users');
-      
-      if (!existingUsers) {
-        const defaultUsers: User[] = [{ id: '1234', password: '1234' }];
-        localStorage.setItem('blog_users', JSON.stringify(defaultUsers));
-      }
+      // 항상 관리자 계정을 '1234'/'1234'로 설정하여 이전 값이 남아있는 문제를 해결합니다.
+      const defaultUsers: User[] = [{ id: '1234', password: '1234' }];
+      localStorage.setItem('blog_users', JSON.stringify(defaultUsers));
     } catch (error) {
       console.error('사용자 초기화 오류:', error);
     }
