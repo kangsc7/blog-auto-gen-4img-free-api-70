@@ -89,7 +89,7 @@ const Index = () => {
       const existingUsers = localStorage.getItem('blog_users');
       
       if (!existingUsers) {
-        const defaultUsers: User[] = [{ id: '123', password: '123' }];
+        const defaultUsers: User[] = [{ id: '1234', password: '1234' }];
         localStorage.setItem('blog_users', JSON.stringify(defaultUsers));
       }
     } catch (error) {
@@ -241,172 +241,39 @@ const Index = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const keyword = appState.keyword.toLowerCase().trim();
+      const keyword = appState.keyword.trim();
+      const count = appState.topicCount;
+
+      // NEW: SEO-optimized, natural topic templates that simulate an API call
+      const templates = [
+        `{keyword} 완벽 정복: 초보자도 전문가로 만들어주는 가이드`,
+        `{keyword} 할 때 당신이 몰랐던 숨겨진 비밀 {count}가지`,
+        `실패 없는 {keyword}를 위한 필수 체크리스트 A to Z`,
+        `시간과 비용을 아끼는 {keyword} 실전 꿀팁 총정리`,
+        `2024년 최신 {keyword} 트렌드와 전망 분석`,
+        `{keyword}, 이것만 알면 당신도 상위 1% 전문가`,
+        `{keyword} 성공 사례 심층 분석 및 바로 적용 가능한 전략`,
+        `{keyword} 시작 전 반드시 피해야 할 치명적인 실수들`,
+        `{keyword}의 모든 것: 개념부터 실전 활용까지 한번에`,
+        `수익으로 직결되는 {keyword} 노하우 대공개`,
+        `상황별 맞춤 {keyword} 전략, 가장 효과적인 방법은?`,
+        `{keyword} 효율을 200% 높이는 마법 같은 도구들`,
+        `경쟁자를 압도하는 {keyword} 시크릿 기술`,
+        `{keyword} 때문에 스트레스 받았다면? 이 글 하나로 해결`,
+        `당신의 {keyword} 수준을 업그레이드할 전문가의 조언`,
+      ];
       
-      // 키워드별 전문적이고 자연스러운 주제 템플릿
-      const topicTemplates = {
-        "당뇨병": [
-          "당뇨병 초기 증상과 예방 관리법",
-          "당뇨병 환자를 위한 올바른 식단 가이드",
-          "당뇨병 합병증 예방하는 생활습관",
-          "당뇨병 혈당 관리 실전 노하우",
-          "당뇨병과 함께 건강하게 살아가는 방법"
-        ],
-        "블로그": [
-          "블로그 수익화를 위한 완전 가이드",
-          "성공하는 블로그 운영 전략과 팁",
-          "블로그 방문자 늘리는 SEO 최적화 방법",
-          "블로그 콘텐츠 기획부터 작성까지",
-          "블로그로 수익을 만드는 실전 방법"
-        ],
-        "투자": [
-          "투자 초보를 위한 안전한 시작 가이드",
-          "2024년 주목해야 할 투자 분야",
-          "부동산 투자 성공 전략과 주의사항",
-          "안정적인 펀드 투자 방법과 선택법",
-          "투자 실패를 피하는 핵심 원칙"
-        ],
-        "요리": [
-          "바쁜 직장인을 위한 간단 요리 레시피",
-          "건강한 다이어트 요리 만들기",
-          "집에서 만드는 카페 스타일 음료",
-          "아이가 좋아하는 영양 만점 요리",
-          "초보자를 위한 홈베이킹 시작 가이드"
-        ],
-        "운동": [
-          "집에서 하는 효과적인 홈트레이닝",
-          "다이어트 성공을 위한 운동 방법",
-          "헬스장 이용 가이드와 운동 루틴",
-          "바쁜 직장인을 위한 10분 운동법",
-          "근력 운동으로 몸매 관리하는 방법"
-        ],
-        "여행": [
-          "국내 숨은 여행지 추천 베스트",
-          "해외여행 경비 절약하는 꿀팁",
-          "혼자 떠나는 안전한 여행 가이드",
-          "가족 여행지 추천과 계획 세우기",
-          "여행 필수품 완벽 체크리스트"
-        ],
-        "프로그래밍": [
-          "프로그래밍 입문자를 위한 완전 가이드",
-          "웹개발 학습 로드맵과 순서",
-          "코딩테스트 합격을 위한 알고리즘 공부법",
-          "개발자 취업을 위한 포트폴리오 만들기",
-          "실무에서 자주 사용하는 개발 도구들"
-        ],
-        "마케팅": [
-          "소상공인을 위한 디지털 마케팅 전략",
-          "SNS 마케팅으로 고객 늘리는 방법",
-          "브랜딩 성공 사례와 핵심 전략",
-          "온라인 광고 효과 극대화하는 방법",
-          "바이럴 마케팅의 성공 비결"
-        ],
-        "부동산": [
-          "내 집 마련을 위한 부동산 투자 가이드",
-          "전세와 월세 선택 기준과 가이드",
-          "부동산 중개수수료 절약하는 방법",
-          "아파트 매매 시 체크해야 할 포인트",
-          "부동산 대출 조건과 금리 비교법"
-        ],
-        "건강": [
-          "면역력 높이는 생활 습관과 방법",
-          "올바른 다이어트와 건강 관리법",
-          "스트레스 해소에 효과적인 방법들",
-          "건강한 수면을 위한 실천법",
-          "중년 건강관리 필수 체크리스트"
-        ],
-        "사랑": [
-          "연인과의 관계 개선하는 방법",
-          "건강한 연애를 위한 소통 기술",
-          "사랑을 표현하는 다양한 방법들",
-          "연애 갈등 해결을 위한 실용적 조언",
-          "오래가는 연애 관계 유지 비결"
-        ]
-      };
+      const shuffledTemplates = templates.sort(() => 0.5 - Math.random());
+      const selectedTemplates = shuffledTemplates.slice(0, count);
 
-      // 키워드에 맞는 자연스러운 주제 생성 함수
-      const generateContextualTopics = (keyword: string, count: number) => {
-        const topics = [];
-        
-        // 키워드별 맞춤형 패턴
-        const contextualPatterns = {
-          "사랑": [
-            `${keyword}을 표현하는 특별한 방법`,
-            `${keyword}하는 사람과의 관계 발전시키기`,
-            `진정한 ${keyword}의 의미와 표현법`,
-            `${keyword}받는 사람이 되는 방법`,
-            `${keyword}을 오래 지속시키는 비결`
-          ],
-          "고백": [
-            `성공하는 ${keyword} 방법과 타이밍`,
-            `${keyword} 전 준비해야 할 것들`,
-            `상황별 ${keyword} 메시지 작성법`,
-            `${keyword} 후 관계 발전시키는 방법`,
-            `${keyword} 실패를 극복하는 방법`
-          ],
-          "데이트": [
-            `완벽한 첫 ${keyword} 계획 세우기`,
-            `${keyword} 장소 추천과 선택 가이드`,
-            `${keyword} 중 피해야 할 실수들`,
-            `기념일 ${keyword} 아이디어와 준비법`,
-            `${keyword} 비용 절약하는 스마트한 방법`
-          ],
-          "결혼": [
-            `${keyword} 준비 완벽 가이드와 체크리스트`,
-            `행복한 ${keyword} 생활을 위한 조언`,
-            `${keyword} 비용 절약하는 현실적 방법`,
-            `${keyword} 전 꼭 알아야 할 것들`,
-            `성공적인 ${keyword} 준비 단계별 가이드`
-          ]
-        };
-        
-        // 기본 패턴 (모든 키워드에 적용 가능)
-        const universalPatterns = [
-          `${keyword} 완전 정복 가이드`,
-          `${keyword} 성공하는 실전 방법`,
-          `${keyword} 초보자를 위한 단계별 가이드`,
-          `${keyword} 전문가가 알려주는 노하우`,
-          `${keyword} 실패하지 않는 선택법`,
-          `${keyword} 체계적으로 접근하는 방법`,
-          `${keyword} 효과적인 관리와 활용법`,
-          `${keyword} 성공 사례와 배울 점`,
-          `${keyword} 기초부터 응용까지`,
-          `${keyword} 실전에서 바로 쓰는 팁`
-        ];
-        
-        // 맞춤형 패턴이 있는 경우 우선 사용
-        const patterns = contextualPatterns[keyword] || universalPatterns;
-        
-        // 패턴을 섞어서 중복 없이 선택
-        const shuffled = patterns.sort(() => 0.5 - Math.random());
-        
-        for (let i = 0; i < Math.min(count, shuffled.length); i++) {
-          topics.push(shuffled[i]);
-        }
-        
-        return topics;
-      };
+      const newTopics = selectedTemplates.map(template => 
+        template.replace(/{keyword}/g, keyword).replace(/{count}/g, ['3', '5', '7'][Math.floor(Math.random() * 3)])
+      );
 
-      let topics: string[] = [];
-      
-      // 미리 정의된 템플릿이 있는 경우
-      if (topicTemplates[keyword]) {
-        topics = topicTemplates[keyword].slice(0, appState.topicCount);
-        
-        // 요청한 개수가 더 많으면 맞춤형 추가 주제 생성
-        if (appState.topicCount > topics.length) {
-          const additionalTopics = generateContextualTopics(appState.keyword, appState.topicCount - topics.length);
-          topics = [...topics, ...additionalTopics];
-        }
-      } else {
-        // 일반적인 키워드인 경우 맞춤형 주제 생성
-        topics = generateContextualTopics(appState.keyword, appState.topicCount);
-      }
-
-      saveAppState({ topics });
+      saveAppState({ topics: newTopics });
       toast({
         title: "자연스러운 SEO 최적화 주제 생성 완료",
-        description: `${topics.length}개의 검색 친화적 주제가 생성되었습니다.`,
+        description: `${newTopics.length}개의 검색 친화적 주제가 생성되었습니다.`,
       });
     } catch (error) {
       console.error('주제 생성 오류:', error);
@@ -900,7 +767,7 @@ ${mainConcept} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 </div>
 <div style="margin-bottom: 22px;">
 <div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: 초기 비용이 많이 드나요?</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 기본적인 것들만 있으면 시작할 수 있어요. 처음에는 무료로 할 수 있는 것들을 활용하다가 필요에 따라 단계적으로 투자하시면 됩니다.</div>
+<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 기본적인 것들만 있으면 시작할 수 있어요. 처음엔 무료로 할 수 있는 것들을 활용하다가 필요에 따라 단계적으로 투자하시면 됩니다.</div>
 </div>
 <div style="margin-bottom: 22px;">
 <div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: 혼자서도 할 수 있을까요?</div>
@@ -1120,6 +987,18 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
     );
   }
 
+  const steps = ['주제 생성', '글 작성', '이미지 생성', '최종 완성'];
+  let preciseActiveStep = 1;
+  if (appState.imagePrompt) {
+    preciseActiveStep = 4;
+  } else if (appState.generatedContent) {
+    preciseActiveStep = 3;
+  } else if (appState.topics.length > 0) {
+    preciseActiveStep = 2;
+  }
+
+  const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       {/* 헤더 */}
@@ -1149,40 +1028,46 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
 
       {/* 진행 단계 표시 */}
       <div className="max-w-7xl mx-auto mb-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-4">
-            {[1, 2, 3, 4].map((step, index) => {
-              const isActive = step === 1 || 
-                              (step === 2 && appState.topics.length > 0) ||
-                              (step === 3 && appState.selectedTopic) ||
-                              (step === 4 && appState.generatedContent);
-              const isCompleted = (step === 1 && appState.topics.length > 0) ||
-                                (step === 2 && appState.selectedTopic) ||
-                                (step === 3 && appState.generatedContent) ||
-                                (step === 4 && appState.imagePrompt);
-              
-              return (
-                <div key={step} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isCompleted ? 'bg-green-500 text-white' : 
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>
-                    {step}
-                  </div>
-                  <div className="ml-2">
-                    <div className={`text-sm font-medium ${isActive ? 'text-gray-800' : 'text-gray-500'}`}>
-                      {step === 1 && '주제 생성'}
-                      {step === 2 && '글 작성'}  
-                      {step === 3 && '이미지 생성'}
-                      {step === 4 && '최종 완성'}
+        <div className="bg-white rounded-lg shadow-md p-6 pt-10">
+          <div className="w-full max-w-2xl mx-auto px-4 sm:px-0">
+            <div className="relative">
+              <div className="absolute top-4 left-0 w-full h-1 bg-gray-200 rounded-full"></div>
+              <div
+                className="absolute top-4 left-0 h-1 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+              <div className="flex justify-between items-start">
+                {steps.map((label, index) => {
+                  const stepNumber = index + 1;
+                  const isCompleted = stepNumber < preciseActiveStep;
+                  const isActive = stepNumber === preciseActiveStep;
+                  return (
+                    <div key={label} className="relative text-center w-20">
+                      <div
+                        className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
+                          isActive
+                            ? 'bg-blue-500 text-white border-blue-500 scale-110'
+                            : isCompleted
+                            ? 'bg-teal-400 text-white border-teal-400'
+                            : 'bg-white text-gray-500 border-gray-300'
+                        }`}
+                      >
+                        {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
+                      </div>
+                      <p
+                        className={`mt-3 text-xs md:text-sm font-medium transition-colors duration-500 ${
+                          isActive || isCompleted ? 'text-gray-800' : 'text-gray-500'
+                        }`}
+                      >
+                        {label}
+                      </p>
                     </div>
-                  </div>
-                  {index < 3 && <div className={`flex-1 h-1 mx-4 ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div className="text-right text-sm text-gray-600">
+          <div className="text-right text-sm text-gray-600 mt-8">
             생성된 주제 목록: {appState.topics.length}개 생성됨
           </div>
         </div>
