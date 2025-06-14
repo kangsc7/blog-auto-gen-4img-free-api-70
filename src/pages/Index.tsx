@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -209,35 +208,73 @@ const Index = () => {
     setIsGeneratingTopics(true);
     
     try {
-      // 시뮬레이션된 주제 생성 로직
+      // 시뮬레이션된 주제 생성 로직 - SEO 최적화된 틈새 키워드 조합
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const prefixes = ["완벽 가이드", "초보자를 위한", "전문가가 알려주는", "2024년 최신", "실전 노하우"];
-      const suffixes = ["방법", "팁", "전략", "가이드", "비법", "해결책"];
+      // SEO 친화적인 접두사들 (검색량이 높은 패턴)
+      const seoOptimizedPrefixes = [
+        "2024년 최신", "완벽 가이드", "초보자를 위한", "전문가가 추천하는", "실전 노하우",
+        "단계별", "쉽게 따라하는", "효과적인", "성공적인", "실용적인", "빠르게 배우는"
+      ];
       
-      const specificTopicIdeas: { [key: string]: string[] } = {
-        "블로그": ["수익화 전략", "SEO 최적화", "콘텐츠 기획", "독자 증가"],
-        "투자": ["포트폴리오 구성", "리스크 관리", "종목 분석", "장기투자"],
-        "요리": ["간단 레시피", "건강식단", "시간 절약", "재료 활용"],
-        "운동": ["홈트레이닝", "다이어트", "근력 증가", "스트레칭"],
-        "여행": ["예산 관리", "일정 계획", "숨은 명소", "패킹 팁"]
+      // SEO 친화적인 접미사들
+      const seoOptimizedSuffixes = [
+        "방법 총정리", "팁 모음", "가이드", "노하우", "전략", "해결법", "비법 공개",
+        "완전정복", "실무 가이드", "핵심 포인트", "체크리스트"
+      ];
+
+      // 키워드별 연관 SEO 키워드 맵 (실제 검색량이 높은 키워드들)
+      const seoKeywordMap: { [key: string]: string[] } = {
+        "블로그": ["수익화", "SEO 최적화", "애드센스", "네이버 블로그", "워드프레스", "콘텐츠 마케팅"],
+        "투자": ["주식", "부동산", "재테크", "펀드", "ETF", "코인", "연금저축"],
+        "요리": ["간단 레시피", "다이어트 식단", "건강식", "반찬", "도시락", "홈쿡"],
+        "운동": ["홈트레이닝", "다이어트", "헬스", "요가", "필라테스", "근력운동"],
+        "여행": ["국내여행", "해외여행", "자유여행", "패키지", "숙소", "맛집"],
+        "프로그래밍": ["파이썬", "자바스크립트", "웹개발", "앱개발", "코딩테스트", "개발자"],
+        "마케팅": ["디지털마케팅", "SNS마케팅", "바이럴마케팅", "브랜딩", "광고", "성과측정"],
+        "부동산": ["아파트", "전세", "월세", "매매", "분양", "투자", "대출"],
+        "건강": ["다이어트", "운동", "영양", "건강관리", "질병예방", "건강식품"],
+        "교육": ["온라인강의", "자격증", "취업", "공부법", "학습법", "스킬업"],
+        "쇼핑": ["할인", "쿠폰", "세일", "리뷰", "추천", "가성비"],
+        "금융": ["대출", "적금", "보험", "카드", "금리", "신용관리"],
+        "자동차": ["중고차", "신차", "정비", "보험", "연비", "튜닝"],
+        "패션": ["코디", "트렌드", "쇼핑몰", "브랜드", "스타일링", "세일"],
+        "뷰티": ["화장품", "스킨케어", "메이크업", "헤어", "네일", "다이어트"]
       };
       
       const topics = [];
       const keywordLower = appState.keyword.toLowerCase();
-      const relatedIdeas = specificTopicIdeas[keywordLower] || ["활용법", "시작하기", "주의사항", "성공 사례"];
+      
+      // 메인 키워드와 관련된 연관 키워드들 가져오기
+      let relatedKeywords = seoKeywordMap[keywordLower] || [];
+      
+      // 연관 키워드가 없는 경우 일반적인 패턴 사용
+      if (relatedKeywords.length === 0) {
+        relatedKeywords = ["활용법", "시작하기", "노하우", "팁", "가이드", "방법"];
+      }
       
       for (let i = 0; i < appState.topicCount; i++) {
-        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-        const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-        const idea = relatedIdeas[i % relatedIdeas.length];
-        topics.push(`${prefix} ${appState.keyword} ${idea} ${suffix}`);
+        const prefix = seoOptimizedPrefixes[Math.floor(Math.random() * seoOptimizedPrefixes.length)];
+        const suffix = seoOptimizedSuffixes[Math.floor(Math.random() * seoOptimizedSuffixes.length)];
+        const relatedKeyword = relatedKeywords[i % relatedKeywords.length];
+        
+        // SEO 최적화된 제목 생성 (메인 키워드 + 연관 키워드 조합)
+        const topicTemplates = [
+          `${prefix} ${appState.keyword} ${relatedKeyword} ${suffix}`,
+          `${appState.keyword} ${relatedKeyword} ${prefix} ${suffix}`,
+          `${prefix} ${appState.keyword}로 ${relatedKeyword} 마스터하는 ${suffix}`,
+          `${appState.keyword} 전문가가 알려주는 ${relatedKeyword} ${suffix}`,
+          `${relatedKeyword} 고수들이 쓰는 ${appState.keyword} ${suffix}`
+        ];
+        
+        const selectedTemplate = topicTemplates[Math.floor(Math.random() * topicTemplates.length)];
+        topics.push(selectedTemplate);
       }
       
       saveAppState({ topics });
       toast({
-        title: "주제 생성 완료",
-        description: `${topics.length}개의 주제가 생성되었습니다.`,
+        title: "SEO 최적화된 주제 생성 완료",
+        description: `${topics.length}개의 틈새 상위 노출 최적화 주제가 생성되었습니다.`,
       });
     } catch (error) {
       console.error('주제 생성 오류:', error);
@@ -292,7 +329,7 @@ const Index = () => {
     setIsGeneratingContent(true);
     
     try {
-      // 시뮬레이션된 글 생성 로직
+      // SEO 최적화된 블로그 글 생성 로직
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       // 컬러 테마 자동 선정
@@ -339,7 +376,7 @@ const Index = () => {
       const colors = getColors(selectedColorTheme);
       const refLink = appState.referenceLink || 'https://worldpis.com';
       
-      // HTML 콘텐츠 생성
+      // SEO 최적화된 HTML 콘텐츠 생성
       const htmlContent = `<div class="wrapper-div" style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; font-size: 17px; box-sizing: border-box; padding: 0 20px; word-break: break-all; overflow-wrap: break-word;">
 
 <style>
@@ -355,76 +392,155 @@ const Index = () => {
 <h3 style="font-size: 28px; font-weight: bold; margin-bottom: 25px; text-align: center; color: #333;">${appState.selectedTopic}</h3>
 
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
-<strong>궁금하지 않으셨나요?</strong> ${appState.selectedTopic}에 대한 실용적인 가이드를 통해 누구나 쉽게 따라할 수 있는 방법들을 소개해드립니다.
+<strong>궁금하지 않으셨나요?</strong> ${appState.selectedTopic}에 대한 완벽한 가이드를 통해 누구나 쉽게 따라할 수 있는 실전 노하우를 소개해드립니다.
 </div>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">안녕하세요! 오늘은 많은 분들이 궁금해하시는 <strong style="color: ${colors.primary};">${appState.keyword}</strong>에 대해 이야기해보려고 해요. 😊</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">${appState.keyword} 때문에 고민이시죠? 저도 처음엔 막막했는데요. 😊 이 글을 끝까지 읽어보시면 <strong style="color: ${colors.primary};">구체적이고 실용적인 해결책</strong>을 얻을 수 있을 거예요!</p>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">이 글을 읽고 나면 <strong style="color: ${colors.primary};">구체적이고 실용적인 해결책</strong>을 얻을 수 있을 거예요. 제가 직접 경험하고 검증한 방법들을 공유해드릴게요!</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">실제로 제가 경험해보고 검증한 방법들만 골라서 정리했으니까, 바로 적용해볼 수 있는 내용들이에요. 특히 초보자분들도 쉽게 따라할 수 있도록 단계별로 자세히 설명드릴게요!</p>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
-<strong>기본 개념 이해하기</strong> 📚
+<strong>${appState.keyword}가 중요한 이유</strong> 📚
 </h2>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">먼저 ${appState.keyword}의 기본 개념부터 차근차근 알아보겠습니다. 많은 분들이 어려워하시는 부분이지만, 차근차근 따라오시면 전혀 어렵지 않아요.</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">요즘 같은 시대에 ${appState.keyword}는 선택이 아니라 필수가 되었어요. 특히 이런 분들에게는 더욱 중요하죠:</p>
+
+<ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;">
+<li style="margin-bottom: 8px;">시간은 부족하지만 효과적인 결과를 원하시는 분</li>
+<li style="margin-bottom: 8px;">처음 시작하는데 어디서부터 해야 할지 모르겠는 분</li>
+<li style="margin-bottom: 8px;">이미 시도해봤지만 만족스러운 결과를 얻지 못한 분</li>
+<li style="margin-bottom: 8px;">체계적이고 검증된 방법을 찾고 계신 분</li>
+</ul>
 
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
 <strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>
-${appState.keyword}을(를) 처음 시작하시는 분들은 기초부터 탄탄히 다지는 것이 중요합니다. 무작정 시작하기보다는 단계적으로 접근해보세요.
+${appState.keyword}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무작정 시작하기보다는 체계적으로 접근하는 것이 성공의 열쇠입니다.
 </div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
-<strong>실전 활용 방법</strong> 🔥
+<strong>단계별 실행 방법</strong> 🚀
 </h2>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">이제 본격적으로 실전에서 활용할 수 있는 구체적인 방법들을 알아보겠습니다. 제가 실제로 적용해본 결과를 바탕으로 말씀드릴게요.</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">이제 본격적으로 ${appState.keyword}를 위한 구체적인 실행 방법을 알아보겠어요. 제가 직접 적용해본 결과를 바탕으로 가장 효과적인 순서로 정리했습니다.</p>
+
+<h3 style="font-size: 20px; color: #333; margin: 25px 0 15px; font-weight: bold;">1단계: 기초 준비하기</h3>
 
 <ol style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;">
-<li style="margin-bottom: 10px;"><strong>첫 번째 단계:</strong> 목표를 명확히 설정하기</li>
-<li style="margin-bottom: 10px;"><strong>두 번째 단계:</strong> 필요한 도구와 자료 준비하기</li>
-<li style="margin-bottom: 10px;"><strong>세 번째 단계:</strong> 단계별로 실행하기</li>
-<li style="margin-bottom: 10px;"><strong>네 번째 단계:</strong> 결과 점검 및 개선하기</li>
+<li style="margin-bottom: 10px;"><strong>목표 설정:</strong> 명확하고 측정 가능한 목표를 세우세요</li>
+<li style="margin-bottom: 10px;"><strong>현재 상황 파악:</strong> 지금 어느 단계에 있는지 정확히 파악하기</li>
+<li style="margin-bottom: 10px;"><strong>필요한 도구 준비:</strong> 기본적인 도구들을 미리 준비해두기</li>
+<li style="margin-bottom: 10px;"><strong>시간 계획 수립:</strong> 언제, 얼마나 투자할지 계획 세우기</li>
 </ol>
+
+<h3 style="font-size: 20px; color: #333; margin: 25px 0 15px; font-weight: bold;">2단계: 핵심 전략 적용하기</h3>
+
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">이 단계가 가장 중요해요. 여기서 실수하면 나중에 돌이키기 어려우니까 천천히 따라해보세요.</p>
 
 <div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 25px 0; font-size: 17px; line-height: 1.6; box-sizing: border-box;">
 <h3 style="font-size: 20px; color: #333; margin: 0 0 12px; font-weight: bold; line-height: 1.5;">실제 적용 사례 📝</h3>
-<p style="margin-bottom: 15px;">실제로 이 방법을 적용한 사례를 살펴보면, 평균적으로 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">80% 이상의 개선 효과</span>를 보였습니다.</p>
-<p>특히 초보자분들도 쉽게 따라할 수 있도록 단계별로 자세히 설명드렸으니, 차근차근 적용해보시기 바랍니다.</p>
+<p style="margin-bottom: 15px;">제가 직접 이 방법을 적용했을 때, <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">3개월 만에 80% 이상의 개선 효과</span>를 보였어요.</p>
+<p style="margin-bottom: 15px;">특히 첫 번째 달에는 큰 변화가 없어서 포기하고 싶었는데, 2개월째부터 확실한 변화가 보이기 시작했어요. 그래서 꾸준히 하는 게 정말 중요한 것 같아요.</p>
+<p>여러분도 조급해하지 마시고 차근차근 따라해보세요!</p>
 </div>
 
-<div style="margin-top: 20px;"></div>
+<div style="overflow-x: auto; margin: 25px 0; padding: 0;">
+<table style="min-width: 600px; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
+    <thead>
+        <tr>
+            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">단계</th>
+            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">주요 활동</th>
+            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">예상 기간</th>
+            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">핵심 포인트</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">1단계</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">기초 준비 및 계획 수립</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">1-2주</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">명확한 목표 설정</td>
+        </tr>
+        <tr style="background-color: #f9f9f9;">
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">2단계</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">핵심 전략 적용</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">4-6주</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">꾸준한 실행</td>
+        </tr>
+        <tr>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">3단계</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">결과 분석 및 개선</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">2-3주</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">데이터 기반 최적화</td>
+        </tr>
+    </tbody>
+</table>
+</div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
-<strong>주의사항 및 팁</strong> ⚠️
+<strong>주의사항 및 실전 팁</strong> ⚠️
 </h2>
 
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.warnBorder};">⚠️ 주의하세요!</strong><br>
-${appState.keyword} 과정에서 가장 흔히 범하는 실수는 성급하게 결과를 얻으려고 하는 것입니다. 충분한 시간을 두고 천천히 진행하세요.
+<strong style="color: ${colors.warnBorder};">⚠️ 흔한 실수들</strong><br>
+많은 분들이 ${appState.keyword} 과정에서 이런 실수를 하시더라고요. 미리 알고 계시면 시행착오를 줄일 수 있어요!
 </div>
 
 <ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;">
-<li style="margin-bottom: 8px;">정기적인 점검과 개선이 중요합니다</li>
-<li style="margin-bottom: 8px;">다른 사람의 성공 사례를 참고하되, 무작정 따라하지는 마세요</li>
-<li style="margin-bottom: 8px;">본인의 상황에 맞게 유연하게 적용하는 것이 핵심입니다</li>
-<li style="margin-bottom: 8px;">꾸준함이 가장 중요한 성공 요인입니다</li>
+<li style="margin-bottom: 8px;"><strong>성급한 결과 기대:</strong> 최소 2-3개월은 꾸준히 해야 확실한 효과를 볼 수 있어요</li>
+<li style="margin-bottom: 8px;"><strong>일관성 부족:</strong> 한 번에 많이 하는 것보다 조금씩이라도 매일 하는 게 중요해요</li>
+<li style="margin-bottom: 8px;"><strong>다른 사람과 비교:</strong> 각자 상황이 다르니까 본인만의 속도로 진행하세요</li>
+<li style="margin-bottom: 8px;"><strong>기초 건너뛰기:</strong> 기본기가 탄탄해야 나중에 응용할 수 있어요</li>
 </ul>
+
+<h3 style="font-size: 20px; color: #333; margin: 25px 0 15px; font-weight: bold;">실전에서 바로 쓸 수 있는 꿀팁들 💎</h3>
+
+<ol style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;">
+<li style="margin-bottom: 10px;"><strong>시간 관리:</strong> 매일 같은 시간에 하면 습관으로 만들기 쉬워요</li>
+<li style="margin-bottom: 10px;"><strong>진행 상황 기록:</strong> 작은 변화라도 기록해두면 동기부여가 돼요</li>
+<li style="margin-bottom: 10px;"><strong>주변 환경 정리:</strong> 집중할 수 있는 환경을 만드는 것도 중요해요</li>
+<li style="margin-bottom: 10px;"><strong>커뮤니티 활용:</strong> 비슷한 목표를 가진 사람들과 정보 공유하기</li>
+</ol>
+
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
+<strong>자주 묻는 질문 (FAQ)</strong> ❓
+</h2>
+
+<div style="margin: 30px 0;">
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px; overflow: hidden;">
+        <div style="background: ${colors.secondary}; padding: 15px; font-weight: bold; color: #333; line-height: 1.5;">Q: ${appState.keyword}를 시작하는데 얼마나 시간이 걸리나요?</div>
+        <div style="padding: 15px; background: white; line-height: 1.6;">A: 개인차가 있지만 보통 기초 준비에 1-2주, 본격적인 적용에 4-6주 정도 소요됩니다. 중요한 건 꾸준히 하는 거예요!</div>
+    </div>
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px; overflow: hidden;">
+        <div style="background: ${colors.secondary}; padding: 15px; font-weight: bold; color: #333; line-height: 1.5;">Q: 초기 비용이 많이 드나요?</div>
+        <div style="padding: 15px; background: white; line-height: 1.6;">A: 기본적인 도구들만 있으면 시작할 수 있어요. 처음에는 무료 도구들을 활용하다가 필요에 따라 단계적으로 투자하시면 됩니다.</div>
+    </div>
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px; overflow: hidden;">
+        <div style="background: ${colors.secondary}; padding: 15px; font-weight: bold; color: #333; line-height: 1.5;">Q: 혼자서도 할 수 있을까요?</div>
+        <div style="padding: 15px; background: white; line-height: 1.6;">A: 물론이죠! 이 가이드대로 천천히 따라하시면 혼자서도 충분히 가능해요. 막히는 부분이 있으면 관련 커뮤니티나 블로그를 참고하시면 도움이 될 거예요.</div>
+    </div>
+</div>
 
 <div style="border-top: 1px dashed #ddd; margin: 35px 0;"></div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
-<strong>정리 및 마무리</strong> ✨
+<strong>핵심 정리 및 다음 단계</strong> ✨
 </h2>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">오늘은 ${appState.selectedTopic}에 대해 자세히 알아봤습니다. 중요한 포인트들을 다시 한번 정리해드릴게요:</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;">지금까지 ${appState.selectedTopic}에 대해 자세히 알아봤어요. 중요한 포인트들을 다시 한번 정리해드릴게요:</p>
 
 <ol style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;">
-<li style="margin-bottom: 10px;"><strong>기본기가 중요합니다:</strong> 탄탄한 기초 위에서 시작하세요</li>
-<li style="margin-bottom: 10px;"><strong>단계적 접근이 핵심:</strong> 한 번에 모든 것을 해결하려 하지 마세요</li>
-<li style="margin-bottom: 10px;"><strong>꾸준한 실천:</strong> 일관성 있게 지속하는 것이 가장 중요합니다</li>
+<li style="margin-bottom: 10px;"><strong>체계적인 접근이 핵심:</strong> 단계별로 차근차근 진행하는 것이 가장 중요해요</li>
+<li style="margin-bottom: 10px;"><strong>꾸준함이 성공의 열쇠:</strong> 매일 조금씩이라도 꾸준히 하는 게 더 효과적이에요</li>
+<li style="margin-bottom: 10px;"><strong>본인만의 속도로:</strong> 다른 사람과 비교하지 말고 본인의 상황에 맞게 조절하세요</li>
+<li style="margin-bottom: 10px;"><strong>기록과 분석:</strong> 진행 상황을 기록하고 정기적으로 점검해보세요</li>
 </ol>
 
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;">더 궁금한 점이 있다면 댓글로 물어봐주세요~ 😊 <strong style="color: ${colors.primary};">여러분의 성공을 응원합니다!</strong></p>
+<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
+<strong style="color: ${colors.primary};">🎯 오늘부터 시작할 수 있는 첫 번째 액션</strong><br>
+이 글을 읽었으니까 이제 첫 번째 단계부터 시작해보세요! 완벽하게 준비될 때까지 기다리지 말고, 오늘 당장 할 수 있는 작은 것부터 시작하는 게 중요해요.
+</div>
+
+<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;">더 궁금한 점이 있다면 댓글로 물어봐주세요~ 😊 <strong style="color: ${colors.primary};">여러분의 성공을 진심으로 응원합니다!</strong></p>
 
 <p style="text-align: center; font-size: 18px;">
 <strong>이건 아직 못 봤다면, 진짜 아쉬울 수 있어요.</strong><br>
@@ -442,8 +558,8 @@ ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지�
       });
       
       toast({
-        title: "블로그 글 생성 완료",
-        description: "HTML 형식의 블로그 콘텐츠가 생성되었습니다.",
+        title: "SEO 최적화된 블로그 글 생성 완료",
+        description: "전문적이고 체계적인 HTML 콘텐츠가 생성되었습니다.",
       });
     } catch (error) {
       console.error('글 생성 오류:', error);
@@ -516,6 +632,14 @@ ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지�
         description: "클립보드 복사에 실패했습니다.",
         variant: "destructive"
       });
+    });
+  };
+
+  const openWhisk = () => {
+    window.open('https://labs.google/fx/ko/tools/whisk', '_blank', 'noopener,noreferrer');
+    toast({
+      title: "Whisk 열기",
+      description: "Google Whisk가 새 탭에서 열렸습니다.",
     });
   };
 
@@ -1034,17 +1158,25 @@ ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지�
                     readOnly
                     className="min-h-32 bg-gray-50"
                   />
-                  <Button 
-                    onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
-                    className="w-full bg-pink-600 hover:bg-pink-700"
-                  >
-                    복사
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
+                      className="flex-1 bg-pink-600 hover:bg-pink-700"
+                    >
+                      복사
+                    </Button>
+                    <Button 
+                      onClick={openWhisk}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      Whisk 열기
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>주제를 선택하고 글을 생성해보세요!</p>
+                  <p>이미지 프롬프트를 생성해보세요!</p>
                 </div>
               )}
             </CardContent>
