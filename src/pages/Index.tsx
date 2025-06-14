@@ -208,73 +208,135 @@ const Index = () => {
     setIsGeneratingTopics(true);
     
     try {
-      // 시뮬레이션된 주제 생성 로직 - SEO 최적화된 틈새 키워드 조합
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // SEO 친화적인 접두사들 (검색량이 높은 패턴)
-      const seoOptimizedPrefixes = [
-        "2024년 최신", "완벽 가이드", "초보자를 위한", "전문가가 추천하는", "실전 노하우",
-        "단계별", "쉽게 따라하는", "효과적인", "성공적인", "실용적인", "빠르게 배우는"
-      ];
-      
-      // SEO 친화적인 접미사들
-      const seoOptimizedSuffixes = [
-        "방법 총정리", "팁 모음", "가이드", "노하우", "전략", "해결법", "비법 공개",
-        "완전정복", "실무 가이드", "핵심 포인트", "체크리스트"
-      ];
-
-      // 키워드별 연관 SEO 키워드 맵 (실제 검색량이 높은 키워드들)
-      const seoKeywordMap: { [key: string]: string[] } = {
-        "블로그": ["수익화", "SEO 최적화", "애드센스", "네이버 블로그", "워드프레스", "콘텐츠 마케팅"],
-        "투자": ["주식", "부동산", "재테크", "펀드", "ETF", "코인", "연금저축"],
-        "요리": ["간단 레시피", "다이어트 식단", "건강식", "반찬", "도시락", "홈쿡"],
-        "운동": ["홈트레이닝", "다이어트", "헬스", "요가", "필라테스", "근력운동"],
-        "여행": ["국내여행", "해외여행", "자유여행", "패키지", "숙소", "맛집"],
-        "프로그래밍": ["파이썬", "자바스크립트", "웹개발", "앱개발", "코딩테스트", "개발자"],
-        "마케팅": ["디지털마케팅", "SNS마케팅", "바이럴마케팅", "브랜딩", "광고", "성과측정"],
-        "부동산": ["아파트", "전세", "월세", "매매", "분양", "투자", "대출"],
-        "건강": ["다이어트", "운동", "영양", "건강관리", "질병예방", "건강식품"],
-        "교육": ["온라인강의", "자격증", "취업", "공부법", "학습법", "스킬업"],
-        "쇼핑": ["할인", "쿠폰", "세일", "리뷰", "추천", "가성비"],
-        "금융": ["대출", "적금", "보험", "카드", "금리", "신용관리"],
-        "자동차": ["중고차", "신차", "정비", "보험", "연비", "튜닝"],
-        "패션": ["코디", "트렌드", "쇼핑몰", "브랜드", "스타일링", "세일"],
-        "뷰티": ["화장품", "스킨케어", "메이크업", "헤어", "네일", "다이어트"]
-      };
-      
-      const topics = [];
+      // 더 자연스러운 주제 생성을 위한 개선된 로직
       const keywordLower = appState.keyword.toLowerCase();
       
-      // 메인 키워드와 관련된 연관 키워드들 가져오기
-      let relatedKeywords = seoKeywordMap[keywordLower] || [];
-      
-      // 연관 키워드가 없는 경우 일반적인 패턴 사용
-      if (relatedKeywords.length === 0) {
-        relatedKeywords = ["활용법", "시작하기", "노하우", "팁", "가이드", "방법"];
-      }
-      
-      for (let i = 0; i < appState.topicCount; i++) {
-        const prefix = seoOptimizedPrefixes[Math.floor(Math.random() * seoOptimizedPrefixes.length)];
-        const suffix = seoOptimizedSuffixes[Math.floor(Math.random() * seoOptimizedSuffixes.length)];
-        const relatedKeyword = relatedKeywords[i % relatedKeywords.length];
-        
-        // SEO 최적화된 제목 생성 (메인 키워드 + 연관 키워드 조합)
-        const topicTemplates = [
-          `${prefix} ${appState.keyword} ${relatedKeyword} ${suffix}`,
-          `${appState.keyword} ${relatedKeyword} ${prefix} ${suffix}`,
-          `${prefix} ${appState.keyword}로 ${relatedKeyword} 마스터하는 ${suffix}`,
-          `${appState.keyword} 전문가가 알려주는 ${relatedKeyword} ${suffix}`,
-          `${relatedKeyword} 고수들이 쓰는 ${appState.keyword} ${suffix}`
+      // 키워드별 맞춤형 주제 템플릿 (더 자연스러운 조합)
+      const topicTemplates: { [key: string]: string[] } = {
+        "블로그": [
+          "블로그 수익화를 위한 실전 가이드",
+          "초보자도 쉽게 시작하는 블로그 운영법",
+          "블로그 방문자를 늘리는 SEO 최적화 방법",
+          "성공하는 블로그의 콘텐츠 작성 비법",
+          "블로그로 월 100만원 벌기 완전정복"
+        ],
+        "투자": [
+          "초보 투자자를 위한 안전한 투자 가이드",
+          "2024년 주목해야 할 투자 종목 분석",
+          "부동산 투자 성공 전략과 주의사항",
+          "펀드 투자로 안정적인 수익 만들기",
+          "투자 실패를 피하는 5가지 핵심 원칙"
+        ],
+        "요리": [
+          "바쁜 직장인을 위한 간단 요리 레시피",
+          "건강한 다이어트 식단 만들기",
+          "집에서 쉽게 만드는 카페 음료",
+          "아이가 좋아하는 영양 만점 반찬",
+          "초보자도 실패 없는 홈베이킹"
+        ],
+        "운동": [
+          "집에서 할 수 있는 효과적인 홈트레이닝",
+          "다이어트에 성공하는 운동법",
+          "초보자를 위한 헬스장 이용 가이드",
+          "바쁜 현대인을 위한 10분 운동법",
+          "근력 운동으로 몸매 만들기"
+        ],
+        "여행": [
+          "국내 숨은 여행지 추천",
+          "해외여행 경비 절약하는 방법",
+          "혼자 떠나는 안전한 여행 가이드",
+          "가족 여행지 베스트 추천",
+          "여행 필수품 체크리스트"
+        ],
+        "프로그래밍": [
+          "프로그래밍 입문자를 위한 첫걸음",
+          "웹개발 공부 순서와 로드맵",
+          "코딩테스트 합격을 위한 알고리즘 학습법",
+          "개발자 취업을 위한 포트폴리오 만들기",
+          "실무에서 자주 사용하는 개발 도구들"
+        ],
+        "마케팅": [
+          "소상공인을 위한 디지털 마케팅 전략",
+          "SNS 마케팅으로 고객 확보하기",
+          "브랜딩 성공 사례와 핵심 포인트",
+          "온라인 광고 효과 극대화 방법",
+          "바이럴 마케팅의 핵심 원리"
+        ],
+        "부동산": [
+          "내 집 마련을 위한 부동산 투자 가이드",
+          "전세와 월세 중 현명한 선택은?",
+          "부동산 중개수수료 절약하는 방법",
+          "아파트 매매 시 체크해야 할 사항들",
+          "부동산 대출 조건과 금리 비교"
+        ],
+        "건강": [
+          "면역력 높이는 생활 습관",
+          "올바른 다이어트 방법과 주의사항",
+          "스트레스 해소에 효과적인 방법들",
+          "건강한 수면을 위한 실천법",
+          "중년 건강관리 필수 체크리스트"
+        ],
+        "교육": [
+          "아이의 학습능력 향상시키는 방법",
+          "성인을 위한 효과적인 공부법",
+          "자격증 취득을 위한 학습 전략",
+          "온라인 강의 활용법과 추천 사이트",
+          "영어 실력 향상을 위한 실전 팁"
+        ]
+      };
+
+      // 일반적인 키워드를 위한 동적 템플릿 생성
+      const generateDynamicTopics = (keyword: string): string[] => {
+        const questionStarters = [
+          `${keyword} 초보자가 알아야 할`,
+          `${keyword} 성공하는 사람들의`,
+          `${keyword} 실패하지 않는`,
+          `${keyword} 전문가가 추천하는`,
+          `${keyword} 비용 절약하는`
         ];
         
-        const selectedTemplate = topicTemplates[Math.floor(Math.random() * topicTemplates.length)];
-        topics.push(selectedTemplate);
-      }
+        const middleParts = [
+          "핵심 포인트 5가지",
+          "실전 가이드",
+          "완벽 가이드",
+          "비법 공개",
+          "방법 총정리"
+        ];
+        
+        const topics = [];
+        for (let i = 0; i < appState.topicCount; i++) {
+          const starter = questionStarters[i % questionStarters.length];
+          const middle = middleParts[i % middleParts.length];
+          topics.push(`${starter} ${middle}`);
+        }
+        
+        return topics;
+      };
+
+      // 키워드에 맞는 주제 생성
+      let topics: string[] = [];
       
+      if (topicTemplates[keywordLower]) {
+        // 미리 정의된 템플릿이 있는 경우
+        const availableTopics = topicTemplates[keywordLower];
+        topics = availableTopics.slice(0, appState.topicCount);
+        
+        // 요청한 개수가 미리 정의된 것보다 많으면 추가 생성
+        if (appState.topicCount > availableTopics.length) {
+          const additionalTopics = generateDynamicTopics(appState.keyword);
+          topics = [...topics, ...additionalTopics.slice(0, appState.topicCount - availableTopics.length)];
+        }
+      } else {
+        // 일반적인 키워드인 경우 동적 생성
+        topics = generateDynamicTopics(appState.keyword);
+      }
+
       saveAppState({ topics });
       toast({
-        title: "SEO 최적화된 주제 생성 완료",
-        description: `${topics.length}개의 틈새 상위 노출 최적화 주제가 생성되었습니다.`,
+        title: "자연스러운 SEO 최적화 주제 생성 완료",
+        description: `${topics.length}개의 검색 친화적 주제가 생성되었습니다.`,
       });
     } catch (error) {
       console.error('주제 생성 오류:', error);
@@ -1130,7 +1192,7 @@ ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지�
             </CardHeader>
             <CardContent>
               {appState.generatedContent ? (
-                <div className="max-h-96 overflow-y-auto border p-4 rounded bg-gray-50">
+                <div className="border p-4 rounded bg-gray-50" style={{ minHeight: '200px', maxHeight: 'none', overflowY: 'auto' }}>
                   <div dangerouslySetInnerHTML={{ __html: appState.generatedContent }} />
                 </div>
               ) : (
