@@ -396,8 +396,6 @@ const Index = () => {
     setIsGeneratingContent(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
       const selectedColorTheme = appState.colorTheme || randomTheme.value;
       
@@ -439,83 +437,38 @@ const Index = () => {
       
       const colors = getColors(selectedColorTheme);
       const refLink = appState.referenceLink || 'https://worldpis.com';
-      
-      // 개선된 키워드 추출 함수 - 주제의 핵심 개념을 더 정확하게 파악
-      const extractMainConcept = (topic: string) => {
-        // 주제에서 핵심 개념을 추출하는 규칙들
-        const conceptPatterns = [
-          // 명사형 개념들
-          { pattern: /(\w+) (완전|성공|실전|효과적인|안전한|올바른|건강한|체계적인)/, extract: 1 },
-          { pattern: /(\w+)을? (표현|관리|예방|개선|해결|선택|활용)/, extract: 1 },
-          { pattern: /(\w+)를? (위한|통한|이용한)/, extract: 1 },
-          { pattern: /(\w+) (방법|가이드|전략|노하우|팁|기술|비결)/, extract: 1 },
-          { pattern: /(\w+) (초보자|입문자|환자)/, extract: 1 },
-          // 동사형 개념들
-          { pattern: /(투자|요리|운동|여행|학습|마케팅) /, extract: 1 },
-          // 복합 개념들
-          { pattern: /(부동산 투자|홈트레이닝|다이어트|프로그래밍|블로그 운영)/, extract: 1 }
-        ];
+      const topic = appState.selectedTopic;
+      const keyword = appState.keyword || topic.split(' ')[0];
 
-        for (const { pattern, extract } of conceptPatterns) {
-          const match = topic.match(pattern);
-          if (match && match[extract]) {
-            return match[extract];
-          }
-        }
-        
-        // 패턴에 매칭되지 않으면 원래 키워드 사용
-        return appState.keyword;
-      };
-      
-      const mainConcept = extractMainConcept(appState.selectedTopic);
-      
-      // 개념별 맞춤형 문구 생성
-      const getConceptualIntro = (concept: string, topic: string) => {
-        const introPatterns = {
-          "투자": `${concept} 때문에 고민이시죠?`,
-          "다이어트": `${concept} 때문에 스트레스받고 계시나요?`,
-          "요리": `${concept}가 어려우시다고요?`,
-          "운동": `${concept}을 시작하고 싶으신가요?`,
-          "여행": `${concept} 계획 때문에 고민이시죠?`,
-          "프로그래밍": `${concept} 학습이 막막하신가요?`,
-          "블로그": `${concept} 운영이 어려우신가요?`,
-          "마케팅": `${concept} 전략 때문에 고민이시죠?`,
-          "부동산": `${concept} 때문에 고민이시나요?`,
-          "건강": `${concept} 관리가 어려우신가요?`,
-          "사랑": `${concept} 때문에 고민이시나요?`,
-          "고백": `${concept}을 어떻게 해야 할지 모르겠다고요?`,
-          "데이트": `${concept} 준비 때문에 스트레스받고 계시나요?`,
-          "결혼": `${concept} 준비가 막막하신가요?`
-        };
-        
-        return introPatterns[concept] || `${concept} 때문에 고민이시죠?`;
-      };
+      const prompt = `
+        당신은 매력적인 블로그 게시물을 작성하는 전문 카피라이터이자 SEO 전문가입니다.
+        주제: "${topic}"
+        핵심 키워드: "${keyword}"
 
-      const getConceptualH2Title = (concept: string) => {
-        const h2Patterns = {
-          "투자": `${concept}, 왜 중요할까요? 기초 지식부터!`,
-          "다이어트": `${concept}, 왜 실패할까요? 원인 분석부터!`,
-          "요리": `${concept}, 왜 어려울까요? 기본기부터!`,
-          "운동": `${concept}, 왜 중요할까요? 효과 파악부터!`,
-          "여행": `${concept}, 왜 계획이 중요할까요? 준비부터!`,
-          "프로그래밍": `${concept}, 왜 어려울까요? 기초 이해부터!`,
-          "블로그": `${concept}, 왜 중요할까요? 전략 수립부터!`,
-          "마케팅": `${concept}, 왜 필요할까요? 목적 파악부터!`,
-          "부동산": `${concept}, 왜 신중해야 할까요? 시장 이해부터!`,
-          "건강": `${concept}, 왜 중요할까요? 기본 원리부터!`,
-          "사랑": `${concept}, 왜 어려울까요? 마음 이해부터!`,
-          "고백": `${concept}, 왜 떨릴까요? 준비 과정부터!`,
-          "데이트": `${concept}, 왜 긴장될까요? 계획 세우기부터!`,
-          "결혼": `${concept}, 왜 신중해야 할까요? 준비 과정부터!`
-        };
+        다음 지침에 따라 이 주제에 대한 완벽한 블로그 게시물을 작성해주세요.
+        - 출력은 HTML 코드 블록 하나여야 합니다. HTML 외에 다른 텍스트나 마크다운 서식을 포함하지 마세요.
+        - 한국어 사용자를 대상으로 하며, Google 및 Naver 검색 엔진에 최적화되어야 합니다.
+        - 제공된 HTML 템플릿과 스타일을 정확하게 사용해주세요.
+        - 모든 섹션 (예: "[여기 매력적인 도입부 작성]")을 독자에게 실질적인 가치를 제공하는 자연스럽고 잘 작성된 콘텐츠로 채워주세요.
+        - 문체는 친근하고 유익해야 하며, 이모지 (예: 😊, 💡, 😥)를 적절하게 사용하여 참여를 유도해주세요.
+
+        사용할 변수:
+        - Primary Color: ${colors.primary}
+        - Secondary Color: ${colors.secondary}
+        - Text Highlight Color: ${colors.textHighlight}
+        - Highlight Color: ${colors.highlight}
+        - Highlight Border Color: ${colors.highlightBorder}
+        - Warn BG Color: ${colors.warnBg}
+        - Warn Border Color: ${colors.warnBorder}
+        - Link Color: ${colors.link}
+        - Reference Link: ${refLink}
+        - Topic: ${topic}
+        - Main Keyword: ${keyword}
+
+        아래는 반드시 따라야 할 HTML 템플릿입니다. 구조와 클래스, 인라인 스타일을 변경하지 마세요.
         
-        return h2Patterns[concept] || `${concept}, 왜 중요할까요? 원리 파악부터!`;
-      };
-      
-      const conceptualIntro = getConceptualIntro(mainConcept, appState.selectedTopic);
-      const conceptualH2 = getConceptualH2Title(mainConcept);
-      
-      const htmlContent = `<div>
+        --- HTML TEMPLATE START ---
+        <div>
 <style>
 @media (max-width: 768px) {
 .wrapper-div {
@@ -528,69 +481,69 @@ const Index = () => {
 
 <div style="margin-top: 10px;"></div>
 
-<h3 style="font-size: 28px; color: #333; margin-top: 25px; margin-bottom: 20px; text-align: center; line-height: 1.4;" data-ke-size="size23">${appState.selectedTopic}</h3>
+<h3 style="font-size: 28px; color: #333; margin-top: 25px; margin-bottom: 20px; text-align: center; line-height: 1.4;" data-ke-size="size23">${topic}</h3>
 
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
-<strong>${conceptualIntro}</strong> ${appState.selectedTopic}에 대한 완벽한 가이드를 통해 누구나 쉽게 따라할 수 있는 실전 노하우를 소개해드립니다.
+<strong>[여기 주제에 대한 흥미로운 질문이나 문제 제기 작성]</strong> [여기 이 글이 어떻게 독자의 문제를 해결해 줄 수 있는지에 대한 간략한 설명 작성]
 </div>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">안녕하세요! 저도 ${mainConcept}와 관련해서 정말 많은 시행착오를 겪었는데요. 처음엔 어디서부터 시작해야 할지 막막했거든요. 😥 하지만 지금은 저만의 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">${mainConcept} 노하우</span>가 생겼답니다!</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[여기 개인적인 경험이나 일화를 공유하며 독자와의 공감대 형성] 😥 [여기 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>가 어떻게 생겼는지에 대한 스토리텔링 추가]</p>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">실제로 제가 경험해보고 검증한 방법들만 골라서 정리했으니까, 바로 적용해볼 수 있는 내용들이에요. 특히 초보자분들도 쉽게 따라할 수 있도록 단계별로 자세히 설명드릴게요! 이 글을 통해 여러분도 ${mainConcept} 스트레스에서 벗어나 더욱 만족스러운 결과를 얻으실 수 있을 거예요. 😊</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[여기 이 글이 왜 특별한지, 독자가 무엇을 얻어갈 수 있는지 강조. 초보자도 쉽게 따라할 수 있다는 점 어필] 😊</p>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${conceptualH2}</strong> 💡
+<strong>[주제와 관련된 첫 번째 핵심 소제목]</strong> 💡
 </h2>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">${appState.selectedTopic}와 관련된 문제는 사실 아주 흔한 일이에요. 많은 분들이 비슷한 고민을 갖고 계시죠. 특히 이런 분들에게는 더욱 중요합니다:</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 설명. 왜 이 내용이 중요한지, 어떤 사람들이 특히 관심을 가져야 하는지 설명]</p>
 
 <ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;">시간은 부족하지만 효과적인 결과를 원하시는 분</li>
-<li style="margin-bottom: 8px;">처음 시작하는데 어디서부터 해야 할지 모르겠는 분</li>
-<li style="margin-bottom: 8px;">이미 시도해봤지만 만족스러운 결과를 얻지 못한 분</li>
-<li style="margin-bottom: 8px;">체계적이고 검증된 방법을 찾고 계신 분</li>
+<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 1]</li>
+<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 2]</li>
+<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 3]</li>
+<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 4]</li>
 </ul>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">하지만 ${mainConcept}가 갑자기 문제가 되거나, 스트레스, 환경 변화 등 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">다른 요인</span>으로 인해 발생하는 경우도 있어요. 저도 한번은 스트레스로 인해 어려움을 겪었던 기억이 나네요. 🥺 그래서 단순히 문제라고 생각하기보다, 혹시 다른 원인이 있는 건 아닌지 세심히 살펴보는 게 중요합니다.</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[주제와 관련된 문제의 다른 원인이나 고려사항 제시. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">다른 요인</span>이 있을 수 있음을 언급하며 깊이 있는 분석 제공] 🥺</p>
 
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
 <strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>
-${mainConcept}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무작정 시작하기보다는 체계적으로 접근하는 것이 성공의 열쇠입니다.
+[독자가 꼭 알아야 할 핵심 팁이나 원칙을 간결하게 작성]
 </div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${mainConcept} 핵심 실전 가이드!</strong> 📝
+<strong>[실용적인 방법이나 가이드를 제시하는 두 번째 소제목]</strong> 📝
 </h2>
 
 <div style="margin-top: 20px;"></div>
 
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.primary};">💡 팁 1: 기초 준비는 필수!</strong><br>
-체계적인 준비는 성공의 50%를 좌우한다고 생각해요. 기본기가 탄탄해야 나중에 응용할 수 있거든요.
+<strong style="color: ${colors.primary};">💡 팁 1: [첫 번째 팁 제목]</strong><br>
+[첫 번째 팁에 대한 상세 설명]
 </div>
 
 <ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;"><strong>목표 설정:</strong> 명확하고 측정 가능한 목표를 세우세요. 구체적일수록 좋아요!</li>
-<li style="margin-bottom: 8px;"><strong>현재 상황 파악:</strong> 지금 어느 단계에 있는지 정확히 파악하기. 솔직한 자기 진단이 중요합니다.</li>
-<li style="margin-bottom: 8px;"><strong>필요한 도구 준비:</strong> 기본적인 도구들을 미리 준비해두면 중간에 헤매지 않아요.</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 1]:</strong> [세부 항목 1에 대한 설명]</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 2]:</strong> [세부 항목 2에 대한 설명]</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 3]:</strong> [세부 항목 3에 대한 설명]</li>
 </ul>
 
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.primary};">💡 팁 2: 올바른 실행 방법!</strong><br>
-준비가 끝났다면 이제 본격적인 실행 단계예요. 여기서 실수하면 나중에 돌이키기 어려우니까 천천히 따라해보세요.
+<strong style="color: ${colors.primary};">💡 팁 2: [두 번째 팁 제목]</strong><br>
+[두 번째 팁에 대한 상세 설명]
 </div>
 
 <ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;"><strong>단계별 접근:</strong> 한 번에 모든 걸 하려고 하지 마시고 단계별로 차근차근 진행하세요.</li>
-<li style="margin-bottom: 8px;"><strong>꾸준한 실행:</strong> 매일 조금씩이라도 꾸준히 하는 게 더 효과적이에요. 습관을 만드는 게 중요합니다.</li>
-<li style="margin-bottom: 8px;"><strong>결과 확인:</strong> 중간중간 결과를 점검하고 필요하면 방향을 조정하세요.</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 1]:</strong> [세부 항목 1에 대한 설명]</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 2]:</strong> [세부 항목 2에 대한 설명]</li>
+<li style="margin-bottom: 8px;"><strong>[세부 항목 3]:</strong> [세부 항목 3에 대한 설명]</li>
 </ul>
 
 <div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 25px 0; font-size: 17px; line-height: 1.6; box-sizing: border-box;">
 <h3 style="font-size: 20px; color: #333; margin: 0 0 12px; font-weight: bold; line-height: 1.5;">실제 적용 사례 📝</h3>
-<p style="margin-bottom: 15px;">제가 직접 이 방법을 적용했을 때, <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">3개월 만에 80% 이상의 개선 효과</span>를 보였어요.</p>
-<p style="margin-bottom: 15px;">특히 첫 번째 달에는 큰 변화가 없어서 포기하고 싶었는데, 2개월째부터 확실한 변화가 보이기 시작했어요. 그래서 꾸준히 하는 게 정말 중요한 것 같아요.</p>
-<p>여러분도 조급해하지 마시고 차근차근 따라해보세요!</p>
+<p style="margin-bottom: 15px;">[실제 적용 사례에 대한 구체적인 이야기. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적인 결과</span>를 보여주면 좋음.]</p>
+<p style="margin-bottom: 15px;">[사례를 통해 얻은 교훈이나 인사이트 공유.]</p>
+<p>[독려 메시지]</p>
 </div>
 
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
@@ -606,21 +559,21 @@ ${mainConcept}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무�
     <tbody>
         <tr>
             <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">1단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">기초 준비 및 계획 수립</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">1-2주</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">명확한 목표 설정</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 활동 내용]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 기간]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 핵심 포인트]</td>
         </tr>
         <tr style="background-color: #f9f9f9;">
             <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">2단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">핵심 전략 적용</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">4-6주</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">꾸준한 실행</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 활동 내용]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 기간]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 핵심 포인트]</td>
         </tr>
         <tr>
             <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">3단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">결과 분석 및 개선</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">2-3주</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">데이터 기반 최적화</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 활동 내용]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 기간]</td>
+            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 핵심 포인트]</td>
         </tr>
     </tbody>
 </table>
@@ -631,19 +584,19 @@ ${mainConcept}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무�
 </h2>
 
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.warnBorder};">⚠️ 과도한 스트레스는 금물!</strong><br>
-${mainConcept} 때문에 너무 스트레스받지 마세요. 스트레스는 오히려 문제를 악화시키는 요인이 될 수 있어요. 저도 처음엔 너무 강박적으로 접근했는데, 그게 독이 되더라고요. ㅠㅠ
+<strong style="color: ${colors.warnBorder};">⚠️ [첫 번째 주의사항 제목]</strong><br>
+[첫 번째 주의사항에 대한 상세 설명. 개인적인 경험을 덧붙이면 좋음.] ㅠㅠ
 </div>
 
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.warnBorder};">⚠️ 전문가 상담이 필요한 경우!</strong><br>
-만약 일반적인 방법으로 해결되지 않거나, 다른 증상이 동반된다면 바로 전문가와 상담하는 것이 중요해요. 자가 판단으로 시간을 지체하면 상황이 악화될 수 있습니다.
+<strong style="color: ${colors.warnBorder};">⚠️ [두 번째 주의사항 제목]</strong><br>
+[두 번째 주의사항에 대한 상세 설명. 전문가의 도움이 필요한 경우를 언급.]
 </div>
 
 <div style="border-top: 1px dashed #ddd; margin: 35px 0;"></div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${mainConcept} 관리, 핵심 요약 카드!</strong> 📌
+<strong>${keyword} 관리, 핵심 요약 카드!</strong> 📌
 </h2>
 
 <style>
@@ -801,40 +754,40 @@ ${mainConcept} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 <div class="single-summary-card">
 <div class="card-header">
 <span class="card-header-icon">💡</span>
-<h3 data-ke-size="size23">${mainConcept} 관리의 핵심!</h3>
+<h3 data-ke-size="size23">${keyword} 관리의 핵심!</h3>
 </div>
 <div class="card-content">
-<div class="section"><strong>체계적인 준비:</strong> <span class="highlight">명확한 목표와 계획 수립!</span></div>
-<div class="section"><strong>단계별 실행:</strong> <span class="highlight">꾸준함이 성공의 열쇠!</span></div>
-<div class="section"><strong>올바른 방법:</strong>
-<div class="formula">검증된 방법으로 차근차근 접근하기</div>
+<div class="section"><strong>[요약 1 제목]:</strong> <span class="highlight">[요약 1 내용]</span></div>
+<div class="section"><strong>[요약 2 제목]:</strong> <span class="highlight">[요약 2 내용]</span></div>
+<div class="section"><strong>[요약 3 제목]:</strong>
+<div class="formula">[요약 3 내용]</div>
 </div>
-<div class="section"><strong>지속적인 관리:</strong> <span class="highlight">정기적인 점검과 개선!</span></div>
+<div class="section"><strong>[요약 4 제목]:</strong> <span class="highlight">[요약 4 내용]</span></div>
 </div>
-<div class="card-footer">성공적인 ${mainConcept} 관리를 위한 필수 습관!</div>
+<div class="card-footer">성공적인 ${keyword} 관리를 위한 필수 습관!</div>
 </div>
 </div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>궁금해요! ${mainConcept} Q&A</strong> ❓
+<strong>궁금해요! ${keyword} Q&A</strong> ❓
 </h2>
 
 <div style="margin: 30px 0;">
 <div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: ${mainConcept}를 시작하는데 얼마나 시간이 걸리나요?</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 개인차가 있지만 보통 기초 준비에 1-2주, 본격적인 적용에 4-6주 정도 소요됩니다. 중요한 건 꾸준히 하는 거예요!</div>
+<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [첫 번째 질문]</div>
+<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [첫 번째 답변]</div>
 </div>
 <div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: 초기 비용이 많이 드나요?</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 기본적인 것들만 있으면 시작할 수 있어요. 처음엔 무료로 할 수 있는 것들을 활용하다가 필요에 따라 단계적으로 투자하시면 됩니다.</div>
+<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [두 번째 질문]</div>
+<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [두 번째 답변]</div>
 </div>
 <div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: 혼자서도 할 수 있을까요?</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 물론이죠! 이 가이드대로 천천히 따라하시면 혼자서도 충분히 가능해요. 막히는 부분이 있으면 관련 커뮤니티나 전문가와 상담하시면 도움이 될 거예요.</div>
+<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [세 번째 질문]</div>
+<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [세 번째 답변]</div>
 </div>
 </div>
 
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">${appState.selectedTopic}에 대한 완벽한 가이드, 어떠셨나요? 제가 알려드린 팁들이 조금이나마 도움이 되셨으면 좋겠어요. 꾸준한 관심과 노력이 있다면 여러분도 ${mainConcept} 고민에서 벗어날 수 있답니다! 더 궁금한 점이 있다면 언제든 댓글로 물어봐주세요~ 😊</p>
+<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하는 문단. 독자에게 도움이 되었기를 바라는 마음을 표현하고, 추가 질문을 유도.] 😊</p>
 
 <p style="text-align: center; font-size: 18px;" data-ke-size="size16">
 <strong>이건 아직 못 봤다면, 진짜 아쉬울 수 있어요.</strong><br>
@@ -844,7 +797,39 @@ ${mainConcept} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 </div>
 
 <br><br>
-${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지털 마케팅, 온라인 비즈니스`;
+[${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5~10개 나열]
+--- HTML TEMPLATE END ---
+      `;
+
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${appState.apiKey}`;
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Google API Error:', errorData);
+        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content?.parts[0]?.text) {
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
+      }
+      
+      const htmlContent = data.candidates[0].content.parts[0].text;
 
       saveAppState({ 
         generatedContent: htmlContent,
@@ -852,14 +837,14 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
       });
       
       toast({
-        title: "SEO 최적화된 블로그 글 생성 완료",
-        description: "전문적이고 체계적인 HTML 콘텐츠가 생성되었습니다.",
+        title: "AI 기반 블로그 글 생성 완료",
+        description: "Gemini AI가 생성한 전문적인 HTML 콘텐츠가 준비되었습니다.",
       });
     } catch (error) {
       console.error('글 생성 오류:', error);
       toast({
         title: "글 생성 실패",
-        description: "블로그 글 생성 중 오류가 발생했습니다.",
+        description: error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다. API 키와 네트워크 연결을 확인해주세요.",
         variant: "destructive"
       });
     } finally {
