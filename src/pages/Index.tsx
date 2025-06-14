@@ -1078,7 +1078,6 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
               <Bot className="h-12 w-12 text-blue-600 mr-2" />
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">GenSpark 기반 자동화 콘텐츠 시스템</p>
               </div>
             </div>
           </CardHeader>
@@ -1115,9 +1114,6 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700">
               로그인
             </Button>
-            <div className="text-center text-sm text-gray-600">
-              <p>정확한 아이디와 비밀번호를 입력해주세요.</p>
-            </div>
           </CardContent>
         </Card>
       </div>
