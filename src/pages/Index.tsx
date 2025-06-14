@@ -290,47 +290,55 @@ const Index = () => {
     setIsGeneratingTopics(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const keyword = appState.keyword.trim();
       const count = appState.topicCount;
+      const prompt = `'${keyword}'를(을) 주제로, 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${count}개를 생성해 주세요. 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다. 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요. 다른 설명 없이 주제 목록만 생성해주세요.`;
 
-      // NEW: SEO-optimized, natural topic templates that simulate an API call
-      const templates = [
-        `{keyword} 완벽 정복: 초보자도 전문가로 만들어주는 가이드`,
-        `{keyword} 할 때 당신이 몰랐던 숨겨진 비밀 {count}가지`,
-        `실패 없는 {keyword}를 위한 필수 체크리스트 A to Z`,
-        `시간과 비용을 아끼는 {keyword} 실전 꿀팁 총정리`,
-        `2024년 최신 {keyword} 트렌드와 전망 분석`,
-        `{keyword}, 이것만 알면 당신도 상위 1% 전문가`,
-        `{keyword} 성공 사례 심층 분석 및 바로 적용 가능한 전략`,
-        `{keyword} 시작 전 반드시 피해야 할 치명적인 실수들`,
-        `{keyword}의 모든 것: 개념부터 실전 활용까지 한번에`,
-        `수익으로 직결되는 {keyword} 노하우 대공개`,
-        `상황별 맞춤 {keyword} 전략, 가장 효과적인 방법은?`,
-        `{keyword} 효율을 200% 높이는 마법 같은 도구들`,
-        `경쟁자를 압도하는 {keyword} 시크릿 기술`,
-        `{keyword} 때문에 스트레스 받았다면? 이 글 하나로 해결`,
-        `당신의 {keyword} 수준을 업그레이드할 전문가의 조언`,
-      ];
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${appState.apiKey}`;
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Google API Error:', errorData);
+        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
+      }
       
-      const shuffledTemplates = templates.sort(() => 0.5 - Math.random());
-      const selectedTemplates = shuffledTemplates.slice(0, count);
-
-      const newTopics = selectedTemplates.map(template => 
-        template.replace(/{keyword}/g, keyword).replace(/{count}/g, ['3', '5', '7'][Math.floor(Math.random() * 3)])
-      );
+      const data = await response.json();
+      
+      if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content?.parts[0]?.text) {
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
+      }
+      
+      const generatedText = data.candidates[0].content.parts[0].text;
+      const newTopics = generatedText
+        .split('\n')
+        .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim()) // Remove potential numbering/bullets
+        .filter(topic => topic.length > 0);
 
       saveAppState({ topics: newTopics });
       toast({
-        title: "자연스러운 SEO 최적화 주제 생성 완료",
-        description: `${newTopics.length}개의 검색 친화적 주제가 생성되었습니다.`,
+        title: "AI 기반 주제 생성 완료",
+        description: `${newTopics.length}개의 새로운 주제가 생성되었습니다.`,
       });
+
     } catch (error) {
       console.error('주제 생성 오류:', error);
       toast({
         title: "주제 생성 실패",
-        description: "주제 생성 중 오류가 발생했습니다.",
+        description: error instanceof Error ? error.message : "주제 생성 중 오류가 발생했습니다. API 키와 네트워크 연결을 확인해주세요.",
         variant: "destructive"
       });
     } finally {
