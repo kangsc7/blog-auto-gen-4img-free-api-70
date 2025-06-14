@@ -87,19 +87,10 @@ const Index = () => {
   const initializeUsers = () => {
     try {
       const existingUsers = localStorage.getItem('blog_users');
-      console.log('기존 사용자 데이터:', existingUsers);
       
       if (!existingUsers) {
         const defaultUsers: User[] = [{ id: '123', password: '123' }];
         localStorage.setItem('blog_users', JSON.stringify(defaultUsers));
-        console.log('기본 관리자 계정이 생성되었습니다.');
-      }
-      
-      const savedUsers = localStorage.getItem('blog_users');
-      console.log('저장된 사용자 데이터 확인:', savedUsers);
-      
-      if (!savedUsers) {
-        console.error('localStorage 저장에 실패했습니다. 브라우저 환경을 확인해주세요.');
       }
     } catch (error) {
       console.error('사용자 초기화 오류:', error);
@@ -138,19 +129,15 @@ const Index = () => {
   const handleLogin = () => {
     try {
       const users = JSON.parse(localStorage.getItem('blog_users') || '[]');
-      console.log('로그인 시도 - 저장된 사용자들:', users);
       
-      // 빈 입력으로 로그인 시 관리자 계정으로 자동 로그인
-      if (!loginData.id && !loginData.password) {
-        const defaultUser = users.find((user: User) => user.id === '123' && user.password === '123');
-        if (defaultUser) {
-          saveAppState({ isLoggedIn: true, currentUser: '123' });
-          toast({
-            title: "자동 로그인 성공",
-            description: "아이디와 비밀번호 없이 관리자 계정으로 로그인합니다.",
-          });
-          return;
-        }
+      // 아이디와 비밀번호 모두 입력되었는지 확인
+      if (!loginData.id || !loginData.password) {
+        toast({
+          title: "로그인 실패",
+          description: "아이디와 비밀번호를 모두 입력해주세요.",
+          variant: "destructive"
+        });
+        return;
       }
       
       const user = users.find((user: User) => user.id === loginData.id && user.password === loginData.password);
@@ -159,7 +146,7 @@ const Index = () => {
         saveAppState({ isLoggedIn: true, currentUser: user.id });
         toast({
           title: "로그인 성공",
-          description: `${user.id}님, 환영합니다!`,
+          description: "환영합니다!",
         });
       } else {
         toast({
@@ -256,102 +243,139 @@ const Index = () => {
       
       const keyword = appState.keyword.toLowerCase().trim();
       
-      // 개선된 자연스러운 주제 생성 로직
+      // 키워드별 전문적이고 자연스러운 주제 템플릿
       const topicTemplates = {
         "당뇨병": [
           "당뇨병 초기 증상과 예방 관리법",
-          "당뇨병 환자를 위한 식단 가이드",
-          "당뇨병 합병증 예방하는 방법",
+          "당뇨병 환자를 위한 올바른 식단 가이드",
+          "당뇨병 합병증 예방하는 생활습관",
           "당뇨병 혈당 관리 실전 노하우",
-          "당뇨병과 함께 건강하게 살아가기"
+          "당뇨병과 함께 건강하게 살아가는 방법"
         ],
         "블로그": [
-          "블로그 수익화 완전 가이드",
-          "성공하는 블로그 운영 전략",
-          "블로그 방문자 늘리는 SEO 방법",
+          "블로그 수익화를 위한 완전 가이드",
+          "성공하는 블로그 운영 전략과 팁",
+          "블로그 방문자 늘리는 SEO 최적화 방법",
           "블로그 콘텐츠 기획부터 작성까지",
-          "블로그로 월 100만원 버는 방법"
+          "블로그로 수익을 만드는 실전 방법"
         ],
         "투자": [
           "투자 초보를 위한 안전한 시작 가이드",
-          "2024년 주목해야 할 투자 트렌드",
-          "부동산 투자 성공 전략과 주의점",
-          "안정적인 펀드 투자 방법",
+          "2024년 주목해야 할 투자 분야",
+          "부동산 투자 성공 전략과 주의사항",
+          "안정적인 펀드 투자 방법과 선택법",
           "투자 실패를 피하는 핵심 원칙"
         ],
         "요리": [
-          "바쁜 직장인을 위한 간단 요리",
-          "건강한 다이어트 요리 레시피",
+          "바쁜 직장인을 위한 간단 요리 레시피",
+          "건강한 다이어트 요리 만들기",
           "집에서 만드는 카페 스타일 음료",
           "아이가 좋아하는 영양 만점 요리",
-          "초보자를 위한 홈베이킹 가이드"
+          "초보자를 위한 홈베이킹 시작 가이드"
         ],
         "운동": [
           "집에서 하는 효과적인 홈트레이닝",
-          "다이어트 성공을 위한 운동법",
+          "다이어트 성공을 위한 운동 방법",
           "헬스장 이용 가이드와 운동 루틴",
-          "바쁜 직장인을 위한 10분 운동",
-          "근력 운동으로 몸매 관리하기"
+          "바쁜 직장인을 위한 10분 운동법",
+          "근력 운동으로 몸매 관리하는 방법"
         ],
         "여행": [
-          "국내 숨은 여행지 추천",
-          "해외여행 경비 절약 꿀팁",
+          "국내 숨은 여행지 추천 베스트",
+          "해외여행 경비 절약하는 꿀팁",
           "혼자 떠나는 안전한 여행 가이드",
-          "가족 여행지 베스트 추천",
+          "가족 여행지 추천과 계획 세우기",
           "여행 필수품 완벽 체크리스트"
         ],
         "프로그래밍": [
-          "프로그래밍 입문자 완전 가이드",
+          "프로그래밍 입문자를 위한 완전 가이드",
           "웹개발 학습 로드맵과 순서",
           "코딩테스트 합격을 위한 알고리즘 공부법",
-          "개발자 취업 포트폴리오 만들기",
-          "실무에서 자주 사용하는 개발 도구"
+          "개발자 취업을 위한 포트폴리오 만들기",
+          "실무에서 자주 사용하는 개발 도구들"
         ],
         "마케팅": [
-          "소상공인을 위한 디지털 마케팅",
-          "SNS 마케팅으로 고객 늘리기",
+          "소상공인을 위한 디지털 마케팅 전략",
+          "SNS 마케팅으로 고객 늘리는 방법",
           "브랜딩 성공 사례와 핵심 전략",
-          "온라인 광고 효과 극대화 방법",
+          "온라인 광고 효과 극대화하는 방법",
           "바이럴 마케팅의 성공 비결"
         ],
         "부동산": [
-          "내 집 마련을 위한 부동산 투자",
-          "전세와 월세 선택 가이드",
-          "부동산 중개수수료 절약 방법",
-          "아파트 매매 시 체크포인트",
-          "부동산 대출 조건과 금리 비교"
+          "내 집 마련을 위한 부동산 투자 가이드",
+          "전세와 월세 선택 기준과 가이드",
+          "부동산 중개수수료 절약하는 방법",
+          "아파트 매매 시 체크해야 할 포인트",
+          "부동산 대출 조건과 금리 비교법"
         ],
         "건강": [
-          "면역력 높이는 생활 습관",
-          "올바른 다이어트와 건강 관리",
-          "스트레스 해소 효과적인 방법",
+          "면역력 높이는 생활 습관과 방법",
+          "올바른 다이어트와 건강 관리법",
+          "스트레스 해소에 효과적인 방법들",
           "건강한 수면을 위한 실천법",
           "중년 건강관리 필수 체크리스트"
+        ],
+        "사랑": [
+          "연인과의 관계 개선하는 방법",
+          "건강한 연애를 위한 소통 기술",
+          "사랑을 표현하는 다양한 방법들",
+          "연애 갈등 해결을 위한 실용적 조언",
+          "오래가는 연애 관계 유지 비결"
         ]
       };
 
-      // 자연스러운 동적 주제 생성 함수
-      const generateNaturalTopics = (keyword: string, count: number) => {
+      // 키워드에 맞는 자연스러운 주제 생성 함수
+      const generateContextualTopics = (keyword: string, count: number) => {
         const topics = [];
         
-        // 다양한 자연스러운 주제 패턴
-        const patterns = [
+        // 키워드별 맞춤형 패턴
+        const contextualPatterns = {
+          "사랑": [
+            `${keyword}을 표현하는 특별한 방법`,
+            `${keyword}하는 사람과의 관계 발전시키기`,
+            `진정한 ${keyword}의 의미와 표현법`,
+            `${keyword}받는 사람이 되는 방법`,
+            `${keyword}을 오래 지속시키는 비결`
+          ],
+          "고백": [
+            `성공하는 ${keyword} 방법과 타이밍`,
+            `${keyword} 전 준비해야 할 것들`,
+            `상황별 ${keyword} 메시지 작성법`,
+            `${keyword} 후 관계 발전시키는 방법`,
+            `${keyword} 실패를 극복하는 방법`
+          ],
+          "데이트": [
+            `완벽한 첫 ${keyword} 계획 세우기`,
+            `${keyword} 장소 추천과 선택 가이드`,
+            `${keyword} 중 피해야 할 실수들`,
+            `기념일 ${keyword} 아이디어와 준비법`,
+            `${keyword} 비용 절약하는 스마트한 방법`
+          ],
+          "결혼": [
+            `${keyword} 준비 완벽 가이드와 체크리스트`,
+            `행복한 ${keyword} 생활을 위한 조언`,
+            `${keyword} 비용 절약하는 현실적 방법`,
+            `${keyword} 전 꼭 알아야 할 것들`,
+            `성공적인 ${keyword} 준비 단계별 가이드`
+          ]
+        };
+        
+        // 기본 패턴 (모든 키워드에 적용 가능)
+        const universalPatterns = [
           `${keyword} 완전 정복 가이드`,
-          `${keyword} 성공 비결과 실전 팁`,
-          `${keyword} 초보자도 쉽게 따라하는 방법`,
-          `${keyword} 전문가가 알려주는 핵심 노하우`,
-          `${keyword} 실패하지 않는 선택 가이드`,
+          `${keyword} 성공하는 실전 방법`,
+          `${keyword} 초보자를 위한 단계별 가이드`,
+          `${keyword} 전문가가 알려주는 노하우`,
+          `${keyword} 실패하지 않는 선택법`,
           `${keyword} 체계적으로 접근하는 방법`,
           `${keyword} 효과적인 관리와 활용법`,
-          `${keyword} 단계별 실행 전략`,
-          `${keyword} 알아두면 유용한 꿀팁`,
-          `${keyword} 현명한 선택을 위한 가이드`,
-          `${keyword} 제대로 알고 시작하기`,
-          `${keyword} 성공 사례와 학습 포인트`,
+          `${keyword} 성공 사례와 배울 점`,
           `${keyword} 기초부터 응용까지`,
-          `${keyword} 실전에서 바로 쓰는 방법`,
-          `${keyword} 트렌드와 미래 전망`
+          `${keyword} 실전에서 바로 쓰는 팁`
         ];
+        
+        // 맞춤형 패턴이 있는 경우 우선 사용
+        const patterns = contextualPatterns[keyword] || universalPatterns;
         
         // 패턴을 섞어서 중복 없이 선택
         const shuffled = patterns.sort(() => 0.5 - Math.random());
@@ -369,14 +393,14 @@ const Index = () => {
       if (topicTemplates[keyword]) {
         topics = topicTemplates[keyword].slice(0, appState.topicCount);
         
-        // 요청한 개수가 더 많으면 자연스러운 추가 주제 생성
+        // 요청한 개수가 더 많으면 맞춤형 추가 주제 생성
         if (appState.topicCount > topics.length) {
-          const additionalTopics = generateNaturalTopics(appState.keyword, appState.topicCount - topics.length);
+          const additionalTopics = generateContextualTopics(appState.keyword, appState.topicCount - topics.length);
           topics = [...topics, ...additionalTopics];
         }
       } else {
-        // 일반적인 키워드인 경우 자연스러운 주제 생성
-        topics = generateNaturalTopics(appState.keyword, appState.topicCount);
+        // 일반적인 키워드인 경우 맞춤형 주제 생성
+        topics = generateContextualTopics(appState.keyword, appState.topicCount);
       }
 
       saveAppState({ topics });
@@ -490,14 +514,80 @@ const Index = () => {
       const colors = getColors(selectedColorTheme);
       const refLink = appState.referenceLink || 'https://worldpis.com';
       
-      const extractKeyword = (topic: string) => {
-        const keywords = topic.split(' ').filter(word => 
-          !['방법', '가이드', '팁', '노하우', '비법', '전략', '완벽', '최고', '효과적인', '성공하는', '실전'].includes(word)
-        );
-        return keywords[0] || appState.keyword;
+      // 개선된 키워드 추출 함수 - 주제의 핵심 개념을 더 정확하게 파악
+      const extractMainConcept = (topic: string) => {
+        // 주제에서 핵심 개념을 추출하는 규칙들
+        const conceptPatterns = [
+          // 명사형 개념들
+          { pattern: /(\w+) (완전|성공|실전|효과적인|안전한|올바른|건강한|체계적인)/, extract: 1 },
+          { pattern: /(\w+)을? (표현|관리|예방|개선|해결|선택|활용)/, extract: 1 },
+          { pattern: /(\w+)를? (위한|통한|이용한)/, extract: 1 },
+          { pattern: /(\w+) (방법|가이드|전략|노하우|팁|기술|비결)/, extract: 1 },
+          { pattern: /(\w+) (초보자|입문자|환자)/, extract: 1 },
+          // 동사형 개념들
+          { pattern: /(투자|요리|운동|여행|학습|마케팅) /, extract: 1 },
+          // 복합 개념들
+          { pattern: /(부동산 투자|홈트레이닝|다이어트|프로그래밍|블로그 운영)/, extract: 1 }
+        ];
+
+        for (const { pattern, extract } of conceptPatterns) {
+          const match = topic.match(pattern);
+          if (match && match[extract]) {
+            return match[extract];
+          }
+        }
+        
+        // 패턴에 매칭되지 않으면 원래 키워드 사용
+        return appState.keyword;
       };
       
-      const mainKeyword = extractKeyword(appState.selectedTopic);
+      const mainConcept = extractMainConcept(appState.selectedTopic);
+      
+      // 개념별 맞춤형 문구 생성
+      const getConceptualIntro = (concept: string, topic: string) => {
+        const introPatterns = {
+          "투자": `${concept} 때문에 고민이시죠?`,
+          "다이어트": `${concept} 때문에 스트레스받고 계시나요?`,
+          "요리": `${concept}가 어려우시다고요?`,
+          "운동": `${concept}을 시작하고 싶으신가요?`,
+          "여행": `${concept} 계획 때문에 고민이시죠?`,
+          "프로그래밍": `${concept} 학습이 막막하신가요?`,
+          "블로그": `${concept} 운영이 어려우신가요?`,
+          "마케팅": `${concept} 전략 때문에 고민이시죠?`,
+          "부동산": `${concept} 때문에 고민이시나요?`,
+          "건강": `${concept} 관리가 어려우신가요?`,
+          "사랑": `${concept} 때문에 고민이시나요?`,
+          "고백": `${concept}을 어떻게 해야 할지 모르겠다고요?`,
+          "데이트": `${concept} 준비 때문에 스트레스받고 계시나요?`,
+          "결혼": `${concept} 준비가 막막하신가요?`
+        };
+        
+        return introPatterns[concept] || `${concept} 때문에 고민이시죠?`;
+      };
+
+      const getConceptualH2Title = (concept: string) => {
+        const h2Patterns = {
+          "투자": `${concept}, 왜 중요할까요? 기초 지식부터!`,
+          "다이어트": `${concept}, 왜 실패할까요? 원인 분석부터!`,
+          "요리": `${concept}, 왜 어려울까요? 기본기부터!`,
+          "운동": `${concept}, 왜 중요할까요? 효과 파악부터!`,
+          "여행": `${concept}, 왜 계획이 중요할까요? 준비부터!`,
+          "프로그래밍": `${concept}, 왜 어려울까요? 기초 이해부터!`,
+          "블로그": `${concept}, 왜 중요할까요? 전략 수립부터!`,
+          "마케팅": `${concept}, 왜 필요할까요? 목적 파악부터!`,
+          "부동산": `${concept}, 왜 신중해야 할까요? 시장 이해부터!`,
+          "건강": `${concept}, 왜 중요할까요? 기본 원리부터!`,
+          "사랑": `${concept}, 왜 어려울까요? 마음 이해부터!`,
+          "고백": `${concept}, 왜 떨릴까요? 준비 과정부터!`,
+          "데이트": `${concept}, 왜 긴장될까요? 계획 세우기부터!`,
+          "결혼": `${concept}, 왜 신중해야 할까요? 준비 과정부터!`
+        };
+        
+        return h2Patterns[concept] || `${concept}, 왜 중요할까요? 원리 파악부터!`;
+      };
+      
+      const conceptualIntro = getConceptualIntro(mainConcept, appState.selectedTopic);
+      const conceptualH2 = getConceptualH2Title(mainConcept);
       
       const htmlContent = `<div>
 <style>
@@ -515,15 +605,15 @@ const Index = () => {
 <h3 style="font-size: 28px; color: #333; margin-top: 25px; margin-bottom: 20px; text-align: center; line-height: 1.4;" data-ke-size="size23">${appState.selectedTopic}</h3>
 
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
-<strong>${mainKeyword} 때문에 고민이시죠?</strong> ${appState.selectedTopic}에 대한 완벽한 가이드를 통해 누구나 쉽게 따라할 수 있는 실전 노하우를 소개해드립니다.
+<strong>${conceptualIntro}</strong> ${appState.selectedTopic}에 대한 완벽한 가이드를 통해 누구나 쉽게 따라할 수 있는 실전 노하우를 소개해드립니다.
 </div>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">안녕하세요! 저도 ${mainKeyword}와 관련해서 정말 많은 시행착오를 겪었는데요. 처음엔 어디서부터 시작해야 할지 막막했거든요. 😥 하지만 지금은 저만의 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">${mainKeyword} 노하우</span>가 생겼답니다!</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">안녕하세요! 저도 ${mainConcept}와 관련해서 정말 많은 시행착오를 겪었는데요. 처음엔 어디서부터 시작해야 할지 막막했거든요. 😥 하지만 지금은 저만의 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">${mainConcept} 노하우</span>가 생겼답니다!</p>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">실제로 제가 경험해보고 검증한 방법들만 골라서 정리했으니까, 바로 적용해볼 수 있는 내용들이에요. 특히 초보자분들도 쉽게 따라할 수 있도록 단계별로 자세히 설명드릴게요! 이 글을 통해 여러분도 ${mainKeyword} 스트레스에서 벗어나 더욱 만족스러운 결과를 얻으실 수 있을 거예요. 😊</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">실제로 제가 경험해보고 검증한 방법들만 골라서 정리했으니까, 바로 적용해볼 수 있는 내용들이에요. 특히 초보자분들도 쉽게 따라할 수 있도록 단계별로 자세히 설명드릴게요! 이 글을 통해 여러분도 ${mainConcept} 스트레스에서 벗어나 더욱 만족스러운 결과를 얻으실 수 있을 거예요. 😊</p>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${mainKeyword}, 왜 중요할까요? 원인 파악부터!</strong> 💡
+<strong>${conceptualH2}</strong> 💡
 </h2>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">${appState.selectedTopic}와 관련된 문제는 사실 아주 흔한 일이에요. 많은 분들이 비슷한 고민을 갖고 계시죠. 특히 이런 분들에게는 더욱 중요합니다:</p>
@@ -535,15 +625,15 @@ const Index = () => {
 <li style="margin-bottom: 8px;">체계적이고 검증된 방법을 찾고 계신 분</li>
 </ul>
 
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">하지만 ${mainKeyword}가 갑자기 문제가 되거나, 스트레스, 환경 변화 등 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">다른 요인</span>으로 인해 발생하는 경우도 있어요. 저도 한번은 스트레스로 인해 어려움을 겪었던 기억이 나네요. 🥺 그래서 단순히 문제라고 생각하기보다, 혹시 다른 원인이 있는 건 아닌지 세심히 살펴보는 게 중요합니다.</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">하지만 ${mainConcept}가 갑자기 문제가 되거나, 스트레스, 환경 변화 등 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">다른 요인</span>으로 인해 발생하는 경우도 있어요. 저도 한번은 스트레스로 인해 어려움을 겪었던 기억이 나네요. 🥺 그래서 단순히 문제라고 생각하기보다, 혹시 다른 원인이 있는 건 아닌지 세심히 살펴보는 게 중요합니다.</p>
 
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
 <strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>
-${mainKeyword}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무작정 시작하기보다는 체계적으로 접근하는 것이 성공의 열쇠입니다.
+${mainConcept}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무작정 시작하기보다는 체계적으로 접근하는 것이 성공의 열쇠입니다.
 </div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${mainKeyword} 핵심 실전 가이드!</strong> 📝
+<strong>${mainConcept} 핵심 실전 가이드!</strong> 📝
 </h2>
 
 <div style="margin-top: 20px;"></div>
@@ -616,7 +706,7 @@ ${mainKeyword}의 핵심은 올바른 순서와 꾸준한 실행이에요. 무�
 
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
 <strong style="color: ${colors.warnBorder};">⚠️ 과도한 스트레스는 금물!</strong><br>
-${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 오히려 문제를 악화시키는 요인이 될 수 있어요. 저도 처음엔 너무 강박적으로 접근했는데, 그게 독이 되더라고요. ㅠㅠ
+${mainConcept} 때문에 너무 스트레스받지 마세요. 스트레스는 오히려 문제를 악화시키는 요인이 될 수 있어요. 저도 처음엔 너무 강박적으로 접근했는데, 그게 독이 되더라고요. ㅠㅠ
 </div>
 
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
@@ -627,7 +717,7 @@ ${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 <div style="border-top: 1px dashed #ddd; margin: 35px 0;"></div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${mainKeyword} 관리, 핵심 요약 카드!</strong> 📌
+<strong>${mainConcept} 관리, 핵심 요약 카드!</strong> 📌
 </h2>
 
 <style>
@@ -785,7 +875,7 @@ ${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 <div class="single-summary-card">
 <div class="card-header">
 <span class="card-header-icon">💡</span>
-<h3 data-ke-size="size23">${mainKeyword} 관리의 핵심!</h3>
+<h3 data-ke-size="size23">${mainConcept} 관리의 핵심!</h3>
 </div>
 <div class="card-content">
 <div class="section"><strong>체계적인 준비:</strong> <span class="highlight">명확한 목표와 계획 수립!</span></div>
@@ -795,17 +885,17 @@ ${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 </div>
 <div class="section"><strong>지속적인 관리:</strong> <span class="highlight">정기적인 점검과 개선!</span></div>
 </div>
-<div class="card-footer">성공적인 ${mainKeyword} 관리를 위한 필수 습관!</div>
+<div class="card-footer">성공적인 ${mainConcept} 관리를 위한 필수 습관!</div>
 </div>
 </div>
 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>궁금해요! ${mainKeyword} Q&A</strong> ❓
+<strong>궁금해요! ${mainConcept} Q&A</strong> ❓
 </h2>
 
 <div style="margin: 30px 0;">
 <div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: ${mainKeyword}를 시작하는데 얼마나 시간이 걸리나요?</div>
+<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: ${mainConcept}를 시작하는데 얼마나 시간이 걸리나요?</div>
 <div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: 개인차가 있지만 보통 기초 준비에 1-2주, 본격적인 적용에 4-6주 정도 소요됩니다. 중요한 건 꾸준히 하는 거예요!</div>
 </div>
 <div style="margin-bottom: 22px;">
@@ -818,7 +908,7 @@ ${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 </div>
 </div>
 
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">${appState.selectedTopic}에 대한 완벽한 가이드, 어떠셨나요? 제가 알려드린 팁들이 조금이나마 도움이 되셨으면 좋겠어요. 꾸준한 관심과 노력이 있다면 여러분도 ${mainKeyword} 고민에서 벗어날 수 있답니다! 더 궁금한 점이 있다면 언제든 댓글로 물어봐주세요~ 😊</p>
+<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">${appState.selectedTopic}에 대한 완벽한 가이드, 어떠셨나요? 제가 알려드린 팁들이 조금이나마 도움이 되셨으면 좋겠어요. 꾸준한 관심과 노력이 있다면 여러분도 ${mainConcept} 고민에서 벗어날 수 있답니다! 더 궁금한 점이 있다면 언제든 댓글로 물어봐주세요~ 😊</p>
 
 <p style="text-align: center; font-size: 18px;" data-ke-size="size16">
 <strong>이건 아직 못 봤다면, 진짜 아쉬울 수 있어요.</strong><br>
@@ -828,7 +918,7 @@ ${mainKeyword} 때문에 너무 스트레스받지 마세요. 스트레스는 �
 </div>
 
 <br><br>
-${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지털 마케팅, 온라인 비즈니스`;
+${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최적화, 디지털 마케팅, 온라인 비즈니스`;
 
       saveAppState({ 
         generatedContent: htmlContent,
@@ -1026,8 +1116,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
               로그인
             </Button>
             <div className="text-center text-sm text-gray-600">
-              <p>관리자 계정: 아이디 <strong>123</strong>, 비밀번호 <strong>123</strong></p>
-              <p className="text-xs text-gray-500 mt-1">빈 입력으로 로그인하면 관리자 계정으로 자동 로그인됩니다.</p>
+              <p>정확한 아이디와 비밀번호를 입력해주세요.</p>
             </div>
           </CardContent>
         </Card>
@@ -1048,7 +1137,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">사용자: {appState.currentUser} (관리자)</span>
+            <span className="text-sm text-gray-600">사용자: {appState.currentUser}</span>
             <span className="text-sm text-gray-500">로그인 시간: {new Date().toLocaleString('ko-KR')}</span>
             <Button onClick={resetApp} variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-50">
               <RefreshCw className="h-4 w-4 mr-1" />
@@ -1104,8 +1193,8 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* 왼쪽 컬럼 - 3/12 비율로 더 축소 */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* 왼쪽 컬럼 - 4/12 비율 */}
+        <div className="lg:col-span-4 space-y-6">
           {/* 1. 주제 생성 */}
           <Card className="shadow-md">
             <CardHeader>
@@ -1277,7 +1366,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </CardContent>
           </Card>
 
-          {/* 이미지 프롬프트 - 3. 이미지 생성 바로 아래로 이동 */}
+          {/* 이미지 프롬프트 - 3. 이미지 생성 바로 아래 */}
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center text-pink-700">
@@ -1317,7 +1406,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </CardContent>
           </Card>
 
-          {/* API 및 링크 설정 */}
+          {/* API 키 설정 */}
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center text-gray-700">
@@ -1362,8 +1451,8 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
           </Card>
         </div>
 
-        {/* 오른쪽 컬럼 - 9/12 비율로 더 확대 */}
-        <div className="lg:col-span-9 space-y-6">
+        {/* 오른쪽 컬럼 - 8/12 비율 */}
+        <div className="lg:col-span-8 space-y-6">
           {/* 생성된 주제 목록 */}
           <Card className="shadow-md">
             <CardHeader>
@@ -1436,7 +1525,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </CardHeader>
             <CardContent>
               {appState.generatedContent ? (
-                <div className="border p-4 rounded bg-gray-50 overflow-y-auto" style={{ minHeight: '600px' }}>
+                <div className="border p-4 rounded bg-gray-50 overflow-y-auto max-h-screen">
                   <div dangerouslySetInnerHTML={{ __html: appState.generatedContent }} />
                 </div>
               ) : (
