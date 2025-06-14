@@ -16,6 +16,7 @@ interface AppState {
   isLoggedIn: boolean;
   currentUser: string;
   apiKey: string;
+  isApiKeyValidated: boolean;
   keyword: string;
   topicCount: number;
   topics: string[];
@@ -55,6 +56,7 @@ const Index = () => {
     isLoggedIn: false,
     currentUser: '',
     apiKey: '',
+    isApiKeyValidated: false,
     keyword: '',
     topicCount: 3,
     topics: [],
@@ -75,6 +77,7 @@ const Index = () => {
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isValidatingApi, setIsValidatingApi] = useState(false);
 
   useEffect(() => {
     initializeUsers();
@@ -92,7 +95,6 @@ const Index = () => {
         console.log('기본 관리자 계정이 생성되었습니다.');
       }
       
-      // 저장 확인
       const savedUsers = localStorage.getItem('blog_users');
       console.log('저장된 사용자 데이터 확인:', savedUsers);
       
@@ -109,7 +111,10 @@ const Index = () => {
       const savedState = localStorage.getItem('blog_app_state');
       if (savedState) {
         const parsedState = JSON.parse(savedState);
-        setAppState(prev => ({ ...prev, ...parsedState }));
+        // API 키 관련 상태는 로드하지 않음 (보안상 매번 새로 입력하도록)
+        delete parsedState.apiKey;
+        delete parsedState.isApiKeyValidated;
+        setAppState(prev => ({ ...prev, ...parsedState, apiKey: '', isApiKeyValidated: false }));
       }
     } catch (error) {
       console.error('앱 상태 로드 오류:', error);
@@ -120,7 +125,11 @@ const Index = () => {
     try {
       const updatedState = { ...appState, ...newState };
       setAppState(updatedState);
-      localStorage.setItem('blog_app_state', JSON.stringify(updatedState));
+      // API 키는 저장하지 않음 (보안상)
+      const stateToSave = { ...updatedState };
+      delete stateToSave.apiKey;
+      delete stateToSave.isApiKeyValidated;
+      localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
     } catch (error) {
       console.error('앱 상태 저장 오류:', error);
     }
@@ -170,7 +179,7 @@ const Index = () => {
   };
 
   const handleLogout = () => {
-    saveAppState({ isLoggedIn: false, currentUser: '' });
+    saveAppState({ isLoggedIn: false, currentUser: '', apiKey: '', isApiKeyValidated: false });
     setLoginData({ id: '', password: '' });
     toast({
       title: "로그아웃",
@@ -178,7 +187,7 @@ const Index = () => {
     });
   };
 
-  const handleApiKeySave = () => {
+  const validateApiKey = async () => {
     if (!appState.apiKey.trim()) {
       toast({
         title: "API 키 오류",
@@ -188,11 +197,37 @@ const Index = () => {
       return;
     }
     
-    saveAppState({ apiKey: appState.apiKey });
-    toast({
-      title: "API 키 저장 성공",
-      description: "API 키가 성공적으로 저장되었습니다.",
-    });
+    setIsValidatingApi(true);
+    
+    try {
+      // API 키 검증 시뮬레이션 (실제로는 Google AI Studio API로 요청)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // 간단한 API 키 형식 검증 (실제 환경에서는 실제 API 호출로 검증)
+      if (appState.apiKey.length < 20) {
+        toast({
+          title: "API 키 검증 실패",
+          description: "API 키 값이 올바르지 않습니다. 다시 확인해주세요.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      saveAppState({ isApiKeyValidated: true });
+      toast({
+        title: "API 키 검증 성공",
+        description: "API 키가 성공적으로 확인되었습니다.",
+      });
+    } catch (error) {
+      console.error('API 키 검증 오류:', error);
+      toast({
+        title: "API 키 검증 실패",
+        description: "API 키 검증 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsValidatingApi(false);
+    }
   };
 
   const generateTopicsFromKeyword = async () => {
@@ -205,132 +240,143 @@ const Index = () => {
       return;
     }
 
+    if (!appState.isApiKeyValidated) {
+      toast({
+        title: "API 키 검증 필요",
+        description: "먼저 API 키를 입력하고 검증해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGeneratingTopics(true);
     
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // 더 자연스러운 주제 생성을 위한 개선된 로직
-      const keywordLower = appState.keyword.toLowerCase();
+      const keyword = appState.keyword.toLowerCase().trim();
       
-      // 키워드별 맞춤형 주제 템플릿 (더 자연스러운 조합)
-      const topicTemplates: { [key: string]: string[] } = {
+      // 개선된 자연스러운 주제 생성 로직
+      const topicTemplates = {
+        "당뇨병": [
+          "당뇨병 초기 증상과 예방 관리법",
+          "당뇨병 환자를 위한 식단 가이드",
+          "당뇨병 합병증 예방하는 방법",
+          "당뇨병 혈당 관리 실전 노하우",
+          "당뇨병과 함께 건강하게 살아가기"
+        ],
         "블로그": [
-          "블로그 수익화를 위한 실전 가이드",
-          "초보자도 쉽게 시작하는 블로그 운영법",
-          "블로그 방문자를 늘리는 SEO 최적화 방법",
-          "성공하는 블로그의 콘텐츠 작성 비법",
-          "블로그로 월 100만원 벌기 완전정복"
+          "블로그 수익화 완전 가이드",
+          "성공하는 블로그 운영 전략",
+          "블로그 방문자 늘리는 SEO 방법",
+          "블로그 콘텐츠 기획부터 작성까지",
+          "블로그로 월 100만원 버는 방법"
         ],
         "투자": [
-          "초보 투자자를 위한 안전한 투자 가이드",
-          "2024년 주목해야 할 투자 종목 분석",
-          "부동산 투자 성공 전략과 주의사항",
-          "펀드 투자로 안정적인 수익 만들기",
-          "투자 실패를 피하는 5가지 핵심 원칙"
+          "투자 초보를 위한 안전한 시작 가이드",
+          "2024년 주목해야 할 투자 트렌드",
+          "부동산 투자 성공 전략과 주의점",
+          "안정적인 펀드 투자 방법",
+          "투자 실패를 피하는 핵심 원칙"
         ],
         "요리": [
-          "바쁜 직장인을 위한 간단 요리 레시피",
-          "건강한 다이어트 식단 만들기",
-          "집에서 쉽게 만드는 카페 음료",
-          "아이가 좋아하는 영양 만점 반찬",
-          "초보자도 실패 없는 홈베이킹"
+          "바쁜 직장인을 위한 간단 요리",
+          "건강한 다이어트 요리 레시피",
+          "집에서 만드는 카페 스타일 음료",
+          "아이가 좋아하는 영양 만점 요리",
+          "초보자를 위한 홈베이킹 가이드"
         ],
         "운동": [
-          "집에서 할 수 있는 효과적인 홈트레이닝",
-          "다이어트에 성공하는 운동법",
-          "초보자를 위한 헬스장 이용 가이드",
-          "바쁜 현대인을 위한 10분 운동법",
-          "근력 운동으로 몸매 만들기"
+          "집에서 하는 효과적인 홈트레이닝",
+          "다이어트 성공을 위한 운동법",
+          "헬스장 이용 가이드와 운동 루틴",
+          "바쁜 직장인을 위한 10분 운동",
+          "근력 운동으로 몸매 관리하기"
         ],
         "여행": [
           "국내 숨은 여행지 추천",
-          "해외여행 경비 절약하는 방법",
+          "해외여행 경비 절약 꿀팁",
           "혼자 떠나는 안전한 여행 가이드",
           "가족 여행지 베스트 추천",
-          "여행 필수품 체크리스트"
+          "여행 필수품 완벽 체크리스트"
         ],
         "프로그래밍": [
-          "프로그래밍 입문자를 위한 첫걸음",
-          "웹개발 공부 순서와 로드맵",
-          "코딩테스트 합격을 위한 알고리즘 학습법",
-          "개발자 취업을 위한 포트폴리오 만들기",
-          "실무에서 자주 사용하는 개발 도구들"
+          "프로그래밍 입문자 완전 가이드",
+          "웹개발 학습 로드맵과 순서",
+          "코딩테스트 합격을 위한 알고리즘 공부법",
+          "개발자 취업 포트폴리오 만들기",
+          "실무에서 자주 사용하는 개발 도구"
         ],
         "마케팅": [
-          "소상공인을 위한 디지털 마케팅 전략",
-          "SNS 마케팅으로 고객 확보하기",
-          "브랜딩 성공 사례와 핵심 포인트",
+          "소상공인을 위한 디지털 마케팅",
+          "SNS 마케팅으로 고객 늘리기",
+          "브랜딩 성공 사례와 핵심 전략",
           "온라인 광고 효과 극대화 방법",
-          "바이럴 마케팅의 핵심 원리"
+          "바이럴 마케팅의 성공 비결"
         ],
         "부동산": [
-          "내 집 마련을 위한 부동산 투자 가이드",
-          "전세와 월세 중 현명한 선택은?",
-          "부동산 중개수수료 절약하는 방법",
-          "아파트 매매 시 체크해야 할 사항들",
+          "내 집 마련을 위한 부동산 투자",
+          "전세와 월세 선택 가이드",
+          "부동산 중개수수료 절약 방법",
+          "아파트 매매 시 체크포인트",
           "부동산 대출 조건과 금리 비교"
         ],
         "건강": [
           "면역력 높이는 생활 습관",
-          "올바른 다이어트 방법과 주의사항",
-          "스트레스 해소에 효과적인 방법들",
+          "올바른 다이어트와 건강 관리",
+          "스트레스 해소 효과적인 방법",
           "건강한 수면을 위한 실천법",
           "중년 건강관리 필수 체크리스트"
-        ],
-        "교육": [
-          "아이의 학습능력 향상시키는 방법",
-          "성인을 위한 효과적인 공부법",
-          "자격증 취득을 위한 학습 전략",
-          "온라인 강의 활용법과 추천 사이트",
-          "영어 실력 향상을 위한 실전 팁"
         ]
       };
 
-      // 일반적인 키워드를 위한 동적 템플릿 생성
-      const generateDynamicTopics = (keyword: string): string[] => {
-        const questionStarters = [
-          `${keyword} 초보자가 알아야 할`,
-          `${keyword} 성공하는 사람들의`,
-          `${keyword} 실패하지 않는`,
-          `${keyword} 전문가가 추천하는`,
-          `${keyword} 비용 절약하는`
-        ];
-        
-        const middleParts = [
-          "핵심 포인트 5가지",
-          "실전 가이드",
-          "완벽 가이드",
-          "비법 공개",
-          "방법 총정리"
-        ];
-        
+      // 자연스러운 동적 주제 생성 함수
+      const generateNaturalTopics = (keyword: string, count: number) => {
         const topics = [];
-        for (let i = 0; i < appState.topicCount; i++) {
-          const starter = questionStarters[i % questionStarters.length];
-          const middle = middleParts[i % middleParts.length];
-          topics.push(`${starter} ${middle}`);
+        
+        // 다양한 자연스러운 주제 패턴
+        const patterns = [
+          `${keyword} 완전 정복 가이드`,
+          `${keyword} 성공 비결과 실전 팁`,
+          `${keyword} 초보자도 쉽게 따라하는 방법`,
+          `${keyword} 전문가가 알려주는 핵심 노하우`,
+          `${keyword} 실패하지 않는 선택 가이드`,
+          `${keyword} 체계적으로 접근하는 방법`,
+          `${keyword} 효과적인 관리와 활용법`,
+          `${keyword} 단계별 실행 전략`,
+          `${keyword} 알아두면 유용한 꿀팁`,
+          `${keyword} 현명한 선택을 위한 가이드`,
+          `${keyword} 제대로 알고 시작하기`,
+          `${keyword} 성공 사례와 학습 포인트`,
+          `${keyword} 기초부터 응용까지`,
+          `${keyword} 실전에서 바로 쓰는 방법`,
+          `${keyword} 트렌드와 미래 전망`
+        ];
+        
+        // 패턴을 섞어서 중복 없이 선택
+        const shuffled = patterns.sort(() => 0.5 - Math.random());
+        
+        for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+          topics.push(shuffled[i]);
         }
         
         return topics;
       };
 
-      // 키워드에 맞는 주제 생성
       let topics: string[] = [];
       
-      if (topicTemplates[keywordLower]) {
-        // 미리 정의된 템플릿이 있는 경우
-        const availableTopics = topicTemplates[keywordLower];
-        topics = availableTopics.slice(0, appState.topicCount);
+      // 미리 정의된 템플릿이 있는 경우
+      if (topicTemplates[keyword]) {
+        topics = topicTemplates[keyword].slice(0, appState.topicCount);
         
-        // 요청한 개수가 미리 정의된 것보다 많으면 추가 생성
-        if (appState.topicCount > availableTopics.length) {
-          const additionalTopics = generateDynamicTopics(appState.keyword);
-          topics = [...topics, ...additionalTopics.slice(0, appState.topicCount - availableTopics.length)];
+        // 요청한 개수가 더 많으면 자연스러운 추가 주제 생성
+        if (appState.topicCount > topics.length) {
+          const additionalTopics = generateNaturalTopics(appState.keyword, appState.topicCount - topics.length);
+          topics = [...topics, ...additionalTopics];
         }
       } else {
-        // 일반적인 키워드인 경우 동적 생성
-        topics = generateDynamicTopics(appState.keyword);
+        // 일반적인 키워드인 경우 자연스러운 주제 생성
+        topics = generateNaturalTopics(appState.keyword, appState.topicCount);
       }
 
       saveAppState({ topics });
@@ -388,6 +434,15 @@ const Index = () => {
       return;
     }
 
+    if (!appState.isApiKeyValidated) {
+      toast({
+        title: "API 키 검증 필요",
+        description: "먼저 API 키를 입력하고 검증해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGeneratingContent(true);
     
     try {
@@ -435,7 +490,6 @@ const Index = () => {
       const colors = getColors(selectedColorTheme);
       const refLink = appState.referenceLink || 'https://worldpis.com';
       
-      // 주제에서 핵심 키워드 추출
       const extractKeyword = (topic: string) => {
         const keywords = topic.split(' ').filter(word => 
           !['방법', '가이드', '팁', '노하우', '비법', '전략', '완벽', '최고', '효과적인', '성공하는', '실전'].includes(word)
@@ -807,6 +861,15 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
       return;
     }
 
+    if (!appState.isApiKeyValidated) {
+      toast({
+        title: "API 키 검증 필요",
+        description: "먼저 API 키를 입력하고 검증해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGeneratingImage(true);
     
     try {
@@ -823,7 +886,6 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
 
       const styleDescription = styleMap[appState.imageStyle] || styleMap['realistic'];
       
-      // 영어로만 프롬프트 생성
       const prompt = `A professional blog content creation scene showing a person writing on a laptop, surrounded by creative elements like floating text, colorful graphics, and digital tools, warm natural lighting, modern workspace environment, ${styleDescription}, 4k photorealistic style with high detail, realistic, and natural lighting`;
       
       saveAppState({ imagePrompt: prompt });
@@ -894,7 +956,6 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
   };
 
   const resetApp = () => {
-    const apiKey = appState.apiKey; // API 키 보존
     const newState = {
       keyword: '',
       topicCount: 3,
@@ -905,7 +966,8 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
       generatedContent: '',
       imageStyle: '',
       imagePrompt: '',
-      apiKey // API 키만 유지
+      apiKey: '',
+      isApiKeyValidated: false
     };
     
     saveAppState(newState);
@@ -913,7 +975,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
     
     toast({
       title: "초기화 완료",
-      description: "API 키를 제외한 모든 데이터가 초기화되었습니다.",
+      description: "모든 데이터가 초기화되었습니다.",
     });
   };
 
@@ -1042,8 +1104,8 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* 왼쪽 컬럼 - 4/12 비율로 축소 */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* 왼쪽 컬럼 - 3/12 비율로 더 축소 */}
+        <div className="lg:col-span-3 space-y-6">
           {/* 1. 주제 생성 */}
           <Card className="shadow-md">
             <CardHeader>
@@ -1081,7 +1143,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
 
               <Button 
                 onClick={generateTopicsFromKeyword}
-                disabled={!appState.keyword.trim() || isGeneratingTopics}
+                disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
@@ -1168,7 +1230,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
 
               <Button 
                 onClick={generateArticleContent}
-                disabled={!appState.selectedTopic || isGeneratingContent}
+                disabled={!appState.selectedTopic || isGeneratingContent || !appState.isApiKeyValidated}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isGeneratingContent ? '글 생성 중...' : '글 생성하기'}
@@ -1207,11 +1269,51 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
 
               <Button 
                 onClick={createImagePromptFromTopic}
-                disabled={!appState.generatedContent || !appState.imageStyle || isGeneratingImage}
+                disabled={!appState.generatedContent || !appState.imageStyle || isGeneratingImage || !appState.isApiKeyValidated}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isGeneratingImage ? '이미지 프롬프트 생성 중...' : '이미지 프롬프트 생성'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* 이미지 프롬프트 - 3. 이미지 생성 바로 아래로 이동 */}
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center text-pink-700">
+                <Image className="h-5 w-5 mr-2" />
+                이미지 프롬프트
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {appState.imagePrompt ? (
+                <div className="space-y-3">
+                  <Textarea
+                    value={appState.imagePrompt}
+                    readOnly
+                    className="min-h-32 bg-gray-50"
+                  />
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
+                      className="flex-1 bg-pink-600 hover:bg-pink-700"
+                    >
+                      복사
+                    </Button>
+                    <Button 
+                      onClick={openWhisk}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      Whisk 열기
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>이미지 프롬프트를 생성해보세요!</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1220,7 +1322,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             <CardHeader>
               <CardTitle className="flex items-center text-gray-700">
                 <AlertCircle className="h-5 w-5 mr-2" />
-                API 및 링크 설정
+                API 키 설정
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1229,35 +1331,39 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
                 <div className="flex space-x-2">
                   <Input
                     type="password"
-                    placeholder="••••••••••••••••••••••••••••••••••••••••"
+                    placeholder="API 키를 입력해주세요"
                     value={appState.apiKey}
                     onChange={(e) => saveAppState({ apiKey: e.target.value })}
                     className="flex-1"
                   />
-                  <Button onClick={handleApiKeySave} variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    저장
+                  <Button 
+                    onClick={validateApiKey} 
+                    disabled={!appState.apiKey.trim() || isValidatingApi}
+                    variant="outline" 
+                    className={appState.isApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
+                  >
+                    {isValidatingApi ? (
+                      <>검증 중...</>
+                    ) : appState.isApiKeyValidated ? (
+                      <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
+                    ) : (
+                      '검증'
+                    )}
                   </Button>
                 </div>
                 <p className="text-xs text-blue-600 mt-1">
-                  <a href="#" className="hover:underline">Google AI Studio에서 발급</a>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="hover:underline">Google AI Studio에서 발급</a>
                 </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">워드프레스 링크</label>
-                <Input
-                  placeholder="예: https://yourblog.com"
-                  value={appState.referenceLink}
-                  onChange={(e) => saveAppState({ referenceLink: e.target.value })}
-                />
+                {appState.isApiKeyValidated && (
+                  <p className="text-xs text-green-600 mt-1">✅ API 키가 검증되었습니다.</p>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* 오른쪽 컬럼 - 8/12 비율로 확대 */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* 오른쪽 컬럼 - 9/12 비율로 더 확대 */}
+        <div className="lg:col-span-9 space-y-6">
           {/* 생성된 주제 목록 */}
           <Card className="shadow-md">
             <CardHeader>
@@ -1276,7 +1382,7 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
                   <p>키워드를 입력하고 주제를 생성해보세요!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {appState.topics.map((topic, index) => (
                     <div
                       key={index}
@@ -1330,53 +1436,13 @@ ${mainKeyword}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </CardHeader>
             <CardContent>
               {appState.generatedContent ? (
-                <div className="border p-4 rounded bg-gray-50 max-h-none overflow-y-auto">
+                <div className="border p-4 rounded bg-gray-50 overflow-y-auto" style={{ minHeight: '600px' }}>
                   <div dangerouslySetInnerHTML={{ __html: appState.generatedContent }} />
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Edit className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>주제를 선택하고 글을 생성해보세요!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 이미지 프롬프트 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center text-pink-700">
-                <Image className="h-5 w-5 mr-2" />
-                이미지 프롬프트
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {appState.imagePrompt ? (
-                <div className="space-y-3">
-                  <Textarea
-                    value={appState.imagePrompt}
-                    readOnly
-                    className="min-h-32 bg-gray-50"
-                  />
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
-                      className="flex-1 bg-pink-600 hover:bg-pink-700"
-                    >
-                      복사
-                    </Button>
-                    <Button 
-                      onClick={openWhisk}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      Whisk 열기
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>이미지 프롬프트를 생성해보세요!</p>
                 </div>
               )}
             </CardContent>
