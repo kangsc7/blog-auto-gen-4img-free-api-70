@@ -104,6 +104,15 @@ const Index = () => {
         delete parsedState.isApiKeyValidated;
         setAppState(prev => ({ ...prev, ...parsedState, apiKey: '', isApiKeyValidated: false }));
       }
+      const savedApiKey = localStorage.getItem('blog_api_key');
+      if (savedApiKey) {
+        const savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
+        setAppState(prev => ({
+          ...prev,
+          apiKey: savedApiKey,
+          isApiKeyValidated: savedApiKeyValidated
+        }));
+      }
     } catch (error) {
       console.error('앱 상태 로드 오류:', error);
     }
@@ -120,6 +129,51 @@ const Index = () => {
       localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
     } catch (error) {
       console.error('앱 상태 저장 오류:', error);
+    }
+  };
+
+  const saveApiKeyToStorage = () => {
+    if (!appState.apiKey.trim()) {
+      toast({
+        title: "저장 오류",
+        description: "API 키를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      localStorage.setItem('blog_api_key', appState.apiKey);
+      localStorage.setItem('blog_api_key_validated', String(appState.isApiKeyValidated));
+      toast({
+        title: "저장 완료",
+        description: "API 키가 브라우저에 저장되었습니다.",
+      });
+    } catch (error) {
+      console.error("API 키 저장 오류:", error);
+      toast({
+        title: "저장 실패",
+        description: "API 키 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteApiKeyFromStorage = () => {
+    try {
+      localStorage.removeItem('blog_api_key');
+      localStorage.removeItem('blog_api_key_validated');
+      saveAppState({ apiKey: '', isApiKeyValidated: false });
+      toast({
+        title: "삭제 완료",
+        description: "저장된 API 키가 삭제되었습니다.",
+      });
+    } catch (error) {
+      console.error("API 키 삭제 오류:", error);
+      toast({
+        title: "삭제 실패",
+        description: "API 키 삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1300,7 +1354,7 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
                     type="password"
                     placeholder="API 키를 입력해주세요"
                     value={appState.apiKey}
-                    onChange={(e) => saveAppState({ apiKey: e.target.value })}
+                    onChange={(e) => saveAppState({ apiKey: e.target.value, isApiKeyValidated: false })}
                     className="flex-1"
                   />
                   <Button 
@@ -1316,6 +1370,14 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
                     ) : (
                       '검증'
                     )}
+                  </Button>
+                </div>
+                <div className="flex space-x-2 mt-2">
+                  <Button onClick={saveApiKeyToStorage} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
+                    키 저장
+                  </Button>
+                  <Button onClick={deleteApiKeyFromStorage} size="sm" variant="destructive" className="flex-1">
+                    키 삭제
                   </Button>
                 </div>
                 <p className="text-xs text-blue-600 mt-1">
@@ -1403,7 +1465,7 @@ ${mainConcept}, ${appState.keyword}, 블로그 작성, 콘텐츠 제작, SEO 최
             </CardHeader>
             <CardContent>
               {appState.generatedContent ? (
-                <div className="border p-4 rounded bg-gray-50 overflow-y-auto max-h-screen">
+                <div className="border p-4 rounded bg-gray-50 overflow-y-auto max-h-[1024px]">
                   <div dangerouslySetInnerHTML={{ __html: appState.generatedContent }} />
                 </div>
               ) : (
