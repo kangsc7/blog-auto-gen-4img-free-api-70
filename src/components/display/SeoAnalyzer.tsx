@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -68,9 +67,23 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     if (keyword && wordCount > 0) {
       const keywordCount = (textContent.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
       const density = (keywordCount / wordCount) * 100;
-      if (density >= 1 && density <= 2.5) keywordDensityScore = 100;
-      else if (density >= 0.5 && density < 3) keywordDensityScore = 70;
-      else if (density > 0) keywordDensityScore = 40;
+      
+      // Target: 1.5% ~ 2.5%
+      if (density >= 1.5 && density <= 2.5) {
+        keywordDensityScore = 100;
+      } 
+      // Near target: 1.0% ~ 1.49% or 2.51% ~ 3.0%
+      else if ((density >= 1.0 && density < 1.5) || (density > 2.5 && density <= 3.0)) {
+        keywordDensityScore = 70;
+      }
+      // Acceptable range: 0.5% ~ 0.99% or 3.01% ~ 3.5%
+      else if ((density >= 0.5 && density < 1.0) || (density > 3.0 && density <= 3.5)) {
+        keywordDensityScore = 40;
+      }
+      // Far from target
+      else {
+        keywordDensityScore = 10;
+      }
     }
 
     // 4. Headings Score
