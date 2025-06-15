@@ -26,6 +26,16 @@ export const useArticleGenerator = (
       return null;
     }
 
+    const coreKeyword = appState.keyword.trim();
+    if (!coreKeyword) {
+      toast({
+        title: "핵심 키워드 누락",
+        description: "글을 생성하려면 먼저 '주제 생성' 단계에서 핵심 키워드를 입력해야 합니다.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     setIsGeneratingContent(true);
     saveAppState({ generatedContent: '', imagePrompt: '' });
     
@@ -35,7 +45,7 @@ export const useArticleGenerator = (
       
       const prompt = getArticlePrompt({
         topic: selectedTopic,
-        keyword: appState.keyword || selectedTopic,
+        keyword: coreKeyword,
         selectedColorTheme: selectedColorTheme,
         referenceLink: appState.referenceLink,
         referenceSentence: appState.referenceSentence,
@@ -63,7 +73,6 @@ export const useArticleGenerator = (
       
       const data = await response.json();
       
-      // For debugging, let's log the finish reason.
       if (data.candidates?.[0]?.finishReason) {
         const finishReason = data.candidates[0].finishReason;
         console.log('Gemini finish reason:', finishReason);
@@ -81,16 +90,14 @@ export const useArticleGenerator = (
       }
       
       const htmlContent = data.candidates[0].content.parts[0].text;
-      const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim().replace(/,?\s*(\.\.\.|…)\s*(?=<\/)/g, '');
-
-      let finalHtml = cleanedHtml;
+      let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
 
       if (pixabayConfig?.key && pixabayConfig?.validated) {
         toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         
         const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
-          cleanedHtml,
+          htmlContent,
           pixabayConfig.key,
           appState.apiKey!
         );
@@ -106,7 +113,7 @@ export const useArticleGenerator = (
       }
 
       try {
-        const metaDescription = await generateMetaDescription(cleanedHtml, appState.apiKey!);
+        const metaDescription = await generateMetaDescription(htmlContent, appState.apiKey!);
         if (metaDescription) {
           const sanitizedMeta = metaDescription.replace(/-->/g, '-- >');
           const metaComment = `<!-- META DESCRIPTION: ${sanitizedMeta} -->`;

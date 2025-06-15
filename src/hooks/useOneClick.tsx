@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -17,9 +17,44 @@ export const useOneClick = (
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
-  const [usedLatestKeywords, setUsedLatestKeywords] = useState<string[]>([]);
-  const [usedEvergreenKeywords, setUsedEvergreenKeywords] = useState<string[]>([]);
+  
+  const [usedLatestKeywords, setUsedLatestKeywords] = useState<string[]>(() => {
+    try {
+      const item = window.localStorage.getItem('usedLatestKeywords');
+      return item ? JSON.parse(item) : [];
+    } catch (error) {
+      console.error('Error reading usedLatestKeywords from localStorage', error);
+      return [];
+    }
+  });
+
+  const [usedEvergreenKeywords, setUsedEvergreenKeywords] = useState<string[]>(() => {
+    try {
+      const item = window.localStorage.getItem('usedEvergreenKeywords');
+      return item ? JSON.parse(item) : [];
+    } catch (error) {
+      console.error('Error reading usedEvergreenKeywords from localStorage', error);
+      return [];
+    }
+  });
+
   const cancelGeneration = useRef(false);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('usedLatestKeywords', JSON.stringify(usedLatestKeywords));
+    } catch (error) {
+      console.error('Error saving usedLatestKeywords to localStorage', error);
+    }
+  }, [usedLatestKeywords]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('usedEvergreenKeywords', JSON.stringify(usedEvergreenKeywords));
+    } catch (error) {
+      console.error('Error saving usedEvergreenKeywords to localStorage', error);
+    }
+  }, [usedEvergreenKeywords]);
 
   const runOneClickFlow = async (keywordSource: 'latest' | 'evergreen') => {
     if (isOneClickGenerating) return;
