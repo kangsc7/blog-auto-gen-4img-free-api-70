@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -13,10 +14,13 @@ export const useArticleGenerator = (
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 
   const generateArticle = async (
-    topicOverride?: string,
-    pixabayConfig?: { key: string; validated: boolean }
+    options?: {
+      topic?: string;
+      keyword?: string;
+      pixabayConfig?: { key: string; validated: boolean };
+    }
   ): Promise<string | null> => {
-    const selectedTopic = topicOverride || appState.selectedTopic;
+    const selectedTopic = options?.topic || appState.selectedTopic;
     if (!selectedTopic) {
       toast({ title: "주제 선택 오류", description: "주제를 먼저 선택해주세요.", variant: "destructive" });
       return null;
@@ -26,7 +30,7 @@ export const useArticleGenerator = (
       return null;
     }
 
-    const coreKeyword = appState.keyword.trim();
+    const coreKeyword = (options?.keyword || appState.keyword).trim();
     if (!coreKeyword) {
       toast({
         title: "핵심 키워드 누락",
@@ -93,6 +97,7 @@ export const useArticleGenerator = (
       let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
 
+      const pixabayConfig = options?.pixabayConfig;
       if (pixabayConfig?.key && pixabayConfig?.validated) {
         toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         

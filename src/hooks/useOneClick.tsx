@@ -6,7 +6,7 @@ import { AppState } from '@/types';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 type GenerateTopicsFunc = (keyword: string) => Promise<string[] | null>;
-type GenerateArticleFunc = (topic: string) => Promise<string | null>;
+type GenerateArticleFunc = (options?: { topic?: string; keyword?: string; }) => Promise<string | null>;
 
 export const useOneClick = (
   appState: AppState,
@@ -116,7 +116,7 @@ export const useOneClick = (
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
-      const articleGenerated = await generateArticle(randomTopic);
+      const articleGenerated = await generateArticle({ topic: randomTopic, keyword });
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!articleGenerated) {
         throw new Error("글 생성에 실패하여 중단합니다.");

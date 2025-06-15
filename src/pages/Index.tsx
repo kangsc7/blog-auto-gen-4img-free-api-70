@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -38,8 +39,14 @@ const Index = () => {
     downloadHTML,
   } = useAppHandlers({ appState, saveAppState, resetApp });
 
-  const generateArticleWithPixabay = (topic?: string) => {
-    return generateArticle(topic, { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated });
+  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
+    return generateArticle({
+      ...options,
+      pixabayConfig: { 
+        key: pixabayManager.pixabayApiKey, 
+        validated: pixabayManager.isPixabayApiKeyValidated 
+      },
+    });
   };
   
   const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
