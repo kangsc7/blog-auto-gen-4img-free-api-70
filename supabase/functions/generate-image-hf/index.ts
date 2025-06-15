@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { HfInference } from 'https://esm.sh/@huggingface/inference@3.1.2'
+import { HfInference } from 'https://esm.sh/@huggingface/inference@4.0.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const imageBlob = await hf.textToImage({
       inputs: prompt,
-      model: 'stabilityai/stable-diffusion-xl-base-1.0',
+      model: 'stabilityai/stable-diffusion-2-1',
     })
 
     const arrayBuffer = await imageBlob.arrayBuffer()
