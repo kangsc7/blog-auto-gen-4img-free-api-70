@@ -57,7 +57,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             <p className="text-sm">잠시만 기다려주세요.</p>
           </div>
         ) : generatedContent ? (
-          <div className="border p-4 rounded bg-gray-50 overflow-y-auto max-h-[1024px]">
+          <div className="border p-4 rounded bg-gray-50">
             <div dangerouslySetInnerHTML={{ __html: generatedContent }} />
           </div>
         ) : (
