@@ -15,7 +15,6 @@ const initialAppState: AppState = {
   referenceLink: '',
   referenceSentence: '',
   generatedContent: '',
-  imageStyle: '',
   imagePrompt: '',
   saveReferenceTrigger: false,
 };
@@ -131,7 +130,6 @@ export const useAppStateManager = () => {
       selectedTopic: '',
       colorTheme: '',
       generatedContent: '',
-      imageStyle: '',
       imagePrompt: '',
       apiKey: savedApiKey,
       isApiKeyValidated: savedApiKeyValidated,

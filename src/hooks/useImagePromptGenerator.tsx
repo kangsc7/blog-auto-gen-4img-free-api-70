@@ -3,19 +3,6 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
-const extractIntroFromHtml = (html: string): string => {
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const firstParagraph = doc.querySelector('p');
-    return firstParagraph?.textContent || '';
-  } catch (error) {
-    console.error("Error parsing HTML to extract intro:", error);
-    const pTagMatch = html.match(/<p>(.*?)<\/p>/i);
-    return pTagMatch ? pTagMatch[1].replace(/<[^>]+>/g, '') : '';
-  }
-};
-
 export const useImagePromptGenerator = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void
@@ -23,14 +10,10 @@ export const useImagePromptGenerator = (
   const { toast } = useToast();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
-  const createImagePrompt = async (): Promise<boolean> => {
-    if (!appState.selectedTopic) {
-      toast({ title: "선택 오류", description: "주제를 먼저 선택해주세요.", variant: "destructive" });
+  const createImagePrompt = async (inputText: string): Promise<boolean> => {
+    if (!inputText.trim()) {
+      toast({ title: "입력 오류", description: "프롬프트를 생성할 텍스트를 입력해주세요.", variant: "destructive" });
       return false;
-    }
-    if (!appState.generatedContent) {
-        toast({ title: "콘텐츠 필요", description: "이미지 프롬프트를 생성하려면 먼저 글을 생성해주세요.", variant: "destructive" });
-        return false;
     }
     if (!appState.isApiKeyValidated) {
       toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
@@ -38,26 +21,23 @@ export const useImagePromptGenerator = (
     }
 
     setIsGeneratingImage(true);
+    saveAppState({ imagePrompt: '' }); // Clear previous prompt
     try {
-      const title = appState.selectedTopic;
-      const intro = extractIntroFromHtml(appState.generatedContent);
-      const script = `Title: ${title}\n\nIntroduction: ${intro}`;
-
       const masterPrompt = `
-You are an expert AI image prompt engineer. Your task is to generate a single, high-quality image prompt in English based on a given blog post title and introduction. Follow these instructions meticulously:
+You are an expert AI image prompt engineer. Your task is to transform a Korean text input into a single, high-quality image prompt in English. Follow these instructions meticulously:
 
-**Input Script to analyze:**
+**Input Korean Text:**
 ---
-${script}
+${inputText}
 ---
 
 **Core Instructions:**
 
-1.  **Primary Goal:** Synthesize the Input Script into a single, compelling visual scene. The output must be a ready-to-use prompt for an AI image generator.
+1.  **Primary Goal:** Analyze the core meaning, keywords, and mood of the input text. Synthesize this into a single, compelling visual scene. The output must be a ready-to-use prompt for an AI image generator.
 
 2.  **Content Generation:**
-    *   Extract the core visual message, key symbols, and dominant emotions from the script.
-    *   Focus on actions, atmosphere, and symbolic representation rather than literal descriptions.
+    *   Extract the core visual message, key symbols, and dominant emotions from the text.
+    *   Focus on actions, atmosphere, and symbolic representation rather than literal translation.
     *   The overall mood must be **bright, warm, and positive**. Use elements like warm sunlight, soft colors, and vibrant, happy expressions.
 
 3.  **Prompt Structure and Formatting (Strict):**
@@ -79,8 +59,9 @@ ${script}
         *   Sensitive political or religious themes.
         *   Content that could be interpreted as misinformation or conspiracy.
 
-**Example Output:**
-A Korean woman writing in a sunlit modern cafe, with the bustling city street blurred through the window, an atmosphere of warm inspiration, soft golden lighting, 4k photorealistic style, high detail, realistic, natural lighting, cinematic
+**Example Transformation:**
+*   **Input:** "햇살 좋은 카페에서 노트북으로 글을 쓰는 프리랜서의 여유로운 오후"
+*   **Output:** A Korean woman writing on a laptop in a sunlit modern cafe, with the bustling city street blurred through the window, an atmosphere of warm inspiration, soft golden lighting, 4k photorealistic style, high detail, realistic, natural lighting, cinematic
 `;
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
@@ -108,7 +89,7 @@ A Korean woman writing in a sunlit modern cafe, with the bustling city street bl
       return true;
     } catch (error) {
       console.error('이미지 프롬프트 생성 오류:', error);
-      toast({ title: "프롬프트 생성 실패", description: "이미지 프롬프트 생성 중 오류가 발생했습니다.", variant: "destructive" });
+      toast({ title: "프롬프트 생성 실패", description: error instanceof Error ? error.message : "이미지 프롬프트 생성 중 오류가 발생했습니다.", variant: "destructive" });
       return false;
     } finally {
       setIsGeneratingImage(false);

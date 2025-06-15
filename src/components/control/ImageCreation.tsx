@@ -1,61 +1,56 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Image } from 'lucide-react';
 import { AppState } from '@/types';
-import { imageStyles } from '@/data/constants';
 
 interface ImageCreationProps {
   appState: AppState;
-  saveAppState: (newState: Partial<AppState>) => void;
   isGeneratingImage: boolean;
-  createImagePromptFromTopic: () => void;
+  createImagePrompt: (text: string) => Promise<boolean>;
   copyToClipboard: (text: string, type: string) => void;
   openWhisk: () => void;
 }
 
 export const ImageCreation: React.FC<ImageCreationProps> = ({
   appState,
-  saveAppState,
   isGeneratingImage,
-  createImagePromptFromTopic,
+  createImagePrompt,
   copyToClipboard,
   openWhisk,
 }) => {
+  const [manualInput, setManualInput] = useState('');
+
+  const handleGenerate = () => {
+    createImagePrompt(manualInput);
+  };
+
   return (
     <>
-      <Card className={`shadow-md ${!appState.generatedContent ? 'opacity-50' : ''}`}>
+      <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center text-pink-700">
             <Image className="h-5 w-5 mr-2" />
-            3. 이미지 생성
+            3. 이미지 프롬프트 생성 (수동)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">이미지 스타일</label>
-            <div className="grid grid-cols-2 gap-2">
-              {imageStyles.map((style) => (
-                <label key={style.value} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="imageStyle"
-                    value={style.value}
-                    checked={appState.imageStyle === style.value}
-                    onChange={(e) => saveAppState({ imageStyle: e.target.value })}
-                    disabled={!appState.generatedContent}
-                    className="text-blue-600"
-                  />
-                  <span className="text-sm">{style.label}</span>
-                </label>
-              ))}
-            </div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">프롬프트로 변환할 내용</label>
+            <Textarea
+              placeholder="블로그 글의 서론이나 묘사하고 싶은 문장을 붙여넣으세요..."
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              className="min-h-24"
+            />
+            <p className="text-xs text-gray-500 mt-1">한글로 입력하면 영어 프롬프트로 자동 변환됩니다.</p>
           </div>
 
           <Button 
-            onClick={createImagePromptFromTopic}
-            disabled={!appState.generatedContent || isGeneratingImage || !appState.isApiKeyValidated}
+            onClick={handleGenerate}
+            disabled={!manualInput.trim() || isGeneratingImage || !appState.isApiKeyValidated}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             {isGeneratingImage ? '이미지 프롬프트 생성 중...' : '이미지 프롬프트 생성'}

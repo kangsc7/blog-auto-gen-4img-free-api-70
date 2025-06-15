@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,7 +112,7 @@ export const ImagePaster = () => {
             <CardHeader>
                 <CardTitle className="flex items-center text-purple-700">
                     <ImageUp className="h-5 w-5 mr-2" />
-                    4. 이미지 붙여넣기 및 변환
+                    이미지 붙여넣기 및 변환
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

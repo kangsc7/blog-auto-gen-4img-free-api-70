@@ -17,7 +17,7 @@ interface GenerationStatus {
 interface GenerationFunctions {
     generateTopics: () => Promise<string[] | null>;
     generateArticle: (topic?: string) => Promise<string | null>;
-    createImagePrompt: () => Promise<boolean>;
+    createImagePrompt: (text: string) => Promise<boolean>;
 }
 
 interface TopicControls {
@@ -74,9 +74,8 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
 
                 <ImageCreation
                     appState={appState}
-                    saveAppState={saveAppState}
                     isGeneratingImage={generationStatus.isGeneratingImage}
-                    createImagePromptFromTopic={generationFunctions.createImagePrompt}
+                    createImagePrompt={generationFunctions.createImagePrompt}
                     copyToClipboard={utilityFunctions.copyToClipboard}
                     openWhisk={utilityFunctions.openWhisk}
                 />

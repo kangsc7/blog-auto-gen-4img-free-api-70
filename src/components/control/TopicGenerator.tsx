@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, RefreshCcw } from 'lucide-react';
 import { AppState } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface TopicGeneratorProps {
   appState: AppState;
@@ -24,6 +26,29 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   setManualTopic,
   handleManualTopicAdd,
 }) => {
+  const { toast } = useToast();
+
+  const handleDeduplicateTopics = () => {
+    if (appState.topics.length === 0) {
+      toast({ title: "알림", description: "제거할 주제가 없습니다.", variant: "default" });
+      return;
+    }
+    const uniqueTopics = Array.from(new Set(appState.topics));
+    const removedCount = appState.topics.length - uniqueTopics.length;
+    if (removedCount > 0) {
+      saveAppState({ topics: uniqueTopics });
+      toast({
+        title: "중복 제거 완료",
+        description: `${removedCount}개의 중복된 주제가 제거되었습니다.`
+      });
+    } else {
+      toast({
+        title: "중복 없음",
+        description: "중복된 주제가 없습니다."
+      });
+    }
+  };
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -66,6 +91,19 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
         >
           {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
         </Button>
+
+        <div className="space-y-2">
+            <Button
+                onClick={handleDeduplicateTopics}
+                disabled={appState.topics.length === 0}
+                variant="outline"
+                className="w-full"
+            >
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                중복 주제 제거
+            </Button>
+            <p className="text-xs text-center text-gray-500">AI가 생성한 주제 목록에서 중복된 항목을 제거합니다.</p>
+        </div>
 
         <div className="border-t pt-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">수동 주제 입력</label>
