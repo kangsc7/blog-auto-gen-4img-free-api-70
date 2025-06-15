@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -19,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApiKeyManager } from '@/hooks/useApiKeyManager';
 import { useGenerationAPI } from '@/hooks/useGenerationAPI';
 import { useOneClick } from '@/hooks/useOneClick';
+import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 
 const Index = () => {
   const { toast } = useToast();
@@ -35,7 +35,75 @@ const Index = () => {
   } = useGenerationAPI(appState, saveAppState);
   
   const [manualTopic, setManualTopic] = useState('');
+  const [pixabayApiKey, setPixabayApiKey] = useState('');
+  const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(false);
+  const [isPixabayValidating, setIsPixabayValidating] = useState(false);
 
+  useEffect(() => {
+    const savedKey = localStorage.getItem('pixabay_api_key') || '';
+    if (savedKey) {
+      setPixabayApiKey(savedKey);
+      // Simple validation check on load
+      validatePixabayApiKey(savedKey);
+    }
+  }, []);
+
+  const savePixabayApiKeyToStorage = () => {
+    if (!pixabayApiKey.trim()) {
+      toast({ title: "저장 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem('pixabay_api_key', pixabayApiKey);
+    localStorage.setItem('pixabay_api_key_validated', String(isPixabayApiKeyValidated));
+    toast({ title: "저장 완료", description: "Pixabay API 키가 브라우저에 저장되었습니다." });
+  };
+
+  const deletePixabayApiKeyFromStorage = () => {
+    localStorage.removeItem('pixabay_api_key');
+    localStorage.removeItem('pixabay_api_key_validated');
+    setPixabayApiKey('');
+    setIsPixabayApiKeyValidated(false);
+    toast({ title: "삭제 완료", description: "저장된 Pixabay API 키가 삭제되었습니다." });
+  };
+
+  const validatePixabayApiKey = async (keyToValidate?: string) => {
+    const key = keyToValidate || pixabayApiKey;
+    if (!key.trim()) {
+      toast({ title: "API 키 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    setIsPixabayValidating(true);
+    try {
+      const response = await fetch(`https://pixabay.com/api/?key=${key}&q=test`);
+      if (response.status === 400) throw new Error('잘못된 API 키');
+      if (!response.ok) throw new Error(`네트워크 오류: ${response.statusText}`);
+      
+      setIsPixabayApiKeyValidated(true);
+      if (!keyToValidate) { // Don't toast on initial load validation
+        toast({ title: "Pixabay API 키 검증 성공", description: "성공적으로 연결되었습니다." });
+      }
+    } catch (error) {
+      setIsPixabayApiKeyValidated(false);
+      if (!keyToValidate) {
+        toast({ title: "Pixabay API 키 검증 실패", description: `키가 유효하지 않거나 문제가 발생했습니다.`, variant: "destructive" });
+      }
+    } finally {
+      setIsPixabayValidating(false);
+    }
+  };
+
+  const generateArticleWithPixabay = (topic?: string) => {
+    return generateArticle(topic, { key: pixabayApiKey, validated: isPixabayApiKeyValidated });
+  };
+  
+  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick } = useOneClick(
+    appState,
+    saveAppState,
+    generateTopics,
+    selectTopic,
+    generateArticleWithPixabay
+  );
+  
   const selectTopic = (topic: string) => {
     saveAppState({ selectedTopic: topic });
     toast({
@@ -44,14 +112,6 @@ const Index = () => {
     });
   };
 
-  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick } = useOneClick(
-    appState,
-    saveAppState,
-    generateTopics,
-    selectTopic,
-    generateArticle
-  );
-  
   const handleManualTopicAdd = () => {
     if (!manualTopic.trim()) {
       toast({ title: "주제 입력 오류", description: "주제를 입력해주세요.", variant: "destructive" });
@@ -109,6 +169,29 @@ const Index = () => {
         resetApp={handleResetApp}
         handleLogout={handleLogout}
       />
+      
+      <div className="max-w-7xl mx-auto my-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ApiKeyManager
+            appState={appState}
+            saveAppState={saveAppState}
+            isValidatingApi={isValidatingApi}
+            validateApiKey={validateApiKey}
+            saveApiKeyToStorage={saveApiKeyToStorage}
+            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+          />
+        <PixabayApiKeyManager
+          apiKey={pixabayApiKey}
+          setApiKey={(key) => {
+            setPixabayApiKey(key);
+            setIsPixabayApiKeyValidated(false);
+          }}
+          isValidated={isPixabayApiKeyValidated}
+          isValidating={isPixabayValidating}
+          validateApiKey={() => validatePixabayApiKey()}
+          saveApiKey={savePixabayApiKeyToStorage}
+          deleteApiKey={deletePixabayApiKeyFromStorage}
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto my-6">
         <div className="flex justify-between items-center gap-4 p-4 rounded-lg shadow bg-white">
@@ -157,7 +240,7 @@ const Index = () => {
             saveAppState={saveAppState}
             selectTopic={selectTopic}
             isGeneratingContent={isGeneratingContent}
-            generateArticleContent={() => generateArticle()}
+            generateArticleContent={generateArticleWithPixabay}
           />
 
           <ImageCreation
@@ -167,15 +250,6 @@ const Index = () => {
             createImagePromptFromTopic={createImagePrompt}
             copyToClipboard={copyToClipboard}
             openWhisk={openWhisk}
-          />
-          
-          <ApiKeyManager
-            appState={appState}
-            saveAppState={saveAppState}
-            isValidatingApi={isValidatingApi}
-            validateApiKey={validateApiKey}
-            saveApiKeyToStorage={saveApiKeyToStorage}
-            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
           />
         </div>
 

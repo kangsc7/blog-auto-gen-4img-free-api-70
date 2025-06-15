@@ -71,7 +71,10 @@ export const useGenerationAPI = (
     }
   };
 
-  const generateArticle = async (topicOverride?: string): Promise<string | null> => {
+  const generateArticle = async (
+    topicOverride?: string,
+    pixabayConfig?: { key: string; validated: boolean }
+  ): Promise<string | null> => {
     const selectedTopic = topicOverride || appState.selectedTopic;
     if (!selectedTopic) {
       toast({ title: "주제 선택 오류", description: "주제를 먼저 선택해주세요.", variant: "destructive" });
@@ -117,9 +120,88 @@ export const useGenerationAPI = (
       const htmlContent = data.candidates[0].content.parts[0].text;
       const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim().replace(/(\.\.\.|…)\s*$/, "");
 
-      saveAppState({ generatedContent: cleanedHtml, colorTheme: selectedColorTheme });
+      let finalHtml = cleanedHtml;
+
+      if (pixabayConfig?.key && pixabayConfig?.validated) {
+        toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(cleanedHtml, 'text/html');
+        const h2s = Array.from(doc.querySelectorAll('h2'));
+        let imageCount = 0;
+        const MAX_IMAGES = 4;
+
+        for (const h2 of h2s) {
+            if (imageCount >= MAX_IMAGES) break;
+
+            let contentForSummary = '';
+            let currentNode = h2.nextSibling;
+            while(currentNode && currentNode.nodeName !== 'H2') {
+                contentForSummary += currentNode.textContent || '';
+                currentNode = currentNode.nextSibling;
+            }
+            
+            const textToSummarize = (h2.textContent + " " + contentForSummary).replace(/\s+/g, ' ').trim().substring(0, 1000);
+
+            if (textToSummarize.length > 10) {
+                 try {
+                    const summaryPrompt = `Please summarize the following text into 2-3 keywords suitable for an English image search on Pixabay. Provide only the keywords, separated by commas, without any other explanation. Text: "${textToSummarize}"`;
+                    const summaryResponse = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: summaryPrompt }] }] })
+                    });
+                    if (!summaryResponse.ok) continue;
+                    const summaryData = await summaryResponse.json();
+                    const keyword = summaryData.candidates?.[0]?.content?.parts?.[0]?.text.trim().replace(/\s/g, '+');
+
+                    if (!keyword) continue;
+
+                    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayConfig.key}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=10&lang=en`;
+                    const imageResponse = await fetch(imageSearchUrl);
+                    if (!imageResponse.ok) continue;
+                    const imageData = await imageResponse.json();
+
+                    if (imageData.hits && imageData.hits.length > 0) {
+                        const randomImage = imageData.hits[Math.floor(Math.random() * imageData.hits.length)];
+                        const imageUrl = randomImage.webformatURL;
+                        
+                        const imageContainer = doc.createElement('div');
+                        imageContainer.style.textAlign = 'center';
+                        imageContainer.style.margin = '2em 0';
+                        
+                        const img = doc.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = keyword.replace(/\+/g, ' ');
+                        img.style.maxWidth = '90%';
+                        img.style.height = 'auto';
+                        img.style.borderRadius = '8px';
+                        
+                        const caption = doc.createElement('p');
+                        caption.style.fontSize = '0.8em';
+                        caption.style.color = '#666';
+                        caption.textContent = `Image by ${randomImage.user} on Pixabay`;
+                        
+                        imageContainer.appendChild(img);
+                        imageContainer.appendChild(caption);
+                        
+                        h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
+                        imageCount++;
+                    }
+                } catch (e) {
+                     console.error("Error integrating single image:", e);
+                }
+            }
+        }
+        finalHtml = doc.body.innerHTML;
+        if(imageCount > 0) {
+            toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
+        }
+      }
+
+      saveAppState({ generatedContent: finalHtml, colorTheme: selectedColorTheme });
       toast({ title: "AI 기반 블로그 글 생성 완료", description: "콘텐츠가 준비되었습니다." });
-      return cleanedHtml;
+      return finalHtml;
     } catch (error) {
       console.error('글 생성 오류:', error);
       toast({ title: "글 생성 실패", description: error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다.", variant: "destructive" });
