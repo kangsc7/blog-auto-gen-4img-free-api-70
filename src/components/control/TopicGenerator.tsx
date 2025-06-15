@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,7 +60,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
         </div>
 
         <Button 
-          onClick={generateTopicsFromKeyword}
+          onClick={() => generateTopicsFromKeyword()}
           disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >

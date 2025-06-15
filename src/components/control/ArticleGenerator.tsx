@@ -102,7 +102,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
         </div>
 
         <Button 
-          onClick={generateArticleContent}
+          onClick={() => generateArticleContent()}
           disabled={!appState.selectedTopic || isGeneratingContent || !appState.isApiKeyValidated}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
