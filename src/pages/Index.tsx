@@ -133,6 +133,17 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
+      <ApiKeysSection
+        appState={appState}
+        saveAppState={saveAppState}
+        isValidatingApi={isValidatingApi}
+        validateApiKey={validateApiKey}
+        saveApiKeyToStorage={saveApiKeyToStorage}
+        deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+        pixabayManager={pixabayManager}
+        huggingFaceManager={huggingFaceManager}
+      />
+
       {isAdmin && (
         <div className="container mx-auto my-4 flex items-center justify-between">
           <div className="flex items-start gap-8">
@@ -147,7 +158,7 @@ const Index = () => {
               <Toggle
                 pressed={!preventDuplicates}
                 onPressedChange={(pressed) => setPreventDuplicates(!pressed)}
-                className="w-56 justify-center gap-2 p-3 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200 data-[state=on]:bg-gray-100 data-[state=on]:shadow-inner data-[state=on]:text-blue-600"
+                className="w-56 justify-center gap-2 p-3 rounded-lg bg-white text-gray-800 border border-black shadow-md hover:shadow-lg transition-all duration-200 data-[state=on]:bg-gray-100 data-[state=on]:shadow-inner data-[state=on]:text-blue-600"
               >
                 <RefreshCcw className="h-5 w-5 text-blue-600" />
                 <span className="font-semibold">
@@ -156,7 +167,8 @@ const Index = () => {
               </Toggle>
               <div className="w-56 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
-                  '금지' 상태에선 중복 주제가 자동 제거됩니다. '허용'으로 바꾸면 중복 생성이 가능합니다.
+                  금지 : 중복 주제 제거<br />
+                  허용 : 중복 주제 가능
                 </p>
               </div>
             </div>
@@ -171,21 +183,10 @@ const Index = () => {
               <RefreshCw className="h-5 w-5" />
               <span className="font-semibold text-gray-800">초기화</span>
             </Button>
-            <p className="text-xs text-gray-500 mt-1">모든 입력과 생성된 내용을 초기화합니다.</p>
+            <p className="text-xs text-gray-500 mt-1">모든 입력값과 생성된 내용 초기화</p>
           </div>
         </div>
       )}
-
-      <ApiKeysSection
-        appState={appState}
-        saveAppState={saveAppState}
-        isValidatingApi={isValidatingApi}
-        validateApiKey={validateApiKey}
-        saveApiKeyToStorage={saveApiKeyToStorage}
-        deleteApiKeyFromStorage={deleteApiKeyFromStorage}
-        pixabayManager={pixabayManager}
-        huggingFaceManager={huggingFaceManager}
-      />
 
       <OneClickSection
         handleLatestIssueOneClick={handleLatestIssueOneClick}
