@@ -38,6 +38,8 @@ ${getCssStyles(colors)}
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     [독자들이 흔히 하는 실수나 꼭 알아야 할 주의사항, 그리고 추가적인 꿀팁을 리스트(ul, li) 형태로 3~4가지 구체적으로 작성. 각 항목은 실제 경험을 바탕으로 상세하게 설명. 여기서도 유용한 외부 자료 링크를 하나 포함 가능.]
 </div>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 적용 시 실패 사례와 극복 방법]</b> 😥</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[${keyword} 적용 과정에서 흔히 겪는 실패 사례를 2-3가지 구체적으로 제시합니다. 실패의 원인을 분석하고, 이를 어떻게 극복했는지에 대한 실제적인 경험담이나 해결책을 상세히 서술해주세요. 이 부분은 독자에게 현실적인 조언을 제공하여 신뢰도를 높입니다. 최소 2~3문단 이상 작성.]</p>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}'와 관련된 심화 탐구 소제목]</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[핵심 키워드와 관련된 연관 키워드를 사용하여 독자들이 더 깊이 알고 싶어할 만한 내용을 다룹니다. 전문적인 정보나 데이터를 포함하여 신뢰성을 높여주세요. 최소 2~3문단 이상 작성.]</p>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 연관 검색어 활용 전략]</b> 📈</h2>
