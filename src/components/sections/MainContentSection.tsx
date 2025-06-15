@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
@@ -92,8 +91,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                 <ArticlePreview
                     generatedContent={appState.generatedContent}
                     isGeneratingContent={generationStatus.isGeneratingContent}
-                    copyToClipboard={utilityFunctions.copyToClipboard}
-                    downloadHTML={utilityFunctions.downloadHTML}
+                    selectedTopic={appState.selectedTopic}
                 />
 
                 {appState.generatedContent && !generationStatus.isGeneratingContent && (
