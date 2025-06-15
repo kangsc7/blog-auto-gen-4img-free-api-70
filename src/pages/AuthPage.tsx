@@ -1,6 +1,5 @@
 
 import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared-themes'
 import { supabase } from '@/lib/supabaseClient'
 import { Bot } from 'lucide-react'
 import { Navigate } from 'react-router-dom';
@@ -22,7 +21,6 @@ const AuthPage = () => {
         </div>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
           providers={['google']}
           localization={{
             variables: {
