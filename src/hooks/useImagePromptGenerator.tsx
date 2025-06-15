@@ -129,7 +129,11 @@ ${inputText}
       if (error.context && typeof error.context.json === 'function') {
         try {
           const functionError = await error.context.json();
-          errorMessage = functionError.error || functionError.details || errorMessage;
+          if (functionError.error && functionError.details) {
+            errorMessage = `${functionError.error}: ${functionError.details}`;
+          } else {
+            errorMessage = functionError.error || functionError.details || errorMessage;
+          }
         } catch (e) {
           // Parsing failed, stick with the original message
         }
