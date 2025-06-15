@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, RefreshCcw } from 'lucide-react';
+import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -121,30 +121,42 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <AppHeader
         currentUser={profile?.email || appState.currentUser}
-        resetApp={handleResetApp}
         handleLogout={handleLogout}
       />
       
       {isAdmin && (
-        <div className="container mx-auto my-4 flex items-start gap-4">
-          <Link
-            to="/admin/users"
-            className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
-          >
-            <Shield className="h-5 w-5 text-red-500" />
-            <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
-          </Link>
+        <div className="container mx-auto my-4 flex items-center justify-between">
+          <div className="flex items-start gap-4">
+            <Link
+              to="/admin/users"
+              className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
+            >
+              <Shield className="h-5 w-5 text-red-500" />
+              <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
+            </Link>
+            <div className="text-center">
+              <Button
+                onClick={handleDeduplicateTopics}
+                disabled={appState.topics.length === 0}
+                variant="outline"
+                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+              >
+                <RefreshCcw className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold text-gray-800">중복 주제 제거</span>
+              </Button>
+              <p className="text-xs text-gray-500 mt-1">AI가 생성한 주제 목록에 동일한 내용이 여러 개 있을 경우, 중복된 항목을 삭제하고 하나만 남깁니다.</p>
+            </div>
+          </div>
           <div className="text-center">
             <Button
-              onClick={handleDeduplicateTopics}
-              disabled={appState.topics.length === 0}
+              onClick={handleResetApp}
               variant="outline"
-              className="w-full inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-green-600 border-green-600 hover:bg-green-50 p-3 rounded-lg shadow-md transition-colors"
             >
-              <RefreshCcw className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold text-gray-800">중복 주제 제거</span>
+              <RefreshCw className="h-5 w-5" />
+              <span className="font-semibold text-gray-800">초기화</span>
             </Button>
-            <p className="text-xs text-gray-500 mt-1">AI 생성 주제 목록에서 중복 항목을 제거합니다.</p>
+            <p className="text-xs text-gray-500 mt-1">모든 입력과 생성된 내용을 초기화합니다.</p>
           </div>
         </div>
       )}

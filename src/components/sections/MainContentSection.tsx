@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
@@ -75,17 +74,19 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     generateArticleContent={generationFunctions.generateArticle}
                 />
 
-                <ImageCreation
-                    appState={appState}
-                    isGeneratingImage={generationStatus.isGeneratingImage}
-                    isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-                    createImagePrompt={generationFunctions.createImagePrompt}
-                    generateDirectImage={generationFunctions.generateDirectImage}
-                    copyToClipboard={utilityFunctions.copyToClipboard}
-                    openWhisk={utilityFunctions.openWhisk}
-                />
+                <div className="sticky top-6 space-y-6">
+                  <ImageCreation
+                      appState={appState}
+                      isGeneratingImage={generationStatus.isGeneratingImage}
+                      isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+                      createImagePrompt={generationFunctions.createImagePrompt}
+                      generateDirectImage={generationFunctions.generateDirectImage}
+                      copyToClipboard={utilityFunctions.copyToClipboard}
+                      openWhisk={utilityFunctions.openWhisk}
+                  />
 
-                <ImagePaster />
+                  <ImagePaster />
+                </div>
             </div>
 
             <div className="lg:col-span-8 space-y-6">

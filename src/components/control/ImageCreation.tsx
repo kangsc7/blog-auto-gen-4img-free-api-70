@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,8 +141,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                 <div className="space-y-2">
                   <img src={generatedImage} alt="Generated from prompt" className="rounded-lg w-full" />
                   <Button
-                    variant="outline"
-                    className="w-full"
+                    className="w-full bg-green-600 hover:bg-green-700 text-primary-foreground"
                     onClick={handleCopyImageHtml}
                   >
                     <Copy className="h-4 w-4 mr-2" />
