@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { HfInference } from 'https://esm.sh/@huggingface/inference@4.0.4'
+import { encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +38,7 @@ serve(async (req) => {
     })
 
     const arrayBuffer = await imageBlob.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const base64 = encode(arrayBuffer)
     const image = `data:image/png;base64,${base64}`;
 
     return new Response(
@@ -61,4 +62,3 @@ serve(async (req) => {
     )
   }
 })
-
