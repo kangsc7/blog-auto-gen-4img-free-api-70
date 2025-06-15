@@ -62,6 +62,7 @@ export const integratePixabayImages = async (
     const h2s = Array.from(doc.querySelectorAll('h2'));
     let imageCount = 0;
     const MAX_IMAGES = 4;
+    const usedImageUrls = new Set<string>(); // 중복 이미지 추적을 위한 Set
 
     if (h2s.length > 0) {
         const numImagesToInsert = Math.min(MAX_IMAGES, h2s.length);
@@ -88,9 +89,14 @@ export const integratePixabayImages = async (
                     if (!keyword) continue;
 
                     const imageData = await searchPixabayImages(keyword, pixabayApiKey);
-                    if (imageData?.hits?.length > 0) {
-                        const randomImage = imageData.hits[Math.floor(Math.random() * imageData.hits.length)];
+                    
+                    // 사용하지 않은 이미지만 필터링
+                    const availableImages = imageData?.hits?.filter(hit => !usedImageUrls.has(hit.webformatURL)) || [];
+
+                    if (availableImages.length > 0) {
+                        const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
                         const imageUrl = randomImage.webformatURL;
+                        usedImageUrls.add(imageUrl); // 사용된 이미지 URL 추가
 
                         const imageContainer = doc.createElement('div');
                         imageContainer.style.textAlign = 'center';

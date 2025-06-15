@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +28,7 @@ const Index = () => {
   const pixabayManager = usePixabayManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage, createImagePrompt } = useImagePromptGenerator(appState, saveAppState);
+  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState);
   
   const {
     manualTopic,
@@ -102,13 +101,13 @@ const Index = () => {
     return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
   }
   
-  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage };
+  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
 
   const generateArticleForManual = (topic?: string) => {
     return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
-  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt };
+  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 

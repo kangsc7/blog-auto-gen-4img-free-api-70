@@ -9,6 +9,7 @@ export const useImagePromptGenerator = (
 ) => {
   const { toast } = useToast();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isDirectlyGenerating, setIsDirectlyGenerating] = useState(false);
 
   const createImagePrompt = async (inputText: string): Promise<boolean> => {
     if (!inputText.trim()) {
@@ -96,5 +97,54 @@ ${inputText}
     }
   };
 
-  return { isGeneratingImage, createImagePrompt };
+  const generateDirectImage = async (): Promise<string | null> => {
+    if (!appState.imagePrompt) {
+      toast({ title: "프롬프트 필요", description: "먼저 이미지 프롬프트를 생성해주세요.", variant: "destructive" });
+      return null;
+    }
+
+    setIsDirectlyGenerating(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Supabase URL 또는 Anon Key가 설정되지 않았습니다.");
+      }
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/generate-image-hf`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({ prompt: appState.imagePrompt }),
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '이미지 생성에 실패했습니다.');
+      }
+      
+      const { image } = await response.json();
+      if (!image) {
+        throw new Error('API로부터 유효한 이미지를 받지 못했습니다.');
+      }
+
+      toast({ title: "이미지 생성 완료", description: "프롬프트 기반 이미지가 생성되었습니다." });
+      return image;
+
+    } catch (error) {
+      console.error('직접 이미지 생성 오류:', error);
+      toast({ title: "이미지 생성 실패", description: error instanceof Error ? error.message : "이미지 생성 중 오류가 발생했습니다.", variant: "destructive" });
+      return null;
+    } finally {
+      setIsDirectlyGenerating(false);
+    }
+  };
+
+  return { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage };
 };

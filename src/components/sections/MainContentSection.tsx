@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
@@ -12,12 +13,14 @@ interface GenerationStatus {
     isGeneratingTopics: boolean;
     isGeneratingContent: boolean;
     isGeneratingImage: boolean;
+    isDirectlyGenerating: boolean;
 }
 
 interface GenerationFunctions {
     generateTopics: () => Promise<string[] | null>;
     generateArticle: (topic?: string) => Promise<string | null>;
     createImagePrompt: (text: string) => Promise<boolean>;
+    generateDirectImage: () => Promise<string | null>;
 }
 
 interface TopicControls {
@@ -75,7 +78,9 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                 <ImageCreation
                     appState={appState}
                     isGeneratingImage={generationStatus.isGeneratingImage}
+                    isDirectlyGenerating={generationStatus.isDirectlyGenerating}
                     createImagePrompt={generationFunctions.createImagePrompt}
+                    generateDirectImage={generationFunctions.generateDirectImage}
                     copyToClipboard={utilityFunctions.copyToClipboard}
                     openWhisk={utilityFunctions.openWhisk}
                 />
