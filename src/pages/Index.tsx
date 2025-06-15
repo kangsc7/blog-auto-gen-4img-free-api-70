@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApiKeyManager } from '@/hooks/useApiKeyManager';
 import { useOneClick } from '@/hooks/useOneClick';
 import { usePixabayManager } from '@/hooks/usePixabayManager';
+import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
 import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
@@ -26,9 +27,14 @@ const Index = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
+  const huggingFaceManager = useHuggingFaceManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState);
+  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
+    appState,
+    saveAppState,
+    huggingFaceManager.huggingFaceApiKey
+  );
   
   const {
     manualTopic,
@@ -151,6 +157,7 @@ const Index = () => {
         saveApiKeyToStorage={saveApiKeyToStorage}
         deleteApiKeyFromStorage={deleteApiKeyFromStorage}
         pixabayManager={pixabayManager}
+        huggingFaceManager={huggingFaceManager}
       />
 
       <OneClickSection

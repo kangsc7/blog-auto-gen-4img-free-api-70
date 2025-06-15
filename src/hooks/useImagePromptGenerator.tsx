@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -6,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useImagePromptGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void
+  saveAppState: (newState: Partial<AppState>) => void,
+  huggingFaceApiKey?: string
 ) => {
   const { toast } = useToast();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -107,7 +107,10 @@ ${inputText}
     setIsDirectlyGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-image-hf', {
-        body: { prompt: appState.imagePrompt },
+        body: { 
+          prompt: appState.imagePrompt,
+          apiKey: huggingFaceApiKey || undefined,
+        },
       });
 
       if (error) {
@@ -124,19 +127,22 @@ ${inputText}
 
     } catch (error: any) {
       console.error('직접 이미지 생성 오류:', error);
-      let errorMessage = error instanceof Error ? error.message : "이미지 생성 중 오류가 발생했습니다.";
-      // Try to parse a more detailed error from the Supabase function response context
+      let errorMessage = "이미지 생성 중 오류가 발생했습니다.";
       if (error.context && typeof error.context.json === 'function') {
         try {
           const functionError = await error.context.json();
           if (functionError.error && functionError.details) {
             errorMessage = `${functionError.error}: ${functionError.details}`;
+          } else if (functionError.details) {
+            errorMessage = functionError.details;
           } else {
-            errorMessage = functionError.error || functionError.details || errorMessage;
+            errorMessage = functionError.error || errorMessage;
           }
         } catch (e) {
-          // Parsing failed, stick with the original message
+            errorMessage = error.message || "이미지 생성 중 오류가 발생했습니다.";
         }
+      } else if(error.message) {
+        errorMessage = error.message;
       }
       toast({ title: "이미지 생성 실패", description: errorMessage, variant: "destructive" });
       return null;

@@ -2,11 +2,13 @@
 import React from 'react';
 import { ApiKeyManager } from '@/components/control/ApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
+import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
 import { AppState } from '@/types';
 import { usePixabayManager } from '@/hooks/usePixabayManager';
+import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Settings, ImagePlus } from 'lucide-react';
+import { Settings, ImagePlus, Bot } from 'lucide-react';
 
 interface ApiKeysSectionProps {
     appState: AppState;
@@ -16,6 +18,7 @@ interface ApiKeysSectionProps {
     saveApiKeyToStorage: () => void;
     deleteApiKeyFromStorage: () => void;
     pixabayManager: ReturnType<typeof usePixabayManager>;
+    huggingFaceManager: ReturnType<typeof useHuggingFaceManager>;
 }
 
 const PlaceholderCard = ({ title, icon: Icon }: { title: string, icon: React.ElementType }) => (
@@ -73,11 +76,12 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
     saveApiKeyToStorage,
     deleteApiKeyFromStorage,
     pixabayManager,
+    huggingFaceManager,
 }) => {
     return (
-        <div className="max-w-7xl mx-auto my-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="max-w-7xl mx-auto my-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <HoverContainer
-                placeholder={<PlaceholderCard title="API 키 설정" icon={Settings} />}
+                placeholder={<PlaceholderCard title="Gemini API 키 설정" icon={Settings} />}
             >
                 <ApiKeyManager
                     appState={appState}
@@ -87,6 +91,11 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
                     saveApiKeyToStorage={saveApiKeyToStorage}
                     deleteApiKeyFromStorage={deleteApiKeyFromStorage}
                 />
+            </HoverContainer>
+            <HoverContainer
+                placeholder={<PlaceholderCard title="Hugging Face API 키" icon={Bot} />}
+            >
+                <HuggingFaceApiKeyManager manager={huggingFaceManager} />
             </HoverContainer>
             <HoverContainer
                 placeholder={<PlaceholderCard title="Pixabay API 키 설정" icon={ImagePlus} />}
