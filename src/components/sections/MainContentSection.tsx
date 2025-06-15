@@ -74,7 +74,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     generateArticleContent={generationFunctions.generateArticle}
                 />
 
-                <div className="sticky top-6 space-y-6">
+                <div className="sticky top-6 space-y-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-lg pr-2">
                   <ImageCreation
                       appState={appState}
                       isGeneratingImage={generationStatus.isGeneratingImage}
