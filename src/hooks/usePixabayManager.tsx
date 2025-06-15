@@ -38,7 +38,7 @@ export const usePixabayManager = () => {
             setPixabayApiKey(savedKey);
             validatePixabayApiKeyCallback(savedKey, true);
         }
-    }, [validateHuggingFaceApiKeyCallback]);
+    }, [validatePixabayApiKeyCallback]);
 
     const deletePixabayApiKeyFromStorage = () => {
         localStorage.removeItem('pixabay_api_key');
