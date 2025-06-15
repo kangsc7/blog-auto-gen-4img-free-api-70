@@ -1,30 +1,25 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { ProgressTracker } from '@/components/layout/ProgressTracker';
-import { TopicGenerator } from '@/components/control/TopicGenerator';
-import { ArticleGenerator } from '@/components/control/ArticleGenerator';
-import { ImageCreation } from '@/components/control/ImageCreation';
-import { ApiKeyManager } from '@/components/control/ApiKeyManager';
-import { TopicList } from '@/components/display/TopicList';
-import { ArticlePreview } from '@/components/display/ArticlePreview';
-import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
-import { Button } from '@/components/ui/button';
-import { Zap, RefreshCw } from 'lucide-react';
+import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
+import { OneClickSection } from '@/components/sections/OneClickSection';
+import { MainContentSection } from '@/components/sections/MainContentSection';
 
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useApiKeyManager } from '@/hooks/useApiKeyManager';
 import { useGenerationAPI } from '@/hooks/useGenerationAPI';
 import { useOneClick } from '@/hooks/useOneClick';
-import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
+import { usePixabayManager } from '@/hooks/usePixabayManager';
 
 const Index = () => {
   const { toast } = useToast();
   const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
   const { loginData, setLoginData, handleLogin, handleLogout } = useAuth(saveAppState);
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
+  const pixabayManager = usePixabayManager();
   const {
     isGeneratingTopics,
     isGeneratingContent,
@@ -35,65 +30,9 @@ const Index = () => {
   } = useGenerationAPI(appState, saveAppState);
   
   const [manualTopic, setManualTopic] = useState('');
-  const [pixabayApiKey, setPixabayApiKey] = useState('');
-  const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(false);
-  const [isPixabayValidating, setIsPixabayValidating] = useState(false);
-
-  useEffect(() => {
-    const savedKey = localStorage.getItem('pixabay_api_key') || '';
-    if (savedKey) {
-      setPixabayApiKey(savedKey);
-      // Simple validation check on load
-      validatePixabayApiKey(savedKey);
-    }
-  }, []);
-
-  const savePixabayApiKeyToStorage = () => {
-    if (!pixabayApiKey.trim()) {
-      toast({ title: "저장 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
-      return;
-    }
-    localStorage.setItem('pixabay_api_key', pixabayApiKey);
-    localStorage.setItem('pixabay_api_key_validated', String(isPixabayApiKeyValidated));
-    toast({ title: "저장 완료", description: "Pixabay API 키가 브라우저에 저장되었습니다." });
-  };
-
-  const deletePixabayApiKeyFromStorage = () => {
-    localStorage.removeItem('pixabay_api_key');
-    localStorage.removeItem('pixabay_api_key_validated');
-    setPixabayApiKey('');
-    setIsPixabayApiKeyValidated(false);
-    toast({ title: "삭제 완료", description: "저장된 Pixabay API 키가 삭제되었습니다." });
-  };
-
-  const validatePixabayApiKey = async (keyToValidate?: string) => {
-    const key = keyToValidate || pixabayApiKey;
-    if (!key.trim()) {
-      toast({ title: "API 키 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
-      return;
-    }
-    setIsPixabayValidating(true);
-    try {
-      const response = await fetch(`https://pixabay.com/api/?key=${key}&q=test`);
-      if (response.status === 400) throw new Error('잘못된 API 키');
-      if (!response.ok) throw new Error(`네트워크 오류: ${response.statusText}`);
-      
-      setIsPixabayApiKeyValidated(true);
-      if (!keyToValidate) { // Don't toast on initial load validation
-        toast({ title: "Pixabay API 키 검증 성공", description: "성공적으로 연결되었습니다." });
-      }
-    } catch (error) {
-      setIsPixabayApiKeyValidated(false);
-      if (!keyToValidate) {
-        toast({ title: "Pixabay API 키 검증 실패", description: `키가 유효하지 않거나 문제가 발생했습니다.`, variant: "destructive" });
-      }
-    } finally {
-      setIsPixabayValidating(false);
-    }
-  };
 
   const generateArticleWithPixabay = (topic?: string) => {
-    return generateArticle(topic, { key: pixabayApiKey, validated: isPixabayApiKeyValidated });
+    return generateArticle(topic, { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated });
   };
   
   const selectTopic = (topic: string) => {
@@ -161,6 +100,11 @@ const Index = () => {
   if (!appState.isLoggedIn) {
     return <LoginForm loginData={loginData} setLoginData={setLoginData} handleLogin={handleLogin} />;
   }
+  
+  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage };
+  const generationFunctions = { generateTopics, generateArticle: generateArticleWithPixabay, createImagePrompt };
+  const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
+  const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -170,120 +114,31 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
-      <div className="max-w-7xl mx-auto my-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ApiKeyManager
-            appState={appState}
-            saveAppState={saveAppState}
-            isValidatingApi={isValidatingApi}
-            validateApiKey={validateApiKey}
-            saveApiKeyToStorage={saveApiKeyToStorage}
-            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
-          />
-        <PixabayApiKeyManager
-          apiKey={pixabayApiKey}
-          setApiKey={(key) => {
-            setPixabayApiKey(key);
-            setIsPixabayApiKeyValidated(false);
-          }}
-          isValidated={isPixabayApiKeyValidated}
-          isValidating={isPixabayValidating}
-          validateApiKey={() => validatePixabayApiKey()}
-          saveApiKey={savePixabayApiKeyToStorage}
-          deleteApiKey={deletePixabayApiKeyFromStorage}
-        />
-      </div>
+      <ApiKeysSection
+        appState={appState}
+        saveAppState={saveAppState}
+        isValidatingApi={isValidatingApi}
+        validateApiKey={validateApiKey}
+        saveApiKeyToStorage={saveApiKeyToStorage}
+        deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+        pixabayManager={pixabayManager}
+      />
 
-      <div className="max-w-7xl mx-auto my-6">
-        <div className="flex justify-between items-center gap-4 p-4 rounded-lg shadow bg-white">
-          <Button 
-            onClick={handleLatestIssueOneClick} 
-            disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
-            className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
-          >
-            <Zap className="mr-2 h-6 w-6" />
-            <span className="text-center">
-              최신 이슈
-              <br />
-              원클릭 생성
-            </span>
-          </Button>
-          
-          <div className="flex-grow px-4">
-            <ProgressTracker
-              topics={appState.topics}
-              generatedContent={appState.generatedContent}
-              imagePrompt={appState.imagePrompt}
-            />
-          </div>
-
-          <Button 
-            onClick={handleEvergreenKeywordOneClick} 
-            disabled={isOneClickGenerating || !appState.isApiKeyValidated}
-            className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
-          >
-            <RefreshCw className="mr-2 h-6 w-6" />
-            <span className="text-center">
-              평생 키워드
-              <br />
-              원클릭 생성
-            </span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 space-y-6">
-          <TopicGenerator
-            appState={appState}
-            saveAppState={saveAppState}
-            isGeneratingTopics={isGeneratingTopics}
-            generateTopicsFromKeyword={() => generateTopics()}
-            manualTopic={manualTopic}
-            setManualTopic={setManualTopic}
-            handleManualTopicAdd={handleManualTopicAdd}
-          />
-
-          <ArticleGenerator
-            appState={appState}
-            saveAppState={saveAppState}
-            selectTopic={selectTopic}
-            isGeneratingContent={isGeneratingContent}
-            generateArticleContent={generateArticleWithPixabay}
-          />
-
-          <ImageCreation
-            appState={appState}
-            saveAppState={saveAppState}
-            isGeneratingImage={isGeneratingImage}
-            createImagePromptFromTopic={createImagePrompt}
-            copyToClipboard={copyToClipboard}
-            openWhisk={openWhisk}
-          />
-        </div>
-
-        <div className="lg:col-span-8 space-y-6">
-          <TopicList
-            topics={appState.topics}
-            selectedTopic={appState.selectedTopic}
-            selectTopic={selectTopic}
-          />
-
-          <ArticlePreview
-            generatedContent={appState.generatedContent}
-            isGeneratingContent={isGeneratingContent}
-            copyToClipboard={copyToClipboard}
-            downloadHTML={downloadHTML}
-          />
-
-          {appState.generatedContent && !isGeneratingContent && (
-             <SeoAnalyzer 
-                generatedContent={appState.generatedContent}
-                keyword={appState.keyword}
-                selectedTopic={appState.selectedTopic}
-             />
-          )}
-        </div>
-      </div>
+      <OneClickSection
+        handleLatestIssueOneClick={handleLatestIssueOneClick}
+        handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
+        isOneClickGenerating={isOneClickGenerating}
+        appState={appState}
+      />
+      
+      <MainContentSection
+        appState={appState}
+        saveAppState={saveAppState}
+        generationStatus={generationStatus}
+        generationFunctions={generationFunctions}
+        topicControls={topicControls}
+        utilityFunctions={utilityFunctions}
+      />
     </div>
   );
 };
