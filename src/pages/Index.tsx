@@ -12,6 +12,8 @@ import { ApiKeyManager } from '@/components/control/ApiKeyManager';
 import { TopicList } from '@/components/display/TopicList';
 import { ArticlePreview } from '@/components/display/ArticlePreview';
 import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
+import { Button } from '@/components/ui/button';
+import { Zap, RefreshCw } from 'lucide-react';
 
 const Index = () => {
   const { toast } = useToast();
@@ -41,6 +43,7 @@ const Index = () => {
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isValidatingApi, setIsValidatingApi] = useState(false);
+  const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
 
   useEffect(() => {
     initializeUsers();
@@ -231,14 +234,16 @@ const Index = () => {
     }
   };
 
-  const generateTopicsFromKeyword = async () => {
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const generateTopicsFromKeyword = async (): Promise<boolean> => {
     if (!appState.keyword.trim()) {
       toast({
         title: "키워드 오류",
         description: "핵심 키워드를 입력해주세요.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     if (!appState.isApiKeyValidated) {
@@ -247,7 +252,7 @@ const Index = () => {
         description: "먼저 API 키를 입력하고 검증해주세요.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     setIsGeneratingTopics(true);
@@ -296,6 +301,8 @@ const Index = () => {
         title: "AI 기반 주제 생성 완료",
         description: `${newTopics.length}개의 새로운 주제가 생성되었습니다.`,
       });
+      setIsGeneratingTopics(false);
+      return true;
 
     } catch (error) {
       console.error('주제 생성 오류:', error);
@@ -304,8 +311,8 @@ const Index = () => {
         description: error instanceof Error ? error.message : "주제 생성 중 오류가 발생했습니다. API 키와 네트워크 연결을 확인해주세요.",
         variant: "destructive"
       });
-    } finally {
       setIsGeneratingTopics(false);
+      return false;
     }
   };
 
@@ -337,14 +344,14 @@ const Index = () => {
     });
   };
 
-  const generateArticleContent = async () => {
+  const generateArticleContent = async (): Promise<boolean> => {
     if (!appState.selectedTopic) {
       toast({
         title: "주제 선택 오류",
         description: "주제를 먼저 선택해주세요.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     if (!appState.isApiKeyValidated) {
@@ -353,7 +360,7 @@ const Index = () => {
         description: "먼저 API 키를 입력하고 검증해주세요.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     setIsGeneratingContent(true);
@@ -516,6 +523,8 @@ const Index = () => {
         title: "AI 기반 블로그 글 생성 완료",
         description: "Gemini AI가 생성한 전문적인 HTML 콘텐츠가 준비되었습니다.",
       });
+      setIsGeneratingContent(false);
+      return true;
     } catch (error) {
       console.error('글 생성 오류:', error);
       toast({
@@ -523,8 +532,8 @@ const Index = () => {
         description: error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다. API 키와 네트워크 연결을 확인해주세요.",
         variant: "destructive"
       });
-    } finally {
       setIsGeneratingContent(false);
+      return false;
     }
   };
 
@@ -571,6 +580,8 @@ const Index = () => {
         title: "이미지 프롬프트 생성 완료",
         description: "ImageFX에서 사용할 수 있는 프롬프트가 생성되었습니다.",
       });
+      setIsGeneratingImage(false);
+      return true;
     } catch (error) {
       console.error('이미지 프롬프트 생성 오류:', error);
       toast({
@@ -578,8 +589,8 @@ const Index = () => {
         description: "이미지 프롬프트 생성 중 오류가 발생했습니다.",
         variant: "destructive"
       });
-    } finally {
       setIsGeneratingImage(false);
+      return false;
     }
   };
 
@@ -656,6 +667,119 @@ const Index = () => {
     });
   };
 
+  const handleLatestIssueOneClick = async () => {
+    if (isOneClickGenerating) return;
+    setIsOneClickGenerating(true);
+
+    try {
+      if (!appState.isApiKeyValidated) {
+        toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "1단계: 최신 트렌드 키워드 추출", description: "실시간 트렌드 키워드(예시)를 가져옵니다..." });
+      await sleep(3000);
+      const trendKeywords = ["국내 여행지 추천", "여름 휴가 계획", "맛집 탐방", "인공지능 최신 기술", "2025년 패션 트렌드"];
+      const keyword = trendKeywords[Math.floor(Math.random() * trendKeywords.length)];
+      saveAppState({ keyword });
+      toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
+
+      await sleep(3000);
+      toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
+      const topicsGenerated = await generateTopicsFromKeyword();
+      if (!topicsGenerated) {
+          throw new Error("주제 생성에 실패하여 중단합니다.");
+      }
+      
+      // Since state updates might be async, we need to get the latest topics. A short delay can help.
+      await sleep(500);
+
+      const latestTopics = (JSON.parse(localStorage.getItem('blog_app_state') || '{}')).topics || [];
+      if (latestTopics.length === 0) {
+        throw new Error("주제 생성 후 토픽을 찾을 수 없습니다.");
+      }
+      
+      await sleep(3000);
+      toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
+      const randomTopic = latestTopics[Math.floor(Math.random() * latestTopics.length)];
+      selectTopic(randomTopic);
+
+      await sleep(3000);
+      toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
+      const articleGenerated = await generateArticleContent();
+      if (!articleGenerated) {
+        throw new Error("글 생성에 실패하여 중단합니다.");
+      }
+
+      toast({ title: "원클릭 생성 완료!", description: "모든 과정이 성공적으로 완료되었습니다.", });
+
+    } catch (error) {
+      toast({
+        title: "원클릭 생성 중단",
+        description: error instanceof Error ? error.message : "자동 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsOneClickGenerating(false);
+    }
+  };
+
+  const handleEvergreenKeywordOneClick = async () => {
+    if (isOneClickGenerating) return;
+    setIsOneClickGenerating(true);
+
+    try {
+      if (!appState.isApiKeyValidated) {
+        toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "1단계: 평생 키워드 추출", description: "평생 사용 가능한 키워드(예시)를 가져옵니다..." });
+      await sleep(3000);
+      const evergreenKeywords = ["초보자를 위한 투자 가이드", "건강한 아침 식단 아이디어", "스트레스 해소 방법", "코딩 독학 하는 법", "효과적인 시간 관리 기술"];
+      const keyword = evergreenKeywords[Math.floor(Math.random() * evergreenKeywords.length)];
+      saveAppState({ keyword });
+      toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
+
+      // The rest of the flow is identical to the latest issue one-click
+      await sleep(3000);
+      toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
+      const topicsGenerated = await generateTopicsFromKeyword();
+      if (!topicsGenerated) {
+        throw new Error("주제 생성에 실패하여 중단합니다.");
+      }
+
+      await sleep(500);
+      const latestTopics = (JSON.parse(localStorage.getItem('blog_app_state') || '{}')).topics || [];
+       if (latestTopics.length === 0) {
+        throw new Error("주제 생성 후 토픽을 찾을 수 없습니다.");
+      }
+
+      await sleep(3000);
+      toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
+      const randomTopic = latestTopics[Math.floor(Math.random() * latestTopics.length)];
+      selectTopic(randomTopic);
+
+      await sleep(3000);
+      toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
+      const articleGenerated = await generateArticleContent();
+      if (!articleGenerated) {
+        throw new Error("글 생성에 실패하여 중단합니다.");
+      }
+
+      toast({ title: "원클릭 생성 완료!", description: "모든 과정이 성공적으로 완료되었습니다.", });
+
+    } catch (error) {
+      toast({
+        title: "원클릭 생성 중단",
+        description: error instanceof Error ? error.message : "자동 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsOneClickGenerating(false);
+    }
+  };
+
   if (!appState.isLoggedIn) {
     return <LoginForm loginData={loginData} setLoginData={setLoginData} handleLogin={handleLogin} />;
   }
@@ -668,11 +792,35 @@ const Index = () => {
         handleLogout={handleLogout}
       />
 
-      <ProgressTracker
-        topics={appState.topics}
-        generatedContent={appState.generatedContent}
-        imagePrompt={appState.imagePrompt}
-      />
+      <div className="max-w-7xl mx-auto my-6">
+        <div className="flex justify-between items-center gap-4 p-4 rounded-lg shadow bg-white">
+          <Button 
+            onClick={handleLatestIssueOneClick} 
+            disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            최신 이슈 원클릭 생성
+          </Button>
+          
+          <div className="flex-grow px-4">
+            <ProgressTracker
+              topics={appState.topics}
+              generatedContent={appState.generatedContent}
+              imagePrompt={appState.imagePrompt}
+            />
+          </div>
+
+          <Button 
+            onClick={handleEvergreenKeywordOneClick} 
+            disabled={isOneClickGenerating || !appState.isApiKeyValidated}
+            className="bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            평생 키워드 원클릭 생성
+          </Button>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 왼쪽 컬럼 */}
