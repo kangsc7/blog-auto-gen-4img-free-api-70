@@ -198,7 +198,7 @@ const Index = () => {
           <Button 
             onClick={handleLatestIssueOneClick} 
             disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
-            className="px-8 py-6 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
+            className="px-8 py-8 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
           >
             <Zap className="mr-2 h-6 w-6" />
             <span className="text-center">
@@ -219,7 +219,7 @@ const Index = () => {
           <Button 
             onClick={handleEvergreenKeywordOneClick} 
             disabled={isOneClickGenerating || !appState.isApiKeyValidated}
-            className="px-8 py-6 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
+            className="px-8 py-8 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
           >
             <RefreshCw className="mr-2 h-6 w-6" />
             <span className="text-center">
