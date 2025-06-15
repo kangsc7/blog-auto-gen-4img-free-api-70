@@ -9,7 +9,7 @@ import { AlertTriangle, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AdminUsers = () => {
-    const { profile, user, loading, handleLogout } = useAuth();
+    const { user, loading, handleLogout, isAdmin } = useAuth();
     const navigate = useNavigate();
 
     if (loading) {
@@ -20,7 +20,7 @@ const AdminUsers = () => {
         );
     }
     
-    if (profile?.role !== 'admin') {
+    if (!isAdmin) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <Card className="w-full max-w-md text-center shadow-lg">

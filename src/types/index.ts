@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   password: string;
@@ -29,7 +28,6 @@ export interface Profile {
   id: string;
   email: string;
   status: UserStatus;
-  role: AppRole;
   created_at: string;
   updated_at: string;
 }

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
@@ -22,7 +23,7 @@ import { useAppHandlers } from '@/hooks/useAppHandlers';
 const Index = () => {
   const { toast } = useToast();
   const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
-  const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout } = useAuth();
+  const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
@@ -96,7 +97,7 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
-      {profile?.role === 'admin' && (
+      {isAdmin && (
         <div className="container mx-auto my-4">
           <Link
             to="/admin/users"

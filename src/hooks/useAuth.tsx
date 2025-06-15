@@ -9,6 +9,7 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export const useAuth = () => {
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
         setProfile(null);
+        setIsAdmin(false);
 
         if (currentUser) {
             const { data, error } = await supabase
@@ -29,6 +31,20 @@ export const useAuth = () => {
                 console.error("Error fetching profile:", error);
             } else if (data) {
                 setProfile(data);
+            }
+
+            // Fetch user role and check if admin
+            const { data: roleData, error: roleError } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', currentUser.id)
+              .eq('role', 'admin')
+              .maybeSingle();
+
+            if (roleError) {
+              console.error("Error fetching user role:", roleError);
+            } else if (roleData) {
+              setIsAdmin(true);
             }
         }
         setLoading(false);
@@ -100,5 +116,5 @@ export const useAuth = () => {
     }
   };
 
-  return { session, user, profile, loading, handleLogin, handleSignUp, handleLogout };
+  return { session, user, profile, loading, isAdmin, handleLogin, handleSignUp, handleLogout };
 };
