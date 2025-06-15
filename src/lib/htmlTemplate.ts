@@ -70,7 +70,7 @@ ${getCssStyles(colors)}
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하며 핵심 내용을 다시 한번 요약하고, 독자에게 도움이 되었기를 바라는 마음을 표현. '${keyword}'의 중요성을 마지막으로 강조. 독자의 행동을 유도하는 문장 포함.] 😊</p>
 <p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>워드프레스 꿀팁 더 보러가기</strong></a></p>
 <br><br>
-[${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5~10개 나열. 블로그 태그로 활용. '...' 등과 같은 생략 부호는 절대 사용하지 마세요.]
+[${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5개에서 10개 사이의 태그를 생성하여 나열해주세요. 목록의 끝을 ...으로 마무리하는 등, 내용을 완성하지 않고 생략하면 안 됩니다. 반드시 완성된 전체 태그 목록을 제공해야 합니다.]
 </div>
 </div>
 `;

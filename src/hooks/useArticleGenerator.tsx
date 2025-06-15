@@ -61,7 +61,7 @@ export const useArticleGenerator = (
       }
       
       const htmlContent = data.candidates[0].content.parts[0].text;
-      const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim().replace(/(\.\.\.|…)\s*$/, "");
+      const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim().replace(/,?\s*(\.\.\.|…)\s*(?=<\/)/g, '');
 
       let finalHtml = cleanedHtml;
 
