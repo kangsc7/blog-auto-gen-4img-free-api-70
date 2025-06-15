@@ -35,6 +35,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
           created_at: string
           email: string | null
           id: string
@@ -42,6 +43,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
           created_at?: string
           email?: string | null
           id: string
@@ -49,6 +51,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -122,6 +125,10 @@ export type Database = {
       check_user_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
+      }
+      expire_approved_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

@@ -30,4 +30,5 @@ export interface Profile {
   status: UserStatus;
   created_at: string;
   updated_at: string;
+  approved_at: string | null;
 }

@@ -45,9 +45,24 @@ export const useUserManagement = () => {
     }, [fetchUsers]);
     
     const updateUserStatus = async (userId: string, status: UserStatus) => {
+        const updatePayload: {
+            status: UserStatus;
+            updated_at: string;
+            approved_at?: string | null;
+        } = {
+            status,
+            updated_at: new Date().toISOString(),
+        };
+
+        if (status === 'approved') {
+            updatePayload.approved_at = new Date().toISOString();
+        } else {
+            updatePayload.approved_at = null;
+        }
+
         const { error } = await supabase
             .from('profiles')
-            .update({ status, updated_at: new Date().toISOString() })
+            .update(updatePayload)
             .eq('id', userId);
 
         if (error) {

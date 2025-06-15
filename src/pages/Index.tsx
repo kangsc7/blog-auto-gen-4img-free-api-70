@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
@@ -151,9 +150,9 @@ const Index = () => {
                 className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
               >
                 <RefreshCcw className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-gray-800">중복 주제 제거</span>
+                <span className="font-semibold text-gray-800">중복 주제 생성 해제</span>
               </Button>
-              <p className="text-xs text-gray-500 mt-1">AI가 생성한 주제 목록에 동일한 내용이 여러 개 있을 경우, 중복된 항목을 삭제하고 하나만 남깁니다.</p>
+              <p className="text-xs text-gray-500 mt-1">중복 주제 생성을 막는 기능을 해제할 수 있는 옵션</p>
             </div>
           </div>
           <div className="text-center">
