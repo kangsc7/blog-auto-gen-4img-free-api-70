@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -96,14 +97,6 @@ const Index = () => {
     return generateArticle(topic, { key: pixabayApiKey, validated: isPixabayApiKeyValidated });
   };
   
-  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick } = useOneClick(
-    appState,
-    saveAppState,
-    generateTopics,
-    selectTopic,
-    generateArticleWithPixabay
-  );
-  
   const selectTopic = (topic: string) => {
     saveAppState({ selectedTopic: topic });
     toast({
@@ -112,6 +105,14 @@ const Index = () => {
     });
   };
 
+  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick } = useOneClick(
+    appState,
+    saveAppState,
+    generateTopics,
+    selectTopic,
+    generateArticleWithPixabay
+  );
+  
   const handleManualTopicAdd = () => {
     if (!manualTopic.trim()) {
       toast({ title: "주제 입력 오류", description: "주제를 입력해주세요.", variant: "destructive" });
