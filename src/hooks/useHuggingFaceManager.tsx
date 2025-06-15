@@ -15,7 +15,7 @@ export const useHuggingFaceManager = () => {
         }
         setIsHuggingFaceValidating(true);
         try {
-            const response = await fetch('https://api-inference.huggingface.co/whoami-v2', {
+            const response = await fetch('https://huggingface.co/api/whoami-v2', {
                 headers: {
                     'Authorization': `Bearer ${key}`
                 }
