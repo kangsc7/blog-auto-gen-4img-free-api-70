@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,7 +105,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             ref={editableDivRef}
             contentEditable={true}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
-            className="border p-4 rounded bg-gray-50 max-h-[60vh] min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto"
+            className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
           />
         ) : (

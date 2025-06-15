@@ -93,7 +93,8 @@ export const useArticleGenerator = (
         throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
       }
       
-      const htmlContent = data.candidates[0].content.parts[0].text;
+      const rawContent = data.candidates[0].content.parts[0].text;
+      const htmlContent = rawContent.replace(/^```html\n?|```$/g, '').trim();
       let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
 
