@@ -74,11 +74,27 @@ export const ImagePaster = () => {
 
         const imgTag = `<img src="${convertedImage}" alt="pasted_and_converted_image" style="max-width: 100%; height: auto;">`;
         try {
-            await navigator.clipboard.writeText(imgTag);
+            // Use Clipboard API to write HTML content, with a plain text fallback.
+            const blob = new Blob([imgTag], { type: 'text/html' });
+            const plainTextBlob = new Blob([imgTag], { type: 'text/plain' });
+            
+            const clipboardItem = new ClipboardItem({
+                'text/html': blob,
+                'text/plain': plainTextBlob,
+            });
+
+            await navigator.clipboard.write([clipboardItem]);
             toast({ title: "복사 완료", description: "이미지 HTML 태그가 클립보드에 복사되었습니다. 미리보기 창에 붙여넣으세요." });
         } catch (error) {
             console.error('Failed to copy HTML: ', error);
-            toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
+            // Fallback for browsers that might not support ClipboardItem or have security restrictions
+            try {
+                await navigator.clipboard.writeText(imgTag);
+                toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. 일부 편집기에서는 HTML 모드로 붙여넣어야 할 수 있습니다." });
+            } catch (copyError) {
+                console.error('Failed to copy HTML as text: ', copyError);
+                toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
+            }
         }
     };
 
