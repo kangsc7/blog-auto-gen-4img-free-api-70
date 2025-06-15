@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
@@ -151,11 +152,13 @@ const Index = () => {
                 className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md data-[state=on]:bg-blue-100 data-[state=on]:border-blue-400 hover:bg-gray-50 transition-colors"
               >
                 <RefreshCcw className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-gray-800">중복 주제 허용</span>
+                <span className="font-semibold text-gray-800 w-28 text-center">
+                  {!preventDuplicates ? '중복 주제 허용' : '중복 주제 금지'}
+                </span>
               </Toggle>
               <div className="w-56 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
-                  이 버튼을 누르면 중복 주제 생성이 허용됩니다. 다시 누르면 중복 주제가 자동으로 제거됩니다.
+                  '금지' 상태에선 중복 주제가 자동 제거됩니다. '허용'으로 바꾸면 중복 생성이 가능합니다.
                 </p>
               </div>
             </div>
