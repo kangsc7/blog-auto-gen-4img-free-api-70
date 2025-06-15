@@ -1,54 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, CheckCircle, User, Lock, Lightbulb, Edit, Image, Download, RefreshCw, LogOut, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface User {
-  id: string;
-  password: string;
-}
-
-interface AppState {
-  isLoggedIn: boolean;
-  currentUser: string;
-  apiKey: string;
-  isApiKeyValidated: boolean;
-  keyword: string;
-  topicCount: number;
-  topics: string[];
-  selectedTopic: string;
-  colorTheme: string;
-  referenceLink: string;
-  generatedContent: string;
-  imageStyle: string;
-  imagePrompt: string;
-}
-
-const colorThemes = [
-  { value: 'blue-gray', label: '블루-그레이 (차분하고 전문적인 느낌)' },
-  { value: 'green-orange', label: '그린-오렌지 (활기차고 친근한 느낌)' },
-  { value: 'purple-yellow', label: '퍼플-옐로우 (세련되고 창의적인 느낌)' },
-  { value: 'teal-light-gray', label: '틸-라이트그레이 (안정적이고 현대적인 느낌)' },
-  { value: 'terracotta-light-gray', label: '테라코타-라이트그레이 (따뜻하고 편안한 느낌)' },
-  { value: 'classic-blue', label: '클래식 블루 (신뢰할 수 있고 안정적인 느낌)' },
-  { value: 'nature-green', label: '네이처 그린 (생기 있고 조화로운 느낌)' },
-  { value: 'royal-purple', label: '로얄 퍼플 (우아하고 독창적인 느낌)' },
-  { value: 'future-teal', label: '퓨처 틸 (혁신적이고 활기찬 느낌)' },
-  { value: 'earth-terracotta', label: '어스 테라코타 (온화하고 견고한 느낌)' }
-];
-
-const imageStyles = [
-  { value: 'realistic', label: '사실적' },
-  { value: 'artistic', label: '예술적' },
-  { value: 'minimal', label: '미니멀' },
-  { value: 'cinematic', label: '시네마틱' },
-  { value: 'animation', label: '애니메이션' },
-  { value: 'cartoon', label: '만화' }
-];
+import { AppState, User } from '@/types';
+import { colorThemes } from '@/data/constants';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { AppHeader } from '@/components/layout/AppHeader';
+import { ProgressTracker } from '@/components/layout/ProgressTracker';
+import { TopicGenerator } from '@/components/control/TopicGenerator';
+import { ArticleGenerator } from '@/components/control/ArticleGenerator';
+import { ImageCreation } from '@/components/control/ImageCreation';
+import { ApiKeyManager } from '@/components/control/ApiKeyManager';
+import { TopicList } from '@/components/display/TopicList';
+import { ArticlePreview } from '@/components/display/ArticlePreview';
 
 const Index = () => {
   const { toast } = useToast();
@@ -981,494 +943,76 @@ const Index = () => {
   };
 
   if (!appState.isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Bot className="h-12 w-12 text-blue-600 mr-2" />
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</CardTitle>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">아이디</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="아이디를 입력하세요"
-                  value={loginData.id}
-                  onChange={(e) => setLoginData(prev => ({ ...prev, id: e.target.value }))}
-                  className="pl-10"
-                  style={{ color: '#000' }}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">비밀번호</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="password"
-                  placeholder="비밀번호를 입력하세요"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                  className="pl-10"
-                  style={{ color: '#000' }}
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                />
-              </div>
-            </div>
-            <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700">
-              로그인
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoginForm loginData={loginData} setLoginData={setLoginData} handleLogin={handleLogin} />;
   }
-
-  const steps = ['주제 생성', '글 작성', '이미지 생성', '최종 완성'];
-  let preciseActiveStep = 1;
-  if (appState.imagePrompt) {
-    preciseActiveStep = 4;
-  } else if (appState.generatedContent) {
-    preciseActiveStep = 3;
-  } else if (appState.topics.length > 0) {
-    preciseActiveStep = 2;
-  }
-
-  const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      {/* 헤더 */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Bot className="h-8 w-8 text-blue-600 mr-3" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</h1>
-              <p className="text-sm text-gray-600">GenSpark 기반 자동화 콘텐츠 시스템 도구</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">사용자: {appState.currentUser}</span>
-            <span className="text-sm text-gray-500">로그인 시간: {new Date().toLocaleString('ko-KR')}</span>
-            <Button onClick={resetApp} variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-50">
-              <RefreshCw className="h-4 w-4 mr-1" />
-              초기화
-            </Button>
-            <Button onClick={handleLogout} variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
-              <LogOut className="h-4 w-4 mr-1" />
-              로그아웃
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AppHeader
+        currentUser={appState.currentUser}
+        resetApp={resetApp}
+        handleLogout={handleLogout}
+      />
 
-      {/* 진행 단계 표시 */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="bg-white rounded-lg shadow-md p-6 pt-10">
-          <div className="w-full max-w-2xl mx-auto px-4 sm:px-0">
-            <div className="relative">
-              <div className="absolute top-4 left-0 w-full h-1 bg-gray-200 rounded-full"></div>
-              <div
-                className="absolute top-4 left-0 h-1 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-              <div className="flex justify-between items-start">
-                {steps.map((label, index) => {
-                  const stepNumber = index + 1;
-                  const isCompleted = stepNumber < preciseActiveStep;
-                  const isActive = stepNumber === preciseActiveStep;
-                  return (
-                    <div key={label} className="relative text-center w-20">
-                      <div
-                        className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
-                          isActive
-                            ? 'bg-blue-500 text-white border-blue-500 scale-110'
-                            : isCompleted
-                            ? 'bg-teal-400 text-white border-teal-400'
-                            : 'bg-white text-gray-500 border-gray-300'
-                        }`}
-                      >
-                        {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
-                      </div>
-                      <p
-                        className={`mt-3 text-xs md:text-sm font-medium transition-colors duration-500 ${
-                          isActive || isCompleted ? 'text-gray-800' : 'text-gray-500'
-                        }`}
-                      >
-                        {label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="text-right text-sm text-gray-600 mt-8">
-            생성된 주제 목록: {appState.topics.length}개 생성됨
-          </div>
-        </div>
-      </div>
+      <ProgressTracker
+        topics={appState.topics}
+        generatedContent={appState.generatedContent}
+        imagePrompt={appState.imagePrompt}
+      />
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* 왼쪽 컬럼 - 4/12 비율 */}
+        {/* 왼쪽 컬럼 */}
         <div className="lg:col-span-4 space-y-6">
-          {/* 1. 주제 생성 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center text-purple-700">
-                <Lightbulb className="h-5 w-5 mr-2" />
-                1. 주제 생성
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">핵심 키워드</label>
-                <Input
-                  placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
-                  value={appState.keyword}
-                  onChange={(e) => saveAppState({ keyword: e.target.value })}
-                />
-                <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">생성할 주제 수: {appState.topicCount}개</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={appState.topicCount}
-                  onChange={(e) => saveAppState({ topicCount: parseInt(e.target.value) })}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>1개</span>
-                  <span>20개</span>
-                </div>
-              </div>
+          <TopicGenerator
+            appState={appState}
+            saveAppState={saveAppState}
+            isGeneratingTopics={isGeneratingTopics}
+            generateTopicsFromKeyword={generateTopicsFromKeyword}
+            manualTopic={manualTopic}
+            setManualTopic={setManualTopic}
+            handleManualTopicAdd={handleManualTopicAdd}
+          />
 
-              <Button 
-                onClick={generateTopicsFromKeyword}
-                disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
-              </Button>
+          <ArticleGenerator
+            appState={appState}
+            saveAppState={saveAppState}
+            selectTopic={selectTopic}
+            isGeneratingContent={isGeneratingContent}
+            generateArticleContent={generateArticleContent}
+          />
 
-              {/* 수동 주제 생성 */}
-              <div className="border-t pt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">수동 주제 입력</label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="직접 주제를 입력해주세요"
-                    value={manualTopic}
-                    onChange={(e) => setManualTopic(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleManualTopicAdd}
-                    disabled={!manualTopic.trim()}
-                    variant="outline"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    추가
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 2. 글 작성 */}
-          <Card className={`shadow-md ${appState.topics.length === 0 ? 'opacity-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center text-green-700">
-                <Edit className="h-5 w-5 mr-2" />
-                2. 글 작성
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">선택된 주제</label>
-                <Select
-                  value={appState.selectedTopic}
-                  onValueChange={(value) => selectTopic(value)}
-                  disabled={appState.topics.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="주제를 선택해주세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {appState.topics.map((topic, index) => (
-                      <SelectItem key={index} value={topic}>{topic}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">컬러 테마</label>
-                <Select
-                  value={appState.colorTheme}
-                  onValueChange={(value) => saveAppState({ colorTheme: value })}
-                  disabled={!appState.selectedTopic}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="랜덤 선택 (권장)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {colorThemes.map((theme) => (
-                      <SelectItem key={theme.value} value={theme.value}>{theme.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">참조 링크</label>
-                <Input
-                  placeholder="예: https://worldpis.com"
-                  value={appState.referenceLink}
-                  onChange={(e) => saveAppState({ referenceLink: e.target.value })}
-                  disabled={!appState.selectedTopic}
-                />
-                <p className="text-xs text-gray-500 mt-1">예: https://worldpis.com</p>
-              </div>
-
-              <Button 
-                onClick={generateArticleContent}
-                disabled={!appState.selectedTopic || isGeneratingContent || !appState.isApiKeyValidated}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {isGeneratingContent ? '글 생성 중...' : '글 생성하기'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* 3. 이미지 생성 */}
-          <Card className={`shadow-md ${!appState.generatedContent ? 'opacity-50' : ''}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center text-pink-700">
-                <Image className="h-5 w-5 mr-2" />
-                3. 이미지 생성
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">이미지 스타일</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {imageStyles.map((style) => (
-                    <label key={style.value} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        name="imageStyle"
-                        value={style.value}
-                        checked={appState.imageStyle === style.value}
-                        onChange={(e) => saveAppState({ imageStyle: e.target.value })}
-                        disabled={!appState.generatedContent}
-                        className="text-blue-600"
-                      />
-                      <span className="text-sm">{style.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <Button 
-                onClick={createImagePromptFromTopic}
-                disabled={!appState.generatedContent || !appState.imageStyle || isGeneratingImage || !appState.isApiKeyValidated}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {isGeneratingImage ? '이미지 프롬프트 생성 중...' : '이미지 프롬프트 생성'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* 이미지 프롬프트 - 3. 이미지 생성 바로 아래 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center text-pink-700">
-                <Image className="h-5 w-5 mr-2" />
-                이미지 프롬프트
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {appState.imagePrompt ? (
-                <div className="space-y-3">
-                  <Textarea
-                    value={appState.imagePrompt}
-                    readOnly
-                    className="min-h-32 bg-gray-50"
-                  />
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
-                      className="flex-1 bg-pink-600 hover:bg-pink-700"
-                    >
-                      복사
-                    </Button>
-                    <Button 
-                      onClick={openWhisk}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      Whisk 열기
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>이미지 프롬프트를 생성해보세요!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* API 키 설정 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center text-gray-700">
-                <AlertCircle className="h-5 w-5 mr-2" />
-                API 키 설정
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gemini API 키</label>
-                <div className="flex space-x-2">
-                  <Input
-                    type="password"
-                    placeholder="API 키를 입력해주세요"
-                    value={appState.apiKey}
-                    onChange={(e) => saveAppState({ apiKey: e.target.value, isApiKeyValidated: false })}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={validateApiKey} 
-                    disabled={!appState.apiKey.trim() || isValidatingApi}
-                    variant="outline" 
-                    className={appState.isApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
-                  >
-                    {isValidatingApi ? (
-                      <>검증 중...</>
-                    ) : appState.isApiKeyValidated ? (
-                      <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
-                    ) : (
-                      '검증'
-                    )}
-                  </Button>
-                </div>
-                <div className="flex space-x-2 mt-2">
-                  <Button onClick={saveApiKeyToStorage} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
-                    키 저장
-                  </Button>
-                  <Button onClick={deleteApiKeyFromStorage} size="sm" variant="destructive" className="flex-1">
-                    키 삭제
-                  </Button>
-                </div>
-                <p className="text-xs text-blue-600 mt-1">
-                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="hover:underline">Google AI Studio에서 발급</a>
-                </p>
-                {appState.isApiKeyValidated && (
-                  <p className="text-xs text-green-600 mt-1">✅ API 키가 검증되었습니다.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ImageCreation
+            appState={appState}
+            saveAppState={saveAppState}
+            isGeneratingImage={isGeneratingImage}
+            createImagePromptFromTopic={createImagePromptFromTopic}
+            copyToClipboard={copyToClipboard}
+            openWhisk={openWhisk}
+          />
+          
+          <ApiKeyManager
+            appState={appState}
+            saveAppState={saveAppState}
+            isValidatingApi={isValidatingApi}
+            validateApiKey={validateApiKey}
+            saveApiKeyToStorage={saveApiKeyToStorage}
+            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+          />
         </div>
 
-        {/* 오른쪽 컬럼 - 8/12 비율 */}
+        {/* 오른쪽 컬럼 */}
         <div className="lg:col-span-8 space-y-6">
-          {/* 생성된 주제 목록 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center text-blue-700">
-                  <Lightbulb className="h-5 w-5 mr-2" />
-                  생성된 주제 목록
-                </span>
-                <span className="text-sm text-gray-500">{appState.topics.length}개 생성됨</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {appState.topics.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Lightbulb className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>키워드를 입력하고 주제를 생성해보세요!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {appState.topics.map((topic, index) => (
-                    <div
-                      key={index}
-                      onClick={() => selectTopic(topic)}
-                      className={`p-3 border rounded cursor-pointer transition-colors ${
-                        appState.selectedTopic === topic 
-                          ? 'bg-blue-50 border-blue-300' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className="text-sm">{topic}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TopicList
+            topics={appState.topics}
+            selectedTopic={appState.selectedTopic}
+            selectTopic={selectTopic}
+          />
 
-          {/* 블로그 글 미리보기 */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center text-green-700">
-                  <Edit className="h-5 w-5 mr-2" />
-                  블로그 글 미리보기
-                </span>
-                <div className="flex space-x-2">
-                  {appState.generatedContent && (
-                    <>
-                      <Button 
-                        onClick={() => copyToClipboard(appState.generatedContent, 'HTML 복사')}
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 border-green-600 hover:bg-green-50"
-                      >
-                        HTML 복사
-                      </Button>
-                      <Button 
-                        onClick={downloadHTML}
-                        size="sm"
-                        variant="outline"
-                        className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        다운로드
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {appState.generatedContent ? (
-                <div className="border p-4 rounded bg-gray-50 overflow-y-auto max-h-[1024px]">
-                  <div dangerouslySetInnerHTML={{ __html: appState.generatedContent }} />
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Edit className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>주제를 선택하고 글을 생성해보세요!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ArticlePreview
+            generatedContent={appState.generatedContent}
+            copyToClipboard={copyToClipboard}
+            downloadHTML={downloadHTML}
+          />
         </div>
       </div>
     </div>
