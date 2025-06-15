@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 
@@ -51,7 +50,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
                       {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
                     </div>
                     <p
-                      className={`mt-3 text-xs md:text-sm font-medium transition-colors duration-500 ${
+                      className={`mt-3 text-xs md:text-sm font-semibold transition-colors duration-500 ${
                         isActive || isCompleted ? 'text-gray-800' : 'text-gray-500'
                       }`}
                     >

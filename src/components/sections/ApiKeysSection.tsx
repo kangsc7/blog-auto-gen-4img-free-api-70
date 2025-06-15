@@ -19,11 +19,11 @@ interface ApiKeysSectionProps {
 }
 
 const PlaceholderCard = ({ title, icon: Icon }: { title: string, icon: React.ElementType }) => (
-    <Card className="shadow-md flex flex-col items-center justify-center h-48 cursor-pointer bg-gray-50/50 hover:bg-gray-50 border-2 border-dashed border-gray-200">
-        <div className="text-center text-gray-500">
+    <Card className="shadow-md flex flex-col items-center justify-center h-full cursor-pointer bg-gray-50/50 hover:bg-gray-50 border-2 border-dashed border-gray-200">
+        <div className="text-center text-gray-500 p-4">
             <Icon className="h-10 w-10 mx-auto mb-3 text-gray-400" />
             <p className="text-lg font-semibold text-gray-600">{title}</p>
-            <p className="text-xs mt-1">마우스를 올리면 설정이 나타납니다.</p>
+            <p className="text-sm text-gray-500 mt-2">마우스를 올려 설정을 확인하거나 변경하세요.</p>
         </div>
     </Card>
 );

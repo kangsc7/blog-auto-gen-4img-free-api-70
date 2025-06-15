@@ -33,7 +33,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">선택된 주제</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">선택된 주제</label>
           <Select
             value={appState.selectedTopic}
             onValueChange={(value) => selectTopic(value)}
@@ -51,7 +51,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">컬러 테마</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">컬러 테마</label>
           <Select
             value={appState.colorTheme}
             onValueChange={(value) => saveAppState({ colorTheme: value })}
@@ -68,36 +68,38 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           </Select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">참조 링크</label>
-          <Input
-            placeholder="예: https://worldpis.com"
-            value={appState.referenceLink}
-            onChange={(e) => saveAppState({ referenceLink: e.target.value })}
-            disabled={!appState.selectedTopic}
-          />
-          <p className="text-xs text-gray-500 mt-1">예: https://worldpis.com</p>
-        </div>
+        <div className="border p-4 rounded-lg space-y-4 bg-gray-50/50 shadow-inner">
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 링크</label>
+                <Input
+                    placeholder="예: https://worldpis.com"
+                    value={appState.referenceLink}
+                    onChange={(e) => saveAppState({ referenceLink: e.target.value })}
+                    disabled={!appState.selectedTopic}
+                />
+                <p className="text-xs text-gray-500 mt-1">예: https://worldpis.com</p>
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">참조 문장</label>
-          <Input
-            placeholder="예: 워드프레스 꿀팁 더 보러가기"
-            value={appState.referenceSentence}
-            onChange={(e) => saveAppState({ referenceSentence: e.target.value })}
-            disabled={!appState.selectedTopic}
-          />
-          <p className="text-xs text-gray-500 mt-1">글 마지막에 삽입될 링크의 텍스트입니다.</p>
-        </div>
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 문장</label>
+                <Input
+                    placeholder="예: 워드프레스 꿀팁 더 보러가기"
+                    value={appState.referenceSentence}
+                    onChange={(e) => saveAppState({ referenceSentence: e.target.value })}
+                    disabled={!appState.selectedTopic}
+                />
+                <p className="text-xs text-gray-500 mt-1">글 마지막에 삽입될 링크의 텍스트입니다.</p>
+            </div>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => saveAppState({ saveReferenceTrigger: true })}
-          disabled={!appState.selectedTopic}
-        >
-          참조 정보 저장
-        </Button>
+            <Button
+              variant="outline"
+              className="w-full bg-white"
+              onClick={() => saveAppState({ saveReferenceTrigger: true })}
+              disabled={!appState.selectedTopic}
+            >
+              참조 정보 저장
+            </Button>
+        </div>
 
         <Button 
           onClick={generateArticleContent}

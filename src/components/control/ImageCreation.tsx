@@ -35,7 +35,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">이미지 스타일</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">이미지 스타일</label>
             <div className="grid grid-cols-2 gap-2">
               {imageStyles.map((style) => (
                 <label key={style.value} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">

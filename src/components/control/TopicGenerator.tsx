@@ -35,7 +35,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">핵심 키워드</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">핵심 키워드</label>
           <Input
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
             value={appState.keyword}
@@ -45,7 +45,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">생성할 주제 수: {appState.topicCount}개</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">생성할 주제 수: {appState.topicCount}개</label>
           <input
             type="range"
             min="1"
@@ -69,7 +69,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
         </Button>
 
         <div className="border-t pt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">수동 주제 입력</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">수동 주제 입력</label>
           <div className="flex space-x-2">
             <Input
               placeholder="직접 주제를 입력해주세요"
