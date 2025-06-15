@@ -1,8 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
@@ -11,100 +10,38 @@ import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
-
-import { useAppStateManager } from '@/hooks/useAppStateManager';
-import { useAuth } from '@/hooks/useAuth';
-import { useApiKeyManager } from '@/hooks/useApiKeyManager';
-import { useOneClick } from '@/hooks/useOneClick';
-import { usePixabayManager } from '@/hooks/usePixabayManager';
-import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
-import { useTopicGenerator } from '@/hooks/useTopicGenerator';
-import { useArticleGenerator } from '@/hooks/useArticleGenerator';
-import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
-import { useTopicControls } from '@/hooks/useTopicControls';
-import { useAppUtils } from '@/hooks/useAppUtils';
+import { useAppController } from '@/hooks/useAppController';
 
 const Index = () => {
-  const { toast } = useToast();
-  const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
-  const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
-  const pixabayManager = usePixabayManager();
-  const huggingFaceManager = useHuggingFaceManager();
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
-  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
+  const {
     appState,
     saveAppState,
-    huggingFaceManager.huggingFaceApiKey
-  );
-  
-  const {
-    manualTopic,
-    setManualTopic,
-    selectTopic,
-    handleManualTopicAdd,
-  } = useTopicControls({ appState, saveAppState });
+    session,
+    profile,
+    authLoading,
+    handleLogin,
+    handleSignUp,
+    handleLogout,
+    isAdmin,
+    isValidatingApi,
+    validateApiKey,
+    saveApiKeyToStorage,
+    deleteApiKeyFromStorage,
+    pixabayManager,
+    huggingFaceManager,
+    preventDuplicates,
+    setPreventDuplicates,
+    handleResetApp,
+    isOneClickGenerating,
+    handleLatestIssueOneClick,
+    handleEvergreenKeywordOneClick,
+    handleStopOneClick,
+    generationStatus,
+    generationFunctions,
+    topicControls,
+    utilityFunctions,
+  } = useAppController();
 
-  const {
-    copyToClipboard,
-    openWhisk,
-    downloadHTML,
-  } = useAppUtils({ appState });
-
-  const handleResetApp = () => {
-    resetApp();
-    setManualTopic('');
-  };
-
-  const handleDeduplicateTopics = () => {
-    if (appState.topics.length === 0) {
-      toast({ title: "알림", description: "제거할 주제가 없습니다.", variant: "default" });
-      return;
-    }
-    const uniqueTopics = Array.from(new Set(appState.topics));
-    const removedCount = appState.topics.length - uniqueTopics.length;
-    if (removedCount > 0) {
-      saveAppState({ topics: uniqueTopics });
-      toast({
-        title: "중복 제거 완료",
-        description: `${removedCount}개의 중복된 주제가 제거되었습니다.`
-      });
-    } else {
-      toast({
-        title: "중복 없음",
-        description: "중복된 주제가 없습니다."
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (session) {
-      saveAppState({ isLoggedIn: true, currentUser: session.user.email });
-    } else {
-      saveAppState({ isLoggedIn: false, currentUser: '' });
-    }
-  }, [session, saveAppState]);
-
-  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
-    return generateArticle({
-      ...options,
-      pixabayConfig: { 
-        key: pixabayManager.pixabayApiKey, 
-        validated: pixabayManager.isPixabayApiKeyValidated 
-      },
-    });
-  };
-  
-  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
-    appState,
-    saveAppState,
-    generateTopics,
-    selectTopic,
-    generateArticleWithPixabay,
-    profile
-  );
-  
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -117,16 +54,6 @@ const Index = () => {
     return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
   }
   
-  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
-
-  const generateArticleForManual = (topic?: string) => {
-    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
-  };
-
-  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
-  const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
-  const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <AppHeader
