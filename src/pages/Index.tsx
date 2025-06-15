@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -199,9 +198,9 @@ const Index = () => {
           <Button 
             onClick={handleLatestIssueOneClick} 
             disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
+            className="px-8 py-4 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
           >
-            <Zap className="mr-2 h-4 w-4" />
+            <Zap className="mr-2 h-5 w-5" />
             최신 이슈 원클릭 생성
           </Button>
           
@@ -216,9 +215,9 @@ const Index = () => {
           <Button 
             onClick={handleEvergreenKeywordOneClick} 
             disabled={isOneClickGenerating || !appState.isApiKeyValidated}
-            className="bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
+            className="px-8 py-4 text-lg font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-2 h-5 w-5" />
             평생 키워드 원클릭 생성
           </Button>
         </div>
