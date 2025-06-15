@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,21 +47,22 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
     const imgTag = `<img src="${generatedImage}" alt="${altText}" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px;">`;
 
     try {
-        const blob = new Blob([imgTag], { type: 'text/html' });
-        const plainTextBlob = new Blob([imgTag], { type: 'text/plain' });
+        const response = await fetch(generatedImage);
+        const imageBlob = await response.blob();
         
         const clipboardItem = new ClipboardItem({
-            'text/html': blob,
-            'text/plain': plainTextBlob,
+            [imageBlob.type]: imageBlob,
+            'text/html': new Blob([imgTag], { type: 'text/html' }),
+            'text/plain': new Blob([imgTag], { type: 'text/plain' }),
         });
 
         await navigator.clipboard.write([clipboardItem]);
-        toast({ title: "복사 완료", description: "이미지 HTML 태그가 클립보드에 복사되었습니다." });
+        toast({ title: "복사 완료", description: "이미지 및 HTML 태그가 복사되었습니다. 블로그, 그림판 등에 붙여넣으세요." });
     } catch (error) {
-        console.error('Failed to copy HTML: ', error);
+        console.error('Failed to copy image and HTML: ', error);
         try {
             await navigator.clipboard.writeText(imgTag);
-            toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. HTML 모드로 붙여넣으세요." });
+            toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. 그림판에 붙여넣으려면 이미지 위에서 우클릭 후 '이미지 복사'를 이용해주세요." });
         } catch (copyError) {
             console.error('Failed to copy HTML as text: ', copyError);
             toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
