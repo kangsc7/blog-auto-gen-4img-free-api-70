@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -43,7 +42,7 @@ const Index = () => {
     return generateArticle(topic, { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated });
   };
   
-  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick } = useOneClick(
+  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
     appState,
     saveAppState,
     generateTopics,
@@ -82,6 +81,7 @@ const Index = () => {
         handleLatestIssueOneClick={handleLatestIssueOneClick}
         handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
         isOneClickGenerating={isOneClickGenerating}
+        handleStopOneClick={handleStopOneClick}
         appState={appState}
       />
       

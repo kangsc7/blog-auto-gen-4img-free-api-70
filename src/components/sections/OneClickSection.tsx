@@ -2,13 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ProgressTracker } from '@/components/layout/ProgressTracker';
-import { Zap, RefreshCw } from 'lucide-react';
+import { Zap, RefreshCw, StopCircle } from 'lucide-react';
 import { AppState } from '@/types';
 
 interface OneClickSectionProps {
     handleLatestIssueOneClick: () => void;
     handleEvergreenKeywordOneClick: () => void;
     isOneClickGenerating: boolean;
+    handleStopOneClick: () => void;
     appState: AppState;
 }
 
@@ -16,6 +17,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
     isOneClickGenerating,
+    handleStopOneClick,
     appState,
 }) => {
     return (
@@ -40,6 +42,16 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                         generatedContent={appState.generatedContent}
                         imagePrompt={appState.imagePrompt}
                     />
+                    {isOneClickGenerating && (
+                         <Button 
+                            variant="destructive" 
+                            onClick={handleStopOneClick}
+                            className="w-full mt-2"
+                        >
+                            <StopCircle className="mr-2 h-4 w-4" />
+                            즉시 중단
+                        </Button>
+                    )}
                 </div>
 
                 <Button 
