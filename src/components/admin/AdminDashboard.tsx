@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types';
@@ -81,7 +80,7 @@ export const AdminDashboard = () => {
                 ) : pendingUsers.length > 0 ? (
                   pendingUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell className="font-medium">{user.email || '이메일 정보 없음'}</TableCell>
                       <TableCell>{new Date(user.created_at).toLocaleString('ko-KR')}</TableCell>
                       <TableCell><Badge variant="outline">{user.status}</Badge></TableCell>
                       <TableCell className="text-right space-x-2">
