@@ -10,10 +10,10 @@ export const useApiKeyManager = (
   const { toast } = useToast();
   const [isValidatingApi, setIsValidatingApi] = useState(false);
 
-  const validateApiKey = async () => {
+  const validateApiKey = async (): Promise<boolean> => {
     if (!appState.apiKey.trim()) {
       toast({ title: "API 키 오류", description: "API 키를 입력해주세요.", variant: "destructive" });
-      return;
+      return false;
     }
     
     setIsValidatingApi(true);
@@ -28,7 +28,7 @@ export const useApiKeyManager = (
           variant: "destructive"
         });
         saveAppState({ isApiKeyValidated: false });
-        return;
+        return false;
       }
       
       saveAppState({ isApiKeyValidated: true });
@@ -36,6 +36,7 @@ export const useApiKeyManager = (
         title: "API 키 검증 성공",
         description: "API 키가 성공적으로 확인되었습니다.",
       });
+      return true;
     } catch (error) {
       console.error('API 키 검증 오류:', error);
       toast({
@@ -44,6 +45,7 @@ export const useApiKeyManager = (
         variant: "destructive"
       });
       saveAppState({ isApiKeyValidated: false });
+      return false;
     } finally {
       setIsValidatingApi(false);
     }
