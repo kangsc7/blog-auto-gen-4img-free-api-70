@@ -20,6 +20,11 @@ const LoginPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // 페이지 로드 시 URL 해시를 확인하여 비밀번호 복구 상태인지 즉시 판단
+    if (window.location.hash.includes('type=recovery')) {
+      setView('update_password');
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && !window.location.hash.includes('type=recovery')) {
         navigate('/');
