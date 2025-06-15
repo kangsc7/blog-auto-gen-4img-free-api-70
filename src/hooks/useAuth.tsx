@@ -2,29 +2,45 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import type { Profile } from '@/types';
 
 export const useAuth = () => {
   const { toast } = useToast();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const handleAuthChange = async (currentSession: Session | null) => {
+        setSession(currentSession);
+        const currentUser = currentSession?.user ?? null;
+        setUser(currentUser);
+        setProfile(null);
+
+        if (currentUser) {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') { // Ignore 'No rows found' error
+                console.error("Error fetching profile:", error);
+            } else if (data) {
+                setProfile(data);
+            }
+        }
+        setLoading(false);
+    };
+
     setLoading(true);
-    
-    // 1. 인증 상태 변경 리스너를 먼저 설정합니다.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+        handleAuthChange(initialSession);
     });
 
-    // 2. 초기 세션 정보를 확인합니다.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // 세션이 없으면 onAuthStateChange가 호출되지 않으므로 로딩 상태를 직접 변경합니다.
-      if (!session) {
-        setLoading(false);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        handleAuthChange(session);
     });
 
     return () => {
@@ -84,5 +100,5 @@ export const useAuth = () => {
     }
   };
 
-  return { session, user, loading, handleLogin, handleSignUp, handleLogout };
+  return { session, user, profile, loading, handleLogin, handleSignUp, handleLogout };
 };

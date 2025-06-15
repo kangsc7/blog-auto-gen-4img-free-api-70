@@ -1,5 +1,6 @@
-
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -21,7 +22,7 @@ import { useAppHandlers } from '@/hooks/useAppHandlers';
 const Index = () => {
   const { toast } = useToast();
   const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
-  const { session, loading: authLoading, handleLogin, handleSignUp, handleLogout } = useAuth();
+  const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
@@ -90,11 +91,23 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <AppHeader
-        currentUser={appState.currentUser}
+        currentUser={profile?.email || appState.currentUser}
         resetApp={handleResetApp}
         handleLogout={handleLogout}
       />
       
+      {profile?.role === 'admin' && (
+        <div className="container mx-auto my-4">
+          <Link
+            to="/admin/users"
+            className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-blue-200"
+          >
+            <Shield className="h-5 w-5 text-blue-600" />
+            <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
+          </Link>
+        </div>
+      )}
+
       <ApiKeysSection
         appState={appState}
         saveAppState={saveAppState}

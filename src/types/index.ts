@@ -21,3 +21,15 @@ export interface AppState {
   imagePrompt: string;
   saveReferenceTrigger?: boolean;
 }
+
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type AppRole = 'admin' | 'user';
+
+export interface Profile {
+  id: string;
+  email: string;
+  status: UserStatus;
+  role: AppRole;
+  created_at: string;
+  updated_at: string;
+}
