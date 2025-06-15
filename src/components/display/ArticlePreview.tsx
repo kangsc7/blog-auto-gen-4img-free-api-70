@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             <p className="text-sm">잠시만 기다려주세요.</p>
           </div>
         ) : generatedContent ? (
-          <div className="border p-4 rounded bg-gray-50">
+          <div className="border p-4 rounded bg-gray-50 max-h-none">
             <div dangerouslySetInnerHTML={{ __html: generatedContent }} />
           </div>
         ) : (
