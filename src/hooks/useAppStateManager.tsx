@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
-const initialAppState: Omit<AppState, 'apiKey' | 'isApiKeyValidated'> = {
+const initialAppState: AppState = {
+  isLoggedIn: false,
+  currentUser: '',
+  apiKey: '',
+  isApiKeyValidated: false,
   keyword: '',
   topicCount: 3,
   topics: [],
@@ -18,11 +22,7 @@ const initialAppState: Omit<AppState, 'apiKey' | 'isApiKeyValidated'> = {
 
 export const useAppStateManager = () => {
   const { toast } = useToast();
-  const [appState, setAppState] = useState<AppState>({
-    ...initialAppState,
-    apiKey: '',
-    isApiKeyValidated: false,
-  });
+  const [appState, setAppState] = useState<AppState>(initialAppState);
 
   useEffect(() => {
     loadAppState();
@@ -34,6 +34,8 @@ export const useAppStateManager = () => {
       let parsedState: Partial<AppState> = {};
       if (savedState) {
         parsedState = JSON.parse(savedState);
+        delete parsedState.apiKey;
+        delete parsedState.isApiKeyValidated;
       }
       
       const savedApiKey = localStorage.getItem('blog_api_key') || '';
@@ -55,7 +57,7 @@ export const useAppStateManager = () => {
     }
   };
 
-  const saveAppState = useCallback((newState: Partial<Omit<AppState, 'isLoggedIn' | 'currentUser'>>) => {
+  const saveAppState = useCallback((newState: Partial<AppState>) => {
     if (newState.saveReferenceTrigger) {
       try {
         setAppState(prevState => {
@@ -65,6 +67,8 @@ export const useAppStateManager = () => {
           
           const updatedState = { ...prevState, saveReferenceTrigger: false };
           const stateToSave = { ...updatedState };
+          delete stateToSave.apiKey;
+          delete stateToSave.isApiKeyValidated;
           localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
           return updatedState;
         });
@@ -79,6 +83,8 @@ export const useAppStateManager = () => {
       setAppState(prevState => {
         const updatedState = { ...prevState, ...newState };
         const stateToSave = { ...updatedState };
+        delete stateToSave.apiKey;
+        delete stateToSave.isApiKeyValidated;
         localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
         return updatedState;
       });
@@ -127,6 +133,8 @@ export const useAppStateManager = () => {
       generatedContent: '',
       imageStyle: '',
       imagePrompt: '',
+      apiKey: savedApiKey,
+      isApiKeyValidated: savedApiKeyValidated,
     });
     
     toast({

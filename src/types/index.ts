@@ -1,9 +1,12 @@
+
 export interface User {
   id: string;
-  password?: string;
+  password: string;
 }
 
 export interface AppState {
+  isLoggedIn: boolean;
+  currentUser: string;
   apiKey: string;
   isApiKeyValidated: boolean;
   keyword: string;
@@ -16,14 +19,5 @@ export interface AppState {
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;
-  saveReferenceTrigger: boolean;
+  saveReferenceTrigger?: boolean;
 }
-
-export type Profile = {
-  id: string;
-  email: string | null;
-  status: "pending" | "approved" | "rejected";
-  role: "admin" | "user";
-  created_at: string;
-  updated_at: string;
-};
