@@ -52,7 +52,7 @@ const LoginPage = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: new URL('/', window.location.href).href,
         },
       });
       if (error) {
@@ -101,7 +101,7 @@ const LoginPage = () => {
     }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: window.location.href.split('#')[0],
     });
     setLoading(false);
     if (error) {
