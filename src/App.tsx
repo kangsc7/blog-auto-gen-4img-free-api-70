@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuthContext } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import { supabase } from "./lib/supabaseClient";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const queryClient = new QueryClient();
 
@@ -36,15 +37,17 @@ const AppContent = () => {
 
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <AppContent />
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
