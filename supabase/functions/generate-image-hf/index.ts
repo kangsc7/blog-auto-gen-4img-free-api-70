@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const imageBlob = await hf.textToImage({
       inputs: prompt,
-      model: 'runwayml/stable-diffusion-v1-5',
+      model: 'black-forest-labs/FLUX.1-schnell',
     })
 
     const arrayBuffer = await imageBlob.arrayBuffer()
@@ -61,3 +61,4 @@ serve(async (req) => {
     )
   }
 })
+
