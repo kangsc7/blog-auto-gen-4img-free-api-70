@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,20 +78,15 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                 readOnly
                 className="min-h-32 bg-gray-50"
               />
-              <div className="flex space-x-2">
-                <Button 
-                  onClick={() => copyToClipboard(appState.imagePrompt, '이미지 프롬프트')}
-                  className="flex-1 bg-pink-600 hover:bg-pink-700"
-                >
-                  복사
-                </Button>
-                <Button 
-                  onClick={openWhisk}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  Whisk 열기
-                </Button>
-              </div>
+              <Button 
+                onClick={() => {
+                  copyToClipboard(appState.imagePrompt, '이미지 프롬프트');
+                  openWhisk();
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                Whisk 열기 (프롬프트 자동 복사)
+              </Button>
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">

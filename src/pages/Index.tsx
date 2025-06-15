@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
@@ -101,9 +102,9 @@ const Index = () => {
         <div className="container mx-auto my-4">
           <Link
             to="/admin/users"
-            className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-blue-200"
+            className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
           >
-            <Shield className="h-5 w-5 text-blue-600" />
+            <Shield className="h-5 w-5 text-red-500" />
             <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
           </Link>
         </div>
