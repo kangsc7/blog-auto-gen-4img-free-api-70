@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -62,7 +61,12 @@ const Index = () => {
   }
   
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage };
-  const generationFunctions = { generateTopics, generateArticle: generateArticleWithPixabay, createImagePrompt };
+
+  const generateArticleForManual = (topic?: string) => {
+    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
+  };
+
+  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 

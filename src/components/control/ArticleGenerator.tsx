@@ -13,7 +13,7 @@ interface ArticleGeneratorProps {
   saveAppState: (newState: Partial<AppState>) => void;
   selectTopic: (topic: string) => void;
   isGeneratingContent: boolean;
-  generateArticleContent: () => void;
+  generateArticleContent: (topic?: string) => Promise<string | null>;
 }
 
 export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
