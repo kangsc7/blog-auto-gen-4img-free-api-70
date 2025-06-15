@@ -375,7 +375,7 @@ const Index = () => {
           'blue-gray': { primary: '#1a73e8', secondary: '#f5f5f5', textHighlight: '#e8f4fd', highlight: '#e8f4fd', highlightBorder: '#1a73e8', warnBg: '#ffebee', warnBorder: '#f44336', link: '#1a73e8' },
           'green-orange': { primary: '#059669', secondary: '#f0fdf4', textHighlight: '#dcfce7', highlight: '#f1f8e9', highlightBorder: '#10b981', warnBg: '#fed7aa', warnBorder: '#e11d48', link: '#16a34a' },
           'purple-yellow': { primary: '#7c3aed', secondary: '#fefce8', textHighlight: '#f3e8ff', highlight: '#faf5ff', highlightBorder: '#9333ea', warnBg: '#fff1f2', warnBorder: '#e91e63', link: '#8b5cf6' },
-          'teal-light-gray': { primary: '#0d9488', secondary: '#f8fafc', textHighlight: '#ccfbf1', highlight: '#f0fdfa', highlightBorder: '#14b8a6', warnBg: '#fef2f2', warnBorder: '#dc2626', link: '#0d9488' },
+          'teal-light-gray': { primary: '#0d9488', secondary: '#f8fafc', textHighlight: '#ccfbf1', highlight: '#f0fdfa', highlightBorder: '#14b8a6', warnBg: '#fffde7', warnBorder: '#ffeb3b', link: '#0d9488' },
           'terracotta-light-gray': { primary: '#e57373', secondary: '#fafafa', textHighlight: '#ffebee', highlight: '#fff8e1', highlightBorder: '#ffab91', warnBg: '#fce4ec', warnBorder: '#e11d48', link: '#e57373' },
           'classic-blue': { primary: '#1a73e8', secondary: '#f5f5f5', textHighlight: '#fffde7', highlight: '#e8f4fd', highlightBorder: '#1a73e8', warnBg: '#ffebee', warnBorder: '#f44336', link: '#1a73e8' },
           'nature-green': { primary: '#4caf50', secondary: '#f1f8e9', textHighlight: '#e8f5e9', highlight: '#f1f8e9', highlightBorder: '#81c784', warnBg: '#fff3e0', warnBorder: '#ff9800', link: '#4caf50' },
@@ -644,7 +644,10 @@ const Index = () => {
   };
 
   const resetApp = () => {
-    const newState = {
+    const savedApiKey = localStorage.getItem('blog_api_key') || '';
+    const savedApiKeyValidated = (localStorage.getItem('blog_api_key_validated') === 'true') && !!savedApiKey;
+
+    const newState: Partial<AppState> = {
       keyword: '',
       topicCount: 3,
       topics: [],
@@ -654,8 +657,8 @@ const Index = () => {
       generatedContent: '',
       imageStyle: '',
       imagePrompt: '',
-      apiKey: '',
-      isApiKeyValidated: false
+      apiKey: savedApiKey,
+      isApiKeyValidated: savedApiKeyValidated,
     };
     
     saveAppState(newState);
@@ -663,7 +666,7 @@ const Index = () => {
     
     toast({
       title: "초기화 완료",
-      description: "모든 데이터가 초기화되었습니다.",
+      description: "앱 데이터가 초기화되었습니다. 브라우저에 저장된 API 키는 유지됩니다.",
     });
   };
 
