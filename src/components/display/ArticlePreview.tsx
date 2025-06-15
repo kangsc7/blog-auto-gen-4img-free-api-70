@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
         {isGeneratingContent ? (
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
-            <p className="font-semibold text-lg">AI가 글을 생성하고 있습니다...</p>
+            <p className="font-semibold text-lg">파코월드가 글을 생성하고 있습니다...</p>
             <p className="text-sm">잠시만 기다려주세요.</p>
           </div>
         ) : generatedContent ? (

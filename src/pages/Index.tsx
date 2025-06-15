@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -10,9 +9,11 @@ import { MainContentSection } from '@/components/sections/MainContentSection';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useApiKeyManager } from '@/hooks/useApiKeyManager';
-import { useGenerationAPI } from '@/hooks/useGenerationAPI';
 import { useOneClick } from '@/hooks/useOneClick';
 import { usePixabayManager } from '@/hooks/usePixabayManager';
+import { useTopicGenerator } from '@/hooks/useTopicGenerator';
+import { useArticleGenerator } from '@/hooks/useArticleGenerator';
+import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 
 const Index = () => {
   const { toast } = useToast();
@@ -20,14 +21,9 @@ const Index = () => {
   const { loginData, setLoginData, handleLogin, handleLogout } = useAuth(saveAppState);
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
-  const {
-    isGeneratingTopics,
-    isGeneratingContent,
-    isGeneratingImage,
-    generateTopics,
-    generateArticle,
-    createImagePrompt,
-  } = useGenerationAPI(appState, saveAppState);
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
+  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
+  const { isGeneratingImage, createImagePrompt } = useImagePromptGenerator(appState, saveAppState);
   
   const [manualTopic, setManualTopic] = useState('');
 
