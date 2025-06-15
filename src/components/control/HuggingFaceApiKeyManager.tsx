@@ -67,9 +67,6 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
            {isHuggingFaceApiKeyValidated && (
             <p className="text-xs text-green-600 mt-1">✅ API 키가 검증 및 저장되었습니다.</p>
           )}
-          <p className="text-xs text-gray-500 mt-2">
-            개인 키를 입력하면, 이미지 생성 시 공용 키 대신 이 키가 사용됩니다.
-          </p>
         </div>
       </CardContent>
     </Card>
