@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -36,7 +35,12 @@ export const useOneClick = (
 
       toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `실시간 트렌드 키워드(예시)를 가져옵니다...` });
       await sleep(3000);
-      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+
+      // 현재 키워드를 제외한 목록에서 새로운 키워드를 선택하여 중복을 방지합니다.
+      const filteredKeywords = keywords.filter(k => k !== appState.keyword);
+      const keywordsToChooseFrom = filteredKeywords.length > 0 ? filteredKeywords : keywords;
+      const keyword = keywordsToChooseFrom[Math.floor(Math.random() * keywordsToChooseFrom.length)];
+
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
       
