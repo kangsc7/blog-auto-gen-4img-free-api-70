@@ -236,14 +236,15 @@ const Index = () => {
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const generateTopicsFromKeyword = async (): Promise<boolean> => {
-    if (!appState.keyword.trim()) {
+  const generateTopicsFromKeyword = async (keywordOverride?: string): Promise<string[] | null> => {
+    const keyword = (keywordOverride || appState.keyword).trim();
+    if (!keyword) {
       toast({
         title: "키워드 오류",
         description: "핵심 키워드를 입력해주세요.",
         variant: "destructive"
       });
-      return false;
+      return null;
     }
 
     if (!appState.isApiKeyValidated) {
@@ -252,13 +253,12 @@ const Index = () => {
         description: "먼저 API 키를 입력하고 검증해주세요.",
         variant: "destructive"
       });
-      return false;
+      return null;
     }
 
     setIsGeneratingTopics(true);
     
     try {
-      const keyword = appState.keyword.trim();
       const count = appState.topicCount;
       const prompt = `'${keyword}'를(을) 주제로, 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${count}개를 생성해 주세요. 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다. 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요. 다른 설명 없이 주제 목록만 생성해주세요.`;
 
@@ -302,7 +302,7 @@ const Index = () => {
         description: `${newTopics.length}개의 새로운 주제가 생성되었습니다.`,
       });
       setIsGeneratingTopics(false);
-      return true;
+      return newTopics;
 
     } catch (error) {
       console.error('주제 생성 오류:', error);
@@ -312,7 +312,7 @@ const Index = () => {
         variant: "destructive"
       });
       setIsGeneratingTopics(false);
-      return false;
+      return null;
     }
   };
 
@@ -344,14 +344,15 @@ const Index = () => {
     });
   };
 
-  const generateArticleContent = async (): Promise<boolean> => {
-    if (!appState.selectedTopic) {
+  const generateArticleContent = async (topicOverride?: string): Promise<string | null> => {
+    const selectedTopic = topicOverride || appState.selectedTopic;
+    if (!selectedTopic) {
       toast({
         title: "주제 선택 오류",
         description: "주제를 먼저 선택해주세요.",
         variant: "destructive"
       });
-      return false;
+      return null;
     }
 
     if (!appState.isApiKeyValidated) {
@@ -360,7 +361,7 @@ const Index = () => {
         description: "먼저 API 키를 입력하고 검증해주세요.",
         variant: "destructive"
       });
-      return false;
+      return null;
     }
 
     setIsGeneratingContent(true);
@@ -388,7 +389,7 @@ const Index = () => {
       
       const colors = getColors(selectedColorTheme);
       const refLink = appState.referenceLink || 'https://worldpis.com';
-      const topic = appState.selectedTopic;
+      const topic = selectedTopic;
       const keyword = appState.keyword || topic.split(' ')[0];
 
       const prompt = `
@@ -524,7 +525,7 @@ const Index = () => {
         description: "Gemini AI가 생성한 전문적인 HTML 콘텐츠가 준비되었습니다.",
       });
       setIsGeneratingContent(false);
-      return true;
+      return cleanedHtml;
     } catch (error) {
       console.error('글 생성 오류:', error);
       toast({
@@ -533,7 +534,7 @@ const Index = () => {
         variant: "destructive"
       });
       setIsGeneratingContent(false);
-      return false;
+      return null;
     }
   };
 
@@ -689,27 +690,19 @@ const Index = () => {
 
       await sleep(3000);
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
-      const topicsGenerated = await generateTopicsFromKeyword();
-      if (!topicsGenerated) {
+      const newTopics = await generateTopicsFromKeyword(keyword);
+      if (!newTopics || newTopics.length === 0) {
           throw new Error("주제 생성에 실패하여 중단합니다.");
-      }
-      
-      // Since state updates might be async, we need to get the latest topics. A short delay can help.
-      await sleep(500);
-
-      const latestTopics = (JSON.parse(localStorage.getItem('blog_app_state') || '{}')).topics || [];
-      if (latestTopics.length === 0) {
-        throw new Error("주제 생성 후 토픽을 찾을 수 없습니다.");
       }
       
       await sleep(3000);
       toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
-      const randomTopic = latestTopics[Math.floor(Math.random() * latestTopics.length)];
+      const randomTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
       selectTopic(randomTopic);
 
       await sleep(3000);
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
-      const articleGenerated = await generateArticleContent();
+      const articleGenerated = await generateArticleContent(randomTopic);
       if (!articleGenerated) {
         throw new Error("글 생성에 실패하여 중단합니다.");
       }
@@ -747,25 +740,19 @@ const Index = () => {
       // The rest of the flow is identical to the latest issue one-click
       await sleep(3000);
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
-      const topicsGenerated = await generateTopicsFromKeyword();
-      if (!topicsGenerated) {
+      const newTopics = await generateTopicsFromKeyword(keyword);
+      if (!newTopics || newTopics.length === 0) {
         throw new Error("주제 생성에 실패하여 중단합니다.");
-      }
-
-      await sleep(500);
-      const latestTopics = (JSON.parse(localStorage.getItem('blog_app_state') || '{}')).topics || [];
-       if (latestTopics.length === 0) {
-        throw new Error("주제 생성 후 토픽을 찾을 수 없습니다.");
       }
 
       await sleep(3000);
       toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
-      const randomTopic = latestTopics[Math.floor(Math.random() * latestTopics.length)];
+      const randomTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
       selectTopic(randomTopic);
 
       await sleep(3000);
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
-      const articleGenerated = await generateArticleContent();
+      const articleGenerated = await generateArticleContent(randomTopic);
       if (!articleGenerated) {
         throw new Error("글 생성에 실패하여 중단합니다.");
       }
@@ -832,7 +819,7 @@ const Index = () => {
             appState={appState}
             saveAppState={saveAppState}
             isGeneratingTopics={isGeneratingTopics}
-            generateTopicsFromKeyword={generateTopicsFromKeyword}
+            generateTopicsFromKeyword={() => generateTopicsFromKeyword()}
             manualTopic={manualTopic}
             setManualTopic={setManualTopic}
             handleManualTopicAdd={handleManualTopicAdd}
@@ -843,7 +830,7 @@ const Index = () => {
             saveAppState={saveAppState}
             selectTopic={selectTopic}
             isGeneratingContent={isGeneratingContent}
-            generateArticleContent={generateArticleContent}
+            generateArticleContent={() => generateArticleContent()}
           />
 
           <ImageCreation
