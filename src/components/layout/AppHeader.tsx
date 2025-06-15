@@ -2,14 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bot, RefreshCw, LogOut } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 
 interface AppHeaderProps {
-  currentUser: string;
+  user: User | null;
   resetApp: () => void;
   handleLogout: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, resetApp, handleLogout }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ user, resetApp, handleLogout }) => {
   return (
     <div className="max-w-7xl mx-auto mb-6">
       <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
@@ -21,7 +22,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, resetApp, han
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">사용자: {currentUser}</span>
+          {user && <span className="text-sm text-gray-600">사용자: {user.email}</span>}
           <span className="text-sm text-gray-500">로그인 시간: {new Date().toLocaleString('ko-KR')}</span>
           <Button onClick={resetApp} variant="outline" size="sm" className="text-green-600 border-green-600 hover:bg-green-50">
             <RefreshCw className="h-4 w-4 mr-1" />

@@ -1,12 +1,10 @@
 
 export interface User {
   id: string;
-  password: string;
+  password?: string;
 }
 
 export interface AppState {
-  isLoggedIn: boolean;
-  currentUser: string;
   apiKey: string;
   isApiKeyValidated: boolean;
   keyword: string;
@@ -19,5 +17,5 @@ export interface AppState {
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;
-  saveReferenceTrigger?: boolean;
+  saveReferenceTrigger: boolean;
 }
