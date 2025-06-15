@@ -18,9 +18,12 @@ import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useAppHandlers } from '@/hooks/useAppHandlers';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const { session, user, signOut, loading } = useAuth();
+  const { session, user, signOut, loading, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
@@ -84,6 +87,26 @@ const Index = () => {
       </div>
     );
   }
+
+  if (profile && profile.status !== 'approved') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center shadow-lg">
+          <CardHeader>
+            <CardTitle>{profile.status === 'pending' ? '승인 대기 중' : '접근 거부됨'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-6">
+              {profile.status === 'pending'
+                ? '관리자의 승인을 기다리고 있습니다. 승인 후 서비스 이용이 가능합니다.'
+                : '계정 접근이 거부되었습니다. 관리자에게 문의하세요.'}
+            </p>
+            <Button onClick={signOut} variant="outline">로그아웃</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage };
   const generationFunctions = { generateTopics, generateArticle: generateArticleWithPixabay, createImagePrompt };
@@ -98,6 +121,8 @@ const Index = () => {
         handleLogout={signOut}
       />
       
+      {profile && profile.role === 'admin' && <AdminDashboard />}
+
       <ApiKeysSection
         appState={appState}
         saveAppState={saveAppState}
