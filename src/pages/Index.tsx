@@ -9,6 +9,7 @@ import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
+import { Toggle } from '@/components/ui/toggle';
 
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +25,7 @@ import { useAppUtils } from '@/hooks/useAppUtils';
 
 const Index = () => {
   const { toast } = useToast();
-  const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
+  const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
@@ -143,23 +144,28 @@ const Index = () => {
               <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
             </Link>
             <div className="text-center">
-              <Button
-                onClick={handleDeduplicateTopics}
-                disabled={appState.topics.length === 0}
+              <Toggle
+                pressed={!preventDuplicates}
+                onPressedChange={(pressed) => setPreventDuplicates(!pressed)}
                 variant="outline"
-                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md data-[state=on]:bg-blue-100 data-[state=on]:border-blue-400 hover:bg-gray-50 transition-colors"
               >
                 <RefreshCcw className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-gray-800">중복 주제 생성 해제</span>
-              </Button>
-              <p className="text-xs text-gray-500 mt-1">중복 주제 생성을 막는 기능을 해제할 수 있는 옵션</p>
+                <span className="font-semibold text-gray-800">중복 주제 허용</span>
+              </Toggle>
+              <div className="w-56 mx-auto">
+                <p className="text-xs text-gray-500 mt-1">
+                  이 버튼을 누르면 중복 주제 생성이 허용됩니다. 다시 누르면 중복 주제가 자동으로 제거됩니다.
+                </p>
+              </div>
             </div>
           </div>
           <div className="text-center">
             <Button
               onClick={handleResetApp}
               variant="outline"
-              className="inline-flex items-center gap-2 bg-white text-green-600 border-green-600 hover:bg-green-50 p-3 rounded-lg shadow-md transition-colors"
+              size="lg"
+              className="bg-white text-green-600 border-green-600 hover:bg-green-50 rounded-lg shadow-md transition-colors"
             >
               <RefreshCw className="h-5 w-5" />
               <span className="font-semibold text-gray-800">초기화</span>

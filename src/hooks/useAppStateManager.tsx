@@ -38,6 +38,7 @@ const saveReferenceToStorage = (link: string, sentence: string) => {
 export const useAppStateManager = () => {
   const { toast } = useToast();
   const [appState, setAppState] = useState<AppState>(initialAppState);
+  const [preventDuplicates, setPreventDuplicates] = useState(true);
 
   useEffect(() => {
     loadAppState();
@@ -84,7 +85,22 @@ export const useAppStateManager = () => {
           return updatedState;
         }
         
-        const updatedState = { ...prevState, ...newState };
+        let updatedState = { ...prevState, ...newState };
+
+        if (newState.topics && preventDuplicates) {
+          const originalTopics = newState.topics;
+          const uniqueTopics = [...new Set(originalTopics)];
+          
+          if (uniqueTopics.length < originalTopics.length) {
+            const removedCount = originalTopics.length - uniqueTopics.length;
+            toast({
+              title: "중복 주제 제거",
+              description: `자동으로 ${removedCount}개의 중복 주제가 제거되었습니다.`
+            });
+          }
+          updatedState = { ...updatedState, topics: uniqueTopics };
+        }
+
         persistStateToStorage(updatedState);
         return updatedState;
 
@@ -94,7 +110,7 @@ export const useAppStateManager = () => {
         return prevState; // Revert to previous state on error
       }
     });
-  }, [toast]);
+  }, [toast, preventDuplicates]);
 
   const saveApiKeyToStorage = () => {
     if (!appState.apiKey.trim()) {
@@ -140,6 +156,7 @@ export const useAppStateManager = () => {
       isApiKeyValidated: savedApiKeyValidated,
     });
     
+    setPreventDuplicates(true);
     window.dispatchEvent(new CustomEvent('app-reset'));
 
     toast({
@@ -148,5 +165,5 @@ export const useAppStateManager = () => {
     });
   };
 
-  return { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp };
+  return { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates };
 };
