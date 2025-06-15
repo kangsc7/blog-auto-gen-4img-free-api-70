@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield } from 'lucide-react';
+import { Shield, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -9,6 +9,7 @@ import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
+import { Button } from '@/components/ui/button';
 
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,6 +41,27 @@ const Index = () => {
     openWhisk,
     downloadHTML,
   } = useAppHandlers({ appState, saveAppState, resetApp });
+
+  const handleDeduplicateTopics = () => {
+    if (appState.topics.length === 0) {
+      toast({ title: "알림", description: "제거할 주제가 없습니다.", variant: "default" });
+      return;
+    }
+    const uniqueTopics = Array.from(new Set(appState.topics));
+    const removedCount = appState.topics.length - uniqueTopics.length;
+    if (removedCount > 0) {
+      saveAppState({ topics: uniqueTopics });
+      toast({
+        title: "중복 제거 완료",
+        description: `${removedCount}개의 중복된 주제가 제거되었습니다.`
+      });
+    } else {
+      toast({
+        title: "중복 없음",
+        description: "중복된 주제가 없습니다."
+      });
+    }
+  };
 
   useEffect(() => {
     if (session) {
@@ -99,7 +121,7 @@ const Index = () => {
       />
       
       {isAdmin && (
-        <div className="container mx-auto my-4">
+        <div className="container mx-auto my-4 flex items-start gap-4">
           <Link
             to="/admin/users"
             className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
@@ -107,6 +129,18 @@ const Index = () => {
             <Shield className="h-5 w-5 text-red-500" />
             <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
           </Link>
+          <div className="text-center">
+            <Button
+              onClick={handleDeduplicateTopics}
+              disabled={appState.topics.length === 0}
+              variant="outline"
+              className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+            >
+              <RefreshCcw className="h-5 w-5 text-blue-600" />
+              <span className="font-semibold text-gray-800">중복 주제 제거</span>
+            </Button>
+            <p className="text-xs text-gray-500 mt-1">AI 생성 주제 목록에서 중복 항목을 제거합니다.</p>
+          </div>
         </div>
       )}
 

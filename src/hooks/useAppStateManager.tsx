@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -16,6 +17,7 @@ const initialAppState: AppState = {
   referenceSentence: '',
   generatedContent: '',
   imagePrompt: '',
+  imageStyle: '',
   saveReferenceTrigger: false,
 };
 
@@ -131,6 +133,7 @@ export const useAppStateManager = () => {
       colorTheme: '',
       generatedContent: '',
       imagePrompt: '',
+      imageStyle: '',
       apiKey: savedApiKey,
       isApiKeyValidated: savedApiKeyValidated,
     });
