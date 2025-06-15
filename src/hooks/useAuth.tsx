@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User, AppState } from '@/types';
@@ -49,7 +48,7 @@ export const useAuth = (saveAppState: (newState: Partial<AppState>) => void) => 
   };
 
   const handleLogout = () => {
-    saveAppState({ isLoggedIn: false, currentUser: '', apiKey: '', isApiKeyValidated: false });
+    saveAppState({ isLoggedIn: false, currentUser: '' });
     setLoginData({ id: '', password: '' });
     toast({ title: "로그아웃", description: "성공적으로 로그아웃되었습니다." });
   };
