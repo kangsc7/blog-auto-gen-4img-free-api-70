@@ -356,6 +356,7 @@ const Index = () => {
     }
 
     setIsGeneratingContent(true);
+    saveAppState({ generatedContent: '' }); // Clear previous content
     
     try {
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
@@ -363,36 +364,16 @@ const Index = () => {
       
       const getColors = (theme: string) => {
         const colorMap: { [key: string]: any } = {
-          'blue-gray': {
-            primary: '#1a73e8',
-            secondary: '#f5f5f5',
-            textHighlight: '#fffde7',
-            highlight: '#e8f4fd',
-            highlightBorder: '#1a73e8',
-            warnBg: '#ffebee',
-            warnBorder: '#f44336',
-            link: '#1a73e8'
-          },
-          'green-orange': {
-            primary: '#059669',
-            secondary: '#f0fdf4',
-            textHighlight: '#dcfce7',
-            highlight: '#ecfdf5',
-            highlightBorder: '#10b981',
-            warnBg: '#fed7aa',
-            warnBorder: '#ea580c',
-            link: '#16a34a'
-          },
-          'classic-blue': {
-            primary: '#1a73e8',
-            secondary: '#f5f5f5',
-            textHighlight: '#fffde7',
-            highlight: '#e8f4fd',
-            highlightBorder: '#1a73e8',
-            warnBg: '#ffebee',
-            warnBorder: '#f44336',
-            link: '#1a73e8'
-          }
+          'blue-gray': { primary: '#1a73e8', secondary: '#f5f5f5', textHighlight: '#e8f4fd', highlight: '#e8f4fd', highlightBorder: '#1a73e8', warnBg: '#ffebee', warnBorder: '#f44336', link: '#1a73e8' },
+          'green-orange': { primary: '#059669', secondary: '#f0fdf4', textHighlight: '#dcfce7', highlight: '#ecfdf5', highlightBorder: '#10b981', warnBg: '#fed7aa', warnBorder: '#ea580c', link: '#16a34a' },
+          'purple-yellow': { primary: '#7c3aed', secondary: '#fefce8', textHighlight: '#f3e8ff', highlight: '#faf5ff', highlightBorder: '#9333ea', warnBg: '#fff1f2', warnBorder: '#e11d48', link: '#8b5cf6' },
+          'teal-light-gray': { primary: '#0d9488', secondary: '#f8fafc', textHighlight: '#ccfbf1', highlight: '#f0fdfa', highlightBorder: '#14b8a6', warnBg: '#fef2f2', warnBorder: '#dc2626', link: '#0d9488' },
+          'terracotta-light-gray': { primary: '#e57373', secondary: '#fafafa', textHighlight: '#ffebee', highlight: '#fff8e1', highlightBorder: '#ffab91', warnBg: '#fce4ec', warnBorder: '#ec407a', link: '#e57373' },
+          'classic-blue': { primary: '#1a73e8', secondary: '#f5f5f5', textHighlight: '#fffde7', highlight: '#e8f4fd', highlightBorder: '#1a73e8', warnBg: '#ffebee', warnBorder: '#f44336', link: '#1a73e8' },
+          'nature-green': { primary: '#4caf50', secondary: '#f1f8e9', textHighlight: '#e8f5e9', highlight: '#f1f8e9', highlightBorder: '#81c784', warnBg: '#fff3e0', warnBorder: '#ff9800', link: '#4caf50' },
+          'royal-purple': { primary: '#673ab7', secondary: '#f3e5f5', textHighlight: '#ede7f6', highlight: '#f3e5f5', highlightBorder: '#9575cd', warnBg: '#fce4ec', warnBorder: '#e91e63', link: '#673ab7' },
+          'future-teal': { primary: '#009688', secondary: '#e0f2f1', textHighlight: '#b2dfdb', highlight: '#e0f2f1', highlightBorder: '#4db6ac', warnBg: '#fffde7', warnBorder: '#ffeb3b', link: '#009688' },
+          'earth-terracotta': { primary: '#ff7043', secondary: '#fbe9e7', textHighlight: '#ffccbc', highlight: '#fbe9e7', highlightBorder: '#ff8a65', warnBg: '#fff9c4', warnBorder: '#fdd835', link: '#ff7043' }
         };
         return colorMap[theme] || colorMap['classic-blue'];
       };
@@ -403,16 +384,16 @@ const Index = () => {
       const keyword = appState.keyword || topic.split(' ')[0];
 
       const prompt = `
-        당신은 매력적인 블로그 게시물을 작성하는 전문 카피라이터이자 SEO 전문가입니다.
+        당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
         주제: "${topic}"
         핵심 키워드: "${keyword}"
 
-        다음 지침에 따라 이 주제에 대한 완벽한 블로그 게시물을 작성해주세요.
-        - 출력은 HTML 코드 블록 하나여야 합니다. HTML 외에 다른 텍스트나 마크다운 서식을 포함하지 마세요.
-        - 한국어 사용자를 대상으로 하며, Google 및 Naver 검색 엔진에 최적화되어야 합니다.
-        - 제공된 HTML 템플릿과 스타일을 정확하게 사용해주세요.
-        - 모든 섹션 (예: "[여기 매력적인 도입부 작성]")을 독자에게 실질적인 가치를 제공하는 자연스럽고 잘 작성된 콘텐츠로 채워주세요.
-        - 문체는 친근하고 유익해야 하며, 이모지 (예: 😊, 💡, 😥)를 적절하게 사용하여 참여를 유도해주세요.
+        다음 지침에 따라, 독자의 시선을 사로잡고 검색 엔진 상위 노출을 목표로 하는 완벽한 블로그 게시물을 작성해주세요.
+        - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식(\`\`\`html)을 포함하지 마세요.
+        - 대상 독자: 한국어 사용자
+        - SEO 최적화: Google 및 Naver 검색 엔진에 최적화된 콘텐츠여야 합니다. 제목, 소제목, 본문에 핵심 키워드를 자연스럽게 배치해주세요.
+        - 콘텐츠 스타일: 제공된 HTML 템플릿과 스타일을 정확히 사용해야 합니다. 모든 섹션('[ ]'으로 표시된 부분)을 실제 가치를 제공하는 풍부하고 자연스러운 콘텐츠로 채워주세요.
+        - 문체: 친근하고 유익하며, 독자의 공감을 얻을 수 있도록 개인적인 경험이나 스토리를 섞어주세요. 이모지(예: 😊, 💡, 😥)를 적절히 사용하여 글의 생동감을 더해주세요.
 
         사용할 변수:
         - Primary Color: ${colors.primary}
@@ -427,339 +408,64 @@ const Index = () => {
         - Topic: ${topic}
         - Main Keyword: ${keyword}
 
-        아래는 반드시 따라야 할 HTML 템플릿입니다. 구조와 클래스, 인라인 스타일을 변경하지 마세요.
+        아래는 반드시 따라야 할 HTML 템플릿입니다. 구조와 클래스, 인라인 스타일을 절대 변경하지 마세요.
         
         --- HTML TEMPLATE START ---
-        <div>
+<div style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; font-size: 17px; box-sizing: border-box; padding: 0 8px; word-break: break-all; overflow-wrap: break-word;">
 <style>
-@media (max-width: 768px) {
-.wrapper-div {
-    padding: 0 10px !important;
-}
-}
+@media (max-width: 768px) { .wrapper-div { padding: 0 10px !important; } }
+.single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
 </style>
-</div>
-<div class="wrapper-div" style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; font-size: 17px; box-sizing: border-box; padding: 0 8px; word-break: break-all; overflow-wrap: break-word;">
-
-<div style="margin-top: 10px;"></div>
-
+<div class="wrapper-div">
 <h3 style="font-size: 28px; color: #333; margin-top: 25px; margin-bottom: 20px; text-align: center; line-height: 1.4;" data-ke-size="size23">${topic}</h3>
-
-<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
-<strong>[여기 주제에 대한 흥미로운 질문이나 문제 제기 작성]</strong> [여기 이 글이 어떻게 독자의 문제를 해결해 줄 수 있는지에 대한 간략한 설명 작성]
-</div>
-
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[여기 개인적인 경험이나 일화를 공유하며 독자와의 공감대 형성] 😥 [여기 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>가 어떻게 생겼는지에 대한 스토리텔링 추가]</p>
-
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[여기 이 글이 왜 특별한지, 독자가 무엇을 얻어갈 수 있는지 강조. 초보자도 쉽게 따라할 수 있다는 점 어필] 😊</p>
-
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>[주제와 관련된 첫 번째 핵심 소제목]</strong> 💡
-</h2>
-
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 설명. 왜 이 내용이 중요한지, 어떤 사람들이 특히 관심을 가져야 하는지 설명]</p>
-
-<ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 1]</li>
-<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 2]</li>
-<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 3]</li>
-<li style="margin-bottom: 8px;">[이 내용이 필요한 사람 유형 4]</li>
-</ul>
-
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[주제와 관련된 문제의 다른 원인이나 고려사항 제시. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">다른 요인</span>이 있을 수 있음을 언급하며 깊이 있는 분석 제공] 🥺</p>
-
-<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>
-[독자가 꼭 알아야 할 핵심 팁이나 원칙을 간결하게 작성]
-</div>
-
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>[실용적인 방법이나 가이드를 제시하는 두 번째 소제목]</strong> 📝
-</h2>
-
-<div style="margin-top: 20px;"></div>
-
-<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.primary};">💡 팁 1: [첫 번째 팁 제목]</strong><br>
-[첫 번째 팁에 대한 상세 설명]
-</div>
-
-<ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;"><strong>[세부 항목 1]:</strong> [세부 항목 1에 대한 설명]</li>
-<li style="margin-bottom: 8px;"><strong>[세부 항목 2]:</strong> [세부 항목 2에 대한 설명]</li>
-<li style="margin-bottom: 8px;"><strong>[세부 항목 3]:</strong> [세부 항목 3에 대한 설명]</li>
-</ul>
-
-<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.primary};">💡 팁 2: [두 번째 팁 제목]</strong><br>
-[두 번째 팁에 대한 상세 설명]
-</div>
-
-<ul style="margin: 0 0 20px 0; padding-left: 25px; font-size: 17px; line-height: 1.7;" data-ke-list-type="disc">
-<li style="margin-bottom: 8px;"><strong>[세부 항목 1]:</strong> [세부 항목 1에 대한 설명]</li>
-<li style="margin-bottom: 8px;"><strong>[세부 항목 2]:</strong> [세부 항목 2에 대한 설명]</li>
-<li style="margin-bottom: 8px;"><strong>[세부 항목 3]:</strong> [세부 항목 3에 대한 설명]</li>
-</ul>
-
+<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;"><b>[독자의 흥미를 끄는 질문]</b> [이 글을 통해 얻게 될 핵심 가치를 요약 설명]</div>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[개인적인 경험이나 일화를 공유하며 독자와의 공감대 형성] 😥 [이후 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>를 깨닫게 된 계기를 스토리텔링으로 연결]</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[이 글이 다른 글과 어떻게 다른지, 초보자도 쉽게 이해할 수 있다는 점을 강조] 😊</p>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[첫 번째 핵심 소제목: 문제 제기 또는 기본 개념]</b> 💡</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 상세 설명. 왜 이 내용이 중요한지, 독자가 겪는 문제의 근본 원인을 분석]</p>
+<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>[독자가 꼭 알아야 할 핵심 팁이나 기본 원칙을 간결하게 작성]</div>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[두 번째 핵심 소제목: 구체적인 해결 방법 또는 단계별 가이드]</b> 📝</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[해결 방법에 대한 전반적인 소개. 따라하기 쉽다는 점 강조]</p>
+<div style="overflow-x: auto; margin: 25px 0; padding: 0;">
+<table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
+<thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">핵심 내용</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">포인트</th></tr></thead>
+<tbody>
+<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계 핵심]</td></tr>
+<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계 핵심]</td></tr>
+<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계 핵심]</td></tr>
+</tbody></table></div>
 <div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 25px 0; font-size: 17px; line-height: 1.6; box-sizing: border-box;">
 <h3 style="font-size: 20px; color: #333; margin: 0 0 12px; font-weight: bold; line-height: 1.5;">실제 적용 사례 📝</h3>
-<p style="margin-bottom: 15px;">[실제 적용 사례에 대한 구체적인 이야기. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적인 결과</span>를 보여주면 좋음.]</p>
-<p style="margin-bottom: 15px;">[사례를 통해 얻은 교훈이나 인사이트 공유.]</p>
-<p>[독려 메시지]</p>
+<p style="margin-bottom: 15px;">[실제 적용 사례를 구체적인 스토리로 설명. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적 결과</span>를 보여주면 신뢰도 상승.]</p>
+<p>[사례를 통해 얻은 교훈이나 독려 메시지]</p>
 </div>
-
-<div style="overflow-x: auto; margin: 25px 0; padding: 0;">
-<table style="min-width: 600px; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
-    <thead>
-        <tr>
-            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">단계</th>
-            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">주요 활동</th>
-            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">예상 기간</th>
-            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333;">핵심 포인트</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">1단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 활동 내용]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 기간]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[1단계 핵심 포인트]</td>
-        </tr>
-        <tr style="background-color: #f9f9f9;">
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">2단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 활동 내용]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 기간]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[2단계 핵심 포인트]</td>
-        </tr>
-        <tr>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">3단계</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 활동 내용]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 기간]</td>
-            <td style="padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6;">[3단계 핵심 포인트]</td>
-        </tr>
-    </tbody>
-</table>
-</div>
-
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>이것만은 주의하세요!</strong> ⚠️
-</h2>
-
-<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.warnBorder};">⚠️ [첫 번째 주의사항 제목]</strong><br>
-[첫 번째 주의사항에 대한 상세 설명. 개인적인 경험을 덧붙이면 좋음.] ㅠㅠ
-</div>
-
-<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-<strong style="color: ${colors.warnBorder};">⚠️ [두 번째 주의사항 제목]</strong><br>
-[두 번째 주의사항에 대한 상세 설명. 전문가의 도움이 필요한 경우를 언급.]
-</div>
-
-<div style="border-top: 1px dashed #ddd; margin: 35px 0;"></div>
-
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>${keyword} 관리, 핵심 요약 카드!</strong> 📌
-</h2>
-
-<style>
-.single-summary-card-container {
-    font-family: 'Noto Sans KR', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 25px 15px;
-    background-color: ${colors.highlight};
-    margin: 25px 0;
-}
-.single-summary-card {
-    width: 100%;
-    max-width: 700px;
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid ${colors.highlightBorder};
-    box-sizing: border-box;
-}
-.single-summary-card .card-header {
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid ${colors.highlightBorder};
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-.single-summary-card .card-header-icon {
-    font-size: 38px;
-    color: ${colors.primary};
-    margin-right: 16px;
-}
-.single-summary-card .card-header h3 {
-    font-size: 28px;
-    color: ${colors.primary};
-    margin: 0;
-    line-height: 1.3;
-    font-weight: 700;
-}
-.single-summary-card .card-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    font-size: 18px;
-    line-height: 1.7;
-    color: #333;
-}
-.single-summary-card .card-content .section {
-    margin-bottom: 12px;
-    line-height: 1.7;
-}
-.single-summary-card .card-content .section:last-child {
-    margin-bottom: 0;
-}
-.single-summary-card .card-content strong {
-    color: ${colors.primary};
-    font-weight: 600;
-}
-.single-summary-card .card-content .highlight {
-    background-color: ${colors.textHighlight};
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: bold;
-}
-.single-summary-card .card-content .formula {
-    background-color: ${colors.secondary};
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.95em;
-    text-align: center;
-    margin-top: 8px;
-    color: ${colors.primary};
-}
-.single-summary-card .card-footer {
-    font-size: 15px;
-    color: #777;
-    text-align: center;
-    padding-top: 15px;
-    border-top: 1px dashed ${colors.highlightBorder};
-    margin-top: auto;
-}
-@media (max-width: 768px) {
-    .single-summary-card-container {
-        padding: 20px 10px;
-    }
-    .single-summary-card {
-        padding: 22px;
-        border-radius: 10px;
-    }
-    .single-summary-card .card-header-icon {
-        font-size: 32px;
-        margin-right: 12px;
-    }
-    .single-summary-card .card-header h3 {
-        font-size: 24px;
-    }
-    .single-summary-card .card-content {
-        font-size: 16px;
-        line-height: 1.6;
-    }
-    .single-summary-card .card-content .section {
-        margin-bottom: 10px;
-        line-height: 1.6;
-    }
-    .single-summary-card .card-content .highlight {
-        padding: 2px 5px;
-    }
-    .single-summary-card .card-content .formula {
-        padding: 7px 10px;
-        font-size: 0.9em;
-    }
-    .single-summary-card .card-footer {
-        font-size: 14px;
-        padding-top: 12px;
-    }
-}
-@media (max-width: 480px) {
-    .single-summary-card {
-        padding: 18px;
-        border-radius: 8px;
-    }
-    .single-summary-card .card-header-icon {
-        font-size: 28px;
-        margin-right: 10px;
-    }
-    .single-summary-card .card-header h3 {
-        font-size: 20px;
-    }
-    .single-summary-card .card-content {
-        font-size: 15px;
-        line-height: 1.5;
-    }
-    .single-summary-card .card-content .section {
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-    .single-summary-card .card-content .formula {
-        padding: 6px 8px;
-        font-size: 0.85em;
-    }
-    .single-summary-card .card-footer {
-        font-size: 13px;
-        padding-top: 10px;
-    }
-}
-</style>
-
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[세 번째 핵심 소제목: 주의사항 또는 추가 팁]</b> ⚠️</h2>
+<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.warnBorder};">⚠️ [첫 번째 주의사항]</strong><br>[흔히 하는 실수나 주의할 점을 상세히 설명. 경험담을 섞으면 좋음.] ㅠㅠ</div>
+<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.warnBorder};">⚠️ [두 번째 주의사항]</strong><br>[또 다른 주의사항이나 전문가의 도움이 필요한 경우에 대한 조언.]</div>
 <div class="single-summary-card-container">
 <div class="single-summary-card">
-<div class="card-header">
-<span class="card-header-icon">💡</span>
-<h3 data-ke-size="size23">${keyword} 관리의 핵심!</h3>
-</div>
+<div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">${keyword} 관리, 핵심만 요약!</h3></div>
 <div class="card-content">
 <div class="section"><strong>[요약 1 제목]:</strong> <span class="highlight">[요약 1 내용]</span></div>
 <div class="section"><strong>[요약 2 제목]:</strong> <span class="highlight">[요약 2 내용]</span></div>
-<div class="section"><strong>[요약 3 제목]:</strong>
-<div class="formula">[요약 3 내용]</div>
-</div>
+<div class="section"><strong>[요약 3 제목]:</strong><div class="formula">[요약 3 내용]</div></div>
 <div class="section"><strong>[요약 4 제목]:</strong> <span class="highlight">[요약 4 내용]</span></div>
 </div>
-<div class="card-footer">성공적인 ${keyword} 관리를 위한 필수 습관!</div>
+<div class="card-footer">성공적인 ${keyword} 관리를 위한 필수 체크리스트!</div>
 </div>
 </div>
-
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
-<strong>궁금해요! ${keyword} Q&A</strong> ❓
-</h2>
-
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>자주 묻는 질문 (FAQ)</b> ❓</h2>
 <div style="margin: 30px 0;">
-<div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [첫 번째 질문]</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [첫 번째 답변]</div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [첫 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [첫 번째 질문에 대한 명확하고 간결한 답변]</div></div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [두 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [두 번째 질문에 대한 상세한 답변]</div></div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [세 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [세 번째 질문에 대한 추가 정보 제공]</div></div>
 </div>
-<div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [두 번째 질문]</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [두 번째 답변]</div>
-</div>
-<div style="margin-bottom: 22px;">
-<div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [세 번째 질문]</div>
-<div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [세 번째 답변]</div>
-</div>
-</div>
-
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하는 문단. 독자에게 도움이 되었기를 바라는 마음을 표현하고, 추가 질문을 유도.] 😊</p>
-
-<p style="text-align: center; font-size: 18px;" data-ke-size="size16">
-<strong>이건 아직 못 봤다면, 진짜 아쉬울 수 있어요.</strong><br>
-👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>워드프레스 꿀팁 보러 가기</strong></a>
-</p>
-
-</div>
-
+<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하며 핵심 내용을 다시 한번 요약하고, 독자에게 도움이 되었기를 바라는 마음을 표현.] 😊</p>
+<p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>워드프레스 꿀팁 더 보러가기</strong></a></p>
 <br><br>
 [${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5~10개 나열]
+</div>
+</div>
 --- HTML TEMPLATE END ---
       `;
 
@@ -792,9 +498,10 @@ const Index = () => {
       }
       
       const htmlContent = data.candidates[0].content.parts[0].text;
+      const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim();
 
       saveAppState({ 
-        generatedContent: htmlContent,
+        generatedContent: cleanedHtml,
         colorTheme: selectedColorTheme 
       });
       
@@ -1010,6 +717,7 @@ const Index = () => {
 
           <ArticlePreview
             generatedContent={appState.generatedContent}
+            isGeneratingContent={isGeneratingContent}
             copyToClipboard={copyToClipboard}
             downloadHTML={downloadHTML}
           />
