@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
@@ -15,7 +16,7 @@ interface GenerationStatus {
 
 interface GenerationFunctions {
     generateTopics: () => Promise<string[] | null>;
-    generateArticle: (topic?: string) => Promise<string | null>;
+    generateArticle: (options?: { topic?: string; keyword?: string; }) => Promise<string | null>;
     createImagePrompt: () => Promise<boolean>;
 }
 
