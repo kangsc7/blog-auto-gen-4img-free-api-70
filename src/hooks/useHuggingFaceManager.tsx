@@ -22,7 +22,22 @@ export const useHuggingFaceManager = () => {
             });
 
             if (!response.ok) {
-                throw new Error('API 키 검증 실패');
+                let errorMessage = `API 요청 실패 (상태 코드: ${response.status})`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // JSON 파싱 실패 시 기본 에러 메시지 유지
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            if (data.auth?.accessToken?.role !== 'read' && data.auth?.accessToken?.role !== 'write') {
+                const role = data.auth?.accessToken?.role || '알 수 없음';
+                throw new Error(`API 키의 권한이 부족합니다. 현재 권한: '${role}'. 'read' 또는 'write' 권한이 필요합니다.`);
             }
 
             setIsHuggingFaceApiKeyValidated(true);
@@ -31,7 +46,8 @@ export const useHuggingFaceManager = () => {
         } catch (error) {
             setIsHuggingFaceApiKeyValidated(false);
             if (!silent) {
-                toast({ title: "Hugging Face API 키 검증 실패", description: "키가 유효하지 않거나 문제가 발생했습니다.", variant: "destructive" });
+                const description = error instanceof Error ? error.message : "키가 유효하지 않거나 문제가 발생했습니다.";
+                toast({ title: "Hugging Face API 키 검증 실패", description, variant: "destructive" });
             }
             return false;
         } finally {
