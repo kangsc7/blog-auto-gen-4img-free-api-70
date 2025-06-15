@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
@@ -136,7 +135,7 @@ const Index = () => {
       
       {isAdmin && (
         <div className="container mx-auto my-4 flex items-center justify-between">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-8">
             <Link
               to="/admin/users"
               className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
@@ -148,11 +147,10 @@ const Index = () => {
               <Toggle
                 pressed={!preventDuplicates}
                 onPressedChange={(pressed) => setPreventDuplicates(!pressed)}
-                variant="outline"
-                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md data-[state=on]:bg-blue-100 data-[state=on]:border-blue-400 hover:bg-gray-50 transition-colors"
+                className="w-56 justify-center gap-2 p-3 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200 data-[state=on]:bg-gray-100 data-[state=on]:shadow-inner data-[state=on]:text-blue-600"
               >
                 <RefreshCcw className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-gray-800 w-28 text-center">
+                <span className="font-semibold">
                   {!preventDuplicates ? '중복 주제 허용' : '중복 주제 금지'}
                 </span>
               </Toggle>
