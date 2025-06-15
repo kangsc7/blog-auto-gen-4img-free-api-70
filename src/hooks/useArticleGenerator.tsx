@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -42,7 +41,7 @@ export const useArticleGenerator = (
         referenceSentence: appState.referenceSentence,
       });
 
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${appState.apiKey}`;
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
       const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
