@@ -40,16 +40,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     fetchSessionAndProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setProfile(userProfile as Profile | null);
+        // Defer the database call to avoid potential deadlocks
+        setTimeout(async () => {
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          setProfile(userProfile as Profile | null);
+        }, 0);
       } else {
         setProfile(null);
       }
