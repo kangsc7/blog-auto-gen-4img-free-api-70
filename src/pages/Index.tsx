@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -5,6 +6,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
+import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
@@ -91,6 +93,7 @@ const Index = () => {
         topicControls={topicControls}
         utilityFunctions={utilityFunctions}
       />
+      <ScrollToTopButton />
     </div>
   );
 };

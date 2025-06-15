@@ -36,7 +36,7 @@ export const useArticleGenerator = (
       
       const prompt = getArticlePrompt({
         topic: selectedTopic,
-        keyword: appState.keyword || selectedTopic.split(' ')[0],
+        keyword: appState.keyword || selectedTopic,
         selectedColorTheme: selectedColorTheme,
         referenceLink: appState.referenceLink,
         referenceSentence: appState.referenceSentence,
