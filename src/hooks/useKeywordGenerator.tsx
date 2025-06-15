@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -54,9 +55,9 @@ export const useKeywordGenerator = (appState: AppState) => {
     };
 
     const generateLatestKeyword = async (): Promise<string | null> => {
-        toast({ title: "AI 최신 트렌드 분석 중...", description: "현재 구글과 네이버의 상위 검색어를 분석하여 키워드를 생성합니다." });
+        toast({ title: "AI 최신 트렌드 분석 중...", description: "AI가 최신 트렌드를 분석하여 키워드를 추론합니다." });
         const currentYear = new Date().getFullYear();
-        const prompt = `현재 ${currentYear}년 대한민국 시간 기준으로 구글과 네이버에서 가장 인기 있는 최신 트렌드 검색어 5개를 찾아줘. 그 중에서 블로그 포스팅에 가장 적합한 핵심 키워드 1개만 선정해서 알려줘. 다른 설명 없이 키워드만 텍스트로 제공해줘.`;
+        const prompt = `당신은 ${currentYear}년의 최신 트렌드를 분석하는 전문가입니다. 현재 대한민국에서 사람들이 가장 뜨겁게 반응하고 있거나, 곧 화제가 될 것으로 예상되는 사회, 문화, 기술, 라이프스타일 분야의 이슈를 예측해주세요. 그 예측을 바탕으로, 블로그 포스팅에 가장 매력적인 핵심 키워드 1개만 선정해서 알려주세요. 다른 부가적인 설명 없이, 오직 키워드 텍스트만 응답으로 제공해야 합니다.`;
         return callGeminiForKeyword(prompt);
     };
 
