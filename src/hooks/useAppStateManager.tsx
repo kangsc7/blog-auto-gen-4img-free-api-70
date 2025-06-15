@@ -137,6 +137,8 @@ export const useAppStateManager = () => {
       isApiKeyValidated: savedApiKeyValidated,
     });
     
+    window.dispatchEvent(new CustomEvent('app-reset'));
+
     toast({
       title: "초기화 완료",
       description: "앱 데이터가 초기화되었습니다. 브라우저에 저장된 API 키와 참조 정보는 유지됩니다.",

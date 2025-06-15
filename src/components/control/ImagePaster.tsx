@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ImageUp, Copy } from 'lucide-react';
@@ -8,6 +8,16 @@ import { useToast } from '@/hooks/use-toast';
 export const ImagePaster = () => {
     const [convertedImage, setConvertedImage] = useState<string | null>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        const handleAppReset = () => {
+            setConvertedImage(null);
+        };
+        window.addEventListener('app-reset', handleAppReset);
+        return () => {
+            window.removeEventListener('app-reset', handleAppReset);
+        };
+    }, []);
 
     const convertToJpeg = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -103,7 +113,7 @@ export const ImagePaster = () => {
             <CardHeader>
                 <CardTitle className="flex items-center text-purple-700">
                     <ImageUp className="h-5 w-5 mr-2" />
-                    4. 이미지 붙여넣기 및 변환 (JPG)
+                    4. 이미지 붙여넣기 및 변환
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
