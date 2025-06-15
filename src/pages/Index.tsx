@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState, User } from '@/types';
@@ -11,6 +12,7 @@ import { ImageCreation } from '@/components/control/ImageCreation';
 import { ApiKeyManager } from '@/components/control/ApiKeyManager';
 import { TopicList } from '@/components/display/TopicList';
 import { ArticlePreview } from '@/components/display/ArticlePreview';
+import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
 
 const Index = () => {
   const { toast } = useToast();
@@ -391,7 +393,7 @@ const Index = () => {
         다음 지침에 따라, 독자의 시선을 사로잡고 검색 엔진 상위 노출을 목표로 하는 완벽한 블로그 게시물을 작성해주세요.
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식(\`\`\`html)을 포함하지 마세요.
         - 대상 독자: 한국어 사용자
-        - SEO 최적화: Google 및 Naver 검색 엔진에 최적화된 콘텐츠여야 합니다. 제목, 소제목, 본문에 핵심 키워드를 자연스럽게 배치해주세요.
+        - SEO 최적화: Google 및 Naver 검색 엔진에 최적화된 콘텐츠여야 합니다. 제목, 소제목, 본문에 핵심 키워드를 자연스럽게 2~3% 밀도로 배치해주세요.
         - 콘텐츠 스타일: 제공된 HTML 템플릿과 스타일을 정확히 사용해야 합니다. 모든 섹션('[ ]'으로 표시된 부분)을 실제 가치를 제공하는 풍부하고 자연스러운 콘텐츠로 채워주세요.
         - 문체: 친근하고 유익하며, 독자의 공감을 얻을 수 있도록 개인적인 경험이나 스토리를 섞어주세요. 이모지(예: 😊, 💡, 😥)를 적절히 사용하여 글의 생동감을 더해주세요.
 
@@ -418,52 +420,54 @@ const Index = () => {
 </style>
 <div class="wrapper-div">
 <h3 style="font-size: 28px; color: #333; margin-top: 25px; margin-bottom: 20px; text-align: center; line-height: 1.4;" data-ke-size="size23">${topic}</h3>
-<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;"><b>[독자의 흥미를 끄는 질문]</b> [이 글을 통해 얻게 될 핵심 가치를 요약 설명]</div>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[개인적인 경험이나 일화를 공유하며 독자와의 공감대 형성] 😥 [이후 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>를 깨닫게 된 계기를 스토리텔링으로 연결]</p>
+<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;"><b>[독자의 흥미를 유발하는 질문으로 시작]</b> [이 글을 통해 얻게 될 핵심 가치를 요약 설명. '이 글을 끝까지 읽으시면 ~을 확실히 알게 되실 거예요!' 와 같은 문장 포함]</div>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[개인적인 경험이나 일화를 공유하며 독자와의 공감대 형성. 핵심 키워드 '${keyword}'를 자연스럽게 포함] 😥 [이후 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>를 깨닫게 된 계기를 스토리텔링으로 연결]</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[이 글이 다른 글과 어떻게 다른지, 초보자도 쉽게 이해할 수 있다는 점을 강조] 😊</p>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[첫 번째 핵심 소제목: 문제 제기 또는 기본 개념]</b> 💡</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 상세 설명. 왜 이 내용이 중요한지, 독자가 겪는 문제의 근본 원인을 분석]</p>
-<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>[독자가 꼭 알아야 할 핵심 팁이나 기본 원칙을 간결하게 작성]</div>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[두 번째 핵심 소제목: 구체적인 해결 방법 또는 단계별 가이드]</b> 📝</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[해결 방법에 대한 전반적인 소개. 따라하기 쉽다는 점 강조]</p>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[첫 번째 핵심 소제목: 문제 제기 또는 기본 개념. '${keyword}' 포함]</b> 💡</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 상세 설명. 왜 이 내용이 중요한지, 독자가 겪는 문제의 근본 원인을 분석. 전문 용어는 쉽게 풀어서 설명.]</p>
+<div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>[독자가 꼭 알아야 할 핵심 팁이나 기본 원칙을 간결하게 작성. '${keyword}' 관련 내용이면 더욱 좋음.]</div>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[두 번째 핵심 소제목: 구체적인 해결 방법 또는 단계별 가이드. '${keyword}' 포함]</b> 📝</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[해결 방법에 대한 전반적인 소개. 따라하기 쉽다는 점 강조.]</p>
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
 <table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
 <thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">핵심 내용</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">포인트</th></tr></thead>
 <tbody>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계 핵심]</td></tr>
-<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계 핵심]</td></tr>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계 내용]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계 핵심]</td></tr>
+<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계 내용 상세 설명]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[1단계에서 가장 중요한 핵심 포인트]</td></tr>
+<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계 내용 상세 설명]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[2단계에서 가장 중요한 핵심 포인트]</td></tr>
+<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계 내용 상세 설명]</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">[3단계에서 가장 중요한 핵심 포인트]</td></tr>
 </tbody></table></div>
 <div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 25px 0; font-size: 17px; line-height: 1.6; box-sizing: border-box;">
 <h3 style="font-size: 20px; color: #333; margin: 0 0 12px; font-weight: bold; line-height: 1.5;">실제 적용 사례 📝</h3>
-<p style="margin-bottom: 15px;">[실제 적용 사례를 구체적인 스토리로 설명. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적 결과</span>를 보여주면 신뢰도 상승.]</p>
-<p>[사례를 통해 얻은 교훈이나 독려 메시지]</p>
+<p style="margin-bottom: 15px;">[실제 적용 사례를 구체적인 스토리로 설명. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적 결과 (예: '비용 30% 절감')</span>를 보여주면 신뢰도 상승.]</p>
+<p>[사례를 통해 얻은 교훈이나 독려 메시지. '${keyword}' 관리의 중요성 강조.]</p>
 </div>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[세 번째 핵심 소제목: 주의사항 또는 추가 팁]</b> ⚠️</h2>
-<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.warnBorder};">⚠️ [첫 번째 주의사항]</strong><br>[흔히 하는 실수나 주의할 점을 상세히 설명. 경험담을 섞으면 좋음.] ㅠㅠ</div>
-<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.warnBorder};">⚠️ [두 번째 주의사항]</strong><br>[또 다른 주의사항이나 전문가의 도움이 필요한 경우에 대한 조언.]</div>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[세 번째 핵심 소제목: 성공률 높이는 꿀팁 및 주의사항]</b> ⚠️</h2>
+<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
+    <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
+    [독자들이 흔히 하는 실수나 꼭 알아야 할 주의사항, 그리고 추가적인 꿀팁을 리스트(ul, li) 형태로 2~3가지 구체적으로 작성. 경험담을 섞으면 신뢰도가 높아짐.]
+</div>
 <div class="single-summary-card-container">
 <div class="single-summary-card">
 <div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">${keyword} 관리, 핵심만 요약!</h3></div>
 <div class="card-content">
-<div class="section"><strong>[요약 1 제목]:</strong> <span class="highlight">[요약 1 내용]</span></div>
-<div class="section"><strong>[요약 2 제목]:</strong> <span class="highlight">[요약 2 내용]</span></div>
-<div class="section"><strong>[요약 3 제목]:</strong><div class="formula">[요약 3 내용]</div></div>
-<div class="section"><strong>[요약 4 제목]:</strong> <span class="highlight">[요약 4 내용]</span></div>
+<div class="section"><strong>[요약 1 제목]:</strong> <span class="highlight">[요약 1 내용: 간결하고 명확하게]</span></div>
+<div class="section"><strong>[요약 2 제목]:</strong> <span class="highlight">[요약 2 내용: 독자가 기억하기 쉽게]</span></div>
+<div class="section"><strong>[요약 3 제목]:</strong><div class="formula">[요약 3 내용: 공식처럼 표현]</div></div>
+<div class="section"><strong>[요약 4 제목]:</strong> <span class="highlight">[요약 4 내용: 가장 중요한 팁]</span></div>
 </div>
 <div class="card-footer">성공적인 ${keyword} 관리를 위한 필수 체크리스트!</div>
 </div>
 </div>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>자주 묻는 질문 (FAQ)</b> ❓</h2>
 <div style="margin: 30px 0;">
-<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [첫 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [첫 번째 질문에 대한 명확하고 간결한 답변]</div></div>
-<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [두 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [두 번째 질문에 대한 상세한 답변]</div></div>
-<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [세 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [세 번째 질문에 대한 추가 정보 제공]</div></div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [핵심 키워드 '${keyword}'와 관련된 첫 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [첫 번째 질문에 대한 명확하고 간결한 답변]</div></div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [주제 '${topic}'에 대한 두 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [두 번째 질문에 대한 상세한 답변. 초보자도 이해하기 쉽게]</div></div>
+<div style="margin-bottom: 22px;"><div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [독자들이 가장 궁금해할 만한 세 번째 예상 질문]</div><div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [세 번째 질문에 대한 추가 정보 또는 팁 제공]</div></div>
 </div>
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하며 핵심 내용을 다시 한번 요약하고, 독자에게 도움이 되었기를 바라는 마음을 표현.] 😊</p>
+<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[글을 마무리하며 핵심 내용을 다시 한번 요약하고, 독자에게 도움이 되었기를 바라는 마음을 표현. '${keyword}'의 중요성을 마지막으로 강조.] 😊</p>
 <p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>워드프레스 꿀팁 더 보러가기</strong></a></p>
 <br><br>
-[${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5~10개 나열]
+[${keyword}, ${topic} 등 관련 키워드를 콤마로 구분하여 5~10개 나열. 블로그 태그로 활용]
 </div>
 </div>
 --- HTML TEMPLATE END ---
@@ -721,6 +725,14 @@ const Index = () => {
             copyToClipboard={copyToClipboard}
             downloadHTML={downloadHTML}
           />
+
+          {appState.generatedContent && !isGeneratingContent && (
+             <SeoAnalyzer 
+                generatedContent={appState.generatedContent}
+                keyword={appState.keyword}
+                selectedTopic={appState.selectedTopic}
+             />
+          )}
         </div>
       </div>
     </div>
