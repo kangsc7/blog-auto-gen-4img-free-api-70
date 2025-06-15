@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { UserManagementTable } from '@/components/admin/UserManagementTable';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -51,12 +51,20 @@ const AdminUsers = () => {
                 handleLogout={handleLogout}
             />
             <main className="container mx-auto p-4 md:p-6">
-                <div className="flex items-center gap-4 mb-6">
-                    <ShieldCheck className="h-10 w-10 text-blue-600" />
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">사용자 관리</h1>
-                        <p className="text-gray-500">새로운 사용자의 가입을 실시간으로 승인하거나 거절합니다.</p>
+                <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-4">
+                        <ShieldCheck className="h-10 w-10 text-blue-600" />
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-800">사용자 관리</h1>
+                            <p className="text-gray-500">새로운 사용자의 가입을 실시간으로 승인하거나 거절합니다.</p>
+                        </div>
                     </div>
+                    <Button asChild variant="outline">
+                        <Link to="/">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            메인으로 돌아가기
+                        </Link>
+                    </Button>
                 </div>
                 <UserManagementTable />
             </main>
