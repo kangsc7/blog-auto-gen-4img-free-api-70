@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -48,8 +47,6 @@ ${getCssStyles(colors)}
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[실제 성공 사례나 가상의 성공 스토리를 통해 '${keyword}'를 활용했을 때 얻을 수 있는 긍정적인 결과를 생생하게 보여줍니다. 독자들이 자신도 할 수 있다는 자신감을 얻도록 동기부여를 해주세요. 최소 2~3문단 이상 작성.]</p>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 관련 추천 도구 및 서비스 소제목]</b> 🛠️</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[${keyword} 작업의 효율성을 높여주는 유용한 도구나 온라인 서비스를 2~3가지 추천하고, 각 도구의 장점과 사용법을 간략하게 설명합니다. 실제 사용 경험을 바탕으로 작성하면 신뢰도가 높아집니다.]</p>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}'의 미래 전망과 최신 트렌드 소제목]</b> 🚀</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[${keyword} 분야의 미래 발전 가능성이나 최신 동향에 대해 분석합니다. 관련 전문가의 의견이나 최신 보고서를 인용하여 글의 전문성을 더합니다. 독자들이 미래를 대비하는 데 도움이 될 만한 인사이트를 제공합니다.]</p>
 <div class="single-summary-card-container">
 <div class="single-summary-card">
 <div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">${keyword} 관리, 핵심만 요약!</h3></div>
@@ -76,3 +73,69 @@ ${getCssStyles(colors)}
 </div>
 </div>
 `;
+```
+
+```typescript
+import { getColors } from './promptUtils';
+import { getHtmlTemplate } from './htmlTemplate';
+
+interface ArticlePromptParams {
+  topic: string;
+  keyword: string;
+  selectedColorTheme: string;
+  referenceLink?: string;
+  referenceSentence?: string;
+}
+
+export const getArticlePrompt = ({
+  topic,
+  keyword,
+  selectedColorTheme,
+  referenceLink,
+  referenceSentence,
+}: ArticlePromptParams): string => {
+  const colors = getColors(selectedColorTheme);
+  const refLink = referenceLink || 'https://worldpis.com';
+  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink);
+
+  return `
+        당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
+        주제: "${topic}"
+        핵심 키워드: "${keyword}"
+
+        다음 지침에 따라, 독자의 시선을 사로잡고 검색 엔진 상위 노출을 목표로 하는 완벽한 블로그 게시물을 작성해주세요.
+        - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식(\`\`\`html)을 포함하지 마세요.
+        - 콘텐츠 독창성: 동일한 주제나 키워드로 이전에 글을 작성했을 수 있습니다. 하지만 이번에는 완전히 새로운 관점과 독창적인 접근 방식을 사용해야 합니다. 이전 글과 절대 중복되지 않는, 완전히 새로운 글을 생성해주세요. 예시, 비유, 스토리텔링을 다르게 구성하고, 글의 구조와 표현 방식에도 변화를 주어 독자에게 신선한 가치를 제공해야 합니다. 이 지침은 검색 엔진의 중복 콘텐츠 페널티를 피하기 위해 매우 중요합니다.
+        - **독자 중심 글쓰기 (매우 중요)**: 글의 모든 내용은 독자가 '${topic}'에 대해 검색했을 때 가장 궁금해하고, 알고 싶어하는 정보를 중심으로 구성해야 합니다. 단순히 정보를 나열하는 것을 넘어, 독자의 문제를 해결해주고 실질적인 도움을 준다는 느낌을 주어야 합니다. 독자의 입장에서 '이 글을 읽길 정말 잘했다'고 느낄 수 있도록 깊이 있는 분석, 구체적인 예시, 실행 가능한 조언을 풍부하게 담아주세요.
+        - 대상 독자: 한국어 사용자
+        - **콘텐츠 분량 (매우 중요)**: SEO 점수 100점을 위해, 전체 글자 수는 반드시 **1,600 단어에서 2,000 단어 사이**여야 합니다. 이는 100점 달성을 위한 필수 조건입니다. 각 섹션을 매우 상세하고 깊이 있게 다루어 분량을 확보하고, 특히 새로 추가된 '실패 사례와 극복 방법' 섹션을 포함하여 모든 소제목에 충실한 내용을 채워 이 분량을 달성해주세요.
+        - **키워드 밀도 (가장 중요한 규칙)**: SEO 100점 달성을 위해, 핵심 키워드 '${keyword}'의 밀도를 **정확히 1.5% ~ 2.5%**로 맞춰야 합니다. 이는 **가장 중요한 요구사항**입니다. 예를 들어, 총 단어가 2,000개라면 '${keyword}'는 30번에서 50번 사이로 등장해야 합니다. 글을 완성한 후, 직접 단어 수와 키워드 등장 횟수를 세어 밀도를 확인하고, 범위를 벗어난다면 반드시 수정하여 이 규칙을 준수해야 합니다. 이 밀도 범위를 벗어나는 것은 절대 허용되지 않습니다.
+        - 콘텐츠 스타일: 제공된 HTML 템플릿과 스타일을 정확히 사용해야 합니다. 모든 섹션('[ ]'으로 표시된 부분)을 실제 가치를 제공하는 풍부하고 자연스러운 콘텐츠로 채워주세요.
+        - 문체: 전체 글의 어조를 일관되게 유지해주세요. 독자에게 말을 거는 듯한 친근하고 부드러운 구어체('~해요', '~죠' 체)를 사용해주세요. 단, '핵심만 요약!' 카드 섹션은 간결하고 명료한 정보 전달을 위해 '~입니다', '~습니다'체를 사용해도 좋습니다. 개인적인 경험이나 스토리를 섞어 독자의 공감을 얻고, 이모지(예: 😊, 💡, 😥)를 적절히 사용하여 글의 생동감을 더해주세요.
+        - **키워드 강조 (매우 중요)**: 글의 가독성과 SEO를 위해, **각 H2 소제목 아래 본문에서** 핵심 키워드 '${keyword}'는 문맥에 맞게 자연스럽게 사용하되, **정확히 1~2번만** \`<strong>${keyword}</strong>\` 와 같이 \`<strong>\` 태그로 강조해주세요. **절대로 2번을 초과하여 강조해서는 안 됩니다.** 이 규칙은 모든 H2 섹션에 예외 없이 엄격하게 적용됩니다.
+        - 가독성 향상: 독자가 내용을 쉽게 읽을 수 있도록 문단 구성을 최적화해야 합니다. **각 단락은 최대 3개의 문장으로 구성하는 것을 원칙으로 합니다.** 만약 한 단락에 3개 이상의 문장이 포함될 경우, 의미 단위에 맞게 자연스럽게 별도의 단락으로 나눠주세요. 이는 가독성 점수를 높이는 데 매우 중요합니다.
+        - 내부/외부 링크: 글의 신뢰도를 높이기 위해, 본문 내용과 관련된 권위 있는 외부 사이트나 통계 자료로 연결되는 링크를 최소 2개 이상 자연스럽게 포함해주세요. 예를 들어, '한 연구에 따르면...' 과 같은 문장에 실제 연구 자료 링크를 추가할 수 있습니다. 링크는 반드시 a 태그를 사용해야 합니다.
+        - 참조 링크 텍스트: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트를 아래 "사용할 변수" 섹션의 "Reference Sentence" 값으로 설정해주세요. 만약 "Reference Sentence" 값이 비어있다면, 기본 텍스트인 "더 많은 정보 확인하기"를 사용하세요.
+        - **가장 중요한 최종 규칙**: 위에서 **(매우 중요)** 또는 **(가장 중요한 규칙)**이라고 표시된 **콘텐츠 분량**과 **키워드 밀도** 지침은 이 작업에서 가장 중요합니다. 어떤 경우에도 이 두 가지 규칙을 어겨서는 안 됩니다.
+
+        사용할 변수:
+        - Primary Color: ${colors.primary}
+        - Secondary Color: ${colors.secondary}
+        - Text Highlight Color: ${colors.textHighlight}
+        - Highlight Color: ${colors.highlight}
+        - Highlight Border Color: ${colors.highlightBorder}
+        - Warn BG Color: ${colors.warnBg}
+        - Warn Border Color: ${colors.warnBorder}
+        - Link Color: ${colors.link}
+        - Reference Link: ${refLink}
+        - Reference Sentence: ${referenceSentence}
+        - Topic: ${topic}
+        - Main Keyword: ${keyword}
+
+        아래는 반드시 따라야 할 HTML 템플릿입니다.
+        
+        --- HTML TEMPLATE START ---
+${htmlTemplate}
+--- HTML TEMPLATE END ---
+      `;
+};
