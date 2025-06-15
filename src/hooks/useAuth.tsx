@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,23 +10,21 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-      } catch (error) {
-        console.error("Error getting session:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getSession();
-
+    setLoading(true);
+    
+    // 1. 인증 상태 변경 리스너를 먼저 설정합니다.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // 2. 초기 세션 정보를 확인합니다.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // 세션이 없으면 onAuthStateChange가 호출되지 않으므로 로딩 상태를 직접 변경합니다.
+      if (!session) {
+        setLoading(false);
+      }
     });
 
     return () => {
