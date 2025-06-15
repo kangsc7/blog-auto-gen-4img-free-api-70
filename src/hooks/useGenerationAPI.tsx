@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
 import { getArticlePrompt } from '@/lib/prompts';
+import { integratePixabayImages } from '@/lib/pixabay';
 
 export const useGenerationAPI = (
   appState: AppState,
@@ -125,84 +126,15 @@ export const useGenerationAPI = (
       if (pixabayConfig?.key && pixabayConfig?.validated) {
         toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(cleanedHtml, 'text/html');
-        const h2s = Array.from(doc.querySelectorAll('h2'));
-        let imageCount = 0;
-        const MAX_IMAGES = 4;
+        const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
+          cleanedHtml,
+          pixabayConfig.key,
+          appState.apiKey!
+        );
 
-        if (h2s.length > 0) {
-          const numImagesToInsert = Math.min(MAX_IMAGES, h2s.length);
-          const step = h2s.length / numImagesToInsert;
-          const indicesToInsertAt = Array.from({ length: numImagesToInsert }, (_, i) => Math.floor(i * step));
-
-          for (const index of indicesToInsertAt) {
-            const h2 = h2s[index];
-            if (!h2) continue;
-
-            let contentForSummary = '';
-            let currentNode = h2.nextSibling;
-            while(currentNode && currentNode.nodeName !== 'H2') {
-                contentForSummary += currentNode.textContent || '';
-                currentNode = currentNode.nextSibling;
-            }
-            
-            const textToSummarize = (h2.textContent + " " + contentForSummary).replace(/\s+/g, ' ').trim().substring(0, 1000);
-
-            if (textToSummarize.length > 10) {
-                 try {
-                    const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${textToSummarize}"`;
-                    const summaryResponse = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: summaryPrompt }] }] })
-                    });
-                    if (!summaryResponse.ok) continue;
-                    const summaryData = await summaryResponse.json();
-                    const keyword = summaryData.candidates?.[0]?.content?.parts?.[0]?.text.trim();
-
-                    if (!keyword) continue;
-
-                    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayConfig.key}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=10&lang=ko`;
-                    const imageResponse = await fetch(imageSearchUrl);
-                    if (!imageResponse.ok) continue;
-                    const imageData = await imageResponse.json();
-
-                    if (imageData.hits && imageData.hits.length > 0) {
-                        const randomImage = imageData.hits[Math.floor(Math.random() * imageData.hits.length)];
-                        const imageUrl = randomImage.webformatURL;
-                        
-                        const imageContainer = doc.createElement('div');
-                        imageContainer.style.textAlign = 'center';
-                        imageContainer.style.margin = '2em 0';
-                        
-                        const img = doc.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = keyword;
-                        img.style.maxWidth = '90%';
-                        img.style.height = 'auto';
-                        img.style.borderRadius = '8px';
-                        
-                        const caption = doc.createElement('p');
-                        caption.style.fontSize = '0.8em';
-                        caption.style.color = '#666';
-                        caption.textContent = `Image by ${randomImage.user} on Pixabay`;
-                        
-                        imageContainer.appendChild(img);
-                        imageContainer.appendChild(caption);
-                        
-                        h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
-                        imageCount++;
-                    }
-                } catch (e) {
-                     console.error("Error integrating single image:", e);
-                }
-            }
-          }
-        }
+        finalHtml = htmlWithImages;
         
-        finalHtml = doc.body.innerHTML;
-        if(imageCount > 0) {
+        if (imageCount > 0) {
             toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
         } else {
             toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
