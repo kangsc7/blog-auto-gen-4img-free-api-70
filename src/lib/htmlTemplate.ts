@@ -40,6 +40,8 @@ ${getCssStyles(colors)}
 </div>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}'와 관련된 심화 탐구 소제목]</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[핵심 키워드와 관련된 연관 키워드를 사용하여 독자들이 더 깊이 알고 싶어할 만한 내용을 다룹니다. 전문적인 정보나 데이터를 포함하여 신뢰성을 높여주세요. 최소 2~3문단 이상 작성.]</p>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 연관 검색어 활용 전략]</b> 📈</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[핵심 키워드 '${keyword}'와 함께 검색되는 연관 검색어들을 2~3개 제시하고, 각 연관 검색어를 어떻게 활용하여 콘텐츠를 더욱 풍부하게 만들 수 있는지 구체적인 아이디어와 예시를 들어 설명합니다. 이를 통해 포스트의 주제 확장성과 SEO 점수를 동시에 높일 수 있다는 점을 강조해주세요. 최소 2~3문단 이상 작성.]</p>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 활용 성공 사례 분석에 대한 소제목]</b> ✨</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[실제 성공 사례나 가상의 성공 스토리를 통해 '${keyword}'를 활용했을 때 얻을 수 있는 긍정적인 결과를 생생하게 보여줍니다. 독자들이 자신도 할 수 있다는 자신감을 얻도록 동기부여를 해주세요. 최소 2~3문단 이상 작성.]</p>
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 관련 추천 도구 및 서비스 소제목]</b> 🛠️</h2>
@@ -72,4 +74,3 @@ ${getCssStyles(colors)}
 </div>
 </div>
 `;
-
