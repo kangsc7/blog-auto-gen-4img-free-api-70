@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const imageBlob = await hf.textToImage({
       inputs: prompt,
-      model: 'stabilityai/stable-diffusion-2-1',
+      model: 'runwayml/stable-diffusion-v1-5',
     })
 
     const arrayBuffer = await imageBlob.arrayBuffer()
