@@ -2,6 +2,7 @@ import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
+import { ImagePaster } from '@/components/control/ImagePaster';
 import { TopicList } from '@/components/display/TopicList';
 import { ArticlePreview } from '@/components/display/ArticlePreview';
 import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
@@ -79,6 +80,8 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     copyToClipboard={utilityFunctions.copyToClipboard}
                     openWhisk={utilityFunctions.openWhisk}
                 />
+
+                <ImagePaster />
             </div>
 
             <div className="lg:col-span-8 space-y-6">
