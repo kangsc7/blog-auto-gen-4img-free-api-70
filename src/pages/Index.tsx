@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
@@ -25,7 +24,6 @@ const Index = () => {
     isAdmin,
     isValidatingApi,
     validateApiKey,
-    saveApiKeyToStorage,
     deleteApiKeyFromStorage,
     pixabayManager,
     huggingFaceManager,
@@ -66,7 +64,6 @@ const Index = () => {
         saveAppState={saveAppState}
         isValidatingApi={isValidatingApi}
         validateApiKey={validateApiKey}
-        saveApiKeyToStorage={saveApiKeyToStorage}
         deleteApiKeyFromStorage={deleteApiKeyFromStorage}
         pixabayManager={pixabayManager}
         huggingFaceManager={huggingFaceManager}

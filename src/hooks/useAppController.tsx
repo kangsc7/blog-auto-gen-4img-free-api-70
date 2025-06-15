@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -15,7 +14,7 @@ import { useAppUtils } from '@/hooks/useAppUtils';
 
 export const useAppController = () => {
   const { toast } = useToast();
-  const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
+  const { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
@@ -95,7 +94,6 @@ export const useAppController = () => {
     isAdmin,
     isValidatingApi,
     validateApiKey,
-    saveApiKeyToStorage,
     deleteApiKeyFromStorage,
     pixabayManager,
     huggingFaceManager,

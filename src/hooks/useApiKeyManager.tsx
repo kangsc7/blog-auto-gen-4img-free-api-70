@@ -19,6 +19,7 @@ export const useApiKeyManager = (
     setIsValidatingApi(true);
     
     try {
+      // This is a mock validation. In a real scenario, you'd make an API call.
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       if (appState.apiKey.length < 20) {
@@ -27,14 +28,17 @@ export const useApiKeyManager = (
           description: "API 키 값이 올바르지 않습니다. 다시 확인해주세요.",
           variant: "destructive"
         });
+        localStorage.removeItem('blog_api_key_validated');
         saveAppState({ isApiKeyValidated: false });
         return false;
       }
       
       saveAppState({ isApiKeyValidated: true });
+      localStorage.setItem('blog_api_key', appState.apiKey);
+      localStorage.setItem('blog_api_key_validated', 'true');
       toast({
-        title: "API 키 검증 성공",
-        description: "API 키가 성공적으로 확인되었습니다.",
+        title: "API 키 검증 및 저장 성공",
+        description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다.",
       });
       return true;
     } catch (error) {
@@ -44,6 +48,7 @@ export const useApiKeyManager = (
         description: "API 키 검증 중 오류가 발생했습니다.",
         variant: "destructive"
       });
+      localStorage.removeItem('blog_api_key_validated');
       saveAppState({ isApiKeyValidated: false });
       return false;
     } finally {

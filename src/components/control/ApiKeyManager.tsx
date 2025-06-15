@@ -11,7 +11,6 @@ interface ApiKeyManagerProps {
   saveAppState: (newState: Partial<AppState>) => void;
   isValidatingApi: boolean;
   validateApiKey: () => void;
-  saveApiKeyToStorage: () => void;
   deleteApiKeyFromStorage: () => void;
 }
 
@@ -20,7 +19,6 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
   saveAppState,
   isValidatingApi,
   validateApiKey,
-  saveApiKeyToStorage,
   deleteApiKeyFromStorage,
 }) => {
   return (
@@ -53,15 +51,12 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
               ) : appState.isApiKeyValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
-                '검증'
+                '검증 및 저장'
               )}
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={saveApiKeyToStorage} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
-              키 저장
-            </Button>
-            <Button onClick={deleteApiKeyFromStorage} size="sm" variant="destructive" className="flex-1">
+            <Button onClick={deleteApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>
@@ -69,7 +64,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="hover:underline">Google AI Studio에서 발급</a>
           </p>
           {appState.isApiKeyValidated && (
-            <p className="text-xs text-green-600 mt-1">✅ API 키가 검증되었습니다.</p>
+            <p className="text-xs text-green-600 mt-1">✅ API 키가 검증 및 저장되었습니다.</p>
           )}
         </div>
       </CardContent>

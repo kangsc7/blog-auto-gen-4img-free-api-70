@@ -14,7 +14,6 @@ interface ApiKeysSectionProps {
     saveAppState: (newState: Partial<AppState>) => void;
     isValidatingApi: boolean;
     validateApiKey: () => Promise<boolean>;
-    saveApiKeyToStorage: () => void;
     deleteApiKeyFromStorage: () => void;
     pixabayManager: ReturnType<typeof usePixabayManager>;
     huggingFaceManager: ReturnType<typeof useHuggingFaceManager>;
@@ -72,7 +71,6 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
     saveAppState,
     isValidatingApi,
     validateApiKey,
-    saveApiKeyToStorage,
     deleteApiKeyFromStorage,
     pixabayManager,
     huggingFaceManager,
@@ -87,7 +85,6 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
                     saveAppState={saveAppState}
                     isValidatingApi={isValidatingApi}
                     validateApiKey={validateApiKey}
-                    saveApiKeyToStorage={saveApiKeyToStorage}
                     deleteApiKeyFromStorage={deleteApiKeyFromStorage}
                 />
             </HoverContainer>

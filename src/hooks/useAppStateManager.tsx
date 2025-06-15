@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -112,21 +111,6 @@ export const useAppStateManager = () => {
     });
   }, [toast, preventDuplicates]);
 
-  const saveApiKeyToStorage = () => {
-    if (!appState.apiKey.trim()) {
-      toast({ title: "저장 오류", description: "API 키를 입력해주세요.", variant: "destructive" });
-      return;
-    }
-    try {
-      localStorage.setItem('blog_api_key', appState.apiKey);
-      localStorage.setItem('blog_api_key_validated', String(appState.isApiKeyValidated));
-      toast({ title: "저장 완료", description: "API 키가 브라우저에 저장되었습니다." });
-    } catch (error) {
-      console.error("API 키 저장 오류:", error);
-      toast({ title: "저장 실패", description: "API 키 저장 중 오류가 발생했습니다.", variant: "destructive" });
-    }
-  };
-
   const deleteApiKeyFromStorage = () => {
     try {
       localStorage.removeItem('blog_api_key');
@@ -165,5 +149,5 @@ export const useAppStateManager = () => {
     });
   };
 
-  return { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates };
+  return { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates };
 };
