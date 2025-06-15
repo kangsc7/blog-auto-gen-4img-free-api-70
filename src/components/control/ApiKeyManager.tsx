@@ -26,7 +26,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center text-gray-700">
           <AlertCircle className="h-5 w-5 mr-2" />
-          API 키 설정
+          Gemini API 키 설정
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

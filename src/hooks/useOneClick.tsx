@@ -15,7 +15,8 @@ export const useOneClick = (
   generateTopics: GenerateTopicsFunc,
   selectTopic: (topic: string) => void,
   generateArticle: GenerateArticleFunc,
-  profile: { id: string; } | null
+  profile: { id: string; } | null,
+  preventDuplicates: boolean
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
@@ -40,64 +41,77 @@ export const useOneClick = (
       }
 
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '평생';
-      toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `데이터베이스에서 사용하지 않은 키워드를 가져옵니다...` });
+      let availableKeywords: { id: number; keyword_text: string; }[] | null = [];
       
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // Get used keyword IDs for the current user
-      const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
-        .from('user_used_keywords')
-        .select('keyword_id')
-        .eq('user_id', userId);
-
-      if (usedKeywordsError) throw new Error(`사용한 키워드 목록 조회 오류: ${usedKeywordsError.message}`);
-      
-      const usedKeywordIds = usedKeywordsData.map(row => row.keyword_id);
-
-      // Get available keywords of the specified type that the user hasn't used
-      let keywordQuery = supabase
-        .from('keywords')
-        .select('id, keyword_text')
-        .eq('type', keywordSource);
-
-      if (usedKeywordIds.length > 0) {
-        keywordQuery = keywordQuery.not('id', 'in', `(${usedKeywordIds.join(',')})`);
-      }
-
-      let { data: availableKeywords, error: keywordsError } = await keywordQuery;
-
-      if (keywordsError) throw new Error(`키워드 조회 오류: ${keywordsError.message}`);
-
-      // If no keywords are available, reset the user's history for this type and try again
-      if (availableKeywords.length === 0) {
-        toast({ title: "키워드 목록 초기화", description: `모든 '${keywordType}' 키워드를 사용했습니다. 목록을 초기화합니다.` });
+      if (preventDuplicates) {
+        toast({ title: `1단계: ${keywordType} 키워드 추출 (중복 제외)`, description: `데이터베이스에서 사용하지 않은 키워드를 가져옵니다...` });
         
-        const { data: allKeywordsOfType, error: allKeywordsError } = await supabase
-            .from('keywords')
-            .select('id')
-            .eq('type', keywordSource);
+        // Get used keyword IDs for the current user
+        const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
+          .from('user_used_keywords')
+          .select('keyword_id')
+          .eq('user_id', userId);
 
-        if (allKeywordsError) throw new Error(`키워드 목록 초기화 실패: ${allKeywordsError.message}`);
+        if (usedKeywordsError) throw new Error(`사용한 키워드 목록 조회 오류: ${usedKeywordsError.message}`);
+        
+        const usedKeywordIds = usedKeywordsData.map(row => row.keyword_id);
 
-        if (allKeywordsOfType.length > 0) {
-            const keywordIdsToDelete = allKeywordsOfType.map(k => k.id);
-            const { error: deleteError } = await supabase
-                .from('user_used_keywords')
-                .delete()
-                .eq('user_id', userId)
-                .in('keyword_id', keywordIdsToDelete);
+        // Get available keywords of the specified type that the user hasn't used
+        let keywordQuery = supabase
+          .from('keywords')
+          .select('id, keyword_text')
+          .eq('type', keywordSource);
 
-            if (deleteError) throw new Error(`키워드 사용 이력 초기화 실패: ${deleteError.message}`);
+        if (usedKeywordIds.length > 0) {
+          keywordQuery = keywordQuery.not('id', 'in', `(${usedKeywordIds.join(',')})`);
         }
+
+        let { data: fetchedKeywords, error: keywordsError } = await keywordQuery;
+        if (keywordsError) throw new Error(`키워드 조회 오류: ${keywordsError.message}`);
+
+        // If no keywords are available, reset the user's history for this type and try again
+        if (fetchedKeywords.length === 0) {
+          toast({ title: "키워드 목록 초기화", description: `모든 '${keywordType}' 키워드를 사용했습니다. 목록을 초기화합니다.` });
+          
+          const { data: allKeywordsOfType, error: allKeywordsError } = await supabase
+              .from('keywords')
+              .select('id')
+              .eq('type', keywordSource);
+
+          if (allKeywordsError) throw new Error(`키워드 목록 초기화 실패: ${allKeywordsError.message}`);
+
+          if (allKeywordsOfType.length > 0) {
+              const keywordIdsToDelete = allKeywordsOfType.map(k => k.id);
+              const { error: deleteError } = await supabase
+                  .from('user_used_keywords')
+                  .delete()
+                  .eq('user_id', userId)
+                  .in('keyword_id', keywordIdsToDelete);
+
+              if (deleteError) throw new Error(`키워드 사용 이력 초기화 실패: ${deleteError.message}`);
+          }
+          
+          const { data: refetchedKeywords, error: refetchedError } = await supabase
+              .from('keywords')
+              .select('id, keyword_text')
+              .eq('type', keywordSource);
+          
+          if (refetchedError) throw new Error(`초기화 후 키워드 조회 오류: ${refetchedError.message}`);
+          availableKeywords = refetchedKeywords;
+        } else {
+          availableKeywords = fetchedKeywords;
+        }
+      } else {
+        toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `데이터베이스에서 키워드를 가져옵니다...` });
+        const { data: allKeywords, error: keywordsError } = await supabase
+          .from('keywords')
+          .select('id, keyword_text')
+          .eq('type', keywordSource);
         
-        // Refetch all keywords of this type
-        const { data: refetchedKeywords, error: refetchedError } = await supabase
-            .from('keywords')
-            .select('id, keyword_text')
-            .eq('type', keywordSource);
-        
-        if (refetchedError) throw new Error(`초기화 후 키워드 조회 오류: ${refetchedError.message}`);
-        availableKeywords = refetchedKeywords;
+        if (keywordsError) throw new Error(`키워드 조회 오류: ${keywordsError.message}`);
+        availableKeywords = allKeywords;
       }
       
       if (!availableKeywords || availableKeywords.length === 0) {
@@ -106,14 +120,18 @@ export const useOneClick = (
       
       const selectedKeyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
 
-      // Record the usage in the database
-      const { error: insertError } = await supabase
-        .from('user_used_keywords')
-        .insert({ user_id: userId, keyword_id: selectedKeyword.id });
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
+      
+      // Record the usage in the database only if preventing duplicates
+      if (preventDuplicates) {
+        const { error: insertError } = await supabase
+          .from('user_used_keywords')
+          .insert({ user_id: userId, keyword_id: selectedKeyword.id });
 
-      if (insertError) {
-        console.error('키워드 사용 이력 저장 오류:', insertError);
-        throw new Error('키워드 사용 이력을 저장하는데 실패했습니다. 다시 시도해주세요.');
+        if (insertError) {
+          console.error('키워드 사용 이력 저장 오류:', insertError);
+          throw new Error('키워드 사용 이력을 저장하는데 실패했습니다. 다시 시도해주세요.');
+        }
       }
 
       const keyword = selectedKeyword.keyword_text;

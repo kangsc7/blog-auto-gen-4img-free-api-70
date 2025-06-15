@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -69,7 +70,8 @@ export const useAppController = () => {
     generateTopics,
     selectTopic,
     generateArticleWithPixabay,
-    profile
+    profile,
+    preventDuplicates
   );
 
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
