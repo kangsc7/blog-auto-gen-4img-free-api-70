@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -28,7 +27,7 @@ export const useArticleGenerator = (
     }
 
     setIsGeneratingContent(true);
-    saveAppState({ generatedContent: '' });
+    saveAppState({ generatedContent: '', imagePrompt: '' });
     
     try {
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
@@ -64,6 +63,7 @@ export const useArticleGenerator = (
       const cleanedHtml = htmlContent.replace(/^```html\s*/, '').replace(/\s*```$/, '').trim().replace(/,?\s*(\.\.\.|…)\s*(?=<\/)/g, '');
 
       let finalHtml = cleanedHtml;
+      let pixabayImagesAdded = false;
 
       if (pixabayConfig?.key && pixabayConfig?.validated) {
         toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
@@ -77,6 +77,7 @@ export const useArticleGenerator = (
         finalHtml = htmlWithImages;
         
         if (imageCount > 0) {
+            pixabayImagesAdded = true;
             toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
         } else {
             toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
@@ -94,7 +95,16 @@ export const useArticleGenerator = (
         console.error("메타 설명 생성 중 오류:", error);
       }
 
-      saveAppState({ generatedContent: finalHtml, colorTheme: selectedColorTheme });
+      const stateToSave: Partial<AppState> = { 
+        generatedContent: finalHtml, 
+        colorTheme: selectedColorTheme 
+      };
+      
+      if (pixabayImagesAdded) {
+        stateToSave.imagePrompt = '✅ Pixabay 이미지가 자동으로 적용되었습니다.';
+      }
+
+      saveAppState(stateToSave);
       toast({ title: "AI 기반 블로그 글 생성 완료", description: "콘텐츠가 준비되었습니다." });
       return finalHtml;
     } catch (error) {
