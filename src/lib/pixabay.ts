@@ -106,13 +106,7 @@ export const integratePixabayImages = async (
                         img.style.marginLeft = 'auto';
                         img.style.marginRight = 'auto';
                         
-                        const caption = doc.createElement('p');
-                        caption.style.fontSize = '0.8em';
-                        caption.style.color = '#666';
-                        caption.textContent = `Image by ${randomImage.user} on Pixabay`;
-                        
                         imageContainer.appendChild(img);
-                        imageContainer.appendChild(caption);
                         
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -16,6 +17,8 @@ export const useOneClick = (
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
+  const [usedLatestKeywords, setUsedLatestKeywords] = useState<string[]>([]);
+  const [usedEvergreenKeywords, setUsedEvergreenKeywords] = useState<string[]>([]);
 
   const runOneClickFlow = async (keywordSource: 'latest' | 'evergreen') => {
     if (isOneClickGenerating) return;
@@ -32,14 +35,22 @@ export const useOneClick = (
       
       const keywords = keywordSource === 'latest' ? latestKeywords : evergreenKeywords;
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '평생';
+      const usedKeywords = keywordSource === 'latest' ? usedLatestKeywords : usedEvergreenKeywords;
+      const setUsedKeywords = keywordSource === 'latest' ? setUsedLatestKeywords : setUsedEvergreenKeywords;
 
       toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `실시간 트렌드 키워드(예시)를 가져옵니다...` });
       await sleep(3000);
 
-      // 현재 키워드를 제외한 목록에서 새로운 키워드를 선택하여 중복을 방지합니다.
-      const filteredKeywords = keywords.filter(k => k !== appState.keyword);
-      const keywordsToChooseFrom = filteredKeywords.length > 0 ? filteredKeywords : keywords;
-      const keyword = keywordsToChooseFrom[Math.floor(Math.random() * keywordsToChooseFrom.length)];
+      let availableKeywords = keywords.filter(k => !usedKeywords.includes(k));
+
+      if (availableKeywords.length === 0) {
+        toast({ title: "키워드 목록 초기화", description: "모든 키워드를 사용했습니다. 목록을 초기화합니다." });
+        setUsedKeywords([]);
+        availableKeywords = keywords;
+      }
+      
+      const keyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
+      setUsedKeywords(prevUsed => [...prevUsed, keyword]);
 
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
