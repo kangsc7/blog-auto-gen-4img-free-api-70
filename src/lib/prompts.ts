@@ -73,10 +73,10 @@ export const getArticlePrompt = ({
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;"><b>[독자의 흥미를 유발하는 강력한 질문으로 시작]</b> [이 글을 통해 얻게 될 핵심 가치를 요약 설명. '이 글을 끝까지 읽으시면 ~을 확실히 알게 되실 거예요!' 와 같은 문장 포함. 최소 2문장 이상 작성]</div>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[개인적인 경험이나 일화를 2~3문단에 걸쳐 구체적으로 공유하며 독자와의 깊은 공감대 형성. 핵심 키워드 '${keyword}'를 자연스럽게 포함] 😥 [이후 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">핵심 노하우</span>를 깨닫게 된 계기를 스토리텔링으로 연결]</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[이 글이 다른 글과 어떻게 다른지, 초보자도 쉽게 이해할 수 있다는 점을 강조하며 글의 신뢰도를 높임] 😊</p>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[첫 번째 핵심 소제목: 문제 제기 또는 기본 개념. '${keyword}' 포함]</b> 💡</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[문제 제기 또는 기본 개념에 대한 소제목. '${keyword}' 포함]</b> 💡</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[첫 번째 소제목에 대한 상세 설명. 왜 이 내용이 중요한지, 독자가 겪는 문제의 근본 원인을 심층적으로 분석. 전문 용어는 쉽게 풀어서 설명. 최소 2~3문단 이상 작성.]</p>
 <div style="background-color: ${colors.highlight}; border-left: 5px solid ${colors.highlightBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;"><strong style="color: ${colors.primary};">💡 알아두세요!</strong><br>[독자가 꼭 알아야 할 핵심 팁이나 기본 원칙을 간결하지만 구체적으로 작성. '${keyword}' 관련 내용이면 더욱 좋음. 관련 정보를 더 찾아볼 수 있는 외부 링크를 하나 포함.]</div>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[두 번째 핵심 소제목: 구체적인 해결 방법 또는 단계별 가이드. '${keyword}' 포함]</b> 📝</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[구체적인 해결 방법 또는 단계별 가이드에 대한 소제목. '${keyword}' 포함]</b> 📝</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[해결 방법에 대한 전반적인 소개. 따라하기 쉽다는 점 강조. 전체 과정을 간략하게 요약.]</p>
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
 <table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
@@ -92,15 +92,19 @@ export const getArticlePrompt = ({
 <p style="margin-bottom: 15px;">[실제 적용 사례를 구체적인 스토리로 설명. <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">수치적 결과 (예: '비용 30% 절감', '시간 50% 단축')</span>를 보여주면 신뢰도 상승. 최소 2문단 이상 작성.]</p>
 <p>[사례를 통해 얻은 교훈이나 독려 메시지. '${keyword}' 관리의 중요성 강조.]</p>
 </div>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[세 번째 핵심 소제목: 성공률 높이는 꿀팁 및 주의사항]</b> ⚠️</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[성공률을 높이는 꿀팁 및 주의사항에 대한 소제목]</b> ⚠️</h2>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     [독자들이 흔히 하는 실수나 꼭 알아야 할 주의사항, 그리고 추가적인 꿀팁을 리스트(ul, li) 형태로 3~4가지 구체적으로 작성. 각 항목은 실제 경험을 바탕으로 상세하게 설명. 여기서도 유용한 외부 자료 링크를 하나 포함 가능.]
 </div>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[네 번째 핵심 소제목: '${keyword}' 관련 심화 탐구]</b> 🧐</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}'와 관련된 심화 탐구 소제목]</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[핵심 키워드와 관련된 연관 키워드를 사용하여 독자들이 더 깊이 알고 싶어할 만한 내용을 다룹니다. 전문적인 정보나 데이터를 포함하여 신뢰성을 높여주세요. 최소 2~3문단 이상 작성.]</p>
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>[다섯 번째 핵심 소제목: '${keyword}' 활용 성공사례 분석]</b> ✨</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 활용 성공 사례 분석에 대한 소제목]</b> ✨</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[실제 성공 사례나 가상의 성공 스토리를 통해 '${keyword}'를 활용했을 때 얻을 수 있는 긍정적인 결과를 생생하게 보여줍니다. 독자들이 자신도 할 수 있다는 자신감을 얻도록 동기부여를 해주세요. 최소 2~3문단 이상 작성.]</p>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}' 관련 추천 도구 및 서비스 소제목]</b> 🛠️</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[${keyword} 작업의 효율성을 높여주는 유용한 도구나 온라인 서비스를 2~3가지 추천하고, 각 도구의 장점과 사용법을 간략하게 설명합니다. 실제 사용 경험을 바탕으로 작성하면 신뢰도가 높아집니다.]</p>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>['${keyword}'의 미래 전망과 최신 트렌드 소제목]</b> 🚀</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">[${keyword} 분야의 미래 발전 가능성이나 최신 동향에 대해 분석합니다. 관련 전문가의 의견이나 최신 보고서를 인용하여 글의 전문성을 더합니다. 독자들이 미래를 대비하는 데 도움이 될 만한 인사이트를 제공합니다.]</p>
 <div class="single-summary-card-container">
 <div class="single-summary-card">
 <div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">${keyword} 관리, 핵심만 요약!</h3></div>
@@ -129,4 +133,3 @@ export const getArticlePrompt = ({
 --- HTML TEMPLATE END ---
       `;
 };
-

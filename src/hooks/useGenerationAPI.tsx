@@ -131,8 +131,14 @@ export const useGenerationAPI = (
         let imageCount = 0;
         const MAX_IMAGES = 4;
 
-        for (const h2 of h2s) {
-            if (imageCount >= MAX_IMAGES) break;
+        if (h2s.length > 0) {
+          const numImagesToInsert = Math.min(MAX_IMAGES, h2s.length);
+          const step = h2s.length / numImagesToInsert;
+          const indicesToInsertAt = Array.from({ length: numImagesToInsert }, (_, i) => Math.floor(i * step));
+
+          for (const index of indicesToInsertAt) {
+            const h2 = h2s[index];
+            if (!h2) continue;
 
             let contentForSummary = '';
             let currentNode = h2.nextSibling;
@@ -145,7 +151,7 @@ export const useGenerationAPI = (
 
             if (textToSummarize.length > 10) {
                  try {
-                    const summaryPrompt = `Please summarize the following text into 2-3 keywords suitable for an English image search on Pixabay. Provide only the keywords, separated by commas, without any other explanation. Text: "${textToSummarize}"`;
+                    const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${textToSummarize}"`;
                     const summaryResponse = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -153,11 +159,11 @@ export const useGenerationAPI = (
                     });
                     if (!summaryResponse.ok) continue;
                     const summaryData = await summaryResponse.json();
-                    const keyword = summaryData.candidates?.[0]?.content?.parts?.[0]?.text.trim().replace(/\s/g, '+');
+                    const keyword = summaryData.candidates?.[0]?.content?.parts?.[0]?.text.trim();
 
                     if (!keyword) continue;
 
-                    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayConfig.key}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=10&lang=en`;
+                    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayConfig.key}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=10&lang=ko`;
                     const imageResponse = await fetch(imageSearchUrl);
                     if (!imageResponse.ok) continue;
                     const imageData = await imageResponse.json();
@@ -172,7 +178,7 @@ export const useGenerationAPI = (
                         
                         const img = doc.createElement('img');
                         img.src = imageUrl;
-                        img.alt = keyword.replace(/\+/g, ' ');
+                        img.alt = keyword;
                         img.style.maxWidth = '90%';
                         img.style.height = 'auto';
                         img.style.borderRadius = '8px';
@@ -192,10 +198,14 @@ export const useGenerationAPI = (
                      console.error("Error integrating single image:", e);
                 }
             }
+          }
         }
+        
         finalHtml = doc.body.innerHTML;
         if(imageCount > 0) {
             toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
+        } else {
+            toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
         }
       }
 
