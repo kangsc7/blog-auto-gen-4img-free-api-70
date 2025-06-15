@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -43,10 +44,17 @@ export const useArticleGenerator = (
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
+      const requestBody = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: 8192,
+        },
+      };
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -55,6 +63,12 @@ export const useArticleGenerator = (
       }
       
       const data = await response.json();
+      
+      // For debugging, let's log the finish reason.
+      if (data.candidates?.[0]?.finishReason) {
+        console.log('Gemini finish reason:', data.candidates[0].finishReason);
+      }
+      
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
         throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
       }
