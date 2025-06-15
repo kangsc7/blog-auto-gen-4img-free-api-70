@@ -41,7 +41,8 @@ export const useHuggingFaceManager = () => {
             }
 
             setIsHuggingFaceApiKeyValidated(true);
-            if (!silent) toast({ title: "Hugging Face API 키 검증 성공", description: "성공적으로 연결되었습니다." });
+            localStorage.setItem('hugging_face_api_key', key);
+            if (!silent) toast({ title: "Hugging Face API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
             return true;
         } catch (error) {
             setIsHuggingFaceApiKeyValidated(false);
@@ -63,16 +64,6 @@ export const useHuggingFaceManager = () => {
         }
     }, [validateHuggingFaceApiKeyCallback]);
 
-    const saveHuggingFaceApiKeyToStorage = () => {
-        if (!huggingFaceApiKey.trim()) {
-            toast({ title: "저장 오류", description: "Hugging Face API 키를 입력해주세요.", variant: "destructive" });
-            return;
-        }
-        localStorage.setItem('hugging_face_api_key', huggingFaceApiKey);
-        toast({ title: "저장 완료", description: "Hugging Face API 키가 브라우저에 저장되었습니다." });
-        validateHuggingFaceApiKeyCallback(huggingFaceApiKey);
-    };
-
     const deleteHuggingFaceApiKeyFromStorage = () => {
         localStorage.removeItem('hugging_face_api_key');
         setHuggingFaceApiKey('');
@@ -91,7 +82,6 @@ export const useHuggingFaceManager = () => {
         isHuggingFaceApiKeyValidated,
         isHuggingFaceValidating,
         validateHuggingFaceApiKey: () => validateHuggingFaceApiKeyCallback(huggingFaceApiKey),
-        saveHuggingFaceApiKeyToStorage,
         deleteHuggingFaceApiKeyFromStorage,
     };
 };

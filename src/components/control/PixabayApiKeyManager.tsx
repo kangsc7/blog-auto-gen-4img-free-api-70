@@ -11,7 +11,6 @@ interface PixabayApiKeyManagerProps {
   isValidated: boolean;
   isValidating: boolean;
   validateApiKey: () => void;
-  saveApiKey: () => void;
   deleteApiKey: () => void;
 }
 
@@ -21,7 +20,6 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
   isValidated,
   isValidating,
   validateApiKey,
-  saveApiKey,
   deleteApiKey,
 }) => {
   return (
@@ -54,15 +52,12 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
               ) : isValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
-                '검증'
+                '검증 및 저장'
               )}
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={saveApiKey} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
-              키 저장
-            </Button>
-            <Button onClick={deleteApiKey} size="sm" variant="destructive" className="flex-1">
+            <Button onClick={deleteApiKey} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>
@@ -70,7 +65,7 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
             <a href="https://pixabay.com/api/docs/" target="_blank" rel="noopener noreferrer" className="hover:underline">Pixabay에서 API 키 발급</a>
           </p>
           {isValidated && (
-            <p className="text-xs text-green-600 mt-1">✅ Pixabay API 키가 검증되었습니다.</p>
+            <p className="text-xs text-green-600 mt-1">✅ Pixabay API 키가 검증 및 저장되었습니다.</p>
           )}
         </div>
       </CardContent>

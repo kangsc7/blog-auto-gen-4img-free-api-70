@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ApiKeyManager } from '@/components/control/ApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
@@ -106,7 +105,6 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
                     isValidated={pixabayManager.isPixabayApiKeyValidated}
                     isValidating={pixabayManager.isPixabayValidating}
                     validateApiKey={pixabayManager.validatePixabayApiKey}
-                    saveApiKey={pixabayManager.savePixabayApiKeyToStorage}
                     deleteApiKey={pixabayManager.deletePixabayApiKeyFromStorage}
                 />
             </HoverContainer>

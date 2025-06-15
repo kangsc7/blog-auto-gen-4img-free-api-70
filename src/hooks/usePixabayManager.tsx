@@ -20,7 +20,8 @@ export const usePixabayManager = () => {
             if (!response.ok) throw new Error(`네트워크 오류: ${response.statusText}`);
             
             setIsPixabayApiKeyValidated(true);
-            if (!silent) toast({ title: "Pixabay API 키 검증 성공", description: "성공적으로 연결되었습니다." });
+            localStorage.setItem('pixabay_api_key', key);
+            if (!silent) toast({ title: "Pixabay API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
         } catch (error) {
             setIsPixabayApiKeyValidated(false);
             if (!silent) {
@@ -37,20 +38,10 @@ export const usePixabayManager = () => {
             setPixabayApiKey(savedKey);
             validatePixabayApiKeyCallback(savedKey, true);
         }
-    }, [validatePixabayApiKeyCallback]);
-
-    const savePixabayApiKeyToStorage = () => {
-        if (!pixabayApiKey.trim()) {
-            toast({ title: "저장 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
-            return;
-        }
-        localStorage.setItem('pixabay_api_key', pixabayApiKey);
-        toast({ title: "저장 완료", description: "Pixabay API 키가 브라우저에 저장되었습니다." });
-    };
+    }, [validateHuggingFaceApiKeyCallback]);
 
     const deletePixabayApiKeyFromStorage = () => {
         localStorage.removeItem('pixabay_api_key');
-        localStorage.removeItem('pixabay_api_key_validated');
         setPixabayApiKey('');
         setIsPixabayApiKeyValidated(false);
         toast({ title: "삭제 완료", description: "저장된 Pixabay API 키가 삭제되었습니다." });
@@ -67,7 +58,6 @@ export const usePixabayManager = () => {
         isPixabayApiKeyValidated,
         isPixabayValidating,
         validatePixabayApiKey: () => validatePixabayApiKeyCallback(pixabayApiKey),
-        savePixabayApiKeyToStorage,
         deletePixabayApiKeyFromStorage,
     };
 };

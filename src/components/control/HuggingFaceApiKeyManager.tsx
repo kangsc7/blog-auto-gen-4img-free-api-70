@@ -19,7 +19,6 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
     isHuggingFaceApiKeyValidated, 
     isHuggingFaceValidating, 
     validateHuggingFaceApiKey, 
-    saveHuggingFaceApiKeyToStorage, 
     deleteHuggingFaceApiKeyFromStorage 
   } = manager;
 
@@ -53,15 +52,12 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
               ) : isHuggingFaceApiKeyValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
-                '검증'
+                '검증 및 저장'
               )}
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={saveHuggingFaceApiKeyToStorage} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
-              키 저장
-            </Button>
-            <Button onClick={deleteHuggingFaceApiKeyFromStorage} size="sm" variant="destructive" className="flex-1">
+            <Button onClick={deleteHuggingFaceApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>
@@ -69,7 +65,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
             <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="hover:underline">Hugging Face에서 Access Token 발급</a>
           </p>
            {isHuggingFaceApiKeyValidated && (
-            <p className="text-xs text-green-600 mt-1">✅ API 키가 검증되었습니다.</p>
+            <p className="text-xs text-green-600 mt-1">✅ API 키가 검증 및 저장되었습니다.</p>
           )}
           <p className="text-xs text-gray-500 mt-2">
             개인 키를 입력하면, 이미지 생성 시 공용 키 대신 이 키가 사용됩니다.
