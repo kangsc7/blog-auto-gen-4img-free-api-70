@@ -134,7 +134,7 @@ const Index = () => {
               onClick={handleDeduplicateTopics}
               disabled={appState.topics.length === 0}
               variant="outline"
-              className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+              className="w-full inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
             >
               <RefreshCcw className="h-5 w-5 text-blue-600" />
               <span className="font-semibold text-gray-800">중복 주제 제거</span>
