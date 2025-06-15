@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -66,7 +65,15 @@ export const useArticleGenerator = (
       
       // For debugging, let's log the finish reason.
       if (data.candidates?.[0]?.finishReason) {
-        console.log('Gemini finish reason:', data.candidates[0].finishReason);
+        const finishReason = data.candidates[0].finishReason;
+        console.log('Gemini finish reason:', finishReason);
+        if (finishReason === 'MAX_TOKENS') {
+          toast({
+            title: "콘텐츠 길이 초과",
+            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다. 글의 완성도를 위해 요청 글자 수를 조정했습니다.",
+            variant: "warning",
+          });
+        }
       }
       
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
