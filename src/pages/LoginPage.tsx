@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -8,25 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { User, Lock, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type View = 'login' | 'signup' | 'reset_password';
+type View = 'login' | 'signup' | 'reset_password' | 'update_password';
 
 const LoginPage = () => {
   const [view, setView] = useState<View>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && !window.location.hash.includes('type=recovery')) {
         navigate('/');
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setView('update_password');
+      } else if (event === 'SIGNED_IN' && session) {
         navigate('/');
       }
     });
@@ -116,10 +119,36 @@ const LoginPage = () => {
     }
   };
 
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: '오류', description: '비밀번호가 일치하지 않습니다.', variant: 'destructive' });
+      return;
+    }
+    if (!newPassword) {
+      toast({ title: '입력 오류', description: '새 비밀번호를 입력해주세요.', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (error) {
+      toast({ title: '오류', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '성공', description: '비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.' });
+      setView('login');
+      setNewPassword('');
+      setConfirmPassword('');
+      setEmail('');
+      setPassword('');
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
   const cardDescriptions: Record<View, string> = {
     login: '로그인하여 콘텐츠 생성을 시작하세요',
     signup: '회원가입하여 콘텐츠 생성을 시작하세요',
     reset_password: '비밀번호 재설정을 위해 이메일을 입력하세요.',
+    update_password: '새로운 비밀번호를 설정하세요.',
   };
 
   return (
@@ -135,7 +164,40 @@ const LoginPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {view === 'reset_password' ? (
+          {view === 'update_password' ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">새 비밀번호</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="password"
+                    placeholder="새 비밀번호를 입력하세요"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">새 비밀번호 확인</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="password"
+                    placeholder="새 비밀번호를 다시 입력하세요"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10"
+                    onKeyPress={(e) => e.key === 'Enter' && handlePasswordUpdate()}
+                  />
+                </div>
+              </div>
+              <Button onClick={handlePasswordUpdate} className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                {loading ? '처리 중...' : '비밀번호 변경'}
+              </Button>
+            </>
+          ) : view === 'reset_password' ? (
             <>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">이메일 (아이디)</label>
