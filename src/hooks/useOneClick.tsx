@@ -1,7 +1,8 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -13,53 +14,23 @@ export const useOneClick = (
   saveAppState: (newState: Partial<AppState>) => void,
   generateTopics: GenerateTopicsFunc,
   selectTopic: (topic: string) => void,
-  generateArticle: GenerateArticleFunc
+  generateArticle: GenerateArticleFunc,
+  profile: { id: string; } | null
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
-  
-  const [usedLatestKeywords, setUsedLatestKeywords] = useState<string[]>(() => {
-    try {
-      const item = window.localStorage.getItem('usedLatestKeywords');
-      return item ? JSON.parse(item) : [];
-    } catch (error) {
-      console.error('Error reading usedLatestKeywords from localStorage', error);
-      return [];
-    }
-  });
-
-  const [usedEvergreenKeywords, setUsedEvergreenKeywords] = useState<string[]>(() => {
-    try {
-      const item = window.localStorage.getItem('usedEvergreenKeywords');
-      return item ? JSON.parse(item) : [];
-    } catch (error) {
-      console.error('Error reading usedEvergreenKeywords from localStorage', error);
-      return [];
-    }
-  });
-
   const cancelGeneration = useRef(false);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('usedLatestKeywords', JSON.stringify(usedLatestKeywords));
-    } catch (error) {
-      console.error('Error saving usedLatestKeywords to localStorage', error);
-    }
-  }, [usedLatestKeywords]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('usedEvergreenKeywords', JSON.stringify(usedEvergreenKeywords));
-    } catch (error) {
-      console.error('Error saving usedEvergreenKeywords to localStorage', error);
-    }
-  }, [usedEvergreenKeywords]);
 
   const runOneClickFlow = async (keywordSource: 'latest' | 'evergreen') => {
     if (isOneClickGenerating) return;
+    if (!profile) {
+        toast({ title: "오류", description: "사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.", variant: "destructive" });
+        return;
+    }
+
     setIsOneClickGenerating(true);
     cancelGeneration.current = false;
+    const userId = profile.id;
 
     try {
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -68,34 +39,88 @@ export const useOneClick = (
         return;
       }
 
-      const latestKeywords = ["국내 여행지 추천", "여름 휴가 계획", "맛집 탐방", "인공지능 최신 기술", "2025년 패션 트렌드"];
-      const evergreenKeywords = ["초보자를 위한 투자 가이드", "건강한 아침 식단 아이디어", "스트레스 해소 방법", "코딩 독학 하는 법", "효과적인 시간 관리 기술"];
-      
-      const keywords = keywordSource === 'latest' ? latestKeywords : evergreenKeywords;
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '평생';
-      const usedKeywords = keywordSource === 'latest' ? usedLatestKeywords : usedEvergreenKeywords;
-      const setUsedKeywords = keywordSource === 'latest' ? setUsedLatestKeywords : setUsedEvergreenKeywords;
-
-      toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `실시간 트렌드 키워드(예시)를 가져옵니다...` });
-      await sleep(3000);
+      toast({ title: `1단계: ${keywordType} 키워드 추출`, description: `데이터베이스에서 사용하지 않은 키워드를 가져옵니다...` });
+      
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
+      // Get used keyword IDs for the current user
+      const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
+        .from('user_used_keywords')
+        .select('keyword_id')
+        .eq('user_id', userId);
 
-      let availableKeywords = keywords.filter(k => !usedKeywords.includes(k));
+      if (usedKeywordsError) throw new Error(`사용한 키워드 목록 조회 오류: ${usedKeywordsError.message}`);
+      
+      const usedKeywordIds = usedKeywordsData.map(row => row.keyword_id);
 
+      // Get available keywords of the specified type that the user hasn't used
+      let keywordQuery = supabase
+        .from('keywords')
+        .select('id, keyword_text')
+        .eq('type', keywordSource);
+
+      if (usedKeywordIds.length > 0) {
+        keywordQuery = keywordQuery.not('id', 'in', `(${usedKeywordIds.join(',')})`);
+      }
+
+      let { data: availableKeywords, error: keywordsError } = await keywordQuery;
+
+      if (keywordsError) throw new Error(`키워드 조회 오류: ${keywordsError.message}`);
+
+      // If no keywords are available, reset the user's history for this type and try again
       if (availableKeywords.length === 0) {
-        toast({ title: "키워드 목록 초기화", description: "모든 키워드를 사용했습니다. 목록을 초기화합니다." });
-        setUsedKeywords([]);
-        availableKeywords = keywords;
+        toast({ title: "키워드 목록 초기화", description: `모든 '${keywordType}' 키워드를 사용했습니다. 목록을 초기화합니다.` });
+        
+        const { data: allKeywordsOfType, error: allKeywordsError } = await supabase
+            .from('keywords')
+            .select('id')
+            .eq('type', keywordSource);
+
+        if (allKeywordsError) throw new Error(`키워드 목록 초기화 실패: ${allKeywordsError.message}`);
+
+        if (allKeywordsOfType.length > 0) {
+            const keywordIdsToDelete = allKeywordsOfType.map(k => k.id);
+            const { error: deleteError } = await supabase
+                .from('user_used_keywords')
+                .delete()
+                .eq('user_id', userId)
+                .in('keyword_id', keywordIdsToDelete);
+
+            if (deleteError) throw new Error(`키워드 사용 이력 초기화 실패: ${deleteError.message}`);
+        }
+        
+        // Refetch all keywords of this type
+        const { data: refetchedKeywords, error: refetchedError } = await supabase
+            .from('keywords')
+            .select('id, keyword_text')
+            .eq('type', keywordSource);
+        
+        if (refetchedError) throw new Error(`초기화 후 키워드 조회 오류: ${refetchedError.message}`);
+        availableKeywords = refetchedKeywords;
       }
       
-      const keyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
-      setUsedKeywords(prevUsed => [...prevUsed, keyword]);
+      if (!availableKeywords || availableKeywords.length === 0) {
+        throw new Error(`데이터베이스에 '${keywordType}' 키워드가 없습니다. 관리자에게 문의하세요.`);
+      }
+      
+      const selectedKeyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
 
+      // Record the usage in the database
+      const { error: insertError } = await supabase
+        .from('user_used_keywords')
+        .insert({ user_id: userId, keyword_id: selectedKeyword.id });
+
+      if (insertError) {
+        console.error('키워드 사용 이력 저장 오류:', insertError);
+        throw new Error('키워드 사용 이력을 저장하는데 실패했습니다. 다시 시도해주세요.');
+      }
+
+      const keyword = selectedKeyword.keyword_text;
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
       
-      await sleep(3000);
+      await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
@@ -105,14 +130,14 @@ export const useOneClick = (
         throw new Error("주제 생성에 실패하여 중단합니다.");
       }
 
-      await sleep(3000);
+      await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
       const randomTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
       selectTopic(randomTopic);
 
-      await sleep(3000);
+      await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
@@ -125,16 +150,18 @@ export const useOneClick = (
       toast({ title: "원클릭 생성 완료!", description: "모든 과정이 성공적으로 완료되었습니다." });
 
     } catch (error) {
-      if (error instanceof Error && error.message === "사용자에 의해 중단되었습니다.") {
+      const errorMessage = error instanceof Error ? error.message : "자동 생성 중 알 수 없는 오류가 발생했습니다.";
+      
+      if (errorMessage === "사용자에 의해 중단되었습니다.") {
         toast({
           title: "원클릭 생성 중단됨",
           description: "사용자 요청에 따라 생성을 중단했습니다.",
-          variant: "warning",
+          variant: "default",
         });
       } else {
         toast({
-          title: "원클릭 생성 중단",
-          description: error instanceof Error ? error.message : "자동 생성 중 오류가 발생했습니다.",
+          title: "원클릭 생성 오류",
+          description: errorMessage,
           variant: "destructive"
         });
       }

@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      keywords: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          keyword_text: string
+          type: Database["public"]["Enums"]["keyword_type"]
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          keyword_text: string
+          type: Database["public"]["Enums"]["keyword_type"]
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          keyword_text?: string
+          type?: Database["public"]["Enums"]["keyword_type"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -54,6 +78,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_used_keywords: {
+        Row: {
+          id: number
+          keyword_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: number
+          keyword_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: number
+          keyword_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_used_keywords_keyword_id_fkey"
+            columns: ["keyword_id"]
+            isOneToOne: false
+            referencedRelation: "keywords"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_used_keywords_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -66,6 +126,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      keyword_type: "latest" | "evergreen"
       user_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -183,6 +244,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      keyword_type: ["latest", "evergreen"],
       user_status: ["pending", "approved", "rejected"],
     },
   },

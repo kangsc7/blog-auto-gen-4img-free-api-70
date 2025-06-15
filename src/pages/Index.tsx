@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
@@ -64,7 +63,8 @@ const Index = () => {
     saveAppState,
     generateTopics,
     selectTopic,
-    generateArticleWithPixabay
+    generateArticleWithPixabay,
+    profile
   );
   
   if (authLoading) {
