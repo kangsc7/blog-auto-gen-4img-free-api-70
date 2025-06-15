@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useImagePromptGenerator = (
   appState: AppState,
@@ -105,31 +105,15 @@ ${inputText}
 
     setIsDirectlyGenerating(true);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { data, error } = await supabase.functions.invoke('generate-image-hf', {
+        body: { prompt: appState.imagePrompt },
+      });
 
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Supabase URL 또는 Anon Key가 설정되지 않았습니다.");
-      }
-
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/generate-image-hf`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-          },
-          body: JSON.stringify({ prompt: appState.imagePrompt }),
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '이미지 생성에 실패했습니다.');
+      if (error) {
+        throw new Error(error.message || '이미지 생성에 실패했습니다.');
       }
       
-      const { image } = await response.json();
+      const { image } = data;
       if (!image) {
         throw new Error('API로부터 유효한 이미지를 받지 못했습니다.');
       }
