@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
+import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
@@ -9,7 +9,7 @@ import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
-import { Toggle } from '@/components/ui/toggle';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useAppController } from '@/hooks/useAppController';
 
 const Index = () => {
@@ -83,20 +83,36 @@ const Index = () => {
               <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
             </Link>
             <div className="text-center">
-              <Toggle
-                pressed={!preventDuplicates}
-                onPressedChange={(pressed) => setPreventDuplicates(!pressed)}
-                className="w-56 justify-center gap-2 p-3 rounded-lg bg-white text-gray-800 border border-black shadow-md hover:shadow-lg transition-all duration-200 data-[state=on]:bg-gray-100 data-[state=on]:shadow-inner data-[state=on]:text-blue-600"
+              <ToggleGroup
+                type="single"
+                value={preventDuplicates ? 'forbid' : 'allow'}
+                onValueChange={(value) => {
+                  if (value) setPreventDuplicates(value === 'forbid');
+                }}
+                className="inline-flex rounded-lg bg-gray-200 p-1 border shadow-inner"
+                aria-label="중복 주제 설정"
               >
-                <RefreshCcw className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold">
-                  {!preventDuplicates ? '중복 주제 허용' : '중복 주제 금지'}
-                </span>
-              </Toggle>
+                <ToggleGroupItem
+                  value="forbid"
+                  aria-label="중복 주제 금지"
+                  className="w-28 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Ban />
+                  중복 금지
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="allow"
+                  aria-label="중복 주제 허용"
+                  className="w-28 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Check />
+                  중복 허용
+                </ToggleGroupItem>
+              </ToggleGroup>
               <div className="w-56 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
-                  금지 : 중복 주제 제거<br />
-                  허용 : 중복 주제 가능
+                  금지: 중복 주제를 자동으로 제거합니다.<br />
+                  허용: 중복된 주제도 허용합니다.
                 </p>
               </div>
             </div>
