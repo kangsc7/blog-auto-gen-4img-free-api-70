@@ -21,6 +21,20 @@ const initialAppState: AppState = {
   saveReferenceTrigger: false,
 };
 
+// Helper function to persist main app state to localStorage
+const persistStateToStorage = (state: AppState) => {
+  const stateToSave = { ...state };
+  delete stateToSave.apiKey;
+  delete stateToSave.isApiKeyValidated;
+  localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
+};
+
+// Helper function to save reference info to localStorage
+const saveReferenceToStorage = (link: string, sentence: string) => {
+  localStorage.setItem('blog_reference_link', link);
+  localStorage.setItem('blog_reference_sentence', sentence);
+};
+
 export const useAppStateManager = () => {
   const { toast } = useToast();
   const [appState, setAppState] = useState<AppState>(initialAppState);
@@ -59,39 +73,27 @@ export const useAppStateManager = () => {
   };
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
-    if (newState.saveReferenceTrigger) {
+    setAppState(prevState => {
       try {
-        setAppState(prevState => {
-          localStorage.setItem('blog_reference_link', prevState.referenceLink);
-          localStorage.setItem('blog_reference_sentence', prevState.referenceSentence);
+        if (newState.saveReferenceTrigger) {
+          saveReferenceToStorage(prevState.referenceLink, prevState.referenceSentence);
           toast({ title: "저장 완료", description: "참조 정보가 브라우저에 저장되었습니다." });
           
           const updatedState = { ...prevState, saveReferenceTrigger: false };
-          const stateToSave = { ...updatedState };
-          delete stateToSave.apiKey;
-          delete stateToSave.isApiKeyValidated;
-          localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
+          persistStateToStorage(updatedState);
           return updatedState;
-        });
-      } catch (error) {
-        console.error('참조 정보 저장 오류:', error);
-        toast({ title: "저장 실패", description: "참조 정보 저장 중 오류가 발생했습니다.", variant: "destructive" });
-      }
-      return;
-    }
-
-    try {
-      setAppState(prevState => {
+        }
+        
         const updatedState = { ...prevState, ...newState };
-        const stateToSave = { ...updatedState };
-        delete stateToSave.apiKey;
-        delete stateToSave.isApiKeyValidated;
-        localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
+        persistStateToStorage(updatedState);
         return updatedState;
-      });
-    } catch (error) {
-      console.error('앱 상태 저장 오류:', error);
-    }
+
+      } catch (error) {
+        console.error('앱 상태 저장 오류:', error);
+        toast({ title: "저장 실패", description: "상태 저장 중 오류가 발생했습니다.", variant: "destructive" });
+        return prevState; // Revert to previous state on error
+      }
+    });
   }, [toast]);
 
   const saveApiKeyToStorage = () => {
