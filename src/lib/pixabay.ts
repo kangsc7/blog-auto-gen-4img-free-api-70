@@ -1,3 +1,4 @@
+
 const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<string | null> => {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
     const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${text}"`;
@@ -17,7 +18,7 @@ const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<s
 };
 
 const searchPixabayImages = async (keyword: string, pixabayApiKey: string) => {
-    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=10&lang=ko`;
+    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=50&lang=ko`;
     try {
         const imageResponse = await fetch(imageSearchUrl);
         if (!imageResponse.ok) return null;
