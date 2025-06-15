@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User, AppState } from '@/types';
+import { SHA256 } from 'crypto-js';
 
 interface LoginData {
   id: string;
@@ -9,7 +10,8 @@ interface LoginData {
 
 const initializeUsers = () => {
   try {
-    const defaultUsers: User[] = [{ id: '1234', password: '1234' }];
+    const hashedPassword = SHA256('1234').toString();
+    const defaultUsers: User[] = [{ id: '1234', password: hashedPassword }];
     localStorage.setItem('blog_users', JSON.stringify(defaultUsers));
   } catch (error) {
     console.error('사용자 초기화 오류:', error);
@@ -21,7 +23,10 @@ export const useAuth = (saveAppState: (newState: Partial<AppState>) => void) => 
   const [loginData, setLoginData] = useState<LoginData>({ id: '', password: '' });
 
   useEffect(() => {
-    initializeUsers();
+    const users = localStorage.getItem('blog_users');
+    if (!users) {
+      initializeUsers();
+    }
   }, []);
 
   const handleLogin = () => {
@@ -33,7 +38,8 @@ export const useAuth = (saveAppState: (newState: Partial<AppState>) => void) => 
         return;
       }
       
-      const user = users.find((u: User) => u.id === loginData.id && u.password === loginData.password);
+      const hashedInputPassword = SHA256(loginData.password).toString();
+      const user = users.find((u: User) => u.id === loginData.id && u.password === hashedInputPassword);
       
       if (user) {
         saveAppState({ isLoggedIn: true, currentUser: user.id });
