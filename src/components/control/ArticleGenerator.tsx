@@ -90,6 +90,14 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           <p className="text-xs text-gray-500 mt-1">글 마지막에 삽입될 링크의 텍스트입니다.</p>
         </div>
 
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => saveAppState({ saveReferenceTrigger: true })}
+          disabled={!appState.selectedTopic}
+        >
+          참조 정보 저장
+        </Button>
 
         <Button 
           onClick={generateArticleContent}

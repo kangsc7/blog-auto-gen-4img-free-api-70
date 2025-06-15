@@ -19,4 +19,5 @@ export interface AppState {
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;
+  saveReferenceTrigger?: boolean;
 }
