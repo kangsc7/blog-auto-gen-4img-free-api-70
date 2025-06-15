@@ -15,6 +15,7 @@ export interface AppState {
   selectedTopic: string;
   colorTheme: string;
   referenceLink: string;
+  referenceSentence: string;
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;

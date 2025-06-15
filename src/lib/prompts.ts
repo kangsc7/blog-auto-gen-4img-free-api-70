@@ -7,6 +7,7 @@ interface ArticlePromptParams {
   keyword: string;
   selectedColorTheme: string;
   referenceLink?: string;
+  referenceSentence?: string;
 }
 
 export const getArticlePrompt = ({
@@ -14,6 +15,7 @@ export const getArticlePrompt = ({
   keyword,
   selectedColorTheme,
   referenceLink,
+  referenceSentence,
 }: ArticlePromptParams): string => {
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
@@ -33,6 +35,7 @@ export const getArticlePrompt = ({
         - 가독성 향상: 독자가 내용을 쉽게 읽을 수 있도록 문단 구성을 최적화해야 합니다. **각 단락은 최대 3개의 문장으로 구성하는 것을 원칙으로 합니다.** 만약 한 단락에 3개 이상의 문장이 포함될 경우, 의미 단위에 맞게 자연스럽게 별도의 단락으로 나눠주세요. 이는 가독성 점수를 높이는 데 매우 중요합니다.
         - 콘텐츠 분량: 반드시 2,500 단어에서 3,000 단어 사이의 풍부하고 깊이 있는 내용으로 작성해주세요. 각 섹션에 할당된 지침보다 더 상세하고 구체적인 정보를 제공하여 독자의 체류 시간을 극대화해야 합니다.
         - 내부/외부 링크: 글의 신뢰도를 높이기 위해, 본문 내용과 관련된 권위 있는 외부 사이트나 통계 자료로 연결되는 링크를 최소 2개 이상 자연스럽게 포함해주세요. 예를 들어, '한 연구에 따르면...' 과 같은 문장에 실제 연구 자료 링크를 추가할 수 있습니다. 링크는 반드시 a 태그를 사용해야 합니다.
+        - 참조 링크 텍스트: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트를 아래 "사용할 변수" 섹션의 "Reference Sentence" 값으로 설정해주세요. 만약 "Reference Sentence" 값이 비어있다면, 기본 텍스트인 "더 많은 정보 확인하기"를 사용하세요.
         - 가장 중요한 규칙: 콘텐츠의 전체적인 품질과 SEO 점수를 위해, 위에서 언급된 키워드 밀도(1.5% ~ 2.5%)와 글자수(2,500 ~ 3,000 단어) 지침은 반드시, 무슨일이 있어도 엄격하게 지켜주세요.
 
         사용할 변수:
@@ -45,6 +48,7 @@ export const getArticlePrompt = ({
         - Warn Border Color: ${colors.warnBorder}
         - Link Color: ${colors.link}
         - Reference Link: ${refLink}
+        - Reference Sentence: ${referenceSentence}
         - Topic: ${topic}
         - Main Keyword: ${keyword}
 

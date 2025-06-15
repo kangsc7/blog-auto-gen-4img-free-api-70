@@ -79,6 +79,18 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           <p className="text-xs text-gray-500 mt-1">예: https://worldpis.com</p>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">참조 문장</label>
+          <Input
+            placeholder="예: 워드프레스 꿀팁 더 보러가기"
+            value={appState.referenceSentence}
+            onChange={(e) => saveAppState({ referenceSentence: e.target.value })}
+            disabled={!appState.selectedTopic}
+          />
+          <p className="text-xs text-gray-500 mt-1">글 마지막에 삽입될 링크의 텍스트입니다.</p>
+        </div>
+
+
         <Button 
           onClick={generateArticleContent}
           disabled={!appState.selectedTopic || isGeneratingContent || !appState.isApiKeyValidated}

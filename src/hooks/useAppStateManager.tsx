@@ -14,6 +14,7 @@ const initialAppState: AppState = {
   selectedTopic: '',
   colorTheme: '',
   referenceLink: '',
+  referenceSentence: '',
   generatedContent: '',
   imageStyle: '',
   imagePrompt: ''
@@ -104,6 +105,7 @@ export const useAppStateManager = () => {
       selectedTopic: '',
       colorTheme: '',
       referenceLink: '',
+      referenceSentence: '',
       generatedContent: '',
       imageStyle: '',
       imagePrompt: '',
