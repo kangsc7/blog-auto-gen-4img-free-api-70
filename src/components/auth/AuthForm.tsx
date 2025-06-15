@@ -5,6 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Lock, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AuthFormProps {
   handleLogin: (data: { email: string; password: string }) => Promise<boolean>;
@@ -17,6 +27,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,21 +35,39 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
       toast({ title: "입력 오류", description: "이메일과 비밀번호를 모두 입력해주세요.", variant: "destructive" });
       return;
     }
-    setLoading(true);
     if (isSignUp) {
-      await handleSignUp({ email, password });
+      setShowConsentDialog(true);
     } else {
+      setLoading(true);
       await handleLogin({ email, password });
+      setLoading(false);
     }
+  };
+
+  const handleConsentAndSignUp = async () => {
+    setLoading(true);
+    await handleSignUp({ email, password });
     setLoading(false);
   };
 
+  const backgroundClass = isSignUp
+    ? "bg-gradient-to-br from-purple-50 to-pink-100"
+    : "bg-gradient-to-br from-blue-50 to-indigo-100";
+  
+  const iconColorClass = isSignUp ? "text-purple-600" : "text-blue-600";
+  const buttonClass = isSignUp 
+    ? "bg-purple-600 hover:bg-purple-700" 
+    : "bg-blue-600 hover:bg-blue-700";
+  const linkButtonClass = isSignUp 
+    ? "font-medium text-purple-600 hover:text-purple-700"
+    : "font-medium text-blue-600 hover:text-blue-700";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className={`min-h-screen ${backgroundClass} flex items-center justify-center p-4 transition-colors duration-500`}>
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <Bot className="h-12 w-12 text-blue-600 mr-2" />
+            <Bot className={`h-12 w-12 ${iconColorClass} mr-2 transition-colors duration-500`} />
             <div>
               <CardTitle className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</CardTitle>
             </div>
@@ -76,18 +105,36 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+            <Button type="submit" className={`w-full ${buttonClass} transition-colors duration-500`} disabled={loading}>
               {loading ? '처리 중...' : (isSignUp ? '회원가입' : '로그인')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
             {isSignUp ? '계정이 이미 있으신가요?' : '계정이 없으신가요?'}
-            <Button variant="link" onClick={() => setIsSignUp(!isSignUp)} className="font-medium text-blue-600 hover:text-blue-700">
+            <Button variant="link" onClick={() => setIsSignUp(!isSignUp)} className={`${linkButtonClass} transition-colors duration-500`}>
               {isSignUp ? '로그인' : '회원가입'}
             </Button>
           </div>
         </CardContent>
       </Card>
+      <AlertDialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>IP 주소 확인 동의</AlertDialogTitle>
+            <AlertDialogDescription>
+              계정 판매나 다계정 운영 등 불법적인 계정 사용을 방지하기 위해, IP 주소 확인에 동의해 주시기 바랍니다.
+              <br /><br />
+              하나의 계정에 등록 가능한 유효 IP는 최대 2개이며, 3개 이상의 서로 다른 IP가 확인될 경우 계정은 즉시 정지됩니다.
+              <br /><br />
+              위 내용에 동의하시면 ‘승인’을, 동의하지 않으시면 ‘거절’을 눌러주세요.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>거절</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConsentAndSignUp} className={buttonClass}>승인</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
