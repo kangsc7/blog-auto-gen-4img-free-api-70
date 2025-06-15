@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCcw, RefreshCw } from 'lucide-react';
@@ -19,7 +20,8 @@ import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
 import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
-import { useAppHandlers } from '@/hooks/useAppHandlers';
+import { useTopicControls } from '@/hooks/useTopicControls';
+import { useAppUtils } from '@/hooks/useAppUtils';
 
 const Index = () => {
   const { toast } = useToast();
@@ -41,11 +43,18 @@ const Index = () => {
     setManualTopic,
     selectTopic,
     handleManualTopicAdd,
-    handleResetApp,
+  } = useTopicControls({ appState, saveAppState });
+
+  const {
     copyToClipboard,
     openWhisk,
     downloadHTML,
-  } = useAppHandlers({ appState, saveAppState, resetApp });
+  } = useAppUtils({ appState });
+
+  const handleResetApp = () => {
+    resetApp();
+    setManualTopic('');
+  };
 
   const handleDeduplicateTopics = () => {
     if (appState.topics.length === 0) {
