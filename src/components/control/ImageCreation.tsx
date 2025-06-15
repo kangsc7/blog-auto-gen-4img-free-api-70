@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Image, Copy } from 'lucide-react';
 import { AppState } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageCreationProps {
   appState: AppState;
@@ -28,6 +29,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
 }) => {
   const [manualInput, setManualInput] = useState('');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleGeneratePrompt = () => {
     createImagePrompt(manualInput);
@@ -36,6 +38,35 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
   const handleGenerateImage = async () => {
     const image = await generateDirectImage();
     setGeneratedImage(image);
+  };
+
+  const handleCopyImageHtml = async () => {
+    if (!generatedImage) return;
+
+    const altText = appState.selectedTopic || appState.keyword || 'generated_image_from_prompt';
+    const imgTag = `<img src="${generatedImage}" alt="${altText}" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px;">`;
+
+    try {
+        const blob = new Blob([imgTag], { type: 'text/html' });
+        const plainTextBlob = new Blob([imgTag], { type: 'text/plain' });
+        
+        const clipboardItem = new ClipboardItem({
+            'text/html': blob,
+            'text/plain': plainTextBlob,
+        });
+
+        await navigator.clipboard.write([clipboardItem]);
+        toast({ title: "복사 완료", description: "이미지 HTML 태그가 클립보드에 복사되었습니다." });
+    } catch (error) {
+        console.error('Failed to copy HTML: ', error);
+        try {
+            await navigator.clipboard.writeText(imgTag);
+            toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. HTML 모드로 붙여넣으세요." });
+        } catch (copyError) {
+            console.error('Failed to copy HTML as text: ', copyError);
+            toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
+        }
+    }
   };
 
   return (
@@ -113,10 +144,10 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => copyToClipboard(generatedImage, '이미지 데이터 URL')}
+                    onClick={handleCopyImageHtml}
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    이미지 데이터 URL 복사
+                    블로그용 이미지 복사 (HTML)
                   </Button>
                 </div>
               ) : null}
