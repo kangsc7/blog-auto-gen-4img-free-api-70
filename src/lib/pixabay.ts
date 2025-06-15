@@ -1,4 +1,3 @@
-
 const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<string | null> => {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
     const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${text}"`;
@@ -25,6 +24,30 @@ const searchPixabayImages = async (keyword: string, pixabayApiKey: string) => {
         return await imageResponse.json();
     } catch (error) {
         console.error("Error searching pixabay images:", error);
+        return null;
+    }
+};
+
+export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const plainText = (doc.body.textContent || '').trim().replace(/\s+/g, ' ').substring(0, 4000);
+
+    if (!plainText) return null;
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
+    const metaPrompt = `다음 텍스트를 SEO에 최적화된 150자 내외의 한국어 메타 설명으로 요약해 주세요. 다른 설명 없이 메타 설명 텍스트만 제공해주세요. 텍스트: "${plainText}"`;
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: metaPrompt }] }] })
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text.trim() || null;
+    } catch (error) {
+        console.error("Error generating meta description:", error);
         return null;
     }
 };
@@ -75,10 +98,13 @@ export const integratePixabayImages = async (
                         
                         const img = doc.createElement('img');
                         img.src = imageUrl;
-                        img.alt = keyword;
+                        img.alt = h2.textContent?.trim() || keyword;
                         img.style.maxWidth = '90%';
                         img.style.height = 'auto';
                         img.style.borderRadius = '8px';
+                        img.style.display = 'block';
+                        img.style.marginLeft = 'auto';
+                        img.style.marginRight = 'auto';
                         
                         const caption = doc.createElement('p');
                         caption.style.fontSize = '0.8em';
@@ -100,4 +126,3 @@ export const integratePixabayImages = async (
     
     return { finalHtml: doc.body.innerHTML, imageCount };
 };
-

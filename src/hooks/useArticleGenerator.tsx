@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
 import { getArticlePrompt } from '@/lib/prompts';
-import { integratePixabayImages } from '@/lib/pixabay';
+import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
 
 export const useArticleGenerator = (
   appState: AppState,
@@ -81,6 +81,17 @@ export const useArticleGenerator = (
         } else {
             toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
         }
+      }
+
+      try {
+        const metaDescription = await generateMetaDescription(cleanedHtml, appState.apiKey!);
+        if (metaDescription) {
+          const sanitizedMeta = metaDescription.replace(/-->/g, '-- >');
+          const metaComment = `<!-- META DESCRIPTION: ${sanitizedMeta} -->`;
+          finalHtml = `${metaComment}\n${finalHtml}`;
+        }
+      } catch (error) {
+        console.error("메타 설명 생성 중 오류:", error);
       }
 
       saveAppState({ generatedContent: finalHtml, colorTheme: selectedColorTheme });
