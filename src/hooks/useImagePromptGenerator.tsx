@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -110,7 +111,7 @@ ${inputText}
       });
 
       if (error) {
-        throw new Error(error.message || '이미지 생성에 실패했습니다.');
+        throw error; // Re-throw the error to be handled by the catch block
       }
       
       const { image } = data;
@@ -121,9 +122,19 @@ ${inputText}
       toast({ title: "이미지 생성 완료", description: "프롬프트 기반 이미지가 생성되었습니다." });
       return image;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('직접 이미지 생성 오류:', error);
-      toast({ title: "이미지 생성 실패", description: error instanceof Error ? error.message : "이미지 생성 중 오류가 발생했습니다.", variant: "destructive" });
+      let errorMessage = error instanceof Error ? error.message : "이미지 생성 중 오류가 발생했습니다.";
+      // Try to parse a more detailed error from the Supabase function response context
+      if (error.context && typeof error.context.json === 'function') {
+        try {
+          const functionError = await error.context.json();
+          errorMessage = functionError.error || functionError.details || errorMessage;
+        } catch (e) {
+          // Parsing failed, stick with the original message
+        }
+      }
+      toast({ title: "이미지 생성 실패", description: errorMessage, variant: "destructive" });
       return null;
     } finally {
       setIsDirectlyGenerating(false);
