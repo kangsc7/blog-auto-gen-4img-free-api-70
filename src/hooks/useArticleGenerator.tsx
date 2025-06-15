@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -94,7 +93,7 @@ export const useArticleGenerator = (
       }
       
       const rawContent = data.candidates[0].content.parts[0].text;
-      const htmlContent = rawContent.replace(/^```html\n?|```$/g, '').trim();
+      const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
       let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
 
