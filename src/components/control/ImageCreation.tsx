@@ -56,7 +56,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
 
           <Button 
             onClick={createImagePromptFromTopic}
-            disabled={!appState.generatedContent || !appState.imageStyle || isGeneratingImage || !appState.isApiKeyValidated}
+            disabled={!appState.generatedContent || isGeneratingImage || !appState.isApiKeyValidated}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             {isGeneratingImage ? '이미지 프롬프트 생성 중...' : '이미지 프롬프트 생성'}
