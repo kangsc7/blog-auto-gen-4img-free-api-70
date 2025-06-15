@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { HfInference } from '@huggingface/inference';
 
 export const useHuggingFaceManager = () => {
     const { toast } = useToast();
@@ -16,9 +15,16 @@ export const useHuggingFaceManager = () => {
         }
         setIsHuggingFaceValidating(true);
         try {
-            const hf = new HfInference(key);
-            await hf.whoami();
-            
+            const response = await fetch('https://api-inference.huggingface.co/whoami-v2', {
+                headers: {
+                    'Authorization': `Bearer ${key}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('API 키 검증 실패');
+            }
+
             setIsHuggingFaceApiKeyValidated(true);
             if (!silent) toast({ title: "Hugging Face API 키 검증 성공", description: "성공적으로 연결되었습니다." });
             return true;
