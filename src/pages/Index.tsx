@@ -1,6 +1,7 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
@@ -20,7 +21,7 @@ import { useAppHandlers } from '@/hooks/useAppHandlers';
 const Index = () => {
   const { toast } = useToast();
   const { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp } = useAppStateManager();
-  const { loginData, setLoginData, handleLogin, handleLogout } = useAuth(saveAppState);
+  const { session, loading: authLoading, handleLogin, handleSignUp, handleLogout } = useAuth();
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
@@ -37,6 +38,14 @@ const Index = () => {
     openWhisk,
     downloadHTML,
   } = useAppHandlers({ appState, saveAppState, resetApp });
+
+  useEffect(() => {
+    if (session) {
+      saveAppState({ isLoggedIn: true, currentUser: session.user.email });
+    } else {
+      saveAppState({ isLoggedIn: false, currentUser: '' });
+    }
+  }, [session, saveAppState]);
 
   const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
     return generateArticle({
@@ -56,8 +65,16 @@ const Index = () => {
     generateArticleWithPixabay
   );
   
-  if (!appState.isLoggedIn) {
-    return <LoginForm loginData={loginData} setLoginData={setLoginData} handleLogin={handleLogin} />;
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
   }
   
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage };
