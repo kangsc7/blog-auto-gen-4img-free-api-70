@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,9 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
   } = manager;
 
   return (
-    <Card className="shadow-md h-full bg-white border border-gray-200" style={{ backgroundColor: '#ffffff !important' }}>
+    <Card className="shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-700">
+        <CardTitle className="flex items-center text-blue-700">
           <KeyRound className="h-5 w-5 mr-2" />
           Hugging Face API 키 설정
         </CardTitle>
