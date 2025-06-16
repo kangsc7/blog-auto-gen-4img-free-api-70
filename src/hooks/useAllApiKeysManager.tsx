@@ -4,6 +4,7 @@ import { usePixabayManager } from '@/hooks/usePixabayManager';
 import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { AppState } from '@/types';
 import { useEffect } from 'react';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 interface UseAllApiKeysManagerProps {
   appState: AppState;
@@ -20,9 +21,24 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
     huggingfaceValidated: appState.isHuggingFaceApiKeyValidated
   });
 
+  // 앱 상태에 API 키가 없는 경우 기본값으로 설정
+  useEffect(() => {
+    if (!appState.apiKey || !appState.pixabayApiKey || !appState.huggingFaceApiKey) {
+      console.log('API 키 누락 감지, 기본값으로 설정');
+      saveAppState({
+        apiKey: appState.apiKey || DEFAULT_API_KEYS.GEMINI,
+        pixabayApiKey: appState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY,
+        huggingFaceApiKey: appState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
+        isApiKeyValidated: true,
+        isPixabayApiKeyValidated: true,
+        isHuggingFaceApiKeyValidated: true,
+      });
+    }
+  }, [appState.apiKey, appState.pixabayApiKey, appState.huggingFaceApiKey, saveAppState]);
+
   const geminiManager = useGeminiManager({
-    initialApiKey: appState.apiKey,
-    initialValidated: appState.isApiKeyValidated,
+    initialApiKey: appState.apiKey || DEFAULT_API_KEYS.GEMINI,
+    initialValidated: appState.isApiKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('Gemini API 키 변경됨:', key);
       saveAppState({ apiKey: key });
@@ -34,8 +50,8 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
   });
 
   const pixabayManager = usePixabayManager({
-    initialApiKey: appState.pixabayApiKey,
-    initialValidated: appState.isPixabayApiKeyValidated,
+    initialApiKey: appState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY,
+    initialValidated: appState.isPixabayApiKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('Pixabay API 키 변경됨:', key);
       saveAppState({ pixabayApiKey: key });
@@ -47,8 +63,8 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
   });
 
   const huggingFaceManager = useHuggingFaceManager({
-    initialApiKey: appState.huggingFaceApiKey,
-    initialValidated: appState.isHuggingFaceApiKeyValidated,
+    initialApiKey: appState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
+    initialValidated: appState.isHuggingFaceApiKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('HuggingFace API 키 변경됨:', key);
       saveAppState({ huggingFaceApiKey: key });

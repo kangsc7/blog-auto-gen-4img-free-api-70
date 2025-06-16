@@ -31,9 +31,24 @@ export const useAppStateManager = () => {
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
 
-  // 앱 상태 초기화 로그 추가
+  // 앱 상태 초기화 시 기본값 확실히 설정
   useEffect(() => {
-    console.log('useAppStateManager 초기화됨:', appState);
+    console.log('useAppStateManager 초기화됨 - 기본 API 키들 설정:', {
+      gemini: DEFAULT_API_KEYS.GEMINI,
+      pixabay: DEFAULT_API_KEYS.PIXABAY,
+      huggingface: DEFAULT_API_KEYS.HUGGING_FACE
+    });
+    
+    // 기본값이 확실히 설정되도록 강제 업데이트
+    setAppState(prev => ({
+      ...prev,
+      apiKey: DEFAULT_API_KEYS.GEMINI,
+      pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+      huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+      isApiKeyValidated: true,
+      isPixabayApiKeyValidated: true,
+      isHuggingFaceApiKeyValidated: true,
+    }));
   }, []);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
