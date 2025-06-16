@@ -60,10 +60,10 @@ export const useAppStateManager = () => {
     loadAppState();
   }, []);
 
-  // preventDuplicates 상태가 변경될 때마다 localStorage에 저장하고 window 객체에도 저장
+  // preventDuplicates 상태가 변경될 때마다 localStorage에 저장 (window 객체 사용 제거)
   useEffect(() => {
     savePreventDuplicatesToStorage(preventDuplicates);
-    (window as any).preventDuplicates = preventDuplicates;
+    console.log('preventDuplicates 상태 변경:', preventDuplicates);
   }, [preventDuplicates]);
 
   const loadAppState = () => {

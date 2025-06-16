@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -37,6 +38,10 @@ export const useTopicGenerator = (
       let allValidTopics: string[] = [];
       let attempts = 0;
       const maxAttempts = 3;
+      
+      // preventDuplicates 상태를 localStorage에서 직접 읽어서 일관성 보장
+      const preventDuplicatesFromStorage = localStorage.getItem('blog_prevent_duplicates');
+      const preventDuplicates = preventDuplicatesFromStorage !== null ? JSON.parse(preventDuplicatesFromStorage) : true;
       
       // 핵심 키워드를 더 정확하게 추출하여 검증
       const extractCoreKeywords = (keyword: string) => {
@@ -151,9 +156,9 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           return coreWordRatio >= 0.6 && yearCheck && numberCheck && excludeOtherTopics;
         });
 
-        // preventDuplicates 설정에 따라 중복 제거 여부 결정
+        // preventDuplicates 설정에 따라 중복 제거 여부 결정 (localStorage 값 사용)
         let uniqueValidTopics;
-        if (window.preventDuplicates !== undefined ? window.preventDuplicates : true) {
+        if (preventDuplicates) {
           // 중복 금지 모드: 현재 세션 내에서만 중복 제거 (기존 저장된 주제와는 비교하지 않음)
           uniqueValidTopics = validTopics.filter(topic => 
             !allValidTopics.some(existingTopic => 
@@ -184,7 +189,7 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
       }
 
       // 중복 허용 모드일 때는 기존 주제에 추가, 중복 금지 모드일 때는 완전 교체
-      if (window.preventDuplicates !== undefined ? window.preventDuplicates : true) {
+      if (preventDuplicates) {
         // 중복 금지 모드: 기존 주제들을 완전히 대체
         saveAppState({ topics: finalTopics, selectedTopic: '' });
       } else {

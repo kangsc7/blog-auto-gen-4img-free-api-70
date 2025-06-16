@@ -52,6 +52,43 @@ export const useOneClick = (
 
     return !!usageData;
   };
+
+  // 주제 중복 체크를 위한 새로운 함수
+  const isTopicUsed = async (topic: string, userId: string): Promise<boolean> => {
+    if (!preventDuplicates) return false;
+    
+    // 로컬 스토리지에서 사용자별 주제 이력 체크
+    const userTopicsKey = `blog_user_topics_${userId}`;
+    const savedTopics = localStorage.getItem(userTopicsKey);
+    
+    if (savedTopics) {
+      const topicsList = JSON.parse(savedTopics);
+      const normalizedTopic = topic.replace(/\s/g, '').toLowerCase();
+      return topicsList.some((savedTopic: string) => 
+        savedTopic.replace(/\s/g, '').toLowerCase() === normalizedTopic
+      );
+    }
+    
+    return false;
+  };
+
+  // 사용된 주제를 기록하는 함수
+  const recordTopicUsage = async (topic: string, userId: string): Promise<void> => {
+    if (!preventDuplicates) return;
+    
+    const userTopicsKey = `blog_user_topics_${userId}`;
+    const savedTopics = localStorage.getItem(userTopicsKey);
+    let topicsList = savedTopics ? JSON.parse(savedTopics) : [];
+    
+    if (!topicsList.includes(topic)) {
+      topicsList.push(topic);
+      // 최대 1000개까지만 저장 (메모리 관리)
+      if (topicsList.length > 1000) {
+        topicsList = topicsList.slice(-1000);
+      }
+      localStorage.setItem(userTopicsKey, JSON.stringify(topicsList));
+    }
+  };
   
   const recordKeywordUsage = async (keyword: string, userId: string, type: 'latest' | 'evergreen'): Promise<void> => {
     let { data: keywordData, error: findError } = await supabase
@@ -118,7 +155,7 @@ export const useOneClick = (
       if (keywordSource === 'latest') {
         toast({ title: `1단계: AI ${keywordType} 키워드 생성`, description: `Gemini AI가 키워드를 생성합니다...` });
         let attempt = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5; // 시도 횟수 증가
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateLatestKeyword();
@@ -140,7 +177,7 @@ export const useOneClick = (
       } else {
         toast({ title: `1단계: AI ${keywordType} 키워드 생성`, description: `Gemini AI가 키워드를 생성합니다...` });
         let attempt = 0;
-        const maxAttempts = 2;
+        const maxAttempts = 3;
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateEvergreenKeyword();
@@ -240,15 +277,40 @@ export const useOneClick = (
       await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      toast({ title: "3단계: 주제 랜덤 선택", description: "생성된 주제 중 하나를 자동으로 선택합니다..." });
-      const randomTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
-      selectTopic(randomTopic);
+      // 중복되지 않은 주제 선택 로직 강화
+      let selectedTopic: string | null = null;
+      if (preventDuplicates) {
+        const availableTopics = [];
+        for (const topic of newTopics) {
+          const isUsed = await isTopicUsed(topic, userId);
+          if (!isUsed) {
+            availableTopics.push(topic);
+          }
+        }
+        
+        if (availableTopics.length === 0) {
+          toast({ title: "주제 중복 경고", description: "생성된 모든 주제가 이미 사용되었습니다. 첫 번째 주제를 선택합니다." });
+          selectedTopic = newTopics[0];
+        } else {
+          selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
+        }
+      } else {
+        selectedTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
+      }
+
+      toast({ title: "3단계: 주제 선택", description: `"${selectedTopic}"을(를) 자동으로 선택했습니다.` });
+      selectTopic(selectedTopic);
+
+      // 선택된 주제를 사용 이력에 기록
+      if (preventDuplicates) {
+        await recordTopicUsage(selectedTopic, userId);
+      }
 
       await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
-      const articleGenerated = await generateArticle({ topic: randomTopic, keyword });
+      const articleGenerated = await generateArticle({ topic: selectedTopic, keyword });
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!articleGenerated) {
         throw new Error("글 생성에 실패하여 중단합니다.");
