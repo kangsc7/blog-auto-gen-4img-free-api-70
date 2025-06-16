@@ -58,7 +58,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   };
 
   return (
-    <Card className="shadow-md">
+    <Card id="article-preview" className="shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center text-green-700">
