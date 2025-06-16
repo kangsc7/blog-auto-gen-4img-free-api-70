@@ -13,8 +13,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
   const scrollToPreview = () => {
     const previewElement = document.getElementById('article-preview');
     if (previewElement) {
-      // 헤더 높이를 고려하여 더 정확한 위치로 스크롤
-      const headerOffset = 100; // 헤더와 여백을 고려한 오프셋
+      // 헤더 높이와 여백을 더 정확하게 계산
+      const headerOffset = 150; // 헤더와 여백을 고려한 오프셋 증가
       const elementPosition = previewElement.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
