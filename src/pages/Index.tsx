@@ -84,7 +84,11 @@ const Index = () => {
                 type="single"
                 value={preventDuplicates ? 'forbid' : 'allow'}
                 onValueChange={(value) => {
-                  if (value) setPreventDuplicates(value === 'forbid');
+                  if (value) {
+                    const newPreventDuplicates = value === 'forbid';
+                    setPreventDuplicates(newPreventDuplicates);
+                    console.log('중복 설정 변경:', newPreventDuplicates ? '금지' : '허용');
+                  }
                 }}
                 className="inline-flex rounded-lg bg-gray-200 p-1 border shadow-inner"
                 aria-label="중복 주제 설정"
@@ -108,8 +112,8 @@ const Index = () => {
               </ToggleGroup>
               <div className="w-72 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
-                  금지: 70% 이상 유사한 주제를 자동 제거합니다.<br />
-                  허용: 모든 중복 제한을 해제합니다.
+                  현재: {preventDuplicates ? '중복 금지 (키워드/주제 중복 방지)' : '중복 허용 (모든 제한 해제)'}<br />
+                  금지: 70% 이상 유사한 주제를 자동 제거합니다.
                 </p>
               </div>
             </div>

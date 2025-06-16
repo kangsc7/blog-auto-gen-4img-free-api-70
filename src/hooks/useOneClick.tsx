@@ -23,6 +23,31 @@ export const useOneClick = (
   const cancelGeneration = useRef(false);
   const { generateLatestKeyword, generateEvergreenKeyword } = useKeywordGenerator(appState);
 
+  const getUserUsedKeywords = async (userId: string): Promise<string[]> => {
+    if (!preventDuplicates) return [];
+    
+    try {
+      const { data: usedKeywordsData, error } = await supabase
+        .from('user_used_keywords')
+        .select(`
+          keywords (
+            keyword_text
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('사용한 키워드 조회 오류:', error);
+        return [];
+      }
+
+      return usedKeywordsData?.map(item => item.keywords?.keyword_text).filter(Boolean) || [];
+    } catch (error) {
+      console.error('키워드 조회 중 오류:', error);
+      return [];
+    }
+  };
+
   const isKeywordUsed = async (keyword: string, userId: string): Promise<boolean> => {
     const { data: keywordData, error: keywordError } = await supabase
         .from('keywords')
@@ -86,43 +111,49 @@ export const useOneClick = (
   };
   
   const recordKeywordUsage = async (keyword: string, userId: string, type: 'latest' | 'evergreen'): Promise<void> => {
-    let { data: keywordData, error: findError } = await supabase
-        .from('keywords')
-        .select('id')
-        .eq('keyword_text', keyword)
-        .maybeSingle();
-
-    if (findError) throw new Error(`키워드 조회 오류: ${findError.message}`);
-
-    let keywordId;
-    if (keywordData) {
-        keywordId = keywordData.id;
-    } else {
-        const { data: newKeywordData, error: insertKeywordError } = await supabase
-            .from('keywords')
-            .insert({ keyword_text: keyword, type: type })
-            .select('id')
-            .single();
-        
-        if (insertKeywordError) throw new Error(`새로운 키워드 저장 오류: ${insertKeywordError.message}`);
-        keywordId = newKeywordData.id;
-    }
+    if (!preventDuplicates) return;
     
-    const { data: existingUsage, error: checkUsageError } = await supabase
-        .from('user_used_keywords')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('keyword_id', keywordId)
-        .maybeSingle();
-        
-    if (checkUsageError) throw new Error(`키워드 사용 이력 확인 오류: ${checkUsageError.message}`);
+    try {
+      let { data: keywordData, error: findError } = await supabase
+          .from('keywords')
+          .select('id')
+          .eq('keyword_text', keyword)
+          .maybeSingle();
 
-    if (!existingUsage) {
-        const { error: insertUsageError } = await supabase
-            .from('user_used_keywords')
-            .insert({ user_id: userId, keyword_id: keywordId });
-        
-        if (insertUsageError) throw new Error(`키워드 사용 이력 저장 오류: ${insertUsageError.message}`);
+      if (findError) throw new Error(`키워드 조회 오류: ${findError.message}`);
+
+      let keywordId;
+      if (keywordData) {
+          keywordId = keywordData.id;
+      } else {
+          const { data: newKeywordData, error: insertKeywordError } = await supabase
+              .from('keywords')
+              .insert({ keyword_text: keyword, type: type })
+              .select('id')
+              .single();
+          
+          if (insertKeywordError) throw new Error(`새로운 키워드 저장 오류: ${insertKeywordError.message}`);
+          keywordId = newKeywordData.id;
+      }
+      
+      const { data: existingUsage, error: checkUsageError } = await supabase
+          .from('user_used_keywords')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('keyword_id', keywordId)
+          .maybeSingle();
+          
+      if (checkUsageError) throw new Error(`키워드 사용 이력 확인 오류: ${checkUsageError.message}`);
+
+      if (!existingUsage) {
+          const { error: insertUsageError } = await supabase
+              .from('user_used_keywords')
+              .insert({ user_id: userId, keyword_id: keywordId });
+          
+          if (insertUsageError) throw new Error(`키워드 사용 이력 저장 오류: ${insertUsageError.message}`);
+      }
+    } catch (error) {
+      console.error('키워드 사용 기록 중 오류:', error);
     }
   };
 
@@ -147,16 +178,20 @@ export const useOneClick = (
       let keyword: string | null = null;
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '틈새';
 
+      // 사용자가 이미 사용한 키워드 목록 가져오기
+      const usedKeywords = await getUserUsedKeywords(userId);
+      console.log(`${keywordType} 키워드 생성 - 사용된 키워드:`, usedKeywords);
+
       if (keywordSource === 'latest') {
         toast({ title: `1단계: 실시간 ${keywordType} 키워드 생성`, description: `Google Trends 데이터를 분석합니다...` });
         let attempt = 0;
-        const maxAttempts = 3; // 시도 횟수 줄임 (개선된 로직으로 성공률 높아짐)
+        const maxAttempts = 3;
         
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateLatestKeyword();
             if (generatedKeyword) {
-                const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
+                const used = preventDuplicates ? usedKeywords.includes(generatedKeyword) : false;
                 if (!used) {
                     keyword = generatedKeyword;
                     toast({ title: "트렌드 키워드 생성 완료", description: `"${keyword}" - 실시간 트렌드 반영됨` });
@@ -179,9 +214,10 @@ export const useOneClick = (
         
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
+            // 사용된 키워드 목록을 전달하여 중복 방지
             const generatedKeyword = await generateEvergreenKeyword();
             if (generatedKeyword) {
-                const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
+                const used = preventDuplicates ? usedKeywords.includes(generatedKeyword) : false;
                 if (!used) {
                     keyword = generatedKeyword;
                     toast({ title: "틈새 키워드 선택 완료", description: `"${keyword}" - 검증된 평생 키워드` });
@@ -196,7 +232,6 @@ export const useOneClick = (
         }
 
         if (!keyword) {
-            // 평생 키워드는 백업 데이터베이스 로직 유지
             toast({ title: "AI 키워드 중복/실패", description: "데이터베이스에서 직접 선택합니다." });
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
@@ -258,9 +293,7 @@ export const useOneClick = (
       
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       
-      if (preventDuplicates) {
-        await recordKeywordUsage(keyword, userId, keywordSource);
-      }
+      await recordKeywordUsage(keyword, userId, keywordSource);
 
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
