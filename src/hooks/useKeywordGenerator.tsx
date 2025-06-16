@@ -70,7 +70,7 @@ export const useKeywordGenerator = (appState: AppState) => {
             console.log('선택된 트렌드 키워드:', randomTrendKeyword);
             
             // 2단계: 트렌딩 키워드를 기반으로 한국적 맥락의 블로그 키워드 생성
-            const currentYear = new Date().getFullYear();
+            const currentYear = 2025; // 2025년으로 고정
             const currentMonth = new Date().getMonth() + 1;
             
             const diversePrompts = [
@@ -88,7 +88,7 @@ export const useKeywordGenerator = (appState: AppState) => {
         } catch (error) {
             console.error('최신 키워드 생성 오류:', error);
             // 백업 로직: Gemini만으로 생성
-            const currentYear = new Date().getFullYear();
+            const currentYear = 2025; // 2025년으로 고정
             const backupPrompt = `${currentYear}년 현재 한국에서 가장 핫한 이슈 중 하나의 키워드를 1개만 생성해주세요. 정부 정책, 경제 혜택, 사회 제도 관련으로 부탁드립니다. 다른 설명 없이 키워드만 제공해주세요.`;
             return await callGeminiForKeyword(backupPrompt);
         }
@@ -108,7 +108,7 @@ export const useKeywordGenerator = (appState: AppState) => {
             console.log('선택된 평생 키워드:', selectedKeyword);
             
             // 2단계: 선택된 키워드를 현재 년도에 맞게 업데이트
-            const currentYear = new Date().getFullYear();
+            const currentYear = 2025; // 2025년으로 고정
             const enhancementPrompts = [
                 `"${selectedKeyword}"를 ${currentYear}년 상황에 맞게 더 구체적으로 만들어주세요.`,
                 `"${selectedKeyword}" 관련해서 ${currentYear}년 새로운 정보나 변화사항을 포함한 키워드로 업그레이드해주세요.`,
