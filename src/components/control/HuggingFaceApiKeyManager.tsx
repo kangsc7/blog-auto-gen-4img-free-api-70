@@ -24,6 +24,8 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
   validateHuggingFaceApiKey,
   deleteHuggingFaceApiKeyFromStorage
 }) => {
+  console.log('HuggingFaceApiKeyManager 렌더링:', { huggingFaceApiKey, isHuggingFaceApiKeyValidated });
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -39,7 +41,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
             <Input
               type="password"
               placeholder="hf_... 형식의 API 키"
-              value={huggingFaceApiKey}
+              value={huggingFaceApiKey || ''}
               onChange={(e) => {
                 setHuggingFaceApiKey(e.target.value);
                 setIsHuggingFaceApiKeyValidated(false);
@@ -48,7 +50,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
             />
             <Button 
               onClick={() => validateHuggingFaceApiKey(huggingFaceApiKey)} 
-              disabled={!huggingFaceApiKey.trim() || isHuggingFaceValidating}
+              disabled={!huggingFaceApiKey?.trim() || isHuggingFaceValidating}
               variant="outline" 
               className={isHuggingFaceApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
             >

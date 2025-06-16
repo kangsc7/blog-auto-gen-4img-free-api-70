@@ -15,6 +15,12 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   pixabayManager,
   huggingFaceManager
 }) => {
+  console.log('RefactoredApiKeysSection 렌더링 - 매니저 상태:', {
+    gemini: { key: geminiManager.geminiApiKey, validated: geminiManager.isGeminiApiKeyValidated },
+    pixabay: { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated },
+    huggingface: { key: huggingFaceManager.huggingFaceApiKey, validated: huggingFaceManager.isHuggingFaceApiKeyValidated }
+  });
+
   return (
     <div className="container mx-auto mt-20 relative z-[200]">
       <div className="flex flex-wrap gap-4 mb-6 justify-center">

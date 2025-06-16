@@ -24,6 +24,8 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
   validatePixabayApiKey,
   deletePixabayApiKeyFromStorage,
 }) => {
+  console.log('PixabayApiKeyManager 렌더링:', { pixabayApiKey, isPixabayApiKeyValidated });
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -39,7 +41,7 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
             <Input
               type="password"
               placeholder="Pixabay API 키를 입력해주세요"
-              value={pixabayApiKey}
+              value={pixabayApiKey || ''}
               onChange={(e) => {
                 setPixabayApiKey(e.target.value);
                 setIsPixabayApiKeyValidated(false);
@@ -48,7 +50,7 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
             />
             <Button 
               onClick={() => validatePixabayApiKey(pixabayApiKey)} 
-              disabled={!pixabayApiKey.trim() || isPixabayValidating}
+              disabled={!pixabayApiKey?.trim() || isPixabayValidating}
               variant="outline" 
               className={isPixabayApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-orange-600 border-orange-600 hover:bg-orange-50"}
             >

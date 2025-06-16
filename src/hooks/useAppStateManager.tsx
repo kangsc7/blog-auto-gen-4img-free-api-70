@@ -31,31 +31,18 @@ export const useAppStateManager = () => {
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
 
-  // 컴포넌트 마운트 시 기본 API 키들로 강제 설정 - 한 번만 실행
+  // 앱 상태 초기화 로그 추가
   useEffect(() => {
-    console.log('앱 상태 초기화 시작 - 기본 API 키 설정');
-    setAppState(prev => {
-      const newState = {
-        ...prev,
-        apiKey: DEFAULT_API_KEYS.GEMINI,
-        isApiKeyValidated: true,
-        pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
-        isPixabayApiKeyValidated: true,
-        huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
-        isHuggingFaceApiKeyValidated: true,
-      };
-      console.log('기본 API 키들이 앱 상태에 설정됨:', {
-        gemini: newState.apiKey,
-        pixabay: newState.pixabayApiKey,
-        huggingface: newState.huggingFaceApiKey
-      });
-      return newState;
-    });
-  }, []); // 빈 의존성 배열로 한 번만 실행
+    console.log('useAppStateManager 초기화됨:', appState);
+  }, []);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
     console.log('앱 상태 업데이트:', newState);
-    setAppState(prev => ({ ...prev, ...newState }));
+    setAppState(prev => {
+      const updatedState = { ...prev, ...newState };
+      console.log('업데이트된 전체 상태:', updatedState);
+      return updatedState;
+    });
   }, []);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {

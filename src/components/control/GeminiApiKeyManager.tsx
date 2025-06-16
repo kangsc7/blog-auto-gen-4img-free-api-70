@@ -24,6 +24,8 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
   validateGeminiApiKey,
   deleteGeminiApiKeyFromStorage,
 }) => {
+  console.log('GeminiApiKeyManager 렌더링:', { geminiApiKey, isGeminiApiKeyValidated });
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -39,7 +41,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
             <Input
               type="password"
               placeholder="API 키를 입력해주세요"
-              value={geminiApiKey}
+              value={geminiApiKey || ''}
               onChange={(e) => {
                 setGeminiApiKey(e.target.value);
                 setIsGeminiApiKeyValidated(false);
@@ -48,7 +50,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
             />
             <Button 
               onClick={() => validateGeminiApiKey(geminiApiKey)} 
-              disabled={!geminiApiKey.trim() || isGeminiValidating}
+              disabled={!geminiApiKey?.trim() || isGeminiValidating}
               variant="outline" 
               className={isGeminiApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
             >
