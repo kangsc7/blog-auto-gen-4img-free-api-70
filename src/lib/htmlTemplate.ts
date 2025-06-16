@@ -193,7 +193,7 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getRelatedInfoSection(colors),
     getRelatedKeywordsSection(colors),
     getSummaryCardSection(keyword),
-    getEncouragingClosingSection(colors, refLink),
+    getEncouragingClosingSection(colors, refLink, referenceSentence),
     getFaqSection(colors, topic),
     getClosingSection(colors, refLink, referenceSentence),
     getTagsSection(topic, keyword),
