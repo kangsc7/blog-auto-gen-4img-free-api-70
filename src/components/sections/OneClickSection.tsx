@@ -26,9 +26,9 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                 <Button 
                     onClick={handleLatestIssueOneClick} 
                     disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
-                    className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
+                    className="px-8 py-16 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-32"
                 >
-                    <Zap className="mr-2 h-6 w-6" />
+                    <Zap className="mr-2 h-8 w-8" />
                     <span className="text-center">
                         최신 이슈
                         <br />
@@ -57,9 +57,9 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                 <Button 
                     onClick={handleEvergreenKeywordOneClick} 
                     disabled={isOneClickGenerating || !appState.isApiKeyValidated}
-                    className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
+                    className="px-8 py-16 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-32"
                 >
-                    <RefreshCw className="mr-2 h-6 w-6" />
+                    <RefreshCw className="mr-2 h-8 w-8" />
                     <span className="text-center">
                         평생 키워드
                         <br />
