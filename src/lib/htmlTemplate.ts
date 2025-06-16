@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -22,7 +21,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <br>
 `;
 
-const getProblemDefinitionSection = (colors: any): string => `
+const getBasicInfoSection = (colors: any): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>핵심 정보와 기본 내용 완벽 정리</b> 💡</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_1]가 정확히 무엇인지, 누구에게 지급되는지 궁금하시죠? 이 제도는 에너지 비용 부담을 줄여주기 위한 정부 지원 정책이에요. 저소득층과 차상위계층을 대상으로 하며, 전기·가스·지역난방비 등에 사용할 수 있답니다.
@@ -36,7 +35,7 @@ const getProblemDefinitionSection = (colors: any): string => `
 </div>
 `;
 
-const getSolutionGuideSection = (colors: any): string => `
+const getApplicationGuideSection = (colors: any): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 방법 단계별 가이드</b> 📝</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_2] 신청 과정이 복잡해 보일 수 있지만, 한 단계씩 따라하시면 어렵지 않아요. 온라인과 오프라인 모두 가능하니 편한 방법을 선택하세요.
@@ -52,55 +51,49 @@ const getSolutionGuideSection = (colors: any): string => `
 </tbody></table></div>
 `;
 
-const getTipsAndWarningsSection = (colors: any): string => `
+const getRequirementsSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 대상 및 자격 요건</b> 👥</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_3] 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 소득 기준이 달라지니 미리 확인해보세요.
+</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+특히 2025년부터는 지원 대상이 확대되어 더 많은 분들이 혜택을 받으실 수 있게 되었어요. 자세한 소득 기준은 <a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부 공식 홈페이지</a>에서 확인하실 수 있답니다.
+</p>
+`;
+
+const getWarningsSection = (colors: any): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     <ul style="margin: 10px 0; padding-left: 20px;">
         <li style="margin-bottom: 8px;">신청 기간을 놓치면 그 해 지원이 불가능해요 - 보통 11월부터 다음해 10월까지</li>
         <li style="margin-bottom: 8px;">가구원 수에 따라 지원 금액이 달라지니 정확한 가구원 신고가 중요해요</li>
-        <li style="margin-bottom: 8px;">[SECTION_CONTENT_3] 관련 정보는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
+        <li style="margin-bottom: 8px;">[SECTION_CONTENT_4] 관련 정보는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
         <li>소득·재산 기준이 매년 조금씩 변동될 수 있으니 신청 전 최신 정보를 확인하세요</li>
     </ul>
 </div>
 `;
 
+const getBenefitsSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 금액 및 혜택 내용</b> 💰</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_5] 지원 금액은 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요. 전기·가스·지역난방뿐만 아니라 일부 연탄·등유 구매에도 사용 가능해졌답니다.
+</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+특히 2025년부터는 지원 금액이 상향 조정되어 더 많은 도움을 받으실 수 있게 되었어요. 바우처 카드는 1년간 사용 가능하며, 미사용 금액은 다음 해로 이월되지 않으니 꼭 기간 내에 사용하세요.
+</p>
+`;
+
 const getFailureCaseSection = (colors: any): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실패 사례와 해결 방법</b> 😥</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 [SECTION_CONTENT_4] 관련 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
+실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 [SECTION_CONTENT_6] 관련 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 또 다른 실패 원인은 신청 시기를 놓치는 것인데요. 많은 분들이 연말에 몰려서 신청하다가 마감일을 넘기는 경우가 있어요. 가능하면 신청 시작과 동시에 준비하시는 것을 추천드려요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 재신청이 가능한 경우도 있으니, 한 번 실패했다고 포기하지 마시고 부족한 서류를 보완해서 다시 도전해보세요. 주민센터 담당자분들이 친절하게 도와주실 거예요.
-</p>
-`;
-
-const getDeepDiveSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 대상 및 금액 상세 안내</b> 🧐</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_5] 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 2025년부터는 지원 금액이 상향 조정되어 더 많은 도움을 받으실 수 있게 되었어요. 또한 사용처도 확대되어 전기·가스·지역난방뿐만 아니라 일부 연탄·등유 구매에도 사용 가능해졌답니다.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-자세한 소득 기준과 지원 금액은 <a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부 공식 홈페이지</a>에서 확인하실 수 있어요.
-</p>
-`;
-
-const getRelatedInfoSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 추가 혜택 및 지원 제도</b> 📈</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_6] 외에도 저소득층을 위한 다양한 에너지 지원 제도가 있어요. 전기요금 할인, 가스요금 할인, 연탄쿠폰 지원 등이 있는데, 이런 제도들을 함께 활용하면 에너지 비용을 더욱 효과적으로 절약할 수 있답니다.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 겨울철에는 한파대응 추가 지원도 있으니, 평소보다 난방비가 많이 나올 것 같다면 이런 제도들도 함께 알아보시길 권해드려요. 중복 신청이 가능한 경우도 있어서 더 많은 혜택을 받으실 수 있어요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-또한 에너지 효율 개선 사업이나 취약계층 주거환경 개선 사업 등도 있으니, 근본적인 에너지 절약을 원하신다면 이런 프로그램들도 살펴보세요.
 </p>
 `;
 
@@ -167,12 +160,12 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
   const htmlParts = [
     getHeaderSection(topic),
     getIntroSection(colors, keyword),
-    getProblemDefinitionSection(colors),
-    getSolutionGuideSection(colors),
-    getTipsAndWarningsSection(colors),
+    getBasicInfoSection(colors),
+    getApplicationGuideSection(colors),
+    getRequirementsSection(colors),
+    getWarningsSection(colors),
+    getBenefitsSection(colors),
     getFailureCaseSection(colors),
-    getDeepDiveSection(colors),
-    getRelatedInfoSection(colors),
     getEncouragingSection(colors),
     getSummaryCardSection(keyword),
     getClosingSection(colors, refLink, referenceSentence),
