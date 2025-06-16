@@ -44,7 +44,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
           
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">사용자: {currentUser}</span>
-            <span className="text-sm text-gray-500">로그인 시간: {new Date().toLocaleString('ko-KR')}</span>
             <Button onClick={handleLogout} variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
               <LogOut className="h-4 w-4 mr-1" />
               로그아웃
