@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
@@ -119,7 +120,7 @@ const Index = () => {
               onClick={handleResetApp}
               variant="outline"
               size="lg"
-              className="bg-white text-green-600 border-green-600 hover:bg-green-50 rounded-lg shadow-md transition-colors px-10 py-5"
+              className="bg-white text-green-600 border-green-600 hover:bg-green-50 rounded-lg shadow-md transition-colors px-16 py-5 min-w-[200px]"
             >
               <RefreshCw className="h-5 w-5" />
               <span className="font-semibold text-gray-800">초기화</span>
