@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -5,7 +6,8 @@ import { getEnhancedTopicPrompt } from '@/lib/enhancedPrompts';
 
 export const useTopicGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void
+  saveAppState: (newState: Partial<AppState>) => void,
+  preventDuplicates: boolean  // preventDuplicates를 매개변수로 직접 받아옴
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
@@ -56,23 +58,12 @@ export const useTopicGenerator = (
       let attempts = 0;
       const maxAttempts = 3;
       
-      const preventDuplicatesFromStorage = localStorage.getItem('blog_prevent_duplicates');
-      const preventDuplicates = preventDuplicatesFromStorage !== null ? JSON.parse(preventDuplicatesFromStorage) : true;
+      // 간단한 년도 검증 함수
+      const hasYearInKeyword = /\d{4}년?/.test(cleanedKeyword);
       
-      // 간소화된 키워드 분석
-      const extractCoreKeywords = (keyword: string) => {
-        const yearMatch = keyword.match(/(\d{4})년?/);
-        const words = keyword.split(/\s+/).filter(word => word.length > 1);
-        
-        return {
-          coreWords: words,
-          year: yearMatch ? yearMatch[1] + '년' : null,
-          originalKeyword: keyword
-        };
-      };
-
-      const keywordInfo = extractCoreKeywords(cleanedKeyword);
-      console.log('키워드 분석:', cleanedKeyword, keywordInfo);
+      console.log('키워드 분석:', cleanedKeyword);
+      console.log('년도 포함 여부:', hasYearInKeyword);
+      console.log('중복 허용 설정:', preventDuplicates);
 
       while (allValidTopics.length < count && attempts < maxAttempts) {
         attempts++;
@@ -89,7 +80,7 @@ export const useTopicGenerator = (
           body: JSON.stringify({ 
             contents: [{ parts: [{ text: enhancedPrompt }] }],
             generationConfig: {
-              temperature: 0.3, // 더 정확한 형식 준수를 위해 온도 낮춤
+              temperature: 0.2, // 매우 낮은 온도로 정확한 형식 준수
               maxOutputTokens: 2048,
             }
           })
@@ -110,28 +101,25 @@ export const useTopicGenerator = (
           .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
           .filter(topic => topic.length > 10);
 
-        // 간소화된 검증 로직 - 형식만 체크
+        // 단순화된 검증 로직
         const validTopics = newTopics.filter(topic => {
-          // 1. 년도로 올바르게 시작하는지 체크 (4자리숫자+년)
-          const startsWithValidYear = /^\d{4}년\s/.test(topic);
-          
-          // 2. 잘못된 "년 " 형태로 시작하지 않는지 체크
-          const startsWithInvalidYear = /^년\s/.test(topic);
-          
-          // 3. 기본 키워드 포함 체크
-          const hasKeywords = keywordInfo.coreWords.some(word => 
-            topic.toLowerCase().includes(word.toLowerCase())
-          );
-          
-          const isValid = startsWithValidYear && !startsWithInvalidYear && hasKeywords;
-          
-          console.log(`주제 검증: "${topic}"`);
-          console.log(`- 올바른 년도 시작: ${startsWithValidYear}`);
-          console.log(`- 잘못된 년 시작 없음: ${!startsWithInvalidYear}`);
-          console.log(`- 키워드 포함: ${hasKeywords}`);
-          console.log(`- 최종 결과: ${isValid}`);
-          
-          return isValid;
+          if (hasYearInKeyword) {
+            // 년도가 포함된 키워드인 경우: 4자리숫자+년으로 시작해야 함
+            const startsWithValidYear = /^\d{4}년\s/.test(topic);
+            
+            console.log(`주제 검증: "${topic}"`);
+            console.log(`- 올바른 년도 시작: ${startsWithValidYear}`);
+            
+            return startsWithValidYear;
+          } else {
+            // 년도가 없는 키워드인 경우: 년도로 시작하면 안됨
+            const startsWithYear = /^\d{4}년/.test(topic);
+            
+            console.log(`주제 검증: "${topic}"`);
+            console.log(`- 년도로 시작하지 않음: ${!startsWithYear}`);
+            
+            return !startsWithYear;
+          }
         });
 
         // 중복 처리
@@ -149,6 +137,7 @@ export const useTopicGenerator = (
         allValidTopics = [...allValidTopics, ...uniqueValidTopics];
         
         console.log(`시도 ${attempts}: ${validTopics.length}개 유효 주제 생성, 누적: ${allValidTopics.length}개`);
+        console.log('중복 허용 설정:', preventDuplicates ? '중복 금지' : '중복 허용');
       }
 
       const finalTopics = allValidTopics.slice(0, count);

@@ -14,6 +14,7 @@ interface TopicGeneratorProps {
   manualTopic: string;
   setManualTopic: React.Dispatch<React.SetStateAction<string>>;
   handleManualTopicAdd: () => void;
+  preventDuplicates: boolean; // preventDuplicates prop 추가
 }
 
 export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
@@ -24,6 +25,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   manualTopic,
   setManualTopic,
   handleManualTopicAdd,
+  preventDuplicates, // preventDuplicates 받아오기
 }) => {
   return (
     <Card className="shadow-md">
@@ -58,6 +60,11 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
             <span>1개</span>
             <span>20개</span>
           </div>
+        </div>
+
+        {/* 중복 설정 상태 표시 */}
+        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+          현재 설정: {preventDuplicates ? '중복 금지' : '중복 허용'}
         </div>
 
         <Button 
