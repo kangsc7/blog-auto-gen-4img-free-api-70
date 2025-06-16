@@ -69,7 +69,12 @@ export const useAppStateManager = () => {
   const loadApiKeysFromDatabase = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { apiKey: '', isApiKeyValidated: false };
+      if (!user) {
+        console.log('사용자가 로그인되지 않음 - API 키 로드 건너뜀');
+        return { apiKey: '', isApiKeyValidated: false };
+      }
+
+      console.log('데이터베이스에서 Gemini API 키 로드 시도...');
 
       const { data, error } = await supabase
         .from('profiles')
@@ -78,21 +83,24 @@ export const useAppStateManager = () => {
         .single();
 
       if (error) {
-        console.error('API 키 로드 오류:', error);
+        console.error('Gemini API 키 로드 오류:', error);
         return { apiKey: '', isApiKeyValidated: false };
       }
 
       const apiKey = data?.gemini_api_key || '';
       const isApiKeyValidated = !!apiKey;
 
+      console.log('데이터베이스에서 로드된 Gemini API 키:', apiKey ? '키 있음' : '키 없음');
+
       if (apiKey) {
         localStorage.setItem('blog_api_key', apiKey);
         localStorage.setItem('blog_api_key_validated', isApiKeyValidated.toString());
+        console.log('Gemini API 키가 localStorage에 저장됨');
       }
 
       return { apiKey, isApiKeyValidated };
     } catch (error) {
-      console.error('API 키 로드 오류:', error);
+      console.error('Gemini API 키 로드 예외:', error);
       return { apiKey: '', isApiKeyValidated: false };
     }
   }, []);
@@ -111,8 +119,11 @@ export const useAppStateManager = () => {
       let savedApiKey = localStorage.getItem('blog_api_key') || '';
       let savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
 
+      console.log('localStorage에서 로드된 Gemini API 키:', savedApiKey ? '키 있음' : '키 없음');
+
       // localStorage에 없으면 데이터베이스에서 로드
       if (!savedApiKey) {
+        console.log('localStorage에 API 키가 없음, 데이터베이스에서 로드 시도...');
         const dbApiKeys = await loadApiKeysFromDatabase();
         savedApiKey = dbApiKeys.apiKey;
         savedApiKeyValidated = dbApiKeys.isApiKeyValidated;
@@ -120,6 +131,11 @@ export const useAppStateManager = () => {
 
       const savedReferenceLink = localStorage.getItem('blog_reference_link') || '';
       const savedReferenceSentence = localStorage.getItem('blog_reference_sentence') || '';
+
+      console.log('최종 API 키 상태:', { 
+        hasApiKey: !!savedApiKey, 
+        isValidated: savedApiKeyValidated && !!savedApiKey 
+      });
 
       setAppState(prev => ({ 
         ...prev, 

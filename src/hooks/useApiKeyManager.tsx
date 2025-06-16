@@ -63,8 +63,13 @@ export const useApiKeyManager = (
   const saveApiKeyToDatabase = async (apiKey: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('사용자가 로그인되지 않음 - API 키 저장 건너뜀');
+        return;
+      }
 
+      console.log('Gemini API 키 저장 시도:', apiKey ? '키 있음' : '키 없음');
+      
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -74,10 +79,13 @@ export const useApiKeyManager = (
         });
 
       if (error) {
-        console.error('API 키 서버 저장 오류:', error);
+        console.error('Gemini API 키 서버 저장 오류:', error);
+        // 에러가 발생해도 localStorage에는 저장되도록 함
+      } else {
+        console.log('Gemini API 키 서버 저장 성공');
       }
     } catch (error) {
-      console.error('API 키 서버 저장 오류:', error);
+      console.error('Gemini API 키 서버 저장 예외:', error);
     }
   };
 
