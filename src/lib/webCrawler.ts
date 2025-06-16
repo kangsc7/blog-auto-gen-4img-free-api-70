@@ -4,6 +4,7 @@ interface CrawlResult {
   content: string;
   url: string;
   summary: string;
+  officialLinks?: string[];
 }
 
 export class WebCrawlerService {
@@ -15,18 +16,22 @@ export class WebCrawlerService {
 제목1: [구체적인 제목]
 내용1: [상세한 설명 200자 이상]
 요약1: [핵심 포인트 50자]
+공식링크1: [관련 정부기관이나 공공기관의 실제 웹사이트 주소]
 
 제목2: [구체적인 제목]
 내용2: [상세한 설명 200자 이상]  
 요약2: [핵심 포인트 50자]
+공식링크2: [관련 정부기관이나 공공기관의 실제 웹사이트 주소]
 
 (이런 식으로 계속...)
 
-주의사항:
+**중요 지침**:
 - "${keyword}" 키워드가 모든 제목과 내용에 포함되어야 함
 - 2025년 최신 정보 반영
 - 정확하고 유용한 정보 제공
-- 각 항목은 서로 다른 관점에서 접근`;
+- 각 항목은 서로 다른 관점에서 접근
+- 공식링크는 반드시 실제 존재하는 정부기관, 공공기관 웹사이트여야 함 (예: 보건복지부, 복지정보포털, 에너지바우처 공식사이트 등)
+- 실제 성공 사례나 구체적인 수치 데이터 포함`;
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
@@ -69,14 +74,18 @@ export class WebCrawlerService {
       const section = sections[i];
       const titleMatch = section.match(/^([^\n]+)/);
       const contentMatch = section.match(/내용\d+:\s*([^요약]+)/);
-      const summaryMatch = section.match(/요약\d+:\s*([^\n]+)/);
+      const summaryMatch = section.match(/요약\d+:\s*([^공식링크]+)/);
+      const officialLinkMatch = section.match(/공식링크\d+:\s*([^\n]+)/);
 
       if (titleMatch && contentMatch && summaryMatch) {
+        const officialLinks = officialLinkMatch ? [officialLinkMatch[1].trim()] : [];
+        
         crawlResults.push({
           title: titleMatch[1].trim(),
           content: contentMatch[1].trim(),
           url: `https://example.com/${keyword.replace(/\s+/g, '-')}`,
           summary: summaryMatch[1].trim(),
+          officialLinks: officialLinks
         });
       }
     }
@@ -99,12 +108,25 @@ export class WebCrawlerService {
     crawlResults.forEach((result, index) => {
       crawledInfo += `${index + 1}. ${result.title}\n`;
       crawledInfo += `${result.content}\n`;
-      crawledInfo += `핵심: ${result.summary}\n\n`;
+      crawledInfo += `핵심: ${result.summary}\n`;
+      if (result.officialLinks && result.officialLinks.length > 0) {
+        crawledInfo += `공식 참고링크: ${result.officialLinks.join(', ')}\n`;
+      }
+      crawledInfo += `\n`;
     });
 
-    crawledInfo += `=== 정보 출처 ===\n`;
+    crawledInfo += `=== 추천 공식 웹사이트 ===\n`;
+    crawledInfo += `보건복지부: https://www.mw.go.kr\n`;
+    crawledInfo += `복지정보포털: https://www.welfaresupport.go.kr\n`;
+    crawledInfo += `에너지바우처 공식사이트: https://www.energyvoucher.go.kr\n`;
+    crawledInfo += `기획재정부: https://www.moef.go.kr\n`;
+    
     crawlResults.forEach((result, index) => {
-      crawledInfo += `${index + 1}. ${result.url}\n`;
+      if (result.officialLinks && result.officialLinks.length > 0) {
+        result.officialLinks.forEach(link => {
+          crawledInfo += `${link}\n`;
+        });
+      }
     });
 
     return crawledInfo;
