@@ -154,7 +154,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       }
     }
 
-    // 4. H2 Headings Score - 개선된 로직
+    // 4. H2 Headings Score - 완전히 새로운 로직
     const h2Elements = doc.querySelectorAll('h2');
     const h2Count = h2Elements.length;
     
@@ -176,13 +176,22 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     console.log('H2 개수:', h2Count);
     console.log('키워드 관련 H2 개수:', h2WithKeywordCount);
 
-    // H2 점수 계산 (개수와 키워드 관련성 모두 고려)
+    // H2 점수 계산 - 완전히 새로운 로직
     let headingsScore = 0;
-    if (h2Count >= 3) {
-      headingsScore = 80 + (h2WithKeywordCount * 5); // 기본 80점 + 키워드 관련 H2당 5점
+    if (h2Count >= 6) {
+      // 6개 이상이면 무조건 100점
+      headingsScore = 100;
+    } else if (h2Count >= 4) {
+      // 4-5개면 90점 + 키워드 관련성 보너스
+      headingsScore = 90 + (h2WithKeywordCount * 2);
+    } else if (h2Count >= 3) {
+      // 3개면 80점 + 키워드 관련성 보너스
+      headingsScore = 80 + (h2WithKeywordCount * 4);
     } else if (h2Count >= 2) {
-      headingsScore = 60 + (h2WithKeywordCount * 10);
+      // 2개면 60점 + 키워드 관련성 보너스
+      headingsScore = 60 + (h2WithKeywordCount * 8);
     } else if (h2Count >= 1) {
+      // 1개면 40점 + 키워드 관련성 보너스
       headingsScore = 40 + (h2WithKeywordCount * 15);
     } else {
       headingsScore = 0;
