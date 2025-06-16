@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -151,7 +152,7 @@ export const useAppStateManager = () => {
     const savedApiKey = localStorage.getItem('blog_api_key') || '';
     const savedApiKeyValidated = (localStorage.getItem('blog_api_key_validated') === 'true') && !!savedApiKey;
 
-    // 완전 초기화 - 모든 주제와 콘텐츠 삭제
+    // 완전 초기화 - 모든 주제와 콘텐츠 삭제 (초기화 버튼 클릭 시에만)
     setAppState({
       ...initialAppState,
       apiKey: savedApiKey,

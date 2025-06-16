@@ -57,7 +57,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     console.log('키워드:', keyword);
     console.log('선택된 주제:', selectedTopic);
     console.log('총 단어 수:', wordCount);
-    console.log('텍스트 내용 (일부):', textContent.substring(0, 200));
+    console.log('HTML 내용 (일부):', generatedContent.substring(0, 500));
 
     // 1. Word Count Score
     let wordCountScore = 0;
@@ -154,9 +154,13 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       }
     }
 
-    // 4. H2 Headings Score - 완전히 새로운 로직
+    // 4. H2 Headings Score - HTML 구조 정확히 파싱
     const h2Elements = doc.querySelectorAll('h2');
     const h2Count = h2Elements.length;
+    
+    // H2 제목들의 실제 텍스트 확인
+    const h2Texts = Array.from(h2Elements).map(el => el.textContent || '');
+    console.log('실제 H2 제목들:', h2Texts);
     
     // H2 제목에 키워드 관련 내용이 포함되어 있는지 확인
     let h2WithKeywordCount = 0;
@@ -176,17 +180,20 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     console.log('H2 개수:', h2Count);
     console.log('키워드 관련 H2 개수:', h2WithKeywordCount);
 
-    // H2 점수 계산 - 완전히 새로운 로직
+    // H2 점수 계산 - 7개 이상일 때 100점이 되도록 수정
     let headingsScore = 0;
-    if (h2Count >= 6) {
-      // 6개 이상이면 무조건 100점
+    if (h2Count >= 7) {
+      // 7개 이상이면 무조건 100점
       headingsScore = 100;
+    } else if (h2Count >= 6) {
+      // 6개면 95점 + 키워드 관련성 보너스
+      headingsScore = 95 + (h2WithKeywordCount * 1);
     } else if (h2Count >= 4) {
-      // 4-5개면 90점 + 키워드 관련성 보너스
-      headingsScore = 90 + (h2WithKeywordCount * 2);
+      // 4-5개면 85점 + 키워드 관련성 보너스
+      headingsScore = 85 + (h2WithKeywordCount * 3);
     } else if (h2Count >= 3) {
-      // 3개면 80점 + 키워드 관련성 보너스
-      headingsScore = 80 + (h2WithKeywordCount * 4);
+      // 3개면 75점 + 키워드 관련성 보너스
+      headingsScore = 75 + (h2WithKeywordCount * 5);
     } else if (h2Count >= 2) {
       // 2개면 60점 + 키워드 관련성 보너스
       headingsScore = 60 + (h2WithKeywordCount * 8);
@@ -211,6 +218,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       actualDensity: actualDensity.toFixed(2),
       h2Count,
       h2WithKeywordCount,
+      h2Texts: h2Texts.join(', '),
       linkCount,
       listCount
     };
@@ -256,6 +264,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
         {/* 디버그 정보 (개발용) */}
         <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
           <p>디버그: 단어수 {debugInfo.wordCount}, 키워드밀도 {debugInfo.actualDensity}%, H2개수 {debugInfo.h2Count}, 키워드H2 {debugInfo.h2WithKeywordCount}개</p>
+          <p>H2 제목들: {debugInfo.h2Texts}</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">

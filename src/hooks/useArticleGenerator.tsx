@@ -41,7 +41,8 @@ export const useArticleGenerator = (
     }
 
     setIsGeneratingContent(true);
-    saveAppState({ generatedContent: '', imagePrompt: '' });
+    // 글 생성 시작할 때 기존 콘텐츠와 이미지 프롬프트만 초기화 (불필요한 초기화 제거)
+    saveAppState({ imagePrompt: '' });
     
     try {
       // 웹 크롤링 단계 알림
