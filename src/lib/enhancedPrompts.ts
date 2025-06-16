@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { WebCrawlerService } from './webCrawler';
@@ -12,11 +11,11 @@ interface EnhancedArticlePromptParams {
   apiKey: string;
 }
 
-// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 보존)
+// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 절대 보존)
 const extractNaturalKeyword = (topic: string): string => {
-  // 년도는 보존하면서 불필요한 단어만 제거
+  // 년도는 절대 제거하지 않고, 필요한 단어만 정리
   return topic
-    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게/g, '') // 일반적인 단어만 제거
+    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게|업법/g, '') // 일반적인 단어만 제거
     .replace(/\s+/g, ' ') // 연속 공백 정리
     .trim();
 };
@@ -55,7 +54,7 @@ export const getEnhancedArticlePrompt = async ({
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
   
-  // 주제에서 자연스러운 핵심 키워드 추출 (년도 보존)
+  // 주제에서 자연스러운 핵심 키워드 추출 (년도 절대 보존)
   const naturalKeyword = extractNaturalKeyword(topic);
   
   // 자연스러운 맥락적 표현들 생성
@@ -157,27 +156,43 @@ ${htmlTemplate}
 export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
   const currentYear = new Date().getFullYear();
   
+  // 키워드에서 년도 정보 추출
+  const yearMatch = keyword.match(/(\d{4})년?/);
+  const extractedYear = yearMatch ? yearMatch[1] : currentYear.toString();
+  
   return `'${keyword}'를(을) 주제로, ${currentYear}년 최신 정보를 반영하여 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${count}개를 생성해 주세요. 
 
-**핵심 키워드 보존 규칙 (매우 중요)**:
-- 핵심 키워드 '${keyword}'의 모든 구성 요소를 절대 누락하지 마세요
-- 특히 년도(2025년, 2025 등)는 반드시 포함되어야 합니다
-- 각 제목에는 반드시 핵심 키워드인 '${keyword}'가 완전한 형태로 포함되어야 합니다
-- 입력된 키워드와 관련 없는 다른 주제나 키워드는 절대 포함하지 마세요
+**🚨 절대 지켜야 할 핵심 규칙 🚨**:
+
+1. **년도 정보 절대 보존**: 
+   - 키워드에 포함된 "${extractedYear}년" 또는 "${extractedYear}"는 절대로 누락하거나 축약하면 안 됩니다
+   - 모든 제목에 반드시 "${extractedYear}년" 형태로 완전하게 포함되어야 합니다
+   - "년"만 단독으로 사용하는 것은 절대 금지입니다
+   
+2. **키워드 완전성 보장**:
+   - 핵심 키워드 '${keyword}'의 모든 구성 요소를 절대 누락하지 마세요
+   - 각 제목에는 반드시 핵심 키워드인 '${keyword}'가 완전한 형태로 포함되어야 합니다
+   - 입력된 키워드와 관련 없는 다른 주제나 키워드는 절대 포함하지 마세요
+
+3. **년도 검증 체크리스트**:
+   ✅ "${extractedYear}년"이 제목에 완전히 포함되었는가?
+   ✅ "년"만 단독으로 사용하지 않았는가?
+   ✅ 년도가 생략되거나 축약되지 않았는가?
 
 **제목 생성 지침**:
 - 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다
 - 모든 제목은 반드시 한글로만 작성해야 하며, 한자(漢字)나 다른 언어는 절대 포함하지 마세요
 - ${currentYear}년 최신 상황을 반영한 시의성 있는 제목으로 작성해주세요
-- 년도 정보는 절대 제거하지 마세요
 - 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요
 - 다른 설명 없이 주제 목록만 생성해주세요
 
-**키워드 정확성 체크리스트**:
+**최종 검증 사항**:
 1. '${keyword}'의 모든 단어가 제목에 포함되었는가?
-2. 년도 정보가 정확히 포함되었는가?
+2. "${extractedYear}년" 정보가 정확히 포함되었는가? (축약 금지)
 3. 키워드의 의미가 변질되지 않았는가?
 4. 입력된 키워드와 무관한 내용이 포함되지 않았는가?
+
+⚠️ 중요: 년도는 반드시 "${extractedYear}년" 형태로 완전하게 표기해야 하며, "년"만 단독으로 사용하는 것은 절대 금지입니다.
 
 오직 입력된 키워드 '${keyword}'와 직접적으로 관련된 주제만 생성해주세요.`;
 };

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -57,28 +58,28 @@ export const useTopicGenerator = (
       const preventDuplicatesFromStorage = localStorage.getItem('blog_prevent_duplicates');
       const preventDuplicates = preventDuplicatesFromStorage !== null ? JSON.parse(preventDuplicatesFromStorage) : true;
       
-      // 핵심 키워드를 더 정확하게 추출하여 검증 (년도 보존)
+      // 강화된 키워드 분석 (년도 정보 보존 최우선)
       const extractCoreKeywords = (keyword: string) => {
-        // 키워드를 단어 단위로 분할하고 중요 단어 추출
         const stopWords = ['의', '를', '을', '이', '가', '에', '로', '으로', '와', '과', '는', '은', '만', '원'];
         const words = keyword.split(/\s+/).filter(word => 
           word.length > 1 && !stopWords.includes(word)
         );
         
-        // 년도와 숫자는 별도 처리하되 보존
-        const yearMatch = keyword.match(/\d{4}년?/);
+        // 년도 정보를 더 정확하게 추출 (2025년, 2025 등)
+        const yearMatch = keyword.match(/(\d{4})년?/);
         const numberMatch = keyword.match(/\d+만?원?/);
         
         return {
           coreWords: words,
           year: yearMatch ? yearMatch[0] : null,
+          fullYear: yearMatch ? yearMatch[1] + '년' : null, // 완전한 년도 형태
           number: numberMatch ? numberMatch[0] : null,
           originalKeyword: keyword
         };
       };
 
       const keywordInfo = extractCoreKeywords(keyword);
-      console.log('핵심 키워드 분석:', keywordInfo);
+      console.log('핵심 키워드 분석 (년도 보존 강화):', keywordInfo);
 
       while (allValidTopics.length < count && attempts < maxAttempts) {
         attempts++;
@@ -86,23 +87,8 @@ export const useTopicGenerator = (
         
         const remainingCount = count - allValidTopics.length;
         
-        // 년도 포함을 강조한 프롬프트
-        const enhancedPrompt = `'${keyword}'를(을) 주제로, 2025년 최신 정보를 반영하여 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${remainingCount * 2}개를 생성해 주세요.
-
-**절대 지켜야 할 핵심 규칙**:
-1. 모든 제목은 반드시 '${keyword}' 키워드의 핵심 구성 요소를 모두 포함해야 합니다.
-2. 특히 년도 정보는 절대 누락해서는 안 됩니다.
-3. 다른 주제는 절대 포함하지 마세요.
-4. 오직 '${keyword}'와 관련된 내용만 생성해주세요.
-
-**핵심 키워드 필수 포함 요소**:
-${keywordInfo.coreWords.map(word => `- "${word}"`).join('\n')}
-${keywordInfo.year ? `- "${keywordInfo.year}" (절대 누락 금지)` : ''}
-${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
-
-각 제목은 위의 핵심 요소들을 자연스럽게 포함하면서 2025년 최신 정보를 반영해야 합니다.
-년도는 반드시 포함되어야 하며, 제거하거나 생략해서는 안 됩니다.
-결과는 제목만 줄바꿈으로 구분하여 제공해주세요.`;
+        // 년도 보존을 최우선으로 하는 강화된 프롬프트
+        const enhancedPrompt = getEnhancedTopicPrompt(keyword, remainingCount * 2);
         
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
@@ -112,7 +98,7 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           body: JSON.stringify({ 
             contents: [{ parts: [{ text: enhancedPrompt }] }],
             generationConfig: {
-              temperature: 0.8,
+              temperature: 0.7, // 온도를 낮춰서 더 정확한 결과 유도
               maxOutputTokens: 2048,
             }
           })
@@ -133,23 +119,30 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
           .filter(topic => topic.length > 5);
 
-        // 개선된 키워드 검증 로직 - 년도 포함 필수
+        // 강화된 키워드 및 년도 검증 로직
         const validTopics = newTopics.filter(topic => {
-          // 1. 핵심 단어 포함률 체크 (60% 이상)
+          // 1. 년도 검증 - 가장 중요!
+          let yearCheck = false;
+          if (keywordInfo.fullYear) {
+            // 완전한 년도 형태가 포함되었는지 확인
+            const yearPattern = new RegExp(keywordInfo.fullYear.replace('년', '') + '년?');
+            yearCheck = yearPattern.test(topic);
+            
+            // "년"만 단독으로 있는 경우 무효 처리
+            if (topic.includes(' 년 ') || topic.startsWith('년 ') || topic.endsWith(' 년')) {
+              console.warn(`년도 오류 발견: "${topic}" - "년"만 단독으로 사용됨`);
+              return false;
+            }
+          } else {
+            yearCheck = true; // 년도가 없는 키워드인 경우
+          }
+          
+          // 2. 핵심 단어 포함률 체크 (60% 이상)
           const includedCoreWords = keywordInfo.coreWords.filter(word => 
             topic.toLowerCase().includes(word.toLowerCase())
           );
           const coreWordRatio = keywordInfo.coreWords.length > 0 ? 
             includedCoreWords.length / keywordInfo.coreWords.length : 1;
-          
-          // 2. 년도가 있다면 반드시 포함되어야 함 (더 유연한 체크)
-          let yearCheck = true;
-          if (keywordInfo.year) {
-            yearCheck = topic.includes(keywordInfo.year) || 
-                      topic.includes(keywordInfo.year.replace('년', '')) ||
-                      topic.includes('2025년') || 
-                      topic.includes('2025');
-          }
           
           // 3. 숫자가 있다면 포함되어야 함
           const numberCheck = !keywordInfo.number || 
@@ -161,9 +154,13 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
             topic.toLowerCase().includes(word.toLowerCase())
           );
           
-          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio.toFixed(2)}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 관련성: ${isRelated}`);
+          console.log(`주제 검증: "${topic}"`);
+          console.log(`- 년도 검증: ${yearCheck} (요구: ${keywordInfo.fullYear})`);
+          console.log(`- 핵심단어비율: ${coreWordRatio.toFixed(2)}`);
+          console.log(`- 숫자 검증: ${numberCheck}`);
+          console.log(`- 관련성: ${isRelated}`);
           
-          return coreWordRatio >= 0.6 && yearCheck && numberCheck && isRelated;
+          return yearCheck && coreWordRatio >= 0.6 && numberCheck && isRelated;
         });
 
         // preventDuplicates 설정에 따라 중복 제거 여부 결정
@@ -187,7 +184,7 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
         console.log(`시도 ${attempts}: ${validTopics.length}개 유효 주제 생성, 누적: ${allValidTopics.length}개`);
         
         if (validTopics.length === 0) {
-          console.warn(`시도 ${attempts}: 키워드 '${keyword}'에 맞는 유효한 주제가 생성되지 않음`);
+          console.warn(`시도 ${attempts}: 키워드 '${keyword}'에 맞는 유효한 주제가 생성되지 않음 (년도 검증 실패 가능성 높음)`);
         }
       }
 
@@ -195,7 +192,7 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
       const finalTopics = allValidTopics.slice(0, count);
 
       if (finalTopics.length === 0) {
-        throw new Error(`핵심 키워드 '${keyword}'가 포함된 주제가 생성되지 않았습니다. 키워드를 더 구체적으로 입력해보세요.`);
+        throw new Error(`핵심 키워드 '${keyword}'가 포함되고 년도 정보가 정확한 주제가 생성되지 않았습니다. 키워드를 더 구체적으로 입력해보세요.`);
       }
 
       // 중복 허용 모드일 때는 기존 주제에 추가, 중복 금지 모드일 때는 완전 교체
@@ -208,16 +205,25 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
         saveAppState({ topics: combinedTopics, selectedTopic: '' });
       }
       
+      // 년도 정보가 정확히 포함되었는지 최종 검증
+      const yearIncludedCount = finalTopics.filter(topic => {
+        if (keywordInfo.fullYear) {
+          const yearPattern = new RegExp(keywordInfo.fullYear.replace('년', '') + '년');
+          return yearPattern.test(topic);
+        }
+        return true;
+      }).length;
+      
       if (finalTopics.length < count) {
         toast({ 
           title: "주제 생성 완료", 
-          description: `${finalTopics.length}개의 주제가 생성되었습니다. (요청: ${count}개)`,
+          description: `${finalTopics.length}개의 주제가 생성되었습니다. (요청: ${count}개, 년도 포함: ${yearIncludedCount}개)`,
           variant: "default"
         });
       } else {
         toast({ 
           title: "AI 기반 주제 생성 완료", 
-          description: `${finalTopics.length}개의 주제가 성공적으로 생성되었습니다.` 
+          description: `${finalTopics.length}개의 주제가 성공적으로 생성되었습니다. (년도 포함: ${yearIncludedCount}개)` 
         });
       }
       
