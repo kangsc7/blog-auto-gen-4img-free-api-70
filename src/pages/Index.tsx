@@ -1,15 +1,16 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
+import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useAppController } from '@/hooks/useAppController';
+import { useRefactoredAppController } from '@/hooks/useRefactoredAppController';
 
 const Index = () => {
   const {
@@ -22,11 +23,6 @@ const Index = () => {
     handleSignUp,
     handleLogout,
     isAdmin,
-    isValidatingApi,
-    validateApiKey,
-    deleteApiKeyFromStorage,
-    pixabayManager,
-    huggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
     handleResetApp,
@@ -38,7 +34,7 @@ const Index = () => {
     generationFunctions,
     topicControls,
     utilityFunctions,
-  } = useAppController();
+  } = useRefactoredAppController();
 
   if (authLoading) {
     return (
@@ -59,15 +55,7 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
-      <ApiKeysSection
-        appState={appState}
-        saveAppState={saveAppState}
-        isValidatingApi={isValidatingApi}
-        validateApiKey={validateApiKey}
-        deleteApiKeyFromStorage={deleteApiKeyFromStorage}
-        pixabayManager={pixabayManager}
-        huggingFaceManager={huggingFaceManager}
-      />
+      <RefactoredApiKeysSection />
 
       {isAdmin && (
         <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">

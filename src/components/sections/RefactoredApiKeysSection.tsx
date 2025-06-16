@@ -1,57 +1,25 @@
 
 import React from 'react';
-import { ApiKeyManager } from '@/components/control/ApiKeyManager';
+import { GeminiApiKeyManager } from '@/components/control/GeminiApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
-import { AppState } from '@/types';
+import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
 
-interface ApiKeysSectionProps {
-  appState: AppState;
-  saveAppState: (newState: Partial<AppState>) => void;
-  isValidatingApi: boolean;
-  validateApiKey: (key: string) => Promise<boolean>;
-  deleteApiKeyFromStorage: () => void;
-  pixabayManager: {
-    pixabayApiKey: string;
-    setPixabayApiKey: (key: string) => void;
-    isPixabayApiKeyValidated: boolean;
-    setIsPixabayApiKeyValidated: (validated: boolean) => void;
-    isPixabayValidating: boolean;
-    validatePixabayApiKey: (key: string) => Promise<boolean>;
-    deletePixabayApiKeyFromStorage: () => void;
-  };
-  huggingFaceManager: {
-    huggingFaceApiKey: string;
-    setHuggingFaceApiKey: (key: string) => void;
-    isHuggingFaceApiKeyValidated: boolean;
-    setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
-    isHuggingFaceValidating: boolean;
-    validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
-    deleteHuggingFaceApiKeyFromStorage: () => void;
-  };
-}
+export const RefactoredApiKeysSection: React.FC = () => {
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager();
 
-export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
-  appState,
-  saveAppState,
-  isValidatingApi,
-  validateApiKey,
-  deleteApiKeyFromStorage,
-  pixabayManager,
-  huggingFaceManager,
-}) => {
   return (
     <div className="container mx-auto mt-20 relative z-[200]">
       <div className="flex flex-wrap gap-4 mb-6 justify-center">
         <div className="relative z-[200]">
-          <ApiKeyManager
-            apiKey={appState.apiKey}
-            setApiKey={(key) => saveAppState({ apiKey: key })}
-            isApiKeyValidated={appState.isApiKeyValidated}
-            setIsApiKeyValidated={(validated) => saveAppState({ isApiKeyValidated: validated })}
-            isValidatingApi={isValidatingApi}
-            validateApiKey={validateApiKey}
-            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+          <GeminiApiKeyManager
+            geminiApiKey={geminiManager.geminiApiKey}
+            setGeminiApiKey={geminiManager.setGeminiApiKey}
+            isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
+            setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
+            isGeminiValidating={geminiManager.isGeminiValidating}
+            validateGeminiApiKey={geminiManager.validateGeminiApiKey}
+            deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
           />
         </div>
         

@@ -3,23 +3,19 @@ import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAuth } from '@/hooks/useAuth';
-import { useApiKeyManager } from '@/hooks/useApiKeyManager';
+import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
 import { useOneClick } from '@/hooks/useOneClick';
-import { usePixabayManager } from '@/hooks/usePixabayManager';
-import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
 import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
 
-export const useAppController = () => {
+export const useRefactoredAppController = () => {
   const { toast } = useToast();
   const { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
-  const pixabayManager = usePixabayManager();
-  const huggingFaceManager = useHuggingFaceManager();
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager();
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
@@ -46,10 +42,8 @@ export const useAppController = () => {
     setManualTopic('');
   };
 
-  // 중복 허용 모드로 변경 시 모든 주제 데이터 초기화
   useEffect(() => {
     if (!preventDuplicates) {
-      // 중복 허용 모드: 모든 중복 제한 해제 및 데이터 초기화는 하지 않음
       console.log('중복 허용 모드 활성화 - 모든 중복 제한 해제');
     }
   }, [preventDuplicates]);
@@ -92,23 +86,6 @@ export const useAppController = () => {
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 
-  // Add missing setter functions to pixabayManager and huggingFaceManager
-  const enhancedPixabayManager = {
-    ...pixabayManager,
-    setIsPixabayApiKeyValidated: (validated: boolean) => {
-      // This is handled internally by usePixabayManager
-      console.log('Pixabay validation state:', validated);
-    },
-  };
-
-  const enhancedHuggingFaceManager = {
-    ...huggingFaceManager,
-    setIsHuggingFaceApiKeyValidated: (validated: boolean) => {
-      // This is handled internally by useHuggingFaceManager  
-      console.log('HuggingFace validation state:', validated);
-    },
-  };
-
   return {
     appState,
     saveAppState,
@@ -119,11 +96,10 @@ export const useAppController = () => {
     handleSignUp,
     handleLogout,
     isAdmin,
-    isValidatingApi,
-    validateApiKey,
+    geminiManager,
+    pixabayManager,
+    huggingFaceManager,
     deleteApiKeyFromStorage,
-    pixabayManager: enhancedPixabayManager,
-    huggingFaceManager: enhancedHuggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
     handleResetApp,
