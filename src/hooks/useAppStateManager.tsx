@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -20,6 +19,10 @@ const defaultState: AppState = {
   generatedImageUrl: '',
   isLoggedIn: false,
   currentUser: '',
+  colorTheme: '',
+  referenceLink: '',
+  referenceSentence: '',
+  imageStyle: '',
 };
 
 export const useAppStateManager = () => {
