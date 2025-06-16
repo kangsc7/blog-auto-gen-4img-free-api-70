@@ -23,7 +23,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
   } = manager;
 
   return (
-    <Card className="shadow-md h-full bg-white">
+    <Card className="shadow-md h-full">
       <CardHeader>
         <CardTitle className="flex items-center text-gray-700">
           <KeyRound className="h-5 w-5 mr-2" />
