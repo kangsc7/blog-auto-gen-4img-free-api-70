@@ -31,8 +31,9 @@ export const useAppStateManager = () => {
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
 
+  // 앱 상태 초기화 - 컴포넌트 마운트 시 기본 API 키들로 강제 설정
   useEffect(() => {
-    // 컴포넌트 마운트 시 기본 API 키들로 자동 설정
+    console.log('앱 상태 초기화 시작');
     setAppState(prev => ({
       ...prev,
       apiKey: DEFAULT_API_KEYS.GEMINI,
@@ -46,6 +47,7 @@ export const useAppStateManager = () => {
   }, []);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
+    console.log('앱 상태 업데이트:', newState);
     setAppState(prev => ({ ...prev, ...newState }));
   }, []);
 

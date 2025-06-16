@@ -15,7 +15,7 @@ export const useRefactoredAppController = () => {
   const { toast } = useToast();
   const { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager();
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
