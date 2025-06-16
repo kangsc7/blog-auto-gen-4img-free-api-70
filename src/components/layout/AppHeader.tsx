@@ -31,7 +31,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
           </div>
         </Link>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex-1 flex justify-center">
           <Button 
             onClick={scrollToPreview}
             variant="outline" 
@@ -41,14 +41,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
             <ArrowDown className="h-4 w-4 mr-1" />
             블로그 글 미리보기로 이동
           </Button>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">사용자: {currentUser}</span>
-            <Button onClick={handleLogout} variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
-              <LogOut className="h-4 w-4 mr-1" />
-              로그아웃
-            </Button>
-          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">사용자: {currentUser}</span>
+          <Button onClick={handleLogout} variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
+            <LogOut className="h-4 w-4 mr-1" />
+            로그아웃
+          </Button>
         </div>
       </div>
     </div>
