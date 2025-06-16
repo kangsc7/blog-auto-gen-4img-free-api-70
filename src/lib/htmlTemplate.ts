@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -104,16 +103,16 @@ const getRelatedInfoSection = (colors: any): string => `
 </p>
 `;
 
-const getRelatedKeywordsSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 검색어와 연관 정보</b> 🔍</h2>
+const getCommonMistakesSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>많은 사람들이 놓치는 중요한 포인트</b> 🔍</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-관련 정보를 찾으시는 분들이 함께 검색하는 연관 키워드들을 알아보면 더 유용한 정보를 얻을 수 있어요. 주로 '[SECTION_CONTENT_7] 신청 조건', '필요 서류', '지원 금액', '사용처' 등의 키워드와 함께 검색되고 있어요.
+많은 분들이 [SECTION_CONTENT_7] 신청할 때 가장 자주 놓치는 부분이 있어요. 바로 '소득 산정 기준 시점'인데요. 대부분 현재 소득으로 생각하시는데, 실제로는 신청일 기준 최근 3개월 평균 소득을 기준으로 한답니다.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 최근에는 '온라인 신청 방법'이나 '모바일 신청' 관련 검색도 늘어나고 있는데, 이는 더 편리한 방법을 찾는 분들이 많아졌다는 의미예요. 또한 '[SECTION_CONTENT_8] 지원 기간'이나 '마감일' 관련 검색도 자주 이루어지고 있어요.
+또 다른 놓치기 쉬운 포인트는 '가구원 범위'예요. 주민등록상 동일 세대가 아니더라도 실제 생계를 같이하는 가족이 있다면 가구원에 포함될 수 있어요. 이 부분을 정확히 신고하지 않으면 나중에 문제가 될 수 있으니 주의하세요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-이런 연관 검색어들을 참고하시면 놓치기 쉬운 중요한 정보들을 미리 확인하실 수 있답니다. 특히 신청 전에 이런 키워드들로 한 번 더 검색해보시는 것을 추천드려요.
+마지막으로 많은 분들이 [SECTION_CONTENT_8] 관련해서 헷갈리는 부분은 '중복 신청'인데요. 다른 에너지 지원 제도와 함께 신청할 수 있는 경우가 많으니, 이런 정보들도 미리 알아보시면 더 많은 혜택을 받으실 수 있어요.
 </p>
 `;
 
@@ -192,7 +191,7 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getFailureCaseSection(colors),
     getDeepDiveSection(colors),
     getRelatedInfoSection(colors),
-    getRelatedKeywordsSection(colors),
+    getCommonMistakesSection(colors),
     getSummaryCardSection(keyword),
     getEncouragingClosingSection(colors, refLink, referenceSentence),
     getFaqSection(colors, topic),
