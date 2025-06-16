@@ -20,7 +20,7 @@ const getIntroSection = (colors: any, keyword: string): string => `
 `;
 
 const getProblemDefinitionSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 기본 정보 완벽 정리</b> 💡</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>기본 정보와 핵심 내용 완벽 정리</b> 💡</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 <strong>${keyword}</strong>가 정확히 무엇인지, 누구에게 지급되는지 궁금하시죠? 이 제도는 에너지 비용 부담을 줄여주기 위한 정부 지원 정책이에요. 저소득층과 차상위계층을 대상으로 하며, 전기·가스·지역난방비 등에 사용할 수 있답니다.
 </p>
@@ -34,7 +34,7 @@ const getProblemDefinitionSection = (colors: any, keyword: string): string => `
 `;
 
 const getSolutionGuideSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 신청 방법 단계별 가이드</b> 📝</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 방법 단계별 가이드</b> 📝</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 신청 과정이 복잡해 보일 수 있지만, 한 단계씩 따라하시면 어렵지 않아요. 온라인과 오프라인 모두 가능하니 편한 방법을 선택하세요.
 </p>
@@ -50,7 +50,7 @@ const getSolutionGuideSection = (colors: any, keyword: string): string => `
 `;
 
 const getTipsAndWarningsSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     <ul style="margin: 10px 0; padding-left: 20px;">
@@ -63,7 +63,7 @@ const getTipsAndWarningsSection = (colors: any, keyword: string): string => `
 `;
 
 const getFailureCaseSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 신청 실패 사례와 해결 방법</b> 😥</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실패 사례와 해결 방법</b> 😥</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
 </p>
@@ -76,7 +76,7 @@ const getFailureCaseSection = (colors: any, keyword: string): string => `
 `;
 
 const getDeepDiveSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 지원 대상 및 금액 상세 안내</b> 🧐</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 대상 및 금액 상세 안내</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 에너지바우처 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요.
 </p>
@@ -89,7 +89,7 @@ const getDeepDiveSection = (colors: any, keyword: string): string => `
 `;
 
 const getRelatedInfoSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 관련 추가 혜택 및 지원 제도</b> 📈</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 추가 혜택 및 지원 제도</b> 📈</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 에너지바우처 외에도 저소득층을 위한 다양한 에너지 지원 제도가 있어요. 전기요금 할인, 가스요금 할인, 연탄쿠폰 지원 등이 있는데, 이런 제도들을 함께 활용하면 에너지 비용을 더욱 효과적으로 절약할 수 있답니다.
 </p>
@@ -102,7 +102,7 @@ const getRelatedInfoSection = (colors: any, keyword: string): string => `
 `;
 
 const getRelatedKeywordsSection = (colors: any, keyword: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 관련 검색어와 연관 정보</b> 🔍</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 검색어와 연관 정보</b> 🔍</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 <strong>${keyword}</strong>를 찾으시는 분들이 함께 검색하는 연관 키워드들을 알아보면 더 유용한 정보를 얻을 수 있어요. 주로 '신청 조건', '필요 서류', '지원 금액', '사용처' 등의 키워드와 함께 검색되고 있어요.
 </p>
