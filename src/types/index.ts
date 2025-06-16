@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   password: string;
@@ -8,6 +9,10 @@ export interface AppState {
   currentUser: string;
   apiKey: string;
   isApiKeyValidated: boolean;
+  pixabayApiKey: string;
+  isPixabayApiKeyValidated: boolean;
+  huggingFaceApiKey: string;
+  isHuggingFaceApiKeyValidated: boolean;
   keyword: string;
   topicCount: number;
   topics: string[];
@@ -18,6 +23,7 @@ export interface AppState {
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;
+  generatedImageUrl: string;
   saveReferenceTrigger?: boolean;
 }
 
