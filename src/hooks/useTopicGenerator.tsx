@@ -142,12 +142,21 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           return coreWordRatio >= 0.8 && yearCheck && numberCheck && excludeOtherTopics;
         });
 
-        // 기존 주제와 중복 제거
-        const uniqueValidTopics = validTopics.filter(topic => 
-          !allValidTopics.some(existingTopic => 
-            existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
-          )
-        );
+        // preventDuplicates 설정에 따라 중복 제거 여부 결정
+        let uniqueValidTopics;
+        if (window.preventDuplicates !== undefined ? window.preventDuplicates : true) {
+          // 중복 금지 모드: 기존 주제와 중복 제거
+          uniqueValidTopics = validTopics.filter(topic => 
+            !allValidTopics.some(existingTopic => 
+              existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
+            )
+          );
+          console.log(`중복 금지 모드: ${validTopics.length}개 -> ${uniqueValidTopics.length}개 (중복 제거됨)`);
+        } else {
+          // 중복 허용 모드: 중복 제거하지 않음
+          uniqueValidTopics = validTopics;
+          console.log(`중복 허용 모드: ${validTopics.length}개 주제 모두 허용`);
+        }
 
         allValidTopics = [...allValidTopics, ...uniqueValidTopics];
         

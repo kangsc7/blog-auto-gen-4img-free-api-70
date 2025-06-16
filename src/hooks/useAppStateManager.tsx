@@ -43,6 +43,11 @@ export const useAppStateManager = () => {
     loadAppState();
   }, []);
 
+  // preventDuplicates 상태를 전역에서 접근할 수 있도록 window 객체에 저장
+  useEffect(() => {
+    (window as any).preventDuplicates = preventDuplicates;
+  }, [preventDuplicates]);
+
   const loadAppState = () => {
     try {
       const savedState = localStorage.getItem('blog_app_state');
