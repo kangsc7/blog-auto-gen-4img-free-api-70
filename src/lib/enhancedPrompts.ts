@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { WebCrawlerService } from './webCrawler';
@@ -158,46 +159,79 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
   
   // 키워드에서 년도 정보 추출
   const yearMatch = keyword.match(/(\d{4})년?/);
-  const extractedYear = yearMatch ? yearMatch[1] : currentYear.toString();
+  const hasYearInKeyword = yearMatch !== null;
+  const extractedYear = yearMatch ? yearMatch[1] : null;
   
-  return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
+  if (hasYearInKeyword && extractedYear) {
+    // 년도가 포함된 키워드인 경우
+    return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
 
-**🚨 절대 지켜야 할 형식 규칙 🚨**:
+**🚨 년도가 포함된 키워드 - 특별 지침 🚨**:
 
-1. **올바른 년도 사용법 (매우 중요)**:
-   ✅ 올바른 예시: "${extractedYear}년 디지털플랫폼정부법", "${extractedYear}년 국민디지털지원금"
-   ❌ 절대 금지: "년 �지털플랫폼정부법", "년 국민디지털지원금"
-   
-2. **제목 구조**:
-   - 첫 번째 단어: "${extractedYear}년" (년도+년)
-   - 두 번째 단어부터: 핵심 키워드
-   - 예: "${extractedYear}년 [핵심키워드] [추가설명]"
+키워드에 "${extractedYear}년"이 포함되어 있으므로, 모든 제목은 반드시 "${extractedYear}년"으로 시작해야 합니다.
 
-3. **절대 하지 말아야 할 것**:
-   - "년"만 단독으로 사용하기
-   - 년도 없이 "년"으로 시작하기
-   - 숫자 없는 "년" 사용하기
+**절대적 형식 규칙**:
+1. **첫 번째 단어**: "${extractedYear}년" (반드시 4자리숫자 + 년)
+2. **두 번째 단어부터**: 핵심 키워드와 설명
 
-**반드시 따라야 할 생성 패턴**:
+**올바른 예시**:
+✅ "${extractedYear}년 디지털플랫폼 지원금 신청방법"
+✅ "${extractedYear}년 국민디지털지원금 자격조건"
+✅ "${extractedYear}년 정부지원금 혜택내용"
 
-모든 제목은 다음 형태 중 하나여야 합니다:
-- "${extractedYear}년 [키워드] + 신청방법"
-- "${extractedYear}년 [키워드] + 자격조건" 
-- "${extractedYear}년 [키워드] + 지원대상"
-- "${extractedYear}년 [키워드] + 혜택내용"
-- "${extractedYear}년 [키워드] + 최신정보"
+**절대 금지**:
+❌ "년 디지털플랫폼..." (숫자 없는 년)
+❌ "디지털플랫폼 ${extractedYear}년..." (년도가 뒤에 위치)
+❌ "${extractedYear} 디지털플랫폼..." (년 없이 숫자만)
 
-**생성 전 자가검증**:
-각 제목을 생성한 후 다음을 확인하세요:
-1. "${extractedYear}년"으로 시작하는가? (4자리숫자+년)
-2. "년 "으로 시작하지 않는가? (년+공백은 절대 금지)
-3. 핵심 키워드 '${keyword}'가 모두 포함되었는가?
+**필수 생성 패턴** (이 중에서만 선택):
+- "${extractedYear}년 [핵심키워드] 신청방법"
+- "${extractedYear}년 [핵심키워드] 자격조건"
+- "${extractedYear}년 [핵심키워드] 지원대상"
+- "${extractedYear}년 [핵심키워드] 혜택내용"
+- "${extractedYear}년 [핵심키워드] 최신정보"
+- "${extractedYear}년 [핵심키워드] 완벽가이드"
+
+**최종 검증**:
+각 제목 생성 후 반드시 확인:
+1. "${extractedYear}년"으로 시작하는가?
+2. 핵심 키워드가 포함되었는가?
+3. 의미있는 설명이 추가되었는가?
+
+지금 즉시 위 규칙을 엄격히 따라 ${count}개의 제목을 생성해주세요.`;
+  } else {
+    // 년도가 포함되지 않은 일반 키워드인 경우
+    return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
+
+**일반 키워드 생성 지침**:
+
+키워드에 년도가 포함되어 있지 않으므로, 자연스러운 블로그 제목을 생성해주세요.
+
+**생성 원칙**:
+1. **키워드 포함**: '${keyword}' 관련 내용이 반드시 포함되어야 합니다
+2. **실용성**: 독자에게 도움이 되는 실용적인 정보 제목
+3. **SEO 최적화**: 검색에 최적화된 구체적인 제목
+4. **다양성**: 다양한 관점에서 접근한 제목들
+
+**추천 제목 패턴**:
+- "[키워드] 완벽 가이드"
+- "[키워드] 초보자를 위한 시작 방법"
+- "[키워드] 노하우 및 팁"
+- "[키워드] 추천 방법"
+- "[키워드] 장단점 비교"
+- "[키워드] 효과적인 활용법"
+- "[키워드] 주의사항과 해결책"
+
+**제목 예시** (${keyword} 기준):
+- "${keyword} 초보자도 쉽게 시작하는 방법"
+- "${keyword} 효과적인 활용을 위한 완벽 가이드"
+- "${keyword} 성공을 위한 필수 노하우"
 
 **최종 출력 규칙**:
 - 번호나 불릿 포인트 없이 제목만 출력
 - 각 제목은 줄바꿈으로 구분
 - 다른 설명이나 주석 절대 금지
-- 오직 제목 텍스트만 출력
 
-지금 즉시 위 규칙을 엄격히 따라 ${count}개의 제목을 생성해주세요.`;
+지금 즉시 위 지침에 따라 ${count}개의 자연스러운 제목을 생성해주세요.`;
+  }
 };
