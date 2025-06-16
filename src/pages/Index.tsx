@@ -93,7 +93,7 @@ const Index = () => {
                 <ToggleGroupItem
                   value="forbid"
                   aria-label="중복 주제 금지"
-                  className="w-28 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <Ban />
                   중복 금지
@@ -101,13 +101,13 @@ const Index = () => {
                 <ToggleGroupItem
                   value="allow"
                   aria-label="중복 주제 허용"
-                  className="w-28 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <Check />
                   중복 허용
                 </ToggleGroupItem>
               </ToggleGroup>
-              <div className="w-56 mx-auto">
+              <div className="w-72 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
                   금지: 중복 주제를 자동으로 제거합니다.<br />
                   허용: 중복된 주제도 허용합니다.
