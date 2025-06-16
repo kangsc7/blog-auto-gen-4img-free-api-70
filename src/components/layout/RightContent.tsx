@@ -12,6 +12,7 @@ interface RightContentProps {
     selectTopic: (topic: string) => void;
     copyToClipboard: (text: string, type: string) => void;
     downloadHTML: () => void;
+    isGeneratingContent: boolean;
 }
 
 export const RightContent: React.FC<RightContentProps> = ({
@@ -20,6 +21,7 @@ export const RightContent: React.FC<RightContentProps> = ({
     selectTopic,
     copyToClipboard,
     downloadHTML,
+    isGeneratingContent,
 }) => {
     return (
         <div className="lg:col-span-8 space-y-6">
@@ -31,7 +33,7 @@ export const RightContent: React.FC<RightContentProps> = ({
 
             <ArticlePreview
                 generatedContent={appState.generatedContent}
-                isGeneratingContent={false}
+                isGeneratingContent={isGeneratingContent}
                 selectedTopic={appState.selectedTopic}
             />
 

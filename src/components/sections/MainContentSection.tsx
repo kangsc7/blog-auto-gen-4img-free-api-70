@@ -69,6 +69,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     selectTopic={topicControls.selectTopic}
                     copyToClipboard={utilityFunctions.copyToClipboard}
                     downloadHTML={utilityFunctions.downloadHTML}
+                    isGeneratingContent={generationStatus.isGeneratingContent}
                 />
             </div>
         </div>
