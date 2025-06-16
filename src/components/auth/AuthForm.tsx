@@ -5,16 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Lock, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface AuthFormProps {
   handleLogin: (data: { email: string; password: string }) => Promise<boolean>;
@@ -27,7 +17,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const [showConsentDialog, setShowConsentDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,18 +24,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
       toast({ title: "입력 오류", description: "이메일과 비밀번호를 모두 입력해주세요.", variant: "destructive" });
       return;
     }
-    if (isSignUp) {
-      setShowConsentDialog(true);
-    } else {
-      setLoading(true);
-      await handleLogin({ email, password });
-      setLoading(false);
-    }
-  };
 
-  const handleConsentAndSignUp = async () => {
     setLoading(true);
-    await handleSignUp({ email, password });
+    if (isSignUp) {
+      await handleSignUp({ email, password });
+    } else {
+      await handleLogin({ email, password });
+    }
     setLoading(false);
   };
 
@@ -117,24 +101,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
           </div>
         </CardContent>
       </Card>
-      <AlertDialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>IP 주소 확인 동의</AlertDialogTitle>
-            <AlertDialogDescription>
-              계정 판매나 다계정 운영 등 불법적인 계정 사용을 방지하기 위해, IP 주소 확인에 동의해 주시기 바랍니다.
-              <br /><br />
-              하나의 계정에 등록 가능한 유효 IP는 최대 2개이며, 3개 이상의 서로 다른 IP가 확인될 경우 계정은 즉시 정지됩니다.
-              <br /><br />
-              위 내용에 동의하시면 ‘승인’을, 동의하지 않으시면 ‘거절’을 눌러주세요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>거절</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConsentAndSignUp} className={buttonClass}>승인</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
