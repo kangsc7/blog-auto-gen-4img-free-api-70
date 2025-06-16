@@ -158,7 +158,7 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 지금까지 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
-<p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <br><br>
 `;
 
@@ -178,7 +178,12 @@ const getTagsSection = (topic: string, keyword: string): string => {
   // 중복 제거 후 태그 조합
   const allTags = [...new Set([...baseTags, ...additionalTags])];
   
-  return allTags.join(', ');
+  return `
+<div style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 10px; border-left: 4px solid #4CAF50;">
+<h3 style="font-size: 18px; color: #333; margin-bottom: 15px; font-weight: bold;">📌 관련 태그</h3>
+<p style="font-size: 16px; line-height: 1.6; color: #555;">${allTags.join(', ')}</p>
+</div>
+<br>`;
 };
 
 export const getHtmlTemplate = (colors: any, topic: string, keyword: string, refLink: string, referenceSentence?: string): string => {
@@ -209,4 +214,3 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
   </div>
 </div>
 `;
-};
