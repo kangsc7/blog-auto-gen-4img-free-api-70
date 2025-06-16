@@ -2,11 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 export const usePixabayManager = () => {
     const { toast } = useToast();
-    const [pixabayApiKey, setPixabayApiKey] = useState('');
-    const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(false);
+    const [pixabayApiKey, setPixabayApiKey] = useState(DEFAULT_API_KEYS.PIXABAY);
+    const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(true);
     const [isPixabayValidating, setIsPixabayValidating] = useState(false);
 
     const validatePixabayApiKeyCallback = useCallback(async (key: string, silent = false): Promise<boolean> => {
@@ -61,7 +62,10 @@ export const usePixabayManager = () => {
     const loadApiKeysFromDatabase = useCallback(async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            if (!user) {
+                console.log('사용자가 로그인되지 않음 - 기본 Pixabay API 키 사용');
+                return;
+            }
 
             const { data, error } = await supabase
                 .from('profiles')
@@ -71,23 +75,33 @@ export const usePixabayManager = () => {
 
             if (error) {
                 console.error('API 키 로드 오류:', error);
+                console.log('기본 Pixabay API 키 사용');
                 return;
             }
 
             if (data?.pixabay_api_key) {
                 setPixabayApiKey(data.pixabay_api_key);
                 validatePixabayApiKeyCallback(data.pixabay_api_key, true);
+            } else {
+                setPixabayApiKey(DEFAULT_API_KEYS.PIXABAY);
+                setIsPixabayApiKeyValidated(true);
             }
         } catch (error) {
             console.error('API 키 로드 오류:', error);
+            setPixabayApiKey(DEFAULT_API_KEYS.PIXABAY);
+            setIsPixabayApiKeyValidated(true);
         }
     }, [validatePixabayApiKeyCallback]);
 
     useEffect(() => {
-        const savedKey = localStorage.getItem('pixabay_api_key') || '';
+        const savedKey = localStorage.getItem('pixabay_api_key') || DEFAULT_API_KEYS.PIXABAY;
         if (savedKey) {
             setPixabayApiKey(savedKey);
-            validatePixabayApiKeyCallback(savedKey, true);
+            if (savedKey === DEFAULT_API_KEYS.PIXABAY) {
+                setIsPixabayApiKeyValidated(true);
+            } else {
+                validatePixabayApiKeyCallback(savedKey, true);
+            }
         } else {
             loadApiKeysFromDatabase();
         }

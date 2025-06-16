@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AppState } from '@/types';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 const initialAppState: AppState = {
   isLoggedIn: false,
@@ -70,8 +71,8 @@ export const useAppStateManager = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('사용자가 로그인되지 않음 - API 키 로드 건너뜀');
-        return { apiKey: '', isApiKeyValidated: false };
+        console.log('사용자가 로그인되지 않음 - 기본 API 키 사용');
+        return { apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true };
       }
 
       console.log('데이터베이스에서 Gemini API 키 로드 시도...');
@@ -84,24 +85,26 @@ export const useAppStateManager = () => {
 
       if (error) {
         console.error('Gemini API 키 로드 오류:', error);
-        return { apiKey: '', isApiKeyValidated: false };
+        console.log('기본 API 키 사용');
+        return { apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true };
       }
 
-      const apiKey = data?.gemini_api_key || '';
-      const isApiKeyValidated = !!apiKey;
+      const apiKey = data?.gemini_api_key || DEFAULT_API_KEYS.GEMINI;
+      const isApiKeyValidated = true; // 항상 검증됨으로 설정
 
       console.log('데이터베이스에서 로드된 Gemini API 키:', apiKey ? '키 있음' : '키 없음');
 
       if (apiKey) {
         localStorage.setItem('blog_api_key', apiKey);
-        localStorage.setItem('blog_api_key_validated', isApiKeyValidated.toString());
+        localStorage.setItem('blog_api_key_validated', 'true');
         console.log('Gemini API 키가 localStorage에 저장됨');
       }
 
       return { apiKey, isApiKeyValidated };
     } catch (error) {
       console.error('Gemini API 키 로드 예외:', error);
-      return { apiKey: '', isApiKeyValidated: false };
+      console.log('기본 API 키 사용');
+      return { apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true };
     }
   }, []);
 
@@ -115,14 +118,14 @@ export const useAppStateManager = () => {
         delete parsedState.isApiKeyValidated;
       }
       
-      // 먼저 localStorage에서 확인
-      let savedApiKey = localStorage.getItem('blog_api_key') || '';
-      let savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
+      // 기본 API 키를 먼저 설정
+      let savedApiKey = localStorage.getItem('blog_api_key') || DEFAULT_API_KEYS.GEMINI;
+      let savedApiKeyValidated = true; // 항상 검증됨으로 설정
 
       console.log('localStorage에서 로드된 Gemini API 키:', savedApiKey ? '키 있음' : '키 없음');
 
-      // localStorage에 없으면 데이터베이스에서 로드
-      if (!savedApiKey) {
+      // localStorage에 기본 키가 없으면 데이터베이스에서 로드하거나 기본값 사용
+      if (!savedApiKey || savedApiKey === '') {
         console.log('localStorage에 API 키가 없음, 데이터베이스에서 로드 시도...');
         const dbApiKeys = await loadApiKeysFromDatabase();
         savedApiKey = dbApiKeys.apiKey;

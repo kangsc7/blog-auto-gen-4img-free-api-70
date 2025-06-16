@@ -2,11 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 export const useHuggingFaceManager = () => {
     const { toast } = useToast();
-    const [huggingFaceApiKey, setHuggingFaceApiKey] = useState('');
-    const [isHuggingFaceApiKeyValidated, setIsHuggingFaceApiKeyValidated] = useState(false);
+    const [huggingFaceApiKey, setHuggingFaceApiKey] = useState(DEFAULT_API_KEYS.HUGGING_FACE);
+    const [isHuggingFaceApiKeyValidated, setIsHuggingFaceApiKeyValidated] = useState(true);
     const [isHuggingFaceValidating, setIsHuggingFaceValidating] = useState(false);
 
     const validateHuggingFaceApiKeyCallback = useCallback(async (key: string, silent = false) => {
@@ -81,7 +82,10 @@ export const useHuggingFaceManager = () => {
     const loadApiKeysFromDatabase = useCallback(async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            if (!user) {
+                console.log('사용자가 로그인되지 않음 - 기본 HuggingFace API 키 사용');
+                return;
+            }
 
             const { data, error } = await supabase
                 .from('profiles')
@@ -91,23 +95,33 @@ export const useHuggingFaceManager = () => {
 
             if (error) {
                 console.error('API 키 로드 오류:', error);
+                console.log('기본 HuggingFace API 키 사용');
                 return;
             }
 
             if (data?.huggingface_api_key) {
                 setHuggingFaceApiKey(data.huggingface_api_key);
                 validateHuggingFaceApiKeyCallback(data.huggingface_api_key, true);
+            } else {
+                setHuggingFaceApiKey(DEFAULT_API_KEYS.HUGGING_FACE);
+                setIsHuggingFaceApiKeyValidated(true);
             }
         } catch (error) {
             console.error('API 키 로드 오류:', error);
+            setHuggingFaceApiKey(DEFAULT_API_KEYS.HUGGING_FACE);
+            setIsHuggingFaceApiKeyValidated(true);
         }
     }, [validateHuggingFaceApiKeyCallback]);
 
     useEffect(() => {
-        const savedKey = localStorage.getItem('hugging_face_api_key') || '';
+        const savedKey = localStorage.getItem('hugging_face_api_key') || DEFAULT_API_KEYS.HUGGING_FACE;
         if (savedKey) {
             setHuggingFaceApiKey(savedKey);
-            validateHuggingFaceApiKeyCallback(savedKey, true);
+            if (savedKey === DEFAULT_API_KEYS.HUGGING_FACE) {
+                setIsHuggingFaceApiKeyValidated(true);
+            } else {
+                validateHuggingFaceApiKeyCallback(savedKey, true);
+            }
         } else {
             loadApiKeysFromDatabase();
         }
