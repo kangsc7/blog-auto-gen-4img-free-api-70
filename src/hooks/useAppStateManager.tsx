@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -34,17 +35,34 @@ const saveReferenceToStorage = (link: string, sentence: string) => {
   localStorage.setItem('blog_reference_sentence', sentence);
 };
 
+// Helper function to save preventDuplicates setting to localStorage
+const savePreventDuplicatesToStorage = (preventDuplicates: boolean) => {
+  localStorage.setItem('blog_prevent_duplicates', JSON.stringify(preventDuplicates));
+};
+
+// Helper function to load preventDuplicates setting from localStorage
+const loadPreventDuplicatesFromStorage = (): boolean => {
+  try {
+    const saved = localStorage.getItem('blog_prevent_duplicates');
+    return saved !== null ? JSON.parse(saved) : true; // 기본값은 true (중복 금지)
+  } catch (error) {
+    console.error('중복 설정 로드 오류:', error);
+    return true;
+  }
+};
+
 export const useAppStateManager = () => {
   const { toast } = useToast();
   const [appState, setAppState] = useState<AppState>(initialAppState);
-  const [preventDuplicates, setPreventDuplicates] = useState(true);
+  const [preventDuplicates, setPreventDuplicates] = useState(() => loadPreventDuplicatesFromStorage());
 
   useEffect(() => {
     loadAppState();
   }, []);
 
-  // preventDuplicates 상태를 전역에서 접근할 수 있도록 window 객체에 저장
+  // preventDuplicates 상태가 변경될 때마다 localStorage에 저장하고 window 객체에도 저장
   useEffect(() => {
+    savePreventDuplicatesToStorage(preventDuplicates);
     (window as any).preventDuplicates = preventDuplicates;
   }, [preventDuplicates]);
 
@@ -72,6 +90,10 @@ export const useAppStateManager = () => {
         referenceLink: savedReferenceLink,
         referenceSentence: savedReferenceSentence,
       }));
+
+      // preventDuplicates 설정도 로드
+      const savedPreventDuplicates = loadPreventDuplicatesFromStorage();
+      setPreventDuplicates(savedPreventDuplicates);
     } catch (error) {
       console.error('앱 상태 로드 오류:', error);
     }
@@ -162,12 +184,12 @@ export const useAppStateManager = () => {
     delete stateToSave.isApiKeyValidated;
     localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
     
-    setPreventDuplicates(true);
+    // preventDuplicates 설정은 초기화하지 않고 그대로 유지
     window.dispatchEvent(new CustomEvent('app-reset'));
 
     toast({
       title: "완전 초기화 완료",
-      description: "모든 주제와 콘텐츠가 완전히 삭제되었습니다. API 키와 참조 정보는 유지됩니다.",
+      description: "모든 주제와 콘텐츠가 완전히 삭제되었습니다. API 키, 참조 정보, 중복 설정은 유지됩니다.",
     });
   };
 
