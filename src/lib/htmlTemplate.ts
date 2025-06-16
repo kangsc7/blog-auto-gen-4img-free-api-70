@@ -1,5 +1,3 @@
-
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -69,7 +67,7 @@ const getTipsAndWarningsSection = (colors: any, keyword: string): string => `
 const getFailureCaseSection = (colors: any, keyword: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실패 사례와 해결 방법</b> 😥</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
+실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 [KEYWORD_SLOT_4] 관련 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 또 다른 실패 원인은 신청 시기를 놓치는 것인데요. 많은 분들이 연말에 몰려서 신청하다가 마감일을 넘기는 경우가 있어요. 가능하면 신청 시작과 동시에 준비하시는 것을 추천드려요.
@@ -82,7 +80,7 @@ const getFailureCaseSection = (colors: any, keyword: string): string => `
 const getDeepDiveSection = (colors: any, keyword: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 대상 및 금액 상세 안내</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[KEYWORD_SLOT_4] 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요.
+[KEYWORD_SLOT_5] 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 2025년부터는 지원 금액이 상향 조정되어 더 많은 도움을 받으실 수 있게 되었어요. 또한 사용처도 확대되어 전기·가스·지역난방뿐만 아니라 일부 연탄·등유 구매에도 사용 가능해졌답니다.
@@ -95,7 +93,7 @@ const getDeepDiveSection = (colors: any, keyword: string): string => `
 const getRelatedInfoSection = (colors: any, keyword: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 추가 혜택 및 지원 제도</b> 📈</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[KEYWORD_SLOT_5] 외에도 저소득층을 위한 다양한 에너지 지원 제도가 있어요. 전기요금 할인, 가스요금 할인, 연탄쿠폰 지원 등이 있는데, 이런 제도들을 함께 활용하면 에너지 비용을 더욱 효과적으로 절약할 수 있답니다.
+[KEYWORD_SLOT_6] 외에도 저소득층을 위한 다양한 에너지 지원 제도가 있어요. 전기요금 할인, 가스요금 할인, 연탄쿠폰 지원 등이 있는데, 이런 제도들을 함께 활용하면 에너지 비용을 더욱 효과적으로 절약할 수 있답니다.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 겨울철에는 한파대응 추가 지원도 있으니, 평소보다 난방비가 많이 나올 것 같다면 이런 제도들도 함께 알아보시길 권해드려요. 중복 신청이 가능한 경우도 있어서 더 많은 혜택을 받으실 수 있어요.
@@ -108,10 +106,10 @@ const getRelatedInfoSection = (colors: any, keyword: string): string => `
 const getRelatedKeywordsSection = (colors: any, keyword: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 검색어와 연관 정보</b> 🔍</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-관련 정보를 찾으시는 분들이 함께 검색하는 연관 키워드들을 알아보면 더 유용한 정보를 얻을 수 있어요. 주로 '신청 조건', '필요 서류', '지원 금액', '사용처' 등의 키워드와 함께 검색되고 있어요.
+관련 정보를 찾으시는 분들이 함께 검색하는 연관 키워드들을 알아보면 더 유용한 정보를 얻을 수 있어요. 주로 '[KEYWORD_SLOT_7] 신청 조건', '필요 서류', '지원 금액', '사용처' 등의 키워드와 함께 검색되고 있어요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 최근에는 '온라인 신청 방법'이나 '모바일 신청' 관련 검색도 늘어나고 있는데, 이는 더 편리한 방법을 찾는 분들이 많아졌다는 의미예요. 또한 '지원 기간'이나 '마감일' 관련 검색도 자주 이루어지고 있어요.
+특히 최근에는 '온라인 신청 방법'이나 '모바일 신청' 관련 검색도 늘어나고 있는데, 이는 더 편리한 방법을 찾는 분들이 많아졌다는 의미예요. 또한 '[KEYWORD_SLOT_8] 지원 기간'이나 '마감일' 관련 검색도 자주 이루어지고 있어요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 이런 연관 검색어들을 참고하시면 놓치기 쉬운 중요한 정보들을 미리 확인하실 수 있답니다. 특히 신청 전에 이런 키워드들로 한 번 더 검색해보시는 것을 추천드려요.
@@ -197,4 +195,3 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
 </div>
 `;
 };
-

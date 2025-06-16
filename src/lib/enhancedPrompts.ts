@@ -88,8 +88,8 @@ export const getEnhancedArticlePrompt = async ({
         2. **핵심 키워드 자연스러운 적용 (매우 중요)**: 
         - 주제 "${topic}" 그대로를 키워드로 사용하지 마세요.
         - 대신 자연스러운 키워드 "${naturalKeyword}"를(을) 본문에 자연스럽게 녹여내세요.
-        - HTML 템플릿의 [KEYWORD_SLOT_1], [KEYWORD_SLOT_2], [KEYWORD_SLOT_3], [KEYWORD_SLOT_4], [KEYWORD_SLOT_5] 부분에만 "<strong>${naturalKeyword}</strong>" 형태로 정확히 5회 적용하세요.
-        - 다른 H2 섹션에는 키워드 강조를 적용하지 마세요.
+        - HTML 템플릿의 [KEYWORD_SLOT_1], [KEYWORD_SLOT_2], [KEYWORD_SLOT_3], [KEYWORD_SLOT_4], [KEYWORD_SLOT_5], [KEYWORD_SLOT_6], [KEYWORD_SLOT_7], [KEYWORD_SLOT_8] 부분 중 5-8회만 선택해서 "<strong>${naturalKeyword}</strong>" 형태로 적용하세요.
+        - 키워드를 적용하지 않는 KEYWORD_SLOT은 해당 문맥에 맞는 일반적인 단어나 구문으로 자연스럽게 채워주세요.
         - 키워드가 문맥에 자연스럽게 어울리도록 작성하세요.
 
         3. **공식 링크 필수 포함 및 하이퍼링크 적용 (매우 중요)**: 
@@ -152,13 +152,14 @@ ${htmlTemplate}
 
         ⚠️ 재확인 사항:
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
-        - [KEYWORD_SLOT_X] 부분에만 정확히 5회 키워드 강조를 적용해야 합니다
+        - [KEYWORD_SLOT_X] 부분 중 5-8개만 선택해서 키워드 강조를 적용해야 합니다
+        - 키워드를 적용하지 않는 KEYWORD_SLOT은 자연스러운 일반 텍스트로 채워야 합니다
         - 공식 링크가 최소 2-3개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
         - 모든 내용이 실제 정보성 콘텐츠여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
-        - 자연스러운 키워드 "${naturalKeyword}"를 [KEYWORD_SLOT_X] 위치에만 사용하세요
+        - 자연스러운 키워드 "${naturalKeyword}"를 선택된 [KEYWORD_SLOT_X] 위치에만 사용하세요
       `;
 };
 
