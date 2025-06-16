@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -10,6 +9,7 @@ export const useTopicGenerator = (
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
+  const [lastGenerationTime, setLastGenerationTime] = useState(0);
 
   const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
     const keyword = (keywordOverride || appState.keyword).trim();
@@ -31,7 +31,21 @@ export const useTopicGenerator = (
       return null;
     }
 
+    // 3초 딜레이 체크
+    const currentTime = Date.now();
+    const timeSinceLastGeneration = currentTime - lastGenerationTime;
+    if (timeSinceLastGeneration < 3000 && lastGenerationTime > 0) {
+      const remainingTime = Math.ceil((3000 - timeSinceLastGeneration) / 1000);
+      toast({
+        title: "잠시만 기다려주세요",
+        description: `${remainingTime}초 후에 다시 시도할 수 있습니다.`,
+        variant: "default"
+      });
+      return null;
+    }
+
     setIsGeneratingTopics(true);
+    setLastGenerationTime(currentTime);
     
     try {
       const count = appState.topicCount;

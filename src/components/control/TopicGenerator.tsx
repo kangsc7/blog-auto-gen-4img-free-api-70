@@ -63,9 +63,24 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
         <Button 
           onClick={() => generateTopicsFromKeyword()}
           disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className={`w-full transition-all duration-300 ${
+            isGeneratingTopics 
+              ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
+          {isGeneratingTopics ? (
+            <span className="flex items-center">
+              주제 생성 중
+              <span className="ml-1 animate-pulse">
+                <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
+                <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
+                <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
+              </span>
+            </span>
+          ) : (
+            '주제 생성하기'
+          )}
         </Button>
 
         <div className="border-t pt-4">
