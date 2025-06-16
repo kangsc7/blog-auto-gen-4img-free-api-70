@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { WebCrawlerService } from './webCrawler';
@@ -41,20 +42,30 @@ export const getEnhancedArticlePrompt = async ({
         ⚠️ 절대 지켜야 할 핵심 규칙:
         1. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요. 반드시 실제 내용으로 대체해야 합니다.
         
-        2. **공식 링크 필수 포함 (매우 중요)**: 크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 2-3개 반드시 **완전한 a 태그 형식**으로 삽입해주세요. 
+        2. **공식 링크 필수 포함 및 하이퍼링크 적용 (매우 중요)**: 
+        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 2-3개 반드시 **완전한 a 태그 형식**으로 삽입해주세요. 
         
-        **올바른 링크 형식 (반드시 이 형식을 사용하세요):**
-        \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: \${colors.link}; text-decoration: underline;">보건복지부</a>\`
+        **반드시 사용해야 할 올바른 링크 형식:**
+        \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
         
-        **절대 사용하지 말아야 할 잘못된 형식:**
+        **절대 사용하지 말아야 할 잘못된 형식들:**
         - 보건복지부(https://www.mw.go.kr/) ← 이런 형식은 절대 사용 금지
         - https://www.mw.go.kr ← 단순 URL만 쓰는 것도 절대 사용 금지
+        - 보건복지부 https://www.mw.go.kr ← 이런 형식도 절대 사용 금지
+        
+        **링크 작성 시 필수 준수사항:**
+        - 모든 공식 사이트 링크는 반드시 클릭 가능한 하이퍼링크로 작성
+        - href 속성에 완전한 URL 포함
+        - target="_blank" 속성으로 새 창에서 열리도록 설정
+        - rel="noopener" 속성으로 보안 강화
+        - style 속성으로 링크 색상과 밑줄 적용
+        - 링크 텍스트는 사이트명만 표시 (URL은 표시하지 않음)
         
         예시 공식 사이트들: 보건복지부(https://www.mw.go.kr), 복지정보포털(https://www.welfaresupport.go.kr), 에너지바우처 공식사이트(https://www.energyvoucher.go.kr), 복지로(https://www.bokjiro.go.kr) 등
         
         3. **정보성 콘텐츠 중심**: 모든 소제목과 내용은 독자가 실제로 필요로 하는 구체적이고 실용적인 정보를 담아야 합니다. "연관 검색어 전략" 같은 메타적인 내용은 절대 포함하지 마세요.
 
-        4. **성공 사례 크롤링 활용**: 크롤링된 정보에서 실제 성공 사례나 데이터를 찾아 활용하고, 없다면 현실적이고 구체적인 가상 사례를 창의적으로 작성해주세요.
+        4. **연관 키워드 활용**: 크롤링된 정보에서 실제 연관 키워드나 검색어를 찾아 활용하고, 없다면 현실적이고 구체적인 연관 정보를 창의적으로 작성해주세요.
 
         다음 지침에 따라 작성해주세요:
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식을 포함하지 마세요.
@@ -95,6 +106,7 @@ ${htmlTemplate}
         - 모든 내용이 실제 정보성 콘텐츠여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
+        - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
       `;
 };
 
@@ -121,3 +133,4 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 3. 입력된 키워드와 무관한 내용이 포함되지 않았는가?
 
 오직 입력된 키워드 '${keyword}'와 직접적으로 관련된 주제만 생성해주세요.`;
+};
