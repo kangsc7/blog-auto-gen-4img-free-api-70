@@ -177,8 +177,8 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getRelatedInfoSection(colors, keyword),
     getRelatedKeywordsSection(colors, keyword),
     getSummaryCardSection(keyword),
-    getFaqSection(colors, topic, keyword),
-    getEncouragingClosingSection(colors, keyword, refLink),
+    getEncouragingClosingSection(colors, keyword, refLink), // 응원 섹션을 먼저
+    getFaqSection(colors, topic, keyword), // FAQ 섹션을 나중에
     getClosingSection(colors, keyword, refLink),
     getTagsSection(topic, keyword),
   ];
