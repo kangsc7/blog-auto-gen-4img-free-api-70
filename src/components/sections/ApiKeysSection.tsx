@@ -16,6 +16,7 @@ interface ApiKeysSectionProps {
     setPixabayApiKey: (key: string) => void;
     isPixabayApiKeyValidated: boolean;
     setIsPixabayApiKeyValidated: (validated: boolean) => void;
+    isPixabayValidating: boolean;
     validatePixabayApiKey: (key: string) => Promise<boolean>;
     deletePixabayApiKeyFromStorage: () => void;
   };
@@ -24,6 +25,7 @@ interface ApiKeysSectionProps {
     setHuggingFaceApiKey: (key: string) => void;
     isHuggingFaceApiKeyValidated: boolean;
     setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
+    isHuggingFaceValidating: boolean;
     validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
     deleteHuggingFaceApiKeyFromStorage: () => void;
   };
@@ -39,9 +41,9 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
   huggingFaceManager,
 }) => {
   return (
-    <div className="container mx-auto mt-20 relative z-50">
+    <div className="container mx-auto mt-20 relative z-[200]">
       <div className="flex flex-wrap gap-4 mb-6 justify-center">
-        <div className="relative z-50">
+        <div className="relative z-[200]">
           <ApiKeyManager
             apiKey={appState.apiKey}
             setApiKey={(key) => saveAppState({ apiKey: key })}
@@ -53,23 +55,25 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
           />
         </div>
         
-        <div className="relative z-50">
+        <div className="relative z-[200]">
           <PixabayApiKeyManager
             pixabayApiKey={pixabayManager.pixabayApiKey}
             setPixabayApiKey={pixabayManager.setPixabayApiKey}
             isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
             setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+            isPixabayValidating={pixabayManager.isPixabayValidating}
             validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
             deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
           />
         </div>
         
-        <div className="relative z-50">
+        <div className="relative z-[200]">
           <HuggingFaceApiKeyManager
             huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
             setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
             isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
             setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+            isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
             validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
             deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
           />

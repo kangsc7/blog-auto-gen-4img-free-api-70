@@ -10,7 +10,8 @@ interface PixabayApiKeyManagerProps {
   setPixabayApiKey: (key: string) => void;
   isPixabayApiKeyValidated: boolean;
   setIsPixabayApiKeyValidated: (validated: boolean) => void;
-  validatePixabayApiKey: (key: string) => Promise<void>;
+  isPixabayValidating: boolean;
+  validatePixabayApiKey: (key: string) => Promise<boolean>;
   deletePixabayApiKeyFromStorage: () => void;
 }
 
@@ -19,6 +20,7 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
   setPixabayApiKey,
   isPixabayApiKeyValidated,
   setIsPixabayApiKeyValidated,
+  isPixabayValidating,
   validatePixabayApiKey,
   deletePixabayApiKeyFromStorage,
 }) => {
@@ -46,11 +48,13 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
             />
             <Button 
               onClick={() => validatePixabayApiKey(pixabayApiKey)} 
-              disabled={!pixabayApiKey.trim()}
+              disabled={!pixabayApiKey.trim() || isPixabayValidating}
               variant="outline" 
               className={isPixabayApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-orange-600 border-orange-600 hover:bg-orange-50"}
             >
-              {isPixabayApiKeyValidated ? (
+              {isPixabayValidating ? (
+                <>검증 중...</>
+              ) : isPixabayApiKeyValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
                 '검증 및 저장'

@@ -8,10 +8,10 @@ export const usePixabayManager = () => {
     const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(false);
     const [isPixabayValidating, setIsPixabayValidating] = useState(false);
 
-    const validatePixabayApiKeyCallback = useCallback(async (key: string, silent = false) => {
+    const validatePixabayApiKeyCallback = useCallback(async (key: string, silent = false): Promise<boolean> => {
         if (!key.trim()) {
             if (!silent) toast({ title: "API 키 오류", description: "Pixabay API 키를 입력해주세요.", variant: "destructive" });
-            return;
+            return false;
         }
         setIsPixabayValidating(true);
         try {
@@ -22,11 +22,13 @@ export const usePixabayManager = () => {
             setIsPixabayApiKeyValidated(true);
             localStorage.setItem('pixabay_api_key', key);
             if (!silent) toast({ title: "Pixabay API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
+            return true;
         } catch (error) {
             setIsPixabayApiKeyValidated(false);
             if (!silent) {
                 toast({ title: "Pixabay API 키 검증 실패", description: `키가 유효하지 않거나 문제가 발생했습니다.`, variant: "destructive" });
             }
+            return false;
         } finally {
             setIsPixabayValidating(false);
         }
@@ -58,7 +60,7 @@ export const usePixabayManager = () => {
         isPixabayApiKeyValidated,
         setIsPixabayApiKeyValidated,
         isPixabayValidating,
-        validatePixabayApiKey: () => validatePixabayApiKeyCallback(pixabayApiKey),
+        validatePixabayApiKey: (key: string) => validatePixabayApiKeyCallback(key),
         deletePixabayApiKeyFromStorage,
     };
 };
