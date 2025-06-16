@@ -23,7 +23,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 `;
 
 const getProblemDefinitionSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>핵심 정보와 기본 내용 완벽 정리</b> 💡</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>1. 핵심 정보와 기본 내용 완벽 정리</b> 💡</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_1]가 정확히 무엇인지, 누구에게 지급되는지 궁금하시죠? 이 제도는 에너지 비용 부담을 줄여주기 위한 정부 지원 정책이에요. 저소득층과 차상위계층을 대상으로 하며, 전기·가스·지역난방비 등에 사용할 수 있답니다.
 </p>
@@ -37,7 +37,7 @@ const getProblemDefinitionSection = (colors: any): string => `
 `;
 
 const getSolutionGuideSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 방법 단계별 가이드</b> 📝</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>2. 신청 방법 단계별 가이드</b> 📝</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_2] 신청 과정이 복잡해 보일 수 있지만, 한 단계씩 따라하시면 어렵지 않아요. 온라인과 오프라인 모두 가능하니 편한 방법을 선택하세요.
 </p>
@@ -53,7 +53,7 @@ const getSolutionGuideSection = (colors: any): string => `
 `;
 
 const getTipsAndWarningsSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>3. 신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     <ul style="margin: 10px 0; padding-left: 20px;">
@@ -66,7 +66,7 @@ const getTipsAndWarningsSection = (colors: any): string => `
 `;
 
 const getFailureCaseSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실패 사례와 해결 방법</b> 😥</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>4. 실패 사례와 해결 방법</b> 😥</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 [SECTION_CONTENT_4] 관련 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
 </p>
@@ -79,7 +79,7 @@ const getFailureCaseSection = (colors: any): string => `
 `;
 
 const getDeepDiveSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 대상 및 금액 상세 안내</b> 🧐</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>5. 지원 대상 및 금액 상세 안내</b> 🧐</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_5] 지원 대상은 기준 중위소득 60% 이하 가구로, 생계급여·의료급여 수급자와 차상위계층이 해당돼요. 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요.
 </p>
@@ -92,7 +92,7 @@ const getDeepDiveSection = (colors: any): string => `
 `;
 
 const getRelatedInfoSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>관련 추가 혜택 및 지원 제도</b> 📈</h2>
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>6. 관련 추가 혜택 및 지원 제도</b> 📈</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_6] 외에도 저소득층을 위한 다양한 에너지 지원 제도가 있어요. 전기요금 할인, 가스요금 할인, 연탄쿠폰 지원 등이 있는데, 이런 제도들을 함께 활용하면 에너지 비용을 더욱 효과적으로 절약할 수 있답니다.
 </p>
@@ -104,16 +104,16 @@ const getRelatedInfoSection = (colors: any): string => `
 </p>
 `;
 
-const getCommonMistakesSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>많은 사람들이 놓치는 중요한 포인트</b> 🔍</h2>
+const getEncouragingSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>7. 당신도 할 수 있어요! 꿈을 향한 첫걸음을 응원합니다</b> 💪✨</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-많은 분들이 [SECTION_CONTENT_7] 신청할 때 가장 자주 놓치는 부분이 있어요. 바로 '소득 산정 기준 시점'인데요. 대부분 현재 소득으로 생각하시는데, 실제로는 신청일 기준 최근 3개월 평균 소득을 기준으로 한답니다.
+여기까지 읽어주신 당신, 정말 대단해요! [SECTION_CONTENT_7]에 대해 꼼꼼히 알아보시는 모습에서 진정한 성공의 자질이 보입니다. 많은 분들이 복잡해 보인다는 이유로 포기하시는데, 여러분은 끝까지 정보를 찾아보고 계시잖아요. 😊
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-또 다른 놓치기 쉬운 포인트는 '가구원 범위'예요. 주민등록상 동일 세대가 아니더라도 실제 생계를 같이하는 가족이 있다면 가구원에 포함될 수 있어요. 이 부분을 정확히 신고하지 않으면 나중에 문제가 될 수 있으니 주의하세요.
+처음엔 어려워 보일 수 있지만, 한 걸음씩 차근차근 따라하시면 반드시 좋은 결과가 있을 거예요. 작은 변화가 모여서 큰 변화를 만들어내듯이, 오늘 알아본 이 정보가 여러분의 삶에 작지만 의미 있는 변화의 시작이 되길 바라요.
 </p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-마지막으로 많은 분들이 [SECTION_CONTENT_8] 관련해서 헷갈리는 부분은 '중복 신청'인데요. 다른 에너지 지원 제도와 함께 신청할 수 있는 경우가 많으니, 이런 정보들도 미리 알아보시면 더 많은 혜택을 받으실 수 있어요.
+혹시 신청 과정에서 막히는 부분이 있더라도 포기하지 마세요. 주변에 도움을 요청하거나, 관련 기관에 문의하시면 친절하게 도와주실 거예요. 여러분의 용기 있는 도전을 진심으로 응원합니다! 🌟
 </p>
 `;
 
@@ -142,22 +142,9 @@ const getFaqSection = (colors: any, topic: string): string => `
 </div>
 `;
 
-const getEncouragingClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>당신도 할 수 있어요! 꿈을 향한 첫걸음을 응원합니다</b> 💪✨</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-여기까지 읽어주신 당신, 정말 대단해요! 관련 정보에 대해 꼼꼼히 알아보시는 모습에서 진정한 성공의 자질이 보입니다. 많은 분들이 복잡해 보인다는 이유로 포기하시는데, 여러분은 끝까지 정보를 찾아보고 계시잖아요. 😊
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-처음엔 어려워 보일 수 있지만, 한 걸음씩 차근차근 따라하시면 반드시 좋은 결과가 있을 거예요. 작은 변화가 모여서 큰 변화를 만들어내듯이, 오늘 알아본 이 정보가 여러분의 삶에 작지만 의미 있는 변화의 시작이 되길 바라요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-혹시 신청 과정에서 막히는 부분이 있더라도 포기하지 마세요. 주변에 도움을 요청하거나, 관련 기관에 문의하시면 친절하게 도와주실 거예요. 여러분의 용기 있는 도전을 진심으로 응원합니다! 🌟
-</p>
-`;
-
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-지금까지 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
+지금까지 [SECTION_CONTENT_8] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <br><br>
@@ -197,9 +184,8 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getFailureCaseSection(colors),
     getDeepDiveSection(colors),
     getRelatedInfoSection(colors),
-    getCommonMistakesSection(colors),
+    getEncouragingSection(colors),
     getSummaryCardSection(keyword),
-    getEncouragingClosingSection(colors, refLink, referenceSentence),
     getFaqSection(colors, topic),
     getClosingSection(colors, refLink, referenceSentence),
     getTagsSection(topic, keyword),
