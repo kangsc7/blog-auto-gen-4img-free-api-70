@@ -49,12 +49,12 @@ export const useRefactoredAppController = () => {
   }, [preventDuplicates]);
 
   useEffect(() => {
-    if (session) {
+    if (session?.user?.email) {
       saveAppState({ isLoggedIn: true, currentUser: session.user.email });
     } else {
       saveAppState({ isLoggedIn: false, currentUser: '' });
     }
-  }, [session, saveAppState]);
+  }, [session?.user?.email, saveAppState]);
 
   const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
     return generateArticle({
