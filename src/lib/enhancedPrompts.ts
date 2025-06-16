@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { WebCrawlerService } from './webCrawler';
@@ -96,8 +95,8 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 
 **핵심 키워드 보존 규칙 (매우 중요)**:
 - 핵심 키워드 '${keyword}'의 모든 구성 요소를 절대 누락하지 마세요
-- 특히 년도(2025년), 숫자(70만원), 고유명사(에너지바우처) 등은 반드시 포함되어야 합니다
 - 각 제목에는 반드시 핵심 키워드인 '${keyword}'가 완전한 형태로 포함되어야 합니다
+- 입력된 키워드와 관련 없는 다른 주제나 키워드는 절대 포함하지 마세요
 
 **제목 생성 지침**:
 - 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다
@@ -106,10 +105,10 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 - 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요
 - 다른 설명 없이 주제 목록만 생성해주세요
 
-**키워드 누락 방지를 위한 체크리스트**:
+**키워드 정확성 체크리스트**:
 1. '${keyword}'의 모든 단어가 제목에 포함되었는가?
-2. 년도, 숫자, 고유명사가 정확히 표기되었는가?
-3. 키워드의 의미가 변질되지 않았는가?
+2. 키워드의 의미가 변질되지 않았는가?
+3. 입력된 키워드와 무관한 내용이 포함되지 않았는가?
 
-이 지침을 엄격히 준수하여 제목을 생성해주세요.`;
+오직 입력된 키워드 '${keyword}'와 직접적으로 관련된 주제만 생성해주세요.`;
 };
