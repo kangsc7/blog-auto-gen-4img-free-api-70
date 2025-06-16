@@ -81,6 +81,41 @@ const getBenefitsSection = (colors: any): string => `
 </div>
 `;
 
+const getUsageTipsSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>효과적인 활용법과 주의사항</b> ⚠️</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_5] 바우처 카드를 받으셨다면 효과적으로 활용하는 방법을 알아두시는 게 좋아요. 전기요금은 매월 자동 차감되지만, 가스요금은 직접 결제해야 하는 경우가 많으니 주의하세요.
+</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+또한 바우처 카드 분실 시 재발급이 가능하지만 시간이 걸리니, 안전한 곳에 보관하시는 것이 중요해요. 사용 잔액은 언제든지 온라인이나 전화로 확인할 수 있답니다.
+</p>
+`;
+
+const getExpectedEffectsSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실제 혜택과 기대 효과</b> 📈</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_6] 실제로 이 제도를 이용하신 분들의 만족도가 매우 높아요. 특히 겨울철 난방비 부담이 크게 줄어들어 가계 경제에 실질적인 도움이 된다는 평가가 많답니다.
+</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+정부에서도 지속적으로 지원 범위와 금액을 확대하고 있어, 앞으로 더 많은 분들이 혜택을 받으실 수 있을 것으로 예상돼요. 꼭 신청하셔서 도움을 받으시길 바라요.
+</p>
+`;
+
+const getFaqSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>자주 묻는 질문 FAQ</b> ❓</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_7] 많은 분들이 궁금해하시는 내용들을 정리해봤어요. 
+</p>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 신청 후 언제부터 사용 가능한가요?</strong><br>
+A: 승인 후 약 1-2주 내에 카드가 발급되며, 즉시 사용 가능해요.</p>
+<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
+A: 세대주 또는 배우자만 신청 가능하며, 위임장이 있으면 대리 신청도 가능해요.</p>
+<p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
+A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능해요.</p>
+</div>
+`;
+
 const getSummaryCardSection = (naturalKeyword: string): string => `
 <div class="single-summary-card-container">
 <div class="single-summary-card">
@@ -98,7 +133,7 @@ const getSummaryCardSection = (naturalKeyword: string): string => `
 
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
+지금까지 [SECTION_CONTENT_8] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <br><br>
@@ -135,6 +170,9 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getApplicationGuideSection(colors),
     getRequirementsSection(colors),
     getBenefitsSection(colors),
+    getUsageTipsSection(colors),
+    getExpectedEffectsSection(colors),
+    getFaqSection(colors),
     getSummaryCardSection(keyword),
     getClosingSection(colors, refLink, referenceSentence),
     getTagsSection(topic, keyword),
