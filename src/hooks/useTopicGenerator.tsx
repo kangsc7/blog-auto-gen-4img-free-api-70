@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -155,15 +154,15 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
         // preventDuplicates 설정에 따라 중복 제거 여부 결정
         let uniqueValidTopics;
         if (window.preventDuplicates !== undefined ? window.preventDuplicates : true) {
-          // 중복 금지 모드: 기존 주제와 중복 제거
+          // 중복 금지 모드: 현재 세션 내에서만 중복 제거 (기존 저장된 주제와는 비교하지 않음)
           uniqueValidTopics = validTopics.filter(topic => 
             !allValidTopics.some(existingTopic => 
               existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
             )
           );
-          console.log(`중복 금지 모드: ${validTopics.length}개 -> ${uniqueValidTopics.length}개 (중복 제거됨)`);
+          console.log(`중복 금지 모드: ${validTopics.length}개 -> ${uniqueValidTopics.length}개 (현재 세션 내 중복 제거됨)`);
         } else {
-          // 중복 허용 모드: 중복 제거하지 않음
+          // 중복 허용 모드: 중복 제거하지 않음 (기존 저장된 주제와도 비교하지 않음)
           uniqueValidTopics = validTopics;
           console.log(`중복 허용 모드: ${validTopics.length}개 주제 모두 허용`);
         }
@@ -184,8 +183,15 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
         throw new Error(`핵심 키워드 '${keyword}'가 포함된 주제가 생성되지 않았습니다. 키워드를 더 구체적으로 입력해보세요.`);
       }
 
-      // 이전 주제들을 완전히 대체 (추가가 아닌 교체)
-      saveAppState({ topics: finalTopics, selectedTopic: '' });
+      // 중복 허용 모드일 때는 기존 주제에 추가, 중복 금지 모드일 때는 완전 교체
+      if (window.preventDuplicates !== undefined ? window.preventDuplicates : true) {
+        // 중복 금지 모드: 기존 주제들을 완전히 대체
+        saveAppState({ topics: finalTopics, selectedTopic: '' });
+      } else {
+        // 중복 허용 모드: 기존 주제에 새 주제들을 추가
+        const combinedTopics = [...appState.topics, ...finalTopics];
+        saveAppState({ topics: combinedTopics, selectedTopic: '' });
+      }
       
       if (finalTopics.length < count) {
         toast({ 
