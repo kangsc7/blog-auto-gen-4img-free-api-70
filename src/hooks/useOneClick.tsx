@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -24,7 +25,10 @@ export const useOneClick = (
   const { generateLatestKeyword, generateEvergreenKeyword } = useKeywordGenerator(appState);
 
   const getUserUsedKeywords = async (userId: string): Promise<string[]> => {
-    if (!preventDuplicates) return [];
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 사용한 키워드 체크 건너뛰기');
+      return [];
+    }
     
     try {
       const { data: usedKeywordsData, error } = await supabase
@@ -49,6 +53,11 @@ export const useOneClick = (
   };
 
   const isKeywordUsed = async (keyword: string, userId: string): Promise<boolean> => {
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 키워드 중복 체크 건너뛰기');
+      return false;
+    }
+
     const { data: keywordData, error: keywordError } = await supabase
         .from('keywords')
         .select('id')
@@ -78,7 +87,10 @@ export const useOneClick = (
   };
 
   const isTopicUsed = async (topic: string, userId: string): Promise<boolean> => {
-    if (!preventDuplicates) return false;
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 주제 중복 체크 건너뛰기');
+      return false;
+    }
     
     const userTopicsKey = `blog_user_topics_${userId}`;
     const savedTopics = localStorage.getItem(userTopicsKey);
@@ -95,7 +107,10 @@ export const useOneClick = (
   };
 
   const recordTopicUsage = async (topic: string, userId: string): Promise<void> => {
-    if (!preventDuplicates) return;
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 주제 사용 기록 건너뛰기');
+      return;
+    }
     
     const userTopicsKey = `blog_user_topics_${userId}`;
     const savedTopics = localStorage.getItem(userTopicsKey);
@@ -111,7 +126,10 @@ export const useOneClick = (
   };
   
   const recordKeywordUsage = async (keyword: string, userId: string, type: 'latest' | 'evergreen'): Promise<void> => {
-    if (!preventDuplicates) return;
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 키워드 사용 기록 건너뛰기');
+      return;
+    }
     
     try {
       let { data: keywordData, error: findError } = await supabase
@@ -178,14 +196,16 @@ export const useOneClick = (
       let keyword: string | null = null;
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '틈새';
 
-      // 사용자가 이미 사용한 키워드 목록 가져오기
+      console.log(`${keywordType} 키워드 생성 시작 - 중복 방지 설정:`, preventDuplicates);
+
+      // 사용자가 이미 사용한 키워드 목록 가져오기 (중복 금지일 때만)
       const usedKeywords = await getUserUsedKeywords(userId);
       console.log(`${keywordType} 키워드 생성 - 사용된 키워드:`, usedKeywords);
 
       if (keywordSource === 'latest') {
         toast({ title: `1단계: 실시간 ${keywordType} 키워드 생성`, description: `Google Trends 데이터를 분석합니다...` });
         let attempt = 0;
-        const maxAttempts = 3;
+        const maxAttempts = preventDuplicates ? 3 : 1; // 중복 허용일 때는 1번만 시도
         
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -205,16 +225,23 @@ export const useOneClick = (
             attempt++;
         }
         
-        if (!keyword) throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        if (!keyword) {
+          // 중복 허용일 때는 실패해도 기본 키워드 사용하지 않고 재시도
+          if (!preventDuplicates) {
+            const retryKeyword = await generateLatestKeyword();
+            keyword = retryKeyword || '2024년 생활 꿀팁';
+          } else {
+            throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+          }
+        }
       
       } else {
         toast({ title: `1단계: 검증된 ${keywordType} 키워드 선택`, description: `데이터베이스에서 최적 키워드를 선택합니다...` });
         let attempt = 0;
-        const maxAttempts = 3;
+        const maxAttempts = preventDuplicates ? 3 : 1; // 중복 허용일 때는 1번만 시도
         
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-            // 사용된 키워드 목록을 전달하여 중복 방지
             const generatedKeyword = await generateEvergreenKeyword();
             if (generatedKeyword) {
                 const used = preventDuplicates ? usedKeywords.includes(generatedKeyword) : false;
@@ -231,7 +258,7 @@ export const useOneClick = (
             attempt++;
         }
 
-        if (!keyword) {
+        if (!keyword && preventDuplicates) {
             toast({ title: "AI 키워드 중복/실패", description: "데이터베이스에서 직접 선택합니다." });
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
@@ -248,7 +275,7 @@ export const useOneClick = (
                 .select('keyword_text, id')
                 .eq('type', 'evergreen');
 
-            if (usedKeywordIds.length > 0 && preventDuplicates) {
+            if (usedKeywordIds.length > 0) {
                  keywordQuery = keywordQuery.not('id', 'in', `(${usedKeywordIds.join(',')})`);
             }
 
@@ -284,6 +311,10 @@ export const useOneClick = (
             
             const selectedKeyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
             keyword = selectedKeyword.keyword_text;
+        } else if (!keyword) {
+          // 중복 허용일 때는 간단히 재시도하거나 기본값 사용
+          const retryKeyword = await generateEvergreenKeyword();
+          keyword = retryKeyword || '생활 절약 꿀팁';
         }
       }
 
@@ -295,6 +326,7 @@ export const useOneClick = (
       
       await recordKeywordUsage(keyword, userId, keywordSource);
 
+      console.log('키워드 설정:', keyword);
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
       
@@ -302,7 +334,9 @@ export const useOneClick = (
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
+      console.log('주제 생성 호출 - 키워드:', keyword);
       const newTopics = await generateTopics(keyword);
+      console.log('생성된 주제들:', newTopics);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!newTopics || newTopics.length === 0) {
         throw new Error("주제 생성에 실패하여 중단합니다.");
@@ -331,6 +365,7 @@ export const useOneClick = (
         selectedTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
       }
 
+      console.log('선택된 주제:', selectedTopic);
       toast({ title: "3단계: 주제 선택", description: `"${selectedTopic}"을(를) 자동으로 선택했습니다.` });
       selectTopic(selectedTopic);
 

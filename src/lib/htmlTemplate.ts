@@ -1,3 +1,4 @@
+
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -61,53 +62,23 @@ const getRequirementsSection = (colors: any): string => `
 </p>
 `;
 
-const getWarningsSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
+const getBenefitsSection = (colors: any): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 금액 및 혜택 내용</b> 💰</h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+[SECTION_CONTENT_4] 지원 금액은 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요. 전기·가스·지역난방뿐만 아니라 일부 연탄·등유 구매에도 사용 가능해졌답니다.
+</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+특히 2025년부터는 지원 금액이 상향 조정되어 더 많은 도움을 받으실 수 있게 되었어요. 바우처 카드는 1년간 사용 가능하며, 미사용 금액은 다음 해로 이월되지 않으니 꼭 기간 내에 사용하세요.
+</p>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 꼭 확인하세요!</strong><br>
     <ul style="margin: 10px 0; padding-left: 20px;">
         <li style="margin-bottom: 8px;">신청 기간을 놓치면 그 해 지원이 불가능해요 - 보통 11월부터 다음해 10월까지</li>
         <li style="margin-bottom: 8px;">가구원 수에 따라 지원 금액이 달라지니 정확한 가구원 신고가 중요해요</li>
-        <li style="margin-bottom: 8px;">[SECTION_CONTENT_4] 관련 정보는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
+        <li style="margin-bottom: 8px;">바우처 카드는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
         <li>소득·재산 기준이 매년 조금씩 변동될 수 있으니 신청 전 최신 정보를 확인하세요</li>
     </ul>
 </div>
-`;
-
-const getBenefitsSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>지원 금액 및 혜택 내용</b> 💰</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_5] 지원 금액은 가구원 수에 따라 1인 가구 22만원부터 6인 이상 가구 70만원까지 차등 지급되고 있어요. 전기·가스·지역난방뿐만 아니라 일부 연탄·등유 구매에도 사용 가능해졌답니다.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 2025년부터는 지원 금액이 상향 조정되어 더 많은 도움을 받으실 수 있게 되었어요. 바우처 카드는 1년간 사용 가능하며, 미사용 금액은 다음 해로 이월되지 않으니 꼭 기간 내에 사용하세요.
-</p>
-`;
-
-const getFailureCaseSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>실패 사례와 해결 방법</b> 😥</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-실제로 신청 과정에서 실패하시는 분들의 가장 흔한 원인은 서류 준비 미흡이에요. 특히 [SECTION_CONTENT_6] 관련 소득증명서의 기준 시점을 잘못 이해하거나, 가구원 정보를 부정확하게 기재하는 경우가 많아요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-또 다른 실패 원인은 신청 시기를 놓치는 것인데요. 많은 분들이 연말에 몰려서 신청하다가 마감일을 넘기는 경우가 있어요. 가능하면 신청 시작과 동시에 준비하시는 것을 추천드려요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-재신청이 가능한 경우도 있으니, 한 번 실패했다고 포기하지 마시고 부족한 서류를 보완해서 다시 도전해보세요. 주민센터 담당자분들이 친절하게 도와주실 거예요.
-</p>
-`;
-
-const getEncouragingSection = (colors: any): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>당신도 할 수 있어요! 꿈을 향한 첫걸음을 응원합니다</b> 💪✨</h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-여기까지 읽어주신 당신, 정말 대단해요! [SECTION_CONTENT_7]에 대해 꼼꼼히 알아보시는 모습에서 진정한 성공의 자질이 보입니다. 많은 분들이 복잡해 보인다는 이유로 포기하시는데, 여러분은 끝까지 정보를 찾아보고 계시잖아요. 😊
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-처음엔 어려워 보일 수 있지만, 한 걸음씩 차근차근 따라하시면 반드시 좋은 결과가 있을 거예요. 작은 변화가 모여서 큰 변화를 만들어내듯이, 오늘 알아본 이 정보가 여러분의 삶에 작지만 의미 있는 변화의 시작이 되길 바라요.
-</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-혹시 신청 과정에서 막히는 부분이 있더라도 포기하지 마세요. 주변에 도움을 요청하거나, 관련 기관에 문의하시면 친절하게 도와주실 거예요. 여러분의 용기 있는 도전을 진심으로 응원합니다! 🌟
-</p>
 `;
 
 const getSummaryCardSection = (naturalKeyword: string): string => `
@@ -127,7 +98,7 @@ const getSummaryCardSection = (naturalKeyword: string): string => `
 
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-지금까지 [SECTION_CONTENT_8] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
+지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <br><br>
@@ -163,10 +134,7 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getBasicInfoSection(colors),
     getApplicationGuideSection(colors),
     getRequirementsSection(colors),
-    getWarningsSection(colors),
     getBenefitsSection(colors),
-    getFailureCaseSection(colors),
-    getEncouragingSection(colors),
     getSummaryCardSection(keyword),
     getClosingSection(colors, refLink, referenceSentence),
     getTagsSection(topic, keyword),
