@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -53,11 +52,9 @@ export const useOneClick = (
     return !!usageData;
   };
 
-  // 주제 중복 체크를 위한 새로운 함수
   const isTopicUsed = async (topic: string, userId: string): Promise<boolean> => {
     if (!preventDuplicates) return false;
     
-    // 로컬 스토리지에서 사용자별 주제 이력 체크
     const userTopicsKey = `blog_user_topics_${userId}`;
     const savedTopics = localStorage.getItem(userTopicsKey);
     
@@ -72,7 +69,6 @@ export const useOneClick = (
     return false;
   };
 
-  // 사용된 주제를 기록하는 함수
   const recordTopicUsage = async (topic: string, userId: string): Promise<void> => {
     if (!preventDuplicates) return;
     
@@ -82,7 +78,6 @@ export const useOneClick = (
     
     if (!topicsList.includes(topic)) {
       topicsList.push(topic);
-      // 최대 1000개까지만 저장 (메모리 관리)
       if (topicsList.length > 1000) {
         topicsList = topicsList.slice(-1000);
       }
@@ -153,9 +148,10 @@ export const useOneClick = (
       const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '틈새';
 
       if (keywordSource === 'latest') {
-        toast({ title: `1단계: AI ${keywordType} 키워드 생성`, description: `Gemini AI가 키워드를 생성합니다...` });
+        toast({ title: `1단계: 실시간 ${keywordType} 키워드 생성`, description: `Google Trends 데이터를 분석합니다...` });
         let attempt = 0;
-        const maxAttempts = 5; // 시도 횟수 증가
+        const maxAttempts = 3; // 시도 횟수 줄임 (개선된 로직으로 성공률 높아짐)
+        
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateLatestKeyword();
@@ -163,8 +159,9 @@ export const useOneClick = (
                 const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
                 if (!used) {
                     keyword = generatedKeyword;
+                    toast({ title: "트렌드 키워드 생성 완료", description: `"${keyword}" - 실시간 트렌드 반영됨` });
                 } else {
-                    toast({ title: "중복 키워드 발생", description: `'${generatedKeyword}' (은)는 이미 사용된 키워드입니다. 새로운 키워드를 다시 생성합니다. (시도 ${attempt + 1}/${maxAttempts})`});
+                    toast({ title: "중복 키워드 발생", description: `'${generatedKeyword}' 재생성 중... (${attempt + 1}/${maxAttempts})`});
                     await sleep(500);
                 }
             } else {
@@ -172,12 +169,14 @@ export const useOneClick = (
             }
             attempt++;
         }
-        if (!keyword) throw new Error("AI가 고유한 최신 트렌드 키워드를 생성하는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
+        
+        if (!keyword) throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
       
       } else {
-        toast({ title: `1단계: AI ${keywordType} 키워드 생성`, description: `Gemini AI가 키워드를 생성합니다...` });
+        toast({ title: `1단계: 검증된 ${keywordType} 키워드 선택`, description: `데이터베이스에서 최적 키워드를 선택합니다...` });
         let attempt = 0;
         const maxAttempts = 3;
+        
         while(attempt < maxAttempts && !keyword) {
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateEvergreenKeyword();
@@ -185,8 +184,9 @@ export const useOneClick = (
                 const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
                 if (!used) {
                     keyword = generatedKeyword;
+                    toast({ title: "틈새 키워드 선택 완료", description: `"${keyword}" - 검증된 평생 키워드` });
                 } else {
-                    toast({ title: "중복 키워드 발생", description: `AI가 생성한 '${generatedKeyword}' (은)는 이미 사용된 키워드입니다. (시도 ${attempt + 1}/${maxAttempts})`});
+                    toast({ title: "중복 키워드 발생", description: `'${generatedKeyword}' 다른 키워드 선택 중... (${attempt + 1}/${maxAttempts})`});
                     await sleep(500);
                 }
             } else {
@@ -196,7 +196,8 @@ export const useOneClick = (
         }
 
         if (!keyword) {
-            toast({ title: "AI 키워드 중복/실패", description: "대체 옵션으로 데이터베이스에서 평생 키워드를 가져옵니다." });
+            // 평생 키워드는 백업 데이터베이스 로직 유지
+            toast({ title: "AI 키워드 중복/실패", description: "데이터베이스에서 직접 선택합니다." });
             if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
             const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
@@ -252,7 +253,7 @@ export const useOneClick = (
       }
 
       if (!keyword) {
-          throw new Error(`키워드를 생성하거나 선택하는데 실패했습니다.`);
+          throw new Error(`${keywordType} 키워드를 생성하거나 선택하는데 실패했습니다.`);
       }
       
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -277,7 +278,6 @@ export const useOneClick = (
       await sleep(1000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // 중복되지 않은 주제 선택 로직 강화
       let selectedTopic: string | null = null;
       if (preventDuplicates) {
         const availableTopics = [];
@@ -301,7 +301,6 @@ export const useOneClick = (
       toast({ title: "3단계: 주제 선택", description: `"${selectedTopic}"을(를) 자동으로 선택했습니다.` });
       selectTopic(selectedTopic);
 
-      // 선택된 주제를 사용 이력에 기록
       if (preventDuplicates) {
         await recordTopicUsage(selectedTopic, userId);
       }
@@ -316,7 +315,7 @@ export const useOneClick = (
         throw new Error("글 생성에 실패하여 중단합니다.");
       }
 
-      toast({ title: "원클릭 생성 완료!", description: "모든 과정이 성공적으로 완료되었습니다." });
+      toast({ title: "원클릭 생성 완료!", description: `${keywordType} 키워드 기반 모든 과정이 성공적으로 완료되었습니다.` });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "자동 생성 중 알 수 없는 오류가 발생했습니다.";
