@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
   } = manager;
 
   return (
-    <Card className="shadow-md h-full bg-white">
+    <Card className="shadow-md h-full !bg-white">
       <CardHeader>
         <CardTitle className="flex items-center text-gray-700">
           <KeyRound className="h-5 w-5 mr-2" />
