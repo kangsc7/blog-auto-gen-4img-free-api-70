@@ -1,6 +1,6 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
+import { generateDynamicHeadings } from './dynamicHeadings';
 import { WebCrawlerService } from './webCrawler';
 
 interface EnhancedArticlePromptParams {
@@ -61,7 +61,12 @@ export const getEnhancedArticlePrompt = async ({
   // 자연스러운 맥락적 표현들 생성
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
   
-  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink);
+  // 동적 소제목 생성
+  console.log('동적 소제목 생성 시작:', keyword, topic);
+  const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
+  console.log('생성된 동적 소제목:', dynamicHeadings);
+  
+  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, dynamicHeadings);
   const currentYear = new Date().getFullYear();
 
   // 웹 크롤링으로 최신 정보 및 공식 링크 수집
@@ -77,19 +82,21 @@ export const getEnhancedArticlePrompt = async ({
         ${crawledInfo}
         === 크롤링 정보 끝 ===
 
-        위의 크롤링된 최신 정보를 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
+        === 동적 생성된 소제목 정보 ===
+        다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 소제목들입니다:
+        ${dynamicHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}`).join('\n')}
+        === 동적 소제목 정보 끝 ===
+
+        위의 크롤링된 최신 정보와 동적 생성된 소제목을 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
         
+        **🚨 동적 생성된 소제목 활용 필수 🚨**
+        위에서 제공된 동적 소제목들은 해당 키워드에 대한 실제 사용자 궁금증을 반영합니다. 이 소제목들을 바탕으로 각 섹션의 내용을 작성해주세요.
+        
         **🚨 7개 H2 섹션 모두 작성 필수 🚨**
-        HTML 템플릿에 있는 7개의 H2 섹션을 모두 풍부한 내용으로 작성해야 합니다:
-        1. 핵심 정보와 기본 내용 완벽 정리
-        2. 신청 방법 단계별 가이드  
-        3. 지원 대상 및 자격 요건
-        4. 지원 금액 및 혜택 내용
-        5. 효과적인 활용법과 주의사항
-        6. 실제 혜택과 기대 효과
-        7. 자주 묻는 질문 FAQ
+        HTML 템플릿에 있는 7개의 H2 섹션을 모두 풍부한 내용으로 작성해야 합니다.
+        각 섹션은 해당 동적 소제목의 의도에 맞는 내용으로 구성해주세요.
         
         **절대로 섹션을 건너뛰거나 생략하지 마세요!**
         
@@ -148,13 +155,14 @@ export const getEnhancedArticlePrompt = async ({
         - Original Keyword: ${keyword}
         - Natural Keyword: ${naturalKeyword}
 
-        아래는 반드시 따라야 할 HTML 템플릿입니다.
+        아래는 반드시 따라야 할 HTML 템플릿입니다 (동적 소제목 포함).
         
         --- HTML TEMPLATE START ---
 ${htmlTemplate}
 --- HTML TEMPLATE END ---
 
         ⚠️ 재확인 사항:
+        - **동적 생성된 소제목의 의도에 맞는 내용으로 각 섹션을 작성해야 합니다**
         - **7개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
         - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
