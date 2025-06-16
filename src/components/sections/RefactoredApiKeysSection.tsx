@@ -4,9 +4,11 @@ import { GeminiApiKeyManager } from '@/components/control/GeminiApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
 import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
+import { useAppStateManager } from '@/hooks/useAppStateManager';
 
 export const RefactoredApiKeysSection: React.FC = () => {
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager();
+  const { appState, saveAppState } = useAppStateManager();
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
 
   return (
     <div className="container mx-auto mt-20 relative z-[200]">
