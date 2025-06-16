@@ -12,39 +12,11 @@ interface EnhancedArticlePromptParams {
   apiKey: string;
 }
 
-// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수
+// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 보존)
 const extractNaturalKeyword = (topic: string): string => {
-  // 특정 패턴들을 더 자연스러운 키워드로 변환
-  const patterns = [
-    { pattern: /(\d+년)\s*(\d+만원)\s*(.+바우처)/i, replacement: '$3' },
-    { pattern: /(\d+년)\s*(.+바우처)\s*(\d+만원)/i, replacement: '$2' },
-    { pattern: /(.+바우처)\s*(\d+만원)\s*(\d+년)/i, replacement: '$1' },
-    { pattern: /(\d+만원)\s*(.+바우처)\s*(\d+년)/i, replacement: '$2' },
-    { pattern: /(\d+년)\s*(.+)\s*(\d+만원)/i, replacement: '$2' },
-    { pattern: /(\d+만원)\s*(.+)\s*(\d+년)/i, replacement: '$2' },
-    { pattern: /(.+)\s*(\d+년)\s*(\d+만원)/i, replacement: '$1' },
-    { pattern: /(.+)\s*(\d+만원)\s*(\d+년)/i, replacement: '$1' },
-    { pattern: /(\d+년)\s*(.+)/i, replacement: '$2' },
-    { pattern: /(.+)\s*(\d+년)/i, replacement: '$1' },
-    { pattern: /(\d+만원)\s*(.+)/i, replacement: '$2' },
-    { pattern: /(.+)\s*(\d+만원)/i, replacement: '$1' },
-  ];
-
-  for (const { pattern, replacement } of patterns) {
-    const match = topic.match(pattern);
-    if (match) {
-      const extracted = topic.replace(pattern, replacement).trim();
-      if (extracted && extracted !== topic) {
-        return extracted;
-      }
-    }
-  }
-
-  // 패턴 매칭이 안되는 경우 일반적인 정리
+  // 년도는 보존하면서 불필요한 단어만 제거
   return topic
-    .replace(/\d+년/g, '') // 년도 제거
-    .replace(/\d+만원?/g, '') // 금액 제거
-    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드/g, '') // 일반적인 단어 제거
+    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게/g, '') // 일반적인 단어만 제거
     .replace(/\s+/g, ' ') // 연속 공백 정리
     .trim();
 };
@@ -60,7 +32,7 @@ const generateNaturalContext = (naturalKeyword: string, originalKeyword: string)
     CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
     SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
     SECTION_CONTENT_2: `${naturalKeyword} 관련`,
-    SECTION_CONTENT_3: `바우처 카드`,
+    SECTION_CONTENT_3: `디지털플랫폼 활용`,
     SECTION_CONTENT_4: `이 지원금`,
     SECTION_CONTENT_5: `${naturalKeyword} 지원`,
     SECTION_CONTENT_6: `이런 혜택`,
@@ -68,7 +40,7 @@ const generateNaturalContext = (naturalKeyword: string, originalKeyword: string)
     SECTION_CONTENT_8: `해당 혜택`,
     SUMMARY_TITLE: naturalKeyword,
     REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
-    GENERATED_TAGS: `${naturalKeyword}, 2025년 ${naturalKeyword}, 70만원 지급, 에너지 지원금, 저소득층 ${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 전기요금 할인, 가스요금 지원, 난방비 지원, 복지혜택, 생계급여, 차상위계층 혜택`
+    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
   };
 };
 
@@ -83,7 +55,7 @@ export const getEnhancedArticlePrompt = async ({
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
   
-  // 주제에서 자연스러운 핵심 키워드 추출
+  // 주제에서 자연스러운 핵심 키워드 추출 (년도 보존)
   const naturalKeyword = extractNaturalKeyword(topic);
   
   // 자연스러운 맥락적 표현들 생성
@@ -189,6 +161,7 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 
 **핵심 키워드 보존 규칙 (매우 중요)**:
 - 핵심 키워드 '${keyword}'의 모든 구성 요소를 절대 누락하지 마세요
+- 특히 년도(2025년, 2025 등)는 반드시 포함되어야 합니다
 - 각 제목에는 반드시 핵심 키워드인 '${keyword}'가 완전한 형태로 포함되어야 합니다
 - 입력된 키워드와 관련 없는 다른 주제나 키워드는 절대 포함하지 마세요
 
@@ -196,13 +169,15 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 - 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다
 - 모든 제목은 반드시 한글로만 작성해야 하며, 한자(漢字)나 다른 언어는 절대 포함하지 마세요
 - ${currentYear}년 최신 상황을 반영한 시의성 있는 제목으로 작성해주세요
+- 년도 정보는 절대 제거하지 마세요
 - 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요
 - 다른 설명 없이 주제 목록만 생성해주세요
 
 **키워드 정확성 체크리스트**:
 1. '${keyword}'의 모든 단어가 제목에 포함되었는가?
-2. 키워드의 의미가 변질되지 않았는가?
-3. 입력된 키워드와 무관한 내용이 포함되지 않았는가?
+2. 년도 정보가 정확히 포함되었는가?
+3. 키워드의 의미가 변질되지 않았는가?
+4. 입력된 키워드와 무관한 내용이 포함되지 않았는가?
 
 오직 입력된 키워드 '${keyword}'와 직접적으로 관련된 주제만 생성해주세요.`;
 };

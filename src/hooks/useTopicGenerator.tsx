@@ -43,15 +43,15 @@ export const useTopicGenerator = (
       const preventDuplicatesFromStorage = localStorage.getItem('blog_prevent_duplicates');
       const preventDuplicates = preventDuplicatesFromStorage !== null ? JSON.parse(preventDuplicatesFromStorage) : true;
       
-      // 핵심 키워드를 더 정확하게 추출하여 검증
+      // 핵심 키워드를 더 정확하게 추출하여 검증 (년도 보존)
       const extractCoreKeywords = (keyword: string) => {
-        // 키워드를 단어 단위로 분할하고 중요 단어만 추출
-        const stopWords = ['년', '월', '일', '의', '를', '을', '이', '가', '에', '로', '으로', '와', '과', '는', '은', '만', '원'];
+        // 키워드를 단어 단위로 분할하고 중요 단어 추출
+        const stopWords = ['의', '를', '을', '이', '가', '에', '로', '으로', '와', '과', '는', '은', '만', '원'];
         const words = keyword.split(/\s+/).filter(word => 
           word.length > 1 && !stopWords.includes(word)
         );
         
-        // 숫자와 년도는 별도 처리
+        // 년도와 숫자는 별도 처리하되 보존
         const yearMatch = keyword.match(/\d{4}년?/);
         const numberMatch = keyword.match(/\d+만?원?/);
         
@@ -72,20 +72,22 @@ export const useTopicGenerator = (
         
         const remainingCount = count - allValidTopics.length;
         
-        // 더 명확한 프롬프트로 키워드 포함 강조
+        // 년도 포함을 강조한 프롬프트
         const enhancedPrompt = `'${keyword}'를(을) 주제로, 2025년 최신 정보를 반영하여 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${remainingCount * 2}개를 생성해 주세요.
 
 **절대 지켜야 할 핵심 규칙**:
 1. 모든 제목은 반드시 '${keyword}' 키워드의 핵심 구성 요소를 모두 포함해야 합니다.
-2. 다른 주제는 절대 포함하지 마세요.
-3. 오직 '${keyword}'와 관련된 내용만 생성해주세요.
+2. 특히 년도 정보는 절대 누락해서는 안 됩니다.
+3. 다른 주제는 절대 포함하지 마세요.
+4. 오직 '${keyword}'와 관련된 내용만 생성해주세요.
 
 **핵심 키워드 필수 포함 요소**:
 ${keywordInfo.coreWords.map(word => `- "${word}"`).join('\n')}
-${keywordInfo.year ? `- "${keywordInfo.year}"` : ''}
+${keywordInfo.year ? `- "${keywordInfo.year}" (절대 누락 금지)` : ''}
 ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
 
 각 제목은 위의 핵심 요소들을 자연스럽게 포함하면서 2025년 최신 정보를 반영해야 합니다.
+년도는 반드시 포함되어야 하며, 제거하거나 생략해서는 안 됩니다.
 결과는 제목만 줄바꿈으로 구분하여 제공해주세요.`;
         
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
@@ -117,49 +119,43 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
           .filter(topic => topic.length > 5);
 
-        // 개선된 키워드 검증 로직 - 입력된 키워드와 관련된 내용은 허용
+        // 개선된 키워드 검증 로직 - 년도 포함 필수
         const validTopics = newTopics.filter(topic => {
-          // 1. 핵심 단어 포함률 체크 (60% 이상으로 완화)
+          // 1. 핵심 단어 포함률 체크 (60% 이상)
           const includedCoreWords = keywordInfo.coreWords.filter(word => 
             topic.toLowerCase().includes(word.toLowerCase())
           );
           const coreWordRatio = keywordInfo.coreWords.length > 0 ? 
             includedCoreWords.length / keywordInfo.coreWords.length : 1;
           
-          // 2. 년도가 있다면 반드시 포함되어야 함
-          const yearCheck = !keywordInfo.year || 
-            topic.includes(keywordInfo.year) || 
-            topic.includes(keywordInfo.year.replace('년', ''));
+          // 2. 년도가 있다면 반드시 포함되어야 함 (더 유연한 체크)
+          let yearCheck = true;
+          if (keywordInfo.year) {
+            yearCheck = topic.includes(keywordInfo.year) || 
+                      topic.includes(keywordInfo.year.replace('년', '')) ||
+                      topic.includes('2025년') || 
+                      topic.includes('2025');
+          }
           
-          // 3. 숫자가 있다면 반드시 포함되어야 함
+          // 3. 숫자가 있다면 포함되어야 함
           const numberCheck = !keywordInfo.number || 
             topic.includes(keywordInfo.number) ||
             topic.includes(keywordInfo.number.replace(/만원?/, ''));
           
-          // 4. 입력된 키워드와 관련없는 완전히 다른 주제만 제외
-          // 입력된 키워드에 "에너지바우처"가 포함되어 있다면 에너지바우처 관련 주제는 허용
-          const isRelatedToInputKeyword = keywordInfo.coreWords.some(word => 
-            ['에너지', '바우처', '에너지바우처'].includes(word.toLowerCase())
+          // 4. 기본적인 관련성 체크
+          const isRelated = keywordInfo.coreWords.some(word => 
+            topic.toLowerCase().includes(word.toLowerCase())
           );
           
-          let excludeOtherTopics = true;
-          if (!isRelatedToInputKeyword) {
-            // 입력 키워드가 에너지바우처와 관련없을 때만 제외
-            excludeOtherTopics = !topic.includes('에너지바우처') && 
-              !topic.includes('70만원') &&
-              !topic.includes('청년도약계좌') &&
-              !topic.includes('국민취업지원제도');
-          }
+          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio.toFixed(2)}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 관련성: ${isRelated}`);
           
-          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio.toFixed(2)}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 다른주제제외: ${excludeOtherTopics}`);
-          
-          return coreWordRatio >= 0.6 && yearCheck && numberCheck && excludeOtherTopics;
+          return coreWordRatio >= 0.6 && yearCheck && numberCheck && isRelated;
         });
 
-        // preventDuplicates 설정에 따라 중복 제거 여부 결정 (localStorage 값 사용)
+        // preventDuplicates 설정에 따라 중복 제거 여부 결정
         let uniqueValidTopics;
         if (preventDuplicates) {
-          // 중복 금지 모드: 현재 세션 내에서만 중복 제거 (기존 저장된 주제와는 비교하지 않음)
+          // 중복 금지 모드: 현재 세션 내에서만 중복 제거
           uniqueValidTopics = validTopics.filter(topic => 
             !allValidTopics.some(existingTopic => 
               existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
@@ -167,7 +163,7 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           );
           console.log(`중복 금지 모드: ${validTopics.length}개 -> ${uniqueValidTopics.length}개 (현재 세션 내 중복 제거됨)`);
         } else {
-          // 중복 허용 모드: 중복 제거하지 않음 (기존 저장된 주제와도 비교하지 않음)
+          // 중복 허용 모드: 중복 제거하지 않음
           uniqueValidTopics = validTopics;
           console.log(`중복 허용 모드: ${validTopics.length}개 주제 모두 허용`);
         }
