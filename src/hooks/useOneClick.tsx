@@ -229,7 +229,7 @@ export const useOneClick = (
           // 중복 허용일 때는 실패해도 기본 키워드 사용하지 않고 재시도
           if (!preventDuplicates) {
             const retryKeyword = await generateLatestKeyword();
-            keyword = retryKeyword || '2024년 생활 꿀팁';
+            keyword = retryKeyword || '2025년 생활 꿀팁';
           } else {
             throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
           }
@@ -330,7 +330,7 @@ export const useOneClick = (
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
       
-      await sleep(1000);
+      await sleep(1500); // 키워드 설정 후 잠시 대기
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
@@ -342,7 +342,8 @@ export const useOneClick = (
         throw new Error("주제 생성에 실패하여 중단합니다.");
       }
 
-      await sleep(1000);
+      // 주제 생성 후 UI 업데이트를 위한 추가 대기
+      await sleep(2000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       let selectedTopic: string | null = null;
@@ -373,7 +374,8 @@ export const useOneClick = (
         await recordTopicUsage(selectedTopic, userId);
       }
 
-      await sleep(1000);
+      // 주제 선택 후 UI 업데이트를 위한 추가 대기
+      await sleep(2000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });

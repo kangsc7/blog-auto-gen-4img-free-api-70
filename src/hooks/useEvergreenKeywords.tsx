@@ -13,7 +13,7 @@ interface EvergreenKeyword {
 export const useEvergreenKeywords = () => {
   const { toast } = useToast();
 
-  // 검증된 평생 키워드 데이터베이스 (더 다양하게 확장)
+  // 검증된 평생 키워드 데이터베이스 (간결한 키워드로 수정)
   const evergreenKeywordsDB: EvergreenKeyword[] = [
     // 재테크 카테고리
     { id: '1', keyword_text: '적금 이자율 비교', category: '재테크', search_volume: 8500, competition_level: 'medium' },
@@ -47,7 +47,7 @@ export const useEvergreenKeywords = () => {
     { id: '23', keyword_text: '영어 회화 학습법', category: '자기계발', search_volume: 12800, competition_level: 'high' },
     { id: '24', keyword_text: '프로그래밍 독학 순서', category: '자기계발', search_volume: 8900, competition_level: 'medium' },
     
-    // 정부혜택 카테고리
+    // 정부혜택 카테고리 (간결한 키워드로 수정)
     { id: '25', keyword_text: '청년 월세 지원금', category: '정부혜택', search_volume: 18000, competition_level: 'high' },
     { id: '26', keyword_text: '기초연금 신청 방법', category: '정부혜택', search_volume: 13500, competition_level: 'medium' },
     { id: '27', keyword_text: '근로장려금 계산기', category: '정부혜택', search_volume: 8900, competition_level: 'medium' },
@@ -103,7 +103,12 @@ export const useEvergreenKeywords = () => {
       
       console.log(`선택된 평생 키워드: ${selectedKeyword.keyword_text} (카테고리: ${selectedKeyword.category}, 경쟁도: ${selectedKeyword.competition_level})`);
       
-      return selectedKeyword.keyword_text;
+      // 간결한 키워드만 반환 (최대 20자 제한)
+      const finalKeyword = selectedKeyword.keyword_text.length > 20 
+        ? selectedKeyword.keyword_text.substring(0, 20) 
+        : selectedKeyword.keyword_text;
+      
+      return finalKeyword;
     } catch (error) {
       console.error('평생 키워드 선택 오류:', error);
       toast({
