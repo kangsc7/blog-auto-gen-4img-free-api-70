@@ -58,12 +58,14 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
+      {/* 모든 사용자에게 동일한 API 키 섹션 표시 */}
       <RefactoredApiKeysSection 
         geminiManager={geminiManager}
         pixabayManager={pixabayManager}
         huggingFaceManager={huggingFaceManager}
       />
 
+      {/* 관리자 전용 컨트롤은 별도로 표시 */}
       {isAdmin && (
         <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">
           <div className="flex items-start gap-8">
