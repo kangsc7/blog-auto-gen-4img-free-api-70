@@ -97,7 +97,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
               onClick={() => saveAppState({ saveReferenceTrigger: true })}
               disabled={!appState.selectedTopic}
             >
-              참조 정보 저장
+              외부 링크 정보 저장
             </Button>
         </div>
 
