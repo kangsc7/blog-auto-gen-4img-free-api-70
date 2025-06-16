@@ -81,7 +81,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 문장</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크 문장</label>
                 <Input
                     placeholder="예: 워드프레스 꿀팁 더 보러가기"
                     value={appState.referenceSentence}
