@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -142,7 +141,7 @@ const getFaqSection = (colors: any, topic: string): string => `
 </div>
 `;
 
-const getEncouragingClosingSection = (colors: any, refLink: string): string => `
+const getEncouragingClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>당신도 할 수 있어요! 꿈을 향한 첫걸음을 응원합니다</b> 💪✨</h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 여기까지 읽어주신 당신, 정말 대단해요! 관련 정보에 대해 꼼꼼히 알아보시는 모습에서 진정한 성공의 자질이 보입니다. 많은 분들이 복잡해 보인다는 이유로 포기하시는데, 여러분은 끝까지 정보를 찾아보고 계시잖아요. 😊
@@ -155,22 +154,37 @@ const getEncouragingClosingSection = (colors: any, refLink: string): string => `
 </p>
 `;
 
-const getClosingSection = (colors: any, refLink: string): string => `
+const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 지금까지 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
-<p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>[REFERENCE_TEXT]</strong></a></p>
+<p style="text-align: center; font-size: 18px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <br><br>
 `;
 
-const getTagsSection = (topic: string, naturalKeyword: string): string => `
-[GENERATED_TAGS]
-`;
+const getTagsSection = (topic: string, keyword: string): string => {
+  // 기본 태그들을 생성
+  const baseTags = [keyword, topic];
+  const additionalTags = [
+    '신청방법',
+    '지원대상', 
+    '혜택',
+    '정부지원',
+    '2025년',
+    '에너지바우처',
+    '생활정보'
+  ];
+  
+  // 중복 제거 후 태그 조합
+  const allTags = [...new Set([...baseTags, ...additionalTags])];
+  
+  return allTags.join(', ');
+};
 
-export const getHtmlTemplate = (colors: any, topic: string, naturalKeyword: string, refLink: string): string => {
+export const getHtmlTemplate = (colors: any, topic: string, keyword: string, refLink: string, referenceSentence?: string): string => {
   const htmlParts = [
     getHeaderSection(topic),
-    getIntroSection(colors, naturalKeyword),
+    getIntroSection(colors, keyword),
     getProblemDefinitionSection(colors),
     getSolutionGuideSection(colors),
     getTipsAndWarningsSection(colors),
@@ -178,11 +192,11 @@ export const getHtmlTemplate = (colors: any, topic: string, naturalKeyword: stri
     getDeepDiveSection(colors),
     getRelatedInfoSection(colors),
     getRelatedKeywordsSection(colors),
-    getSummaryCardSection(naturalKeyword),
+    getSummaryCardSection(keyword),
     getEncouragingClosingSection(colors, refLink),
     getFaqSection(colors, topic),
-    getClosingSection(colors, refLink),
-    getTagsSection(topic, naturalKeyword),
+    getClosingSection(colors, refLink, referenceSentence),
+    getTagsSection(topic, keyword),
   ];
 
   return `
@@ -195,4 +209,3 @@ export const getHtmlTemplate = (colors: any, topic: string, naturalKeyword: stri
   </div>
 </div>
 `;
-};
