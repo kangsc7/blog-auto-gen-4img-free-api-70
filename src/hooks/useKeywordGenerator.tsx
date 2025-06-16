@@ -107,12 +107,11 @@ export const useKeywordGenerator = (appState: AppState) => {
             
             console.log('선택된 평생 키워드:', selectedKeyword);
             
-            // 2단계: 선택된 키워드를 현재 년도에 맞게 업데이트
-            const currentYear = 2025; // 2025년으로 고정
+            // 2단계: 평생 키워드는 년도를 추가하지 않고 그대로 사용하거나 일반적인 개선만 적용
             const enhancementPrompts = [
-                `"${selectedKeyword}"를 ${currentYear}년 상황에 맞게 더 구체적으로 만들어주세요.`,
-                `"${selectedKeyword}" 관련해서 ${currentYear}년 새로운 정보나 변화사항을 포함한 키워드로 업그레이드해주세요.`,
-                `"${selectedKeyword}"에 년도나 구체적인 수치를 추가해서 더 매력적인 키워드로 만들어주세요.`
+                `"${selectedKeyword}"를 더 구체적이고 매력적인 키워드로 만들어주세요. 년도는 포함하지 마세요.`,
+                `"${selectedKeyword}" 관련해서 더 검색하고 싶게 만드는 키워드로 업그레이드해주세요. 년도는 포함하지 마세요.`,
+                `"${selectedKeyword}"에 구체적인 수치나 방법을 추가해서 더 매력적인 키워드로 만들어주세요. 년도는 포함하지 마세요.`
             ];
             
             const randomEnhancement = enhancementPrompts[Math.floor(Math.random() * enhancementPrompts.length)];
