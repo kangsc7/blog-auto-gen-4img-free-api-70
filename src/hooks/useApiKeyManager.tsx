@@ -10,8 +10,10 @@ export const useApiKeyManager = (
   const { toast } = useToast();
   const [isValidatingApi, setIsValidatingApi] = useState(false);
 
-  const validateApiKey = async (): Promise<boolean> => {
-    if (!appState.apiKey.trim()) {
+  const validateApiKey = async (key?: string): Promise<boolean> => {
+    const apiKeyToValidate = key || appState.apiKey;
+    
+    if (!apiKeyToValidate.trim()) {
       toast({ title: "API 키 오류", description: "API 키를 입력해주세요.", variant: "destructive" });
       return false;
     }
@@ -22,7 +24,7 @@ export const useApiKeyManager = (
       // This is a mock validation. In a real scenario, you'd make an API call.
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (appState.apiKey.length < 20) {
+      if (apiKeyToValidate.length < 20) {
         toast({
           title: "API 키 검증 실패",
           description: "API 키 값이 올바르지 않습니다. 다시 확인해주세요.",
@@ -34,7 +36,7 @@ export const useApiKeyManager = (
       }
       
       saveAppState({ isApiKeyValidated: true });
-      localStorage.setItem('blog_api_key', appState.apiKey);
+      localStorage.setItem('blog_api_key', apiKeyToValidate);
       localStorage.setItem('blog_api_key_validated', 'true');
       toast({
         title: "API 키 검증 및 저장 성공",

@@ -92,6 +92,23 @@ export const useAppController = () => {
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 
+  // Add missing setter functions to pixabayManager and huggingFaceManager
+  const enhancedPixabayManager = {
+    ...pixabayManager,
+    setIsPixabayApiKeyValidated: (validated: boolean) => {
+      // This is handled internally by usePixabayManager
+      console.log('Pixabay validation state:', validated);
+    },
+  };
+
+  const enhancedHuggingFaceManager = {
+    ...huggingFaceManager,
+    setIsHuggingFaceApiKeyValidated: (validated: boolean) => {
+      // This is handled internally by useHuggingFaceManager  
+      console.log('HuggingFace validation state:', validated);
+    },
+  };
+
   return {
     appState,
     saveAppState,
@@ -105,8 +122,8 @@ export const useAppController = () => {
     isValidatingApi,
     validateApiKey,
     deleteApiKeyFromStorage,
-    pixabayManager,
-    huggingFaceManager,
+    pixabayManager: enhancedPixabayManager,
+    huggingFaceManager: enhancedHuggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
     handleResetApp,

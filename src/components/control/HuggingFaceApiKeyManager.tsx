@@ -4,26 +4,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, KeyRound } from 'lucide-react';
-import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 
 interface HuggingFaceApiKeyManagerProps {
-  manager: ReturnType<typeof useHuggingFaceManager>;
+  huggingFaceApiKey: string;
+  setHuggingFaceApiKey: (key: string) => void;
+  isHuggingFaceApiKeyValidated: boolean;
+  setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
+  validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
+  deleteHuggingFaceApiKeyFromStorage: () => void;
 }
 
 export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> = ({
-  manager
+  huggingFaceApiKey,
+  setHuggingFaceApiKey,
+  isHuggingFaceApiKeyValidated,
+  setIsHuggingFaceApiKeyValidated,
+  validateHuggingFaceApiKey,
+  deleteHuggingFaceApiKeyFromStorage
 }) => {
-  const { 
-    huggingFaceApiKey, 
-    setHuggingFaceApiKey,
-    isHuggingFaceApiKeyValidated, 
-    isHuggingFaceValidating, 
-    validateHuggingFaceApiKey, 
-    deleteHuggingFaceApiKeyFromStorage 
-  } = manager;
-
   return (
-    <Card className="shadow-md">
+    <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
         <CardTitle className="flex items-center text-blue-700">
           <KeyRound className="h-5 w-5 mr-2" />
@@ -38,18 +38,19 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
               type="password"
               placeholder="hf_... 형식의 API 키"
               value={huggingFaceApiKey}
-              onChange={(e) => setHuggingFaceApiKey(e.target.value)}
+              onChange={(e) => {
+                setHuggingFaceApiKey(e.target.value);
+                setIsHuggingFaceApiKeyValidated(false);
+              }}
               className="flex-1"
             />
             <Button 
-              onClick={validateHuggingFaceApiKey} 
-              disabled={!huggingFaceApiKey.trim() || isHuggingFaceValidating}
+              onClick={() => validateHuggingFaceApiKey(huggingFaceApiKey)} 
+              disabled={!huggingFaceApiKey.trim()}
               variant="outline" 
               className={isHuggingFaceApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
             >
-              {isHuggingFaceValidating ? (
-                <>검증 중...</>
-              ) : isHuggingFaceApiKeyValidated ? (
+              {isHuggingFaceApiKeyValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
                 '검증 및 저장'

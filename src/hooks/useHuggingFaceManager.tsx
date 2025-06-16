@@ -35,53 +35,87 @@ export const useHuggingFaceManager = () => {
             }
 
             const data = await response.json();
-            if (data.auth?.accessToken?.role !== 'read' && data.auth?.accessToken?.role !== 'write') {
-                const role = data.auth?.accessToken?.role || '알 수 없음';
-                throw new Error(`API 키의 권한이 부족합니다. 현재 권한: '${role}'. 'read' 또는 'write' 권한이 필요합니다.`);
-            }
+            if (data.auth?.accessToken?.role !== 'read' && data.auth?.accessToken?.role !== 'write') {빌드 에러의 원인을 분석해보니 다음과 같은 문제들이 있습니다:
 
-            setIsHuggingFaceApiKeyValidated(true);
-            localStorage.setItem('hugging_face_api_key', key);
-            if (!silent) toast({ title: "Hugging Face API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
-            return true;
-        } catch (error) {
-            setIsHuggingFaceApiKeyValidated(false);
-            if (!silent) {
-                const description = error instanceof Error ? error.message : "키가 유효하지 않거나 문제가 발생했습니다.";
-                toast({ title: "Hugging Face API 키 검증 실패", description, variant: "destructive" });
-            }
-            return false;
-        } finally {
-            setIsHuggingFaceValidating(false);
-        }
-    }, [toast]);
+1. `ApiKeyManager`에서 `validateApiKey` 함수 시그니처가 맞지 않음
+2. `PixabayApiKeyManager`와 `HuggingFaceApiKeyManager`의 props 구조가 실제 컴포넌트 인터페이스와 맞지 않음
+3. 각 매니저들에서 필요한 setter 함수들이 누락됨
 
-    useEffect(() => {
-        const savedKey = localStorage.getItem('hugging_face_api_key') || '';
-        if (savedKey) {
-            setHuggingFaceApiKey(savedKey);
-            validateHuggingFaceApiKeyCallback(savedKey, true);
-        }
-    }, [validateHuggingFaceApiKeyCallback]);
+각 컴포넌트의 원래 인터페이스에 맞춰서 수정하겠습니다.
 
-    const deleteHuggingFaceApiKeyFromStorage = () => {
-        localStorage.removeItem('hugging_face_api_key');
-        setHuggingFaceApiKey('');
-        setIsHuggingFaceApiKeyValidated(false);
-        toast({ title: "삭제 완료", description: "저장된 Hugging Face API 키가 삭제되었습니다." });
-    };
-    
-    const handleSetHuggingFaceApiKey = (key: string) => {
-        setHuggingFaceApiKey(key);
-        setIsHuggingFaceApiKeyValidated(false);
-    };
+<lov-code>
+먼저 `ApiKeysSection.tsx`에서 각 API 키 매니저 컴포넌트들의 props를 올바른 형태로 수정해야 합니다:
 
-    return {
-        huggingFaceApiKey,
-        setHuggingFaceApiKey: handleSetHuggingFaceApiKey,
-        isHuggingFaceApiKeyValidated,
-        isHuggingFaceValidating,
-        validateHuggingFaceApiKey: () => validateHuggingFaceApiKeyCallback(huggingFaceApiKey),
-        deleteHuggingFaceApiKeyFromStorage,
-    };
+<lov-write file_path="src/components/sections/ApiKeysSection.tsx">
+import React from 'react';
+import { ApiKeyManager } from '@/components/control/ApiKeyManager';
+import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
+import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
+import { AppState } from '@/types';
+
+interface ApiKeysSectionProps {
+  appState: AppState;
+  saveAppState: (newState: Partial<AppState>) => void;
+  isValidatingApi: boolean;
+  validateApiKey: (key: string) => Promise<boolean>;
+  deleteApiKeyFromStorage: () => void;
+  pixabayManager: {
+    pixabayApiKey: string;
+    setPixabayApiKey: (key: string) => void;
+    isPixabayApiKeyValidated: boolean;
+    setIsPixabayApiKeyValidated: (validated: boolean) => void;
+    validatePixabayApiKey: (key: string) => Promise<boolean>;
+    deletePixabayApiKeyFromStorage: () => void;
+  };
+  huggingFaceManager: {
+    huggingFaceApiKey: string;
+    setHuggingFaceApiKey: (key: string) => void;
+    isHuggingFaceApiKeyValidated: boolean;
+    setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
+    validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
+    deleteHuggingFaceApiKeyFromStorage: () => void;
+  };
+}
+
+export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
+  appState,
+  saveAppState,
+  isValidatingApi,
+  validateApiKey,
+  deleteApiKeyFromStorage,
+  pixabayManager,
+  huggingFaceManager,
+}) => {
+  return (
+    <div className="container mx-auto mt-20 relative z-[9999]">
+      <div className="flex flex-wrap gap-4 mb-6 justify-center">
+        <div className="relative z-[9999] hover:z-[10000]">
+          <ApiKeyManager
+            appState={appState}
+            saveAppState={saveAppState}
+            isValidatingApi={isValidatingApi}
+            validateApiKey={validateApiKey}
+            deleteApiKeyFromStorage={deleteApiKeyFromStorage}
+          />
+        </div>
+        
+        <div className="relative z-[9999] hover:z-[10000]">
+          <PixabayApiKeyManager
+            apiKey={pixabayManager.pixabayApiKey}
+            setApiKey={pixabayManager.setPixabayApiKey}
+            isValidated={pixabayManager.isPixabayApiKeyValidated}
+            isValidating={pixabayManager.isPixabayValidating || false}
+            validateApiKey={pixabayManager.validatePixabayApiKey}
+            deleteApiKey={pixabayManager.deletePixabayApiKeyFromStorage}
+          />
+        </div>
+        
+        <div className="relative z-[9999] hover:z-[10000]">
+          <HuggingFaceApiKeyManager
+            manager={huggingFaceManager}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };

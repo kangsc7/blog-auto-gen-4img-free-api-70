@@ -56,6 +56,7 @@ export const usePixabayManager = () => {
         pixabayApiKey,
         setPixabayApiKey: handleSetPixabayApiKey,
         isPixabayApiKeyValidated,
+        setIsPixabayApiKeyValidated,
         isPixabayValidating,
         validatePixabayApiKey: () => validatePixabayApiKeyCallback(pixabayApiKey),
         deletePixabayApiKeyFromStorage,
