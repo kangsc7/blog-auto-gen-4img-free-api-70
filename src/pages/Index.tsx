@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
@@ -121,8 +122,8 @@ const Index = () => {
               size="lg"
               className="bg-white text-green-600 border-green-600 hover:bg-green-50 rounded-lg shadow-md transition-colors px-16 py-8 min-w-[200px] h-16"
             >
-              <RefreshCw className="h-5 w-5" />
-              <span className="font-semibold text-gray-800">초기화</span>
+              <RefreshCw className="h-6 w-6" />
+              <span className="font-bold text-lg text-gray-800">초기화</span>
             </Button>
             <p className="text-xs text-gray-500 mt-1">모든 입력값과 생성된 내용 초기화</p>
           </div>
