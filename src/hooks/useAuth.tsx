@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,7 +91,7 @@ export const useAuth = () => {
         email: signUpData.email,
         password: signUpData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: 'https://blog-ai-wizard-forge.lovable.app/',
         },
       });
 
