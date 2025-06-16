@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { AppState } from '@/types';
 
 export const useApiKeyManager = (
@@ -30,17 +31,18 @@ export const useApiKeyManager = (
           description: "API 키 값이 올바르지 않습니다. 다시 확인해주세요.",
           variant: "destructive"
         });
-        localStorage.removeItem('blog_api_key_validated');
+        await saveApiKeyToDatabase('');
         saveAppState({ isApiKeyValidated: false });
         return false;
       }
       
       saveAppState({ isApiKeyValidated: true });
+      await saveApiKeyToDatabase(apiKeyToValidate);
       localStorage.setItem('blog_api_key', apiKeyToValidate);
       localStorage.setItem('blog_api_key_validated', 'true');
       toast({
         title: "API 키 검증 및 저장 성공",
-        description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다.",
+        description: "성공적으로 연결되었으며, 서버에 저장되었습니다.",
       });
       return true;
     } catch (error) {
@@ -50,11 +52,32 @@ export const useApiKeyManager = (
         description: "API 키 검증 중 오류가 발생했습니다.",
         variant: "destructive"
       });
-      localStorage.removeItem('blog_api_key_validated');
+      await saveApiKeyToDatabase('');
       saveAppState({ isApiKeyValidated: false });
       return false;
     } finally {
       setIsValidatingApi(false);
+    }
+  };
+
+  const saveApiKeyToDatabase = async (apiKey: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          gemini_api_key: apiKey,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error('API 키 서버 저장 오류:', error);
+      }
+    } catch (error) {
+      console.error('API 키 서버 저장 오류:', error);
     }
   };
 

@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePixabayManager = () => {
     const { toast } = useToast();
@@ -20,11 +21,13 @@ export const usePixabayManager = () => {
             if (!response.ok) throw new Error(`네트워크 오류: ${response.statusText}`);
             
             setIsPixabayApiKeyValidated(true);
+            await savePixabayApiKeyToDatabase(key);
             localStorage.setItem('pixabay_api_key', key);
-            if (!silent) toast({ title: "Pixabay API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
+            if (!silent) toast({ title: "Pixabay API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 서버에 저장되었습니다." });
             return true;
         } catch (error) {
             setIsPixabayApiKeyValidated(false);
+            await savePixabayApiKeyToDatabase('');
             if (!silent) {
                 toast({ title: "Pixabay API 키 검증 실패", description: `키가 유효하지 않거나 문제가 발생했습니다.`, variant: "destructive" });
             }
@@ -34,18 +37,67 @@ export const usePixabayManager = () => {
         }
     }, [toast]);
 
+    const savePixabayApiKeyToDatabase = async (apiKey: string) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    pixabay_api_key: apiKey,
+                    updated_at: new Date().toISOString(),
+                });
+
+            if (error) {
+                console.error('Pixabay API 키 서버 저장 오류:', error);
+            }
+        } catch (error) {
+            console.error('Pixabay API 키 서버 저장 오류:', error);
+        }
+    };
+
+    const loadApiKeysFromDatabase = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('pixabay_api_key')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                console.error('API 키 로드 오류:', error);
+                return;
+            }
+
+            if (data?.pixabay_api_key) {
+                setPixabayApiKey(data.pixabay_api_key);
+                validatePixabayApiKeyCallback(data.pixabay_api_key, true);
+            }
+        } catch (error) {
+            console.error('API 키 로드 오류:', error);
+        }
+    }, [validatePixabayApiKeyCallback]);
+
     useEffect(() => {
         const savedKey = localStorage.getItem('pixabay_api_key') || '';
         if (savedKey) {
             setPixabayApiKey(savedKey);
             validatePixabayApiKeyCallback(savedKey, true);
+        } else {
+            loadApiKeysFromDatabase();
         }
-    }, [validatePixabayApiKeyCallback]);
+    }, [validatePixabayApiKeyCallback, loadApiKeysFromDatabase]);
 
     const deletePixabayApiKeyFromStorage = () => {
         localStorage.removeItem('pixabay_api_key');
         setPixabayApiKey('');
         setIsPixabayApiKeyValidated(false);
+        savePixabayApiKeyToDatabase('');
         toast({ title: "삭제 완료", description: "저장된 Pixabay API 키가 삭제되었습니다." });
     };
     

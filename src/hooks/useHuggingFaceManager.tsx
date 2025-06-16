@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useHuggingFaceManager = () => {
     const { toast } = useToast();
@@ -40,11 +41,13 @@ export const useHuggingFaceManager = () => {
             }
 
             setIsHuggingFaceApiKeyValidated(true);
+            await saveHuggingFaceApiKeyToDatabase(key);
             localStorage.setItem('hugging_face_api_key', key);
-            if (!silent) toast({ title: "Hugging Face API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 키가 브라우저에 저장되었습니다." });
+            if (!silent) toast({ title: "Hugging Face API 키 검증 및 저장 성공", description: "성공적으로 연결되었으며, 서버에 저장되었습니다." });
             return true;
         } catch (error) {
             setIsHuggingFaceApiKeyValidated(false);
+            await saveHuggingFaceApiKeyToDatabase('');
             if (!silent) {
                 toast({ title: "Hugging Face API 키 검증 실패", description: `키가 유효하지 않거나 문제가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`, variant: "destructive" });
             }
@@ -54,18 +57,67 @@ export const useHuggingFaceManager = () => {
         }
     }, [toast]);
 
+    const saveHuggingFaceApiKeyToDatabase = async (apiKey: string) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    huggingface_api_key: apiKey,
+                    updated_at: new Date().toISOString(),
+                });
+
+            if (error) {
+                console.error('HuggingFace API 키 서버 저장 오류:', error);
+            }
+        } catch (error) {
+            console.error('HuggingFace API 키 서버 저장 오류:', error);
+        }
+    };
+
+    const loadApiKeysFromDatabase = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('huggingface_api_key')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                console.error('API 키 로드 오류:', error);
+                return;
+            }
+
+            if (data?.huggingface_api_key) {
+                setHuggingFaceApiKey(data.huggingface_api_key);
+                validateHuggingFaceApiKeyCallback(data.huggingface_api_key, true);
+            }
+        } catch (error) {
+            console.error('API 키 로드 오류:', error);
+        }
+    }, [validateHuggingFaceApiKeyCallback]);
+
     useEffect(() => {
         const savedKey = localStorage.getItem('hugging_face_api_key') || '';
         if (savedKey) {
             setHuggingFaceApiKey(savedKey);
             validateHuggingFaceApiKeyCallback(savedKey, true);
+        } else {
+            loadApiKeysFromDatabase();
         }
-    }, [validateHuggingFaceApiKeyCallback]);
+    }, [validateHuggingFaceApiKeyCallback, loadApiKeysFromDatabase]);
 
     const deleteHuggingFaceApiKeyFromStorage = () => {
         localStorage.removeItem('hugging_face_api_key');
         setHuggingFaceApiKey('');
         setIsHuggingFaceApiKeyValidated(false);
+        saveHuggingFaceApiKeyToDatabase('');
         toast({ title: "삭제 완료", description: "저장된 Hugging Face API 키가 삭제되었습니다." });
     };
     

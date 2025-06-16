@@ -1,6 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { AppState } from '@/types';
 
 const initialAppState: AppState = {
@@ -66,7 +66,38 @@ export const useAppStateManager = () => {
     console.log('preventDuplicates 상태 변경:', preventDuplicates);
   }, [preventDuplicates]);
 
-  const loadAppState = () => {
+  const loadApiKeysFromDatabase = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { apiKey: '', isApiKeyValidated: false };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('gemini_api_key')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('API 키 로드 오류:', error);
+        return { apiKey: '', isApiKeyValidated: false };
+      }
+
+      const apiKey = data?.gemini_api_key || '';
+      const isApiKeyValidated = !!apiKey;
+
+      if (apiKey) {
+        localStorage.setItem('blog_api_key', apiKey);
+        localStorage.setItem('blog_api_key_validated', isApiKeyValidated.toString());
+      }
+
+      return { apiKey, isApiKeyValidated };
+    } catch (error) {
+      console.error('API 키 로드 오류:', error);
+      return { apiKey: '', isApiKeyValidated: false };
+    }
+  }, []);
+
+  const loadAppState = async () => {
     try {
       const savedState = localStorage.getItem('blog_app_state');
       let parsedState: Partial<AppState> = {};
@@ -76,8 +107,16 @@ export const useAppStateManager = () => {
         delete parsedState.isApiKeyValidated;
       }
       
-      const savedApiKey = localStorage.getItem('blog_api_key') || '';
-      const savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
+      // 먼저 localStorage에서 확인
+      let savedApiKey = localStorage.getItem('blog_api_key') || '';
+      let savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
+
+      // localStorage에 없으면 데이터베이스에서 로드
+      if (!savedApiKey) {
+        const dbApiKeys = await loadApiKeysFromDatabase();
+        savedApiKey = dbApiKeys.apiKey;
+        savedApiKeyValidated = dbApiKeys.isApiKeyValidated;
+      }
 
       const savedReferenceLink = localStorage.getItem('blog_reference_link') || '';
       const savedReferenceSentence = localStorage.getItem('blog_reference_sentence') || '';
