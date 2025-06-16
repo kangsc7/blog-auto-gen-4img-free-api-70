@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 
@@ -26,9 +27,9 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
       <div className="bg-white rounded-lg shadow-md p-6 pt-10">
         <div className="w-full max-w-2xl mx-auto px-4 sm:px-0">
           <div className="relative">
-            <div className="absolute top-4 left-0 w-full h-1 bg-gray-200 rounded-full"></div>
+            <div className="absolute top-5 left-0 w-full h-1 bg-gray-200 rounded-full"></div>
             <div
-              className="absolute top-4 left-0 h-1 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500 ease-out"
+              className="absolute top-5 left-0 h-1 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progressPercentage}%` }}
             ></div>
             <div className="flex justify-between items-start">
@@ -39,7 +40,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
                 return (
                   <div key={label} className="relative text-center w-20">
                     <div
-                      className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
+                      className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center text-base font-bold border-2 transition-all duration-500 z-10 relative ${
                         isActive
                           ? 'bg-blue-500 text-white border-blue-500 scale-110'
                           : isCompleted
@@ -47,10 +48,10 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
                           : 'bg-white text-gray-500 border-gray-300'
                       }`}
                     >
-                      {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
+                      {isCompleted ? <CheckCircle className="w-6 h-6" /> : stepNumber}
                     </div>
                     <p
-                      className={`mt-3 text-xs md:text-sm font-semibold transition-colors duration-500 ${
+                      className={`mt-4 text-xs md:text-sm font-semibold transition-colors duration-500 ${
                         isActive || isCompleted ? 'text-gray-800' : 'text-gray-500'
                       }`}
                     >
