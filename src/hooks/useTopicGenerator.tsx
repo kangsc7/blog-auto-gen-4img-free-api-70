@@ -39,33 +39,50 @@ export const useTopicGenerator = (
       let attempts = 0;
       const maxAttempts = 3;
       
-      // 키워드를 더 유연하게 검증하기 위한 핵심 단어 추출
-      const extractKeywords = (keyword: string) => {
-        // 년도, 숫자, 고유명사 등 핵심 요소 추출
-        const yearMatch = keyword.match(/\d{4}년?/);
-        const numberMatch = keyword.match(/\d+만?원?/);
-        const mainWords = keyword.split(' ').filter(word => 
-          word.length > 1 && 
-          !['년', '월', '일', '의', '를', '을', '이', '가', '에', '로', '으로'].includes(word)
+      // 핵심 키워드를 더 정확하게 추출하여 검증
+      const extractCoreKeywords = (keyword: string) => {
+        // 키워드를 단어 단위로 분할하고 중요 단어만 추출
+        const stopWords = ['년', '월', '일', '의', '를', '을', '이', '가', '에', '로', '으로', '와', '과', '는', '은', '만', '원'];
+        const words = keyword.split(/\s+/).filter(word => 
+          word.length > 1 && !stopWords.includes(word)
         );
         
+        // 숫자와 년도는 별도 처리
+        const yearMatch = keyword.match(/\d{4}년?/);
+        const numberMatch = keyword.match(/\d+만?원?/);
+        
         return {
+          coreWords: words,
           year: yearMatch ? yearMatch[0] : null,
           number: numberMatch ? numberMatch[0] : null,
-          mainWords: mainWords
+          originalKeyword: keyword
         };
       };
 
-      const keywordComponents = extractKeywords(keyword);
-      console.log('키워드 구성요소:', keywordComponents);
+      const keywordInfo = extractCoreKeywords(keyword);
+      console.log('핵심 키워드 분석:', keywordInfo);
 
       while (allValidTopics.length < count && attempts < maxAttempts) {
         attempts++;
         console.log(`주제 생성 시도 ${attempts}/${maxAttempts}, 현재 유효 주제 수: ${allValidTopics.length}/${count}`);
         
-        // 개선된 프롬프트 사용
         const remainingCount = count - allValidTopics.length;
-        const prompt = getEnhancedTopicPrompt(keyword, remainingCount * 2); // 여분으로 더 많이 생성
+        
+        // 더 명확한 프롬프트로 키워드 포함 강조
+        const enhancedPrompt = `'${keyword}'를(을) 주제로, 2025년 최신 정보를 반영하여 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${remainingCount * 2}개를 생성해 주세요.
+
+**절대 지켜야 할 핵심 규칙**:
+1. 모든 제목은 반드시 '${keyword}' 키워드의 핵심 구성 요소를 모두 포함해야 합니다.
+2. 다른 주제(에너지바우처, 70만원 등)는 절대 포함하지 마세요.
+3. 오직 '${keyword}'와 관련된 내용만 생성해주세요.
+
+**핵심 키워드 필수 포함 요소**:
+${keywordInfo.coreWords.map(word => `- "${word}"`).join('\n')}
+${keywordInfo.year ? `- "${keywordInfo.year}"` : ''}
+${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
+
+각 제목은 위의 핵심 요소들을 자연스럽게 포함하면서 2025년 최신 정보를 반영해야 합니다.
+결과는 제목만 줄바꿈으로 구분하여 제공해주세요.`;
         
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
@@ -73,9 +90,9 @@ export const useTopicGenerator = (
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: [{ parts: [{ text: enhancedPrompt }] }],
             generationConfig: {
-              temperature: 0.7 + (attempts * 0.1), // 시도할 때마다 창의성 증가
+              temperature: 0.8,
               maxOutputTokens: 2048,
             }
           })
@@ -94,40 +111,41 @@ export const useTopicGenerator = (
         const generatedText = data.candidates[0].content.parts[0].text;
         const newTopics = generatedText.split('\n')
           .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
-          .filter(topic => topic.length > 0);
+          .filter(topic => topic.length > 5);
 
-        // 개선된 키워드 검증 로직
+        // 강화된 키워드 검증 로직
         const validTopics = newTopics.filter(topic => {
-          // 년도 검증 (더 유연하게)
-          if (keywordComponents.year) {
-            const hasYear = topic.includes(keywordComponents.year) || 
-                           topic.includes(keywordComponents.year.replace('년', ''));
-            if (!hasYear) return false;
-          }
-          
-          // 숫자 검증
-          if (keywordComponents.number) {
-            const hasNumber = topic.includes(keywordComponents.number) ||
-                             topic.includes(keywordComponents.number.replace('만원', '')) ||
-                             topic.includes(keywordComponents.number.replace('원', ''));
-            if (!hasNumber) return false;
-          }
-          
-          // 주요 단어 검증 (70% 이상 포함되어야 함)
-          const includedWords = keywordComponents.mainWords.filter(word => 
-            topic.includes(word) || 
-            // 유사한 단어도 허용 (예: 에너지바우처, 에너지 바우처)
-            topic.replace(/\s/g, '').includes(word.replace(/\s/g, ''))
+          // 1. 핵심 단어 포함률 체크 (80% 이상)
+          const includedCoreWords = keywordInfo.coreWords.filter(word => 
+            topic.toLowerCase().includes(word.toLowerCase())
           );
+          const coreWordRatio = includedCoreWords.length / keywordInfo.coreWords.length;
           
-          const inclusionRate = includedWords.length / keywordComponents.mainWords.length;
-          return inclusionRate >= 0.7; // 70% 이상의 주요 단어가 포함되어야 함
+          // 2. 년도가 있다면 반드시 포함되어야 함
+          const yearCheck = !keywordInfo.year || 
+            topic.includes(keywordInfo.year) || 
+            topic.includes(keywordInfo.year.replace('년', ''));
+          
+          // 3. 숫자가 있다면 반드시 포함되어야 함
+          const numberCheck = !keywordInfo.number || 
+            topic.includes(keywordInfo.number) ||
+            topic.includes(keywordInfo.number.replace(/만원?/, ''));
+          
+          // 4. 다른 주제 키워드 제외 (에너지바우처, 70만원 등)
+          const excludeOtherTopics = !topic.includes('에너지바우처') && 
+            !topic.includes('70만원') &&
+            !topic.includes('에너지') &&
+            !topic.includes('바우처');
+          
+          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 다른주제제외: ${excludeOtherTopics}`);
+          
+          return coreWordRatio >= 0.8 && yearCheck && numberCheck && excludeOtherTopics;
         });
 
-        // 중복 제거하면서 추가
+        // 기존 주제와 중복 제거
         const uniqueValidTopics = validTopics.filter(topic => 
           !allValidTopics.some(existingTopic => 
-            existingTopic.replace(/\s/g, '') === topic.replace(/\s/g, '')
+            existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
           )
         );
 
@@ -136,7 +154,7 @@ export const useTopicGenerator = (
         console.log(`시도 ${attempts}: ${validTopics.length}개 유효 주제 생성, 누적: ${allValidTopics.length}개`);
         
         if (validTopics.length === 0) {
-          console.warn(`시도 ${attempts}: 유효한 주제가 생성되지 않음`);
+          console.warn(`시도 ${attempts}: 키워드 '${keyword}'에 맞는 유효한 주제가 생성되지 않음`);
         }
       }
 
@@ -144,10 +162,11 @@ export const useTopicGenerator = (
       const finalTopics = allValidTopics.slice(0, count);
 
       if (finalTopics.length === 0) {
-        throw new Error(`핵심 키워드 '${keyword}'가 포함된 주제가 생성되지 않았습니다. 키워드를 더 단순하게 입력해보세요.`);
+        throw new Error(`핵심 키워드 '${keyword}'가 포함된 주제가 생성되지 않았습니다. 키워드를 더 구체적으로 입력해보세요.`);
       }
 
-      saveAppState({ topics: finalTopics });
+      // 이전 주제들을 완전히 대체 (추가가 아닌 교체)
+      saveAppState({ topics: finalTopics, selectedTopic: '' });
       
       if (finalTopics.length < count) {
         toast({ 

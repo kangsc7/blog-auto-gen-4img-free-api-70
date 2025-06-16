@@ -86,6 +86,17 @@ export const useAppStateManager = () => {
         
         let updatedState = { ...prevState, ...newState };
 
+        // 주제 생성 시 키워드가 변경되었다면 기존 주제들을 완전히 삭제
+        if (newState.keyword && newState.keyword !== prevState.keyword) {
+          console.log('키워드 변경 감지: 기존 주제 삭제');
+          updatedState = { 
+            ...updatedState, 
+            topics: [], 
+            selectedTopic: '',
+            generatedContent: '' 
+          };
+        }
+
         if (newState.topics && preventDuplicates) {
           const originalTopics = newState.topics;
           const uniqueTopics = [...new Set(originalTopics)];
@@ -106,7 +117,7 @@ export const useAppStateManager = () => {
       } catch (error) {
         console.error('앱 상태 저장 오류:', error);
         toast({ title: "저장 실패", description: "상태 저장 중 오류가 발생했습니다.", variant: "destructive" });
-        return prevState; // Revert to previous state on error
+        return prevState;
       }
     });
   }, [toast, preventDuplicates]);
@@ -127,25 +138,31 @@ export const useAppStateManager = () => {
     const savedApiKey = localStorage.getItem('blog_api_key') || '';
     const savedApiKeyValidated = (localStorage.getItem('blog_api_key_validated') === 'true') && !!savedApiKey;
 
-    saveAppState({
-      keyword: '',
-      topicCount: 3,
-      topics: [],
-      selectedTopic: '',
-      colorTheme: '',
-      generatedContent: '',
-      imagePrompt: '',
-      imageStyle: '',
+    // 완전 초기화 - 모든 주제와 콘텐츠 삭제
+    setAppState({
+      ...initialAppState,
       apiKey: savedApiKey,
       isApiKeyValidated: savedApiKeyValidated,
+      referenceLink: localStorage.getItem('blog_reference_link') || '',
+      referenceSentence: localStorage.getItem('blog_reference_sentence') || '',
     });
+    
+    // 로컬 스토리지에서도 주제 관련 데이터 완전 삭제
+    const stateToSave = {
+      ...initialAppState,
+      referenceLink: localStorage.getItem('blog_reference_link') || '',
+      referenceSentence: localStorage.getItem('blog_reference_sentence') || '',
+    };
+    delete stateToSave.apiKey;
+    delete stateToSave.isApiKeyValidated;
+    localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
     
     setPreventDuplicates(true);
     window.dispatchEvent(new CustomEvent('app-reset'));
 
     toast({
-      title: "초기화 완료",
-      description: "앱 데이터가 초기화되었습니다. 브라우저에 저장된 API 키와 참조 정보는 유지됩니다.",
+      title: "완전 초기화 완료",
+      description: "모든 주제와 콘텐츠가 완전히 삭제되었습니다. API 키와 참조 정보는 유지됩니다.",
     });
   };
 
