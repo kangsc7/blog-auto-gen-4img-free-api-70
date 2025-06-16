@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
-import { getArticlePrompt } from '@/lib/prompts';
+import { getEnhancedArticlePrompt } from '@/lib/enhancedPrompts';
 import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
 
 export const useArticleGenerator = (
@@ -43,15 +44,29 @@ export const useArticleGenerator = (
     saveAppState({ generatedContent: '', imagePrompt: '' });
     
     try {
+      // 웹 크롤링 단계 알림
+      toast({ 
+        title: "1단계: 웹 정보 수집 중...", 
+        description: "키워드 관련 최신 정보를 크롤링하고 있습니다." 
+      });
+
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
       const selectedColorTheme = appState.colorTheme || randomTheme.value;
       
-      const prompt = getArticlePrompt({
+      // 개선된 프롬프트 사용 (웹 크롤링 포함)
+      const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
         keyword: coreKeyword,
         selectedColorTheme: selectedColorTheme,
         referenceLink: appState.referenceLink,
         referenceSentence: appState.referenceSentence,
+        apiKey: appState.apiKey!,
+      });
+
+      // 글 생성 단계 알림
+      toast({ 
+        title: "2단계: AI 글 작성 중...", 
+        description: "수집된 정보를 바탕으로 풍부한 내용의 글을 생성하고 있습니다." 
       });
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
@@ -60,6 +75,7 @@ export const useArticleGenerator = (
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           maxOutputTokens: 8192,
+          temperature: 0.7,
         },
       };
 
@@ -82,8 +98,8 @@ export const useArticleGenerator = (
         if (finishReason === 'MAX_TOKENS') {
           toast({
             title: "콘텐츠 길이 초과",
-            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다. 글의 완성도를 위해 요청 글자 수를 조정했습니다.",
-            variant: "warning",
+            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다. 웹 크롤링된 풍부한 정보로 인해 더 자세한 글이 생성되었습니다.",
+            variant: "default",
           });
         }
       }
@@ -99,7 +115,7 @@ export const useArticleGenerator = (
 
       const pixabayConfig = options?.pixabayConfig;
       if (pixabayConfig?.key && pixabayConfig?.validated) {
-        toast({ title: "Pixabay 이미지 통합 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
+        toast({ title: "3단계: 이미지 추가 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         
         const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
           htmlContent,
@@ -138,7 +154,10 @@ export const useArticleGenerator = (
       }
 
       saveAppState(stateToSave);
-      toast({ title: "AI 기반 블로그 글 생성 완료", description: "콘텐츠가 준비되었습니다." });
+      toast({ 
+        title: "웹 크롤링 기반 블로그 글 생성 완료", 
+        description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
+      });
       return finalHtml;
     } catch (error) {
       console.error('글 생성 오류:', error);

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
+import { getEnhancedTopicPrompt } from '@/lib/enhancedPrompts';
 
 export const useTopicGenerator = (
   appState: AppState,
@@ -34,14 +35,22 @@ export const useTopicGenerator = (
     
     try {
       const count = appState.topicCount;
-      const currentYear = new Date().getFullYear();
-      const prompt = `'${keyword}'를(을) 주제로, ${currentYear}년 최신 정보를 반영하여 구글과 네이버 검색에 최적화된 블로그 포스팅 제목 ${count}개를 생성해 주세요. 각 제목에는 반드시 핵심 키워드인 '${keyword}'가 포함되어야 합니다. 각 제목은 사람들이 클릭하고 싶게 만드는 흥미로운 내용이어야 합니다. 모든 제목은 반드시 한글로만 작성해야 하며, 한자(漢字)나 다른 언어는 절대 포함하지 마세요. 결과는 각 제목을 줄바꿈으로 구분하여 번호 없이 텍스트만 제공해주세요. 다른 설명 없이 주제 목록만 생성해주세요.`;
+      
+      // 개선된 프롬프트 사용
+      const prompt = getEnhancedTopicPrompt(keyword, count);
+      
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify({ 
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2048,
+          }
+        })
       });
 
       if (!response.ok) {
@@ -56,6 +65,38 @@ export const useTopicGenerator = (
       
       const generatedText = data.candidates[0].content.parts[0].text;
       const newTopics = generatedText.split('\n').map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim()).filter(topic => topic.length > 0);
+
+      // 키워드 누락 검증
+      const keywordMissingTopics = newTopics.filter(topic => {
+        const keywordParts = keyword.split(' ');
+        return !keywordParts.every(part => topic.includes(part));
+      });
+
+      if (keywordMissingTopics.length > 0) {
+        console.warn('키워드 누락된 주제들:', keywordMissingTopics);
+        toast({
+          title: "키워드 누락 감지",
+          description: `일부 주제에서 핵심 키워드가 누락되었습니다. 다시 생성을 시도합니다.`,
+          variant: "default"
+        });
+        
+        // 키워드가 포함된 주제만 필터링
+        const validTopics = newTopics.filter(topic => {
+          const keywordParts = keyword.split(' ');
+          return keywordParts.every(part => topic.includes(part));
+        });
+        
+        if (validTopics.length === 0) {
+          throw new Error(`핵심 키워드 '${keyword}'가 포함된 주제가 생성되지 않았습니다. 다시 시도해주세요.`);
+        }
+        
+        saveAppState({ topics: validTopics });
+        toast({ 
+          title: "AI 기반 주제 생성 완료", 
+          description: `${validTopics.length}개의 키워드가 포함된 주제가 생성되었습니다.` 
+        });
+        return validTopics;
+      }
 
       saveAppState({ topics: newTopics });
       toast({ title: "AI 기반 주제 생성 완료", description: `${newTopics.length}개의 새로운 주제가 생성되었습니다.` });
