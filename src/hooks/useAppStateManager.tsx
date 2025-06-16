@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -44,10 +43,10 @@ const savePreventDuplicatesToStorage = (preventDuplicates: boolean) => {
 const loadPreventDuplicatesFromStorage = (): boolean => {
   try {
     const saved = localStorage.getItem('blog_prevent_duplicates');
-    return saved !== null ? JSON.parse(saved) : true; // 기본값은 true (중복 금지)
+    return saved !== null ? JSON.parse(saved) : false; // 기본값을 false (중복 허용)로 변경
   } catch (error) {
     console.error('중복 설정 로드 오류:', error);
-    return true;
+    return false; // 기본값을 false (중복 허용)로 변경
   }
 };
 
