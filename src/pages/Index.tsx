@@ -70,7 +70,7 @@ const Index = () => {
       />
 
       {isAdmin && (
-        <div className="container mx-auto my-4 flex items-center justify-between">
+        <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">
           <div className="flex items-start gap-8">
             <Link
               to="/admin/users"
