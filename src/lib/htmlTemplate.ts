@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -19,7 +18,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 이 글에서는 복잡한 용어나 절차를 쉽게 풀어서 설명드릴 예정이에요. 특히 실제 신청 과정에서 놓치기 쉬운 부분들까지 상세히 다뤄보겠습니다! 💡
 </p>
 
-<br>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getBasicInfoSection = (colors: any): string => `
@@ -34,6 +33,7 @@ const getBasicInfoSection = (colors: any): string => `
 <strong style="color: ${colors.primary};">💡 꼭 기억하세요!</strong><br>
 에너지바우처는 소급 적용이 되지 않아요. 신청 기간을 놓치면 그 해 지원을 받을 수 없으니, 미리 확인하고 준비하시는 게 중요해요. 자세한 내용은 <a href="https://www.welfaresupport.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지정보포털</a>에서 확인하실 수 있어요.
 </div>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getApplicationGuideSection = (colors: any): string => `
@@ -50,6 +50,7 @@ const getApplicationGuideSection = (colors: any): string => `
 <tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">접수 완료 후 심사 진행 (약 2주 소요)</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">통장 사본</td></tr>
 <tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">-</td></tr>
 </tbody></table></div>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getRequirementsSection = (colors: any): string => `
@@ -60,6 +61,7 @@ const getRequirementsSection = (colors: any): string => `
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 2025년부터는 지원 대상이 확대되어 더 많은 분들이 혜택을 받으실 수 있게 되었어요. 자세한 소득 기준은 <a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부 공식 홈페이지</a>에서 확인하실 수 있답니다.
 </p>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getBenefitsSection = (colors: any): string => `
@@ -79,6 +81,7 @@ const getBenefitsSection = (colors: any): string => `
         <li>소득·재산 기준이 매년 조금씩 변동될 수 있으니 신청 전 최신 정보를 확인하세요</li>
     </ul>
 </div>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getUsageTipsSection = (colors: any): string => `
@@ -89,6 +92,7 @@ const getUsageTipsSection = (colors: any): string => `
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 또한 바우처 카드 분실 시 재발급이 가능하지만 시간이 걸리니, 안전한 곳에 보관하시는 것이 중요해요. 사용 잔액은 언제든지 온라인이나 전화로 확인할 수 있답니다.
 </p>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getExpectedEffectsSection = (colors: any): string => `
@@ -99,6 +103,7 @@ const getExpectedEffectsSection = (colors: any): string => `
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 정부에서도 지속적으로 지원 범위와 금액을 확대하고 있어, 앞으로 더 많은 분들이 혜택을 받으실 수 있을 것으로 예상돼요. 꼭 신청하셔서 도움을 받으시길 바라요.
 </p>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getFaqSection = (colors: any): string => `
@@ -114,6 +119,7 @@ A: 세대주 또는 배우자만 신청 가능하며, 위임장이 있으면 대
 <p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
 A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능해요.</p>
 </div>
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getSummaryCardSection = (naturalKeyword: string): string => `
@@ -136,7 +142,7 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 지금까지 [SECTION_CONTENT_8] 관련 정보에 대해 자세히 알아봤는데요, 도움이 되셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
-<br><br>
+<p style="height: 30px;">&nbsp;</p>
 `;
 
 const getTagsSection = (topic: string, keyword: string): string => {
@@ -159,7 +165,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
 <div style="margin-top: 30px; padding: 15px 0;">
 <p style="font-size: 14px; line-height: 1.4; color: #666; text-align: left;">${allTags.join(', ')}</p>
 </div>
-<br>`;
+<p style="height: 20px;">&nbsp;</p>`;
 };
 
 export const getHtmlTemplate = (colors: any, topic: string, keyword: string, refLink: string, referenceSentence?: string): string => {
