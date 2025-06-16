@@ -1,5 +1,4 @@
 
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { WebCrawlerService } from './webCrawler';
@@ -50,6 +49,29 @@ const extractNaturalKeyword = (topic: string): string => {
     .trim();
 };
 
+// 더 자연스러운 관련 용어 생성 함수
+const generateNaturalContext = (naturalKeyword: string, originalKeyword: string): { [key: string]: string } => {
+  const baseTerms = ['지원금', '혜택', '제도', '프로그램', '서비스'];
+  const contextTerms = ['관련 지원', '이런 혜택', '해당 제도', '이 프로그램', '지원 서비스'];
+  
+  // 자연스러운 맥락적 표현들 생성
+  return {
+    INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 관련 혜택`,
+    CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
+    SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
+    SECTION_CONTENT_2: `${naturalKeyword} 관련`,
+    SECTION_CONTENT_3: `바우처 카드`,
+    SECTION_CONTENT_4: `이 지원금`,
+    SECTION_CONTENT_5: `${naturalKeyword} 지원`,
+    SECTION_CONTENT_6: `이런 혜택`,
+    SECTION_CONTENT_7: `지원금`,
+    SECTION_CONTENT_8: `해당 혜택`,
+    SUMMARY_TITLE: naturalKeyword,
+    REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
+    GENERATED_TAGS: `${naturalKeyword}, 2025년 ${naturalKeyword}, 70만원 지급, 에너지 지원금, 저소득층 ${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 전기요금 할인, 가스요금 지원, 난방비 지원, 복지혜택, 생계급여, 차상위계층 혜택`
+  };
+};
+
 export const getEnhancedArticlePrompt = async ({
   topic,
   keyword,
@@ -64,6 +86,9 @@ export const getEnhancedArticlePrompt = async ({
   // 주제에서 자연스러운 핵심 키워드 추출
   const naturalKeyword = extractNaturalKeyword(topic);
   
+  // 자연스러운 맥락적 표현들 생성
+  const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
+  
   const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink);
   const currentYear = new Date().getFullYear();
 
@@ -73,7 +98,7 @@ export const getEnhancedArticlePrompt = async ({
   return `
         당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
         주제: "${topic}"
-        핵심 키워드: "${keyword}"
+        입력 키워드: "${keyword}"
         자연스러운 키워드: "${naturalKeyword}"
 
         === 최신 웹 크롤링 정보 ===
@@ -83,51 +108,47 @@ export const getEnhancedArticlePrompt = async ({
         위의 크롤링된 최신 정보를 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
-        1. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요. 반드시 실제 내용으로 대체해야 합니다.
         
-        2. **핵심 키워드 자연스러운 적용 (매우 중요)**: 
-        - 주제 "${topic}" 그대로를 키워드로 사용하지 마세요.
-        - 대신 자연스러운 키워드 "${naturalKeyword}"를(을) 본문에 자연스럽게 녹여내세요.
-        - HTML 템플릿의 [KEYWORD_SLOT_1], [KEYWORD_SLOT_2], [KEYWORD_SLOT_3], [KEYWORD_SLOT_4], [KEYWORD_SLOT_5], [KEYWORD_SLOT_6], [KEYWORD_SLOT_7], [KEYWORD_SLOT_8] 부분 중 5-8회만 선택해서 "<strong>${naturalKeyword}</strong>" 형태로 적용하세요.
-        - 키워드를 적용하지 않는 KEYWORD_SLOT은 해당 문맥에 맞는 일반적인 단어나 구문으로 자연스럽게 채워주세요.
-        - 키워드가 문맥에 자연스럽게 어울리도록 작성하세요.
+        1. **키워드 자연스러운 적용 (가장 중요)**: 
+        - 원본 키워드 "${keyword}"를 그대로 강조하여 사용하지 마세요
+        - 대신 자연스러운 키워드 "${naturalKeyword}"나 관련 용어를 사용하세요
+        - 각 섹션에서는 아래 맥락적 표현들을 활용하세요:
+
+        **사용할 맥락적 표현들:**
+        - [INTRO_KEYWORD_CONTEXT] → "${contextualTerms.INTRO_KEYWORD_CONTEXT}"
+        - [CONTENT_KEYWORD_1] → "${contextualTerms.CONTENT_KEYWORD_1}" 
+        - [SECTION_CONTENT_1] → "${contextualTerms.SECTION_CONTENT_1}"
+        - [SECTION_CONTENT_2] → "${contextualTerms.SECTION_CONTENT_2}"
+        - [SECTION_CONTENT_3] → "${contextualTerms.SECTION_CONTENT_3}"
+        - [SECTION_CONTENT_4] → "${contextualTerms.SECTION_CONTENT_4}"
+        - [SECTION_CONTENT_5] → "${contextualTerms.SECTION_CONTENT_5}"
+        - [SECTION_CONTENT_6] → "${contextualTerms.SECTION_CONTENT_6}"
+        - [SECTION_CONTENT_7] → "${contextualTerms.SECTION_CONTENT_7}"
+        - [SECTION_CONTENT_8] → "${contextualTerms.SECTION_CONTENT_8}"
+        - [SUMMARY_TITLE] → "${contextualTerms.SUMMARY_TITLE}"
+        - [REFERENCE_TEXT] → "${referenceSentence || contextualTerms.REFERENCE_TEXT}"
+        - [GENERATED_TAGS] → "${contextualTerms.GENERATED_TAGS}"
+
+        2. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요.
 
         3. **공식 링크 필수 포함 및 하이퍼링크 적용 (매우 중요)**: 
-        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 2-3개 반드시 **완전한 a 태그 형식**으로 삽입해주세요. 
+        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 2-3개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
         
         **반드시 사용해야 할 올바른 링크 형식:**
         \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
-        
-        **절대 사용하지 말아야 할 잘못된 형식들:**
-        - 보건복지부(https://www.mw.go.kr/) ← 이런 형식은 절대 사용 금지
-        - https://www.mw.go.kr ← 단순 URL만 쓰는 것도 절대 사용 금지
-        - 보건복지부 https://www.mw.go.kr ← 이런 형식도 절대 사용 금지
-        
-        **링크 작성 시 필수 준수사항:**
-        - 모든 공식 사이트 링크는 반드시 클릭 가능한 하이퍼링크로 작성
-        - href 속성에 완전한 URL 포함
-        - target="_blank" 속성으로 새 창에서 열리도록 설정
-        - rel="noopener" 속성으로 보안 강화
-        - style 속성으로 링크 색상과 밑줄 적용
-        - 링크 텍스트는 사이트명만 표시 (URL은 표시하지 않음)
-        
-        예시 공식 사이트들: 보건복지부(https://www.mw.go.kr), 복지정보포털(https://www.welfaresupport.go.kr), 에너지바우처 공식사이트(https://www.energyvoucher.go.kr), 복지로(https://www.bokjiro.go.kr) 등
-        
-        4. **정보성 콘텐츠 중심**: 모든 소제목과 내용은 독자가 실제로 필요로 하는 구체적이고 실용적인 정보를 담아야 합니다. "연관 검색어 전략" 같은 메타적인 내용은 절대 포함하지 마세요.
 
-        5. **연관 키워드 활용**: 크롤링된 정보에서 실제 연관 키워드나 검색어를 찾아 활용하고, 없다면 현실적이고 구체적인 연관 정보를 창의적으로 작성해주세요.
+        4. **정보성 콘텐츠 중심**: 모든 소제목과 내용은 독자가 실제로 필요로 하는 구체적이고 실용적인 정보를 담아야 합니다.
+
+        5. **자연스러운 키워드 강조**: 필요한 경우에만 "<strong>${naturalKeyword}</strong>" 형태로 1-2회 자연스럽게 강조하되, 억지로 반복하지 마세요.
 
         다음 지침에 따라 작성해주세요:
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식을 포함하지 마세요.
-        - **핵심 키워드 보존**: "${keyword}"의 모든 구성 요소를 정확히 유지하면서 자연스럽게 활용해주세요.
         - **크롤링 정보 우선 활용**: 위에서 제공된 최신 웹 정보를 글의 근거로 최우선 활용해주세요.
         - 대상 독자: 한국어 사용자
         - **시의성**: 크롤링된 최신 정보를 반영하여 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요.
         - **섹션별 글자수**: HTML 템플릿의 각 H2 소제목 아래 본문 내용은 **150자에서 190자 사이**로 작성해주세요.
-        - **키워드 활용**: 핵심 키워드 '${keyword}'를 글 전체에 자연스럽게 녹여내세요.
         - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요.
         - 가독성: 각 단락은 최대 2-3개의 문장으로 구성해주세요.
-        - 참조 링크 텍스트: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트를 "${referenceSentence || '워드프레스 꿀팁 더 보러가기'}"로 설정해주세요.
 
         사용할 변수:
         - Primary Color: ${colors.primary}
@@ -139,9 +160,8 @@ export const getEnhancedArticlePrompt = async ({
         - Warn Border Color: ${colors.warnBorder}
         - Link Color: ${colors.link}
         - Reference Link: ${refLink}
-        - Reference Sentence: ${referenceSentence || '워드프레스 꿀팁 더 보러가기'}
         - Topic: ${topic}
-        - Main Keyword: ${keyword}
+        - Original Keyword: ${keyword}
         - Natural Keyword: ${naturalKeyword}
 
         아래는 반드시 따라야 할 HTML 템플릿입니다.
@@ -152,14 +172,13 @@ ${htmlTemplate}
 
         ⚠️ 재확인 사항:
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
-        - [KEYWORD_SLOT_X] 부분 중 5-8개만 선택해서 키워드 강조를 적용해야 합니다
-        - 키워드를 적용하지 않는 KEYWORD_SLOT은 자연스러운 일반 텍스트로 채워야 합니다
+        - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
+        - 자연스러운 키워드 "${naturalKeyword}"나 맥락적 표현을 사용하세요
         - 공식 링크가 최소 2-3개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
         - 모든 내용이 실제 정보성 콘텐츠여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
-        - 자연스러운 키워드 "${naturalKeyword}"를 선택된 [KEYWORD_SLOT_X] 위치에만 사용하세요
       `;
 };
 
@@ -187,4 +206,3 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 
 오직 입력된 키워드 '${keyword}'와 직접적으로 관련된 주제만 생성해주세요.`;
 };
-
