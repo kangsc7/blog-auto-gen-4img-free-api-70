@@ -20,7 +20,7 @@ export const useAppController = () => {
   const { isValidatingApi, validateApiKey } = useApiKeyManager(appState, saveAppState);
   const pixabayManager = usePixabayManager();
   const huggingFaceManager = useHuggingFaceManager();
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState,
@@ -33,7 +33,7 @@ export const useAppController = () => {
     setManualTopic,
     selectTopic,
     handleManualTopicAdd,
-  } = useTopicControls({ appState, saveAppState });
+  } = useTopicControls({ appState, saveAppState, preventDuplicates });
 
   const {
     copyToClipboard,
@@ -45,6 +45,14 @@ export const useAppController = () => {
     resetApp();
     setManualTopic('');
   };
+
+  // 중복 허용 모드로 변경 시 모든 주제 데이터 초기화
+  useEffect(() => {
+    if (!preventDuplicates) {
+      // 중복 허용 모드: 모든 중복 제한 해제 및 데이터 초기화는 하지 않음
+      console.log('중복 허용 모드 활성화 - 모든 중복 제한 해제');
+    }
+  }, [preventDuplicates]);
 
   useEffect(() => {
     if (session) {

@@ -4,17 +4,34 @@ import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { getEnhancedTopicPrompt } from '@/lib/enhancedPrompts';
 
+// 간단한 유사도 검사 함수 (70% 기준)
+const calculateSimilarity = (str1: string, str2: string): number => {
+  const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
+  const s1 = normalize(str1);
+  const s2 = normalize(str2);
+  
+  if (s1 === s2) return 100;
+  
+  const maxLength = Math.max(s1.length, s2.length);
+  let matches = 0;
+  
+  for (let i = 0; i < Math.min(s1.length, s2.length); i++) {
+    if (s1[i] === s2[i]) matches++;
+  }
+  
+  return (matches / maxLength) * 100;
+};
+
 export const useTopicGenerator = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
-  preventDuplicates: boolean  // preventDuplicates를 매개변수로 직접 받아옴
+  preventDuplicates: boolean
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [lastGenerationTime, setLastGenerationTime] = useState(0);
 
   const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
-    // 키워드 정리 및 정규화
     const rawKeyword = (keywordOverride || appState.keyword).trim();
     const cleanedKeyword = rawKeyword.replace(/\s+/g, ' ').trim();
     
@@ -54,118 +71,77 @@ export const useTopicGenerator = (
     
     try {
       const count = appState.topicCount;
-      let allValidTopics: string[] = [];
-      let attempts = 0;
-      const maxAttempts = 3;
+      const enhancedPrompt = getEnhancedTopicPrompt(cleanedKeyword, count);
       
-      // 간단한 년도 검증 함수
-      const hasYearInKeyword = /\d{4}년?/.test(cleanedKeyword);
-      
-      console.log('키워드 분석:', cleanedKeyword);
-      console.log('년도 포함 여부:', hasYearInKeyword);
-      console.log('중복 허용 설정:', preventDuplicates);
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
-      while (allValidTopics.length < count && attempts < maxAttempts) {
-        attempts++;
-        console.log(`주제 생성 시도 ${attempts}/${maxAttempts}`);
-        
-        const remainingCount = count - allValidTopics.length;
-        const enhancedPrompt = getEnhancedTopicPrompt(cleanedKeyword, remainingCount * 2);
-        
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
-
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            contents: [{ parts: [{ text: enhancedPrompt }] }],
-            generationConfig: {
-              temperature: 0.2, // 매우 낮은 온도로 정확한 형식 준수
-              maxOutputTokens: 2048,
-            }
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-          throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
-        }
-        
-        const generatedText = data.candidates[0].content.parts[0].text;
-        const newTopics = generatedText.split('\n')
-          .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
-          .filter(topic => topic.length > 10);
-
-        // 단순화된 검증 로직
-        const validTopics = newTopics.filter(topic => {
-          if (hasYearInKeyword) {
-            // 년도가 포함된 키워드인 경우: 4자리숫자+년으로 시작해야 함
-            const startsWithValidYear = /^\d{4}년\s/.test(topic);
-            
-            console.log(`주제 검증: "${topic}"`);
-            console.log(`- 올바른 년도 시작: ${startsWithValidYear}`);
-            
-            return startsWithValidYear;
-          } else {
-            // 년도가 없는 키워드인 경우: 년도로 시작하면 안됨
-            const startsWithYear = /^\d{4}년/.test(topic);
-            
-            console.log(`주제 검증: "${topic}"`);
-            console.log(`- 년도로 시작하지 않음: ${!startsWithYear}`);
-            
-            return !startsWithYear;
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          contents: [{ parts: [{ text: enhancedPrompt }] }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 2048,
           }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
+      }
+      
+      const data = await response.json();
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
+      }
+      
+      const generatedText = data.candidates[0].content.parts[0].text;
+      const newTopics = generatedText.split('\n')
+        .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
+        .filter(topic => topic.length > 10);
+
+      let finalTopics = newTopics;
+
+      // 중복 금지 설정이 활성화된 경우에만 유사도 검사
+      if (preventDuplicates && appState.topics.length > 0) {
+        finalTopics = newTopics.filter(newTopic => {
+          return !appState.topics.some(existingTopic => {
+            const similarity = calculateSimilarity(newTopic, existingTopic);
+            return similarity >= 70;
+          });
         });
 
-        // 중복 처리
-        let uniqueValidTopics;
-        if (preventDuplicates) {
-          uniqueValidTopics = validTopics.filter(topic => 
-            !allValidTopics.some(existingTopic => 
-              existingTopic.replace(/\s/g, '').toLowerCase() === topic.replace(/\s/g, '').toLowerCase()
-            )
-          );
-        } else {
-          uniqueValidTopics = validTopics;
+        const removedCount = newTopics.length - finalTopics.length;
+        if (removedCount > 0) {
+          toast({
+            title: "중복 주제 제거",
+            description: `70% 이상 유사한 ${removedCount}개 주제가 제거되었습니다.`,
+            variant: "default"
+          });
         }
-
-        allValidTopics = [...allValidTopics, ...uniqueValidTopics];
-        
-        console.log(`시도 ${attempts}: ${validTopics.length}개 유효 주제 생성, 누적: ${allValidTopics.length}개`);
-        console.log('중복 허용 설정:', preventDuplicates ? '중복 금지' : '중복 허용');
       }
-
-      const finalTopics = allValidTopics.slice(0, count);
 
       if (finalTopics.length === 0) {
-        throw new Error(`키워드 '${cleanedKeyword}'에 맞는 주제가 생성되지 않았습니다. 다시 시도해주세요.`);
+        throw new Error(`생성된 모든 주제가 기존 주제와 70% 이상 유사합니다. 다른 키워드로 시도해주세요.`);
       }
 
-      // 상태 업데이트
+      // 상태 업데이트 - 중복 허용/금지에 관계없이 추가
       if (preventDuplicates) {
-        saveAppState({ topics: finalTopics, selectedTopic: '', keyword: cleanedKeyword });
+        // 중복 금지: 기존 주제에 새로운 주제 추가
+        const combinedTopics = [...appState.topics, ...finalTopics];
+        saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
       } else {
+        // 중복 허용: 모든 제한 없이 추가
         const combinedTopics = [...appState.topics, ...finalTopics];
         saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
       }
       
-      if (finalTopics.length < count) {
-        toast({ 
-          title: "주제 생성 완료", 
-          description: `${finalTopics.length}개의 주제가 생성되었습니다. (요청: ${count}개)`,
-          variant: "default"
-        });
-      } else {
-        toast({ 
-          title: "AI 기반 주제 생성 완료", 
-          description: `${finalTopics.length}개의 주제가 성공적으로 생성되었습니다.` 
-        });
-      }
+      toast({ 
+        title: "AI 기반 주제 생성 완료", 
+        description: `${finalTopics.length}개의 주제가 성공적으로 생성되었습니다.` 
+      });
       
       return finalTopics;
     } catch (error) {

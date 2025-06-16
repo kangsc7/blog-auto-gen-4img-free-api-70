@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
@@ -109,8 +108,8 @@ const Index = () => {
               </ToggleGroup>
               <div className="w-72 mx-auto">
                 <p className="text-xs text-gray-500 mt-1">
-                  금지: 중복 주제를 자동으로 제거합니다.<br />
-                  허용: 중복된 주제도 허용합니다.
+                  금지: 70% 이상 유사한 주제를 자동 제거합니다.<br />
+                  허용: 모든 중복 제한을 해제합니다.
                 </p>
               </div>
             </div>
@@ -145,6 +144,7 @@ const Index = () => {
         generationFunctions={generationFunctions}
         topicControls={topicControls}
         utilityFunctions={utilityFunctions}
+        preventDuplicates={preventDuplicates}
       />
       <ScrollToTopButton />
     </div>

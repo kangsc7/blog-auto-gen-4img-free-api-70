@@ -40,6 +40,7 @@ interface LeftSidebarProps {
     generationFunctions: GenerationFunctions;
     topicControls: TopicControls;
     utilityFunctions: UtilityFunctions;
+    preventDuplicates: boolean;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -49,6 +50,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     generationFunctions,
     topicControls,
     utilityFunctions,
+    preventDuplicates,
 }) => {
     return (
         <div className="lg:col-span-4 space-y-6">
@@ -60,6 +62,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 manualTopic={topicControls.manualTopic}
                 setManualTopic={topicControls.setManualTopic}
                 handleManualTopicAdd={topicControls.handleManualTopicAdd}
+                preventDuplicates={preventDuplicates}
             />
 
             <ArticleGenerator

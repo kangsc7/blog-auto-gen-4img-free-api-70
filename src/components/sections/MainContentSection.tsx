@@ -38,6 +38,7 @@ interface MainContentSectionProps {
     generationFunctions: GenerationFunctions;
     topicControls: TopicControls;
     utilityFunctions: UtilityFunctions;
+    preventDuplicates?: boolean;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
@@ -47,27 +48,29 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
     generationFunctions,
     topicControls,
     utilityFunctions,
+    preventDuplicates = false,
 }) => {
     return (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <LeftSidebar
-                appState={appState}
-                saveAppState={saveAppState}
-                generationStatus={generationStatus}
-                generationFunctions={generationFunctions}
-                topicControls={topicControls}
-                utilityFunctions={utilityFunctions}
-            />
-
-            <RightContent
-                appState={appState}
-                generationStatus={{ isGeneratingContent: generationStatus.isGeneratingContent }}
-                topicControls={{ selectTopic: topicControls.selectTopic }}
-                utilityFunctions={{
-                    copyToClipboard: utilityFunctions.copyToClipboard,
-                    downloadHTML: utilityFunctions.downloadHTML,
-                }}
-            />
+        <div className="container mx-auto mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <LeftSidebar
+                    appState={appState}
+                    saveAppState={saveAppState}
+                    generationStatus={generationStatus}
+                    generationFunctions={generationFunctions}
+                    topicControls={topicControls}
+                    utilityFunctions={utilityFunctions}
+                    preventDuplicates={preventDuplicates}
+                />
+                
+                <RightContent 
+                    appState={appState}
+                    saveAppState={saveAppState}
+                    selectTopic={topicControls.selectTopic}
+                    copyToClipboard={utilityFunctions.copyToClipboard}
+                    downloadHTML={utilityFunctions.downloadHTML}
+                />
+            </div>
         </div>
     );
 };

@@ -59,7 +59,7 @@ export const useAppStateManager = () => {
     loadAppState();
   }, []);
 
-  // preventDuplicates 상태가 변경될 때마다 localStorage에 저장 (window 객체 사용 제거)
+  // preventDuplicates 상태가 변경될 때마다 localStorage에 저장
   useEffect(() => {
     savePreventDuplicatesToStorage(preventDuplicates);
     console.log('preventDuplicates 상태 변경:', preventDuplicates);
@@ -123,20 +123,7 @@ export const useAppStateManager = () => {
           };
         }
 
-        if (newState.topics && preventDuplicates) {
-          const originalTopics = newState.topics;
-          const uniqueTopics = [...new Set(originalTopics)];
-          
-          if (uniqueTopics.length < originalTopics.length) {
-            const removedCount = originalTopics.length - uniqueTopics.length;
-            toast({
-              title: "중복 주제 제거",
-              description: `자동으로 ${removedCount}개의 중복 주제가 제거되었습니다.`
-            });
-          }
-          updatedState = { ...updatedState, topics: uniqueTopics };
-        }
-
+        // 간단한 중복 처리 로직 제거 - useTopicGenerator에서 처리
         persistStateToStorage(updatedState);
         return updatedState;
 
@@ -146,7 +133,7 @@ export const useAppStateManager = () => {
         return prevState;
       }
     });
-  }, [toast, preventDuplicates]);
+  }, [toast]);
 
   const deleteApiKeyFromStorage = () => {
     try {
