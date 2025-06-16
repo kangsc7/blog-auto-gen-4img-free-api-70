@@ -1,0 +1,76 @@
+
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { AppState } from '@/types';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
+
+const defaultState: AppState = {
+  keyword: '',
+  topics: [],
+  selectedTopic: '',
+  topicCount: 5,
+  generatedContent: '',
+  isApiKeyValidated: true,
+  apiKey: DEFAULT_API_KEYS.GEMINI,
+  pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+  isPixabayApiKeyValidated: true,
+  huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+  isHuggingFaceApiKeyValidated: true,
+  imagePrompt: '',
+  generatedImageUrl: '',
+  isLoggedIn: false,
+  currentUser: '',
+};
+
+export const useAppStateManager = () => {
+  const { toast } = useToast();
+  const [appState, setAppState] = useState<AppState>(defaultState);
+  const [preventDuplicates, setPreventDuplicates] = useState(true);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 기본 API 키들로 자동 설정
+    setAppState(prev => ({
+      ...prev,
+      apiKey: DEFAULT_API_KEYS.GEMINI,
+      isApiKeyValidated: true,
+      pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+      isPixabayApiKeyValidated: true,
+      huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+      isHuggingFaceApiKeyValidated: true,
+    }));
+    console.log('앱 상태에 기본 API 키들이 자동 설정됨');
+  }, []);
+
+  const saveAppState = (newState: Partial<AppState>) => {
+    setAppState(prev => ({ ...prev, ...newState }));
+  };
+
+  const deleteApiKeyFromStorage = (keyType: 'gemini' | 'pixabay' | 'huggingface') => {
+    switch (keyType) {
+      case 'gemini':
+        saveAppState({ apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true });
+        break;
+      case 'pixabay':
+        saveAppState({ pixabayApiKey: DEFAULT_API_KEYS.PIXABAY, isPixabayApiKeyValidated: true });
+        break;
+      case 'huggingface':
+        saveAppState({ huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE, isHuggingFaceApiKeyValidated: true });
+        break;
+    }
+    toast({ title: "기본값으로 복원", description: `${keyType} API 키가 기본값으로 복원되었습니다.` });
+  };
+
+  const resetApp = () => {
+    setAppState(defaultState);
+    toast({ title: "초기화 완료", description: "모든 데이터가 초기화되었습니다." });
+  };
+
+  return {
+    appState,
+    saveAppState,
+    deleteApiKeyFromStorage,
+    resetApp,
+    preventDuplicates,
+    setPreventDuplicates,
+  };
+};
