@@ -70,7 +70,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
 
         <div className="border p-4 rounded-lg space-y-4 bg-gray-50/50 shadow-inner">
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 링크</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크</label>
                 <Input
                     placeholder="예: https://worldpis.com"
                     value={appState.referenceLink}
