@@ -21,9 +21,9 @@ interface ApiKeysSectionProps {
 }
 
 const CompactCard = ({ title, icon: Icon }: { title: string, icon: React.ElementType }) => (
-    <Card className="shadow-md flex items-center justify-center h-16 cursor-pointer bg-gray-50/50 hover:bg-gray-50 border-2 border-dashed border-gray-200">
+    <Card className="shadow-md flex items-center justify-center h-20 cursor-pointer bg-gray-50/50 hover:bg-gray-50 border-2 border-dashed border-gray-200">
         <div className="flex items-center text-gray-500 px-4">
-            <Icon className="h-5 w-5 mr-2 text-gray-400" />
+            <Icon className="h-6 w-6 mr-3 text-gray-400" />
             <p className="text-sm font-semibold text-gray-600">{title}</p>
         </div>
     </Card>
@@ -72,7 +72,7 @@ export const ApiKeysSection: React.FC<ApiKeysSectionProps> = ({
     huggingFaceManager,
 }) => {
     return (
-        <div className="max-w-7xl mx-auto my-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="max-w-7xl mx-auto my-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <HoverExpandContainer
                 compactView={<CompactCard title="Gemini API 키" icon={Settings} />}
                 expandedView={
