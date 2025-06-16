@@ -49,14 +49,6 @@ const getSolutionGuideSection = (colors: any, keyword: string): string => `
 </tbody></table></div>
 `;
 
-const getPracticalExampleSection = (colors: any, keyword: string): string => `
-<div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 25px 0; font-size: 17px; line-height: 1.6; box-sizing: border-box;">
-<h3 style="font-size: 20px; color: #333; margin: 0 0 12px; font-weight: bold; line-height: 1.5;">실제 신청 성공 사례 📝</h3>
-<p style="margin-bottom: 15px;">저희 이웃에 계신 김○○님 사례를 보면, 작년에 <span style="background-color: ${colors.textHighlight}; padding: 3px 6px; border-radius: 4px; font-weight: bold;">월 평균 전기료 15만원을 7만원으로 절약</span>할 수 있었어요. 처음엔 신청 과정이 복잡할 거라 생각했지만, 주민센터에서 친절하게 도움을 받아 하루 만에 모든 절차를 완료했다고 하시더라고요.</p>
-<p>특히 겨울철 난방비 부담이 크게 줄어들어서 정말 도움이 되었다고 하셨어요. <strong>${keyword}</strong>를 통해 가계 부담을 실질적으로 줄일 수 있다는 걸 보여주는 좋은 사례랍니다.</p>
-</div>
-`;
-
 const getTipsAndWarningsSection = (colors: any, keyword: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${keyword} 신청 시 꼭 알아야 할 주의사항</b> ⚠️</h2>
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
@@ -178,7 +170,6 @@ export const getHtmlTemplate = (colors: any, topic: string, keyword: string, ref
     getIntroSection(colors, keyword),
     getProblemDefinitionSection(colors, keyword),
     getSolutionGuideSection(colors, keyword),
-    getPracticalExampleSection(colors, keyword),
     getTipsAndWarningsSection(colors, keyword),
     getFailureCaseSection(colors, keyword),
     getDeepDiveSection(colors, keyword),
