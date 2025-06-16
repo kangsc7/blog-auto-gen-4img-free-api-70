@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit } from 'lucide-react';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
+import { useToast } from '@/hooks/use-toast';
 
 interface ArticleGeneratorProps {
   appState: AppState;
@@ -23,6 +24,25 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
   isGeneratingContent,
   generateArticleContent
 }) => {
+  const { toast } = useToast();
+
+  const handleSaveReferenceInfo = () => {
+    if (!appState.referenceLink && !appState.referenceSentence) {
+      toast({
+        title: "저장할 정보가 없습니다",
+        description: "외부 링크 또는 링크 문장을 입력해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    saveAppState({ saveReferenceTrigger: true });
+    toast({
+      title: "외부 링크 정보 저장 완료",
+      description: "외부 링크 정보가 성공적으로 저장되었습니다."
+    });
+  };
+
   return (
     <Card className={`shadow-md ${appState.topics.length === 0 ? 'opacity-50' : ''}`}>
       <CardHeader>
@@ -94,7 +114,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             <Button
               variant="outline"
               className="w-full bg-white"
-              onClick={() => saveAppState({ saveReferenceTrigger: true })}
+              onClick={handleSaveReferenceInfo}
               disabled={!appState.selectedTopic}
             >
               외부 링크 정보 저장
