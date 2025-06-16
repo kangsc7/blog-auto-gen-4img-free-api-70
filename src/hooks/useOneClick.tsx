@@ -41,7 +41,7 @@ export const useOneClick = (
         return [];
       }
 
-      return usedKeywordsData?.map(item => item.keywords?.keyword_text).filter(Boolean) || [];
+      return usedKeywordsData?.map((item: any) => item.keywords?.keyword_text).filter(Boolean) || [];
     } catch (error) {
       console.error('키워드 조회 중 오류:', error);
       return [];
