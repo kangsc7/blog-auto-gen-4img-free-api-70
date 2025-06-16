@@ -16,18 +16,18 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
     const [isPixabayApiKeyValidated, setIsPixabayApiKeyValidated] = useState(props?.initialValidated ?? true);
     const [isPixabayValidating, setIsPixabayValidating] = useState(false);
 
-    // 외부에서 전달된 초기값이 변경되면 내부 상태도 업데이트
+    // 외부에서 전달된 초기값이 변경되면 내부 상태도 즉시 업데이트
     useEffect(() => {
-      if (props?.initialApiKey && props.initialApiKey !== pixabayApiKey) {
-        setPixabayApiKey(props.initialApiKey);
+      if (props?.initialApiKey !== undefined && props.initialApiKey !== pixabayApiKey) {
         console.log('Pixabay API 키 동기화:', props.initialApiKey);
+        setPixabayApiKey(props.initialApiKey);
       }
     }, [props?.initialApiKey]);
 
     useEffect(() => {
       if (props?.initialValidated !== undefined && props.initialValidated !== isPixabayApiKeyValidated) {
-        setIsPixabayApiKeyValidated(props.initialValidated);
         console.log('Pixabay API 키 검증 상태 동기화:', props.initialValidated);
+        setIsPixabayApiKeyValidated(props.initialValidated);
       }
     }, [props?.initialValidated]);
 
@@ -59,6 +59,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
     }, [toast, props]);
 
     const handleSetPixabayApiKey = (key: string) => {
+        console.log('Pixabay API 키 설정:', key);
         setPixabayApiKey(key);
         setIsPixabayApiKeyValidated(false);
         props?.onApiKeyChange?.(key);
@@ -73,6 +74,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
         isPixabayValidating,
         validatePixabayApiKey: (key: string) => validatePixabayApiKeyCallback(key),
         deletePixabayApiKeyFromStorage: () => {
+            console.log('Pixabay API 키 기본값 복원');
             setPixabayApiKey(DEFAULT_API_KEYS.PIXABAY);
             setIsPixabayApiKeyValidated(true);
             props?.onApiKeyChange?.(DEFAULT_API_KEYS.PIXABAY);

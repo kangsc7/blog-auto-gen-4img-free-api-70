@@ -31,20 +31,27 @@ export const useAppStateManager = () => {
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
 
-  // 앱 상태 초기화 - 컴포넌트 마운트 시 기본 API 키들로 강제 설정
+  // 컴포넌트 마운트 시 기본 API 키들로 강제 설정 - 한 번만 실행
   useEffect(() => {
-    console.log('앱 상태 초기화 시작');
-    setAppState(prev => ({
-      ...prev,
-      apiKey: DEFAULT_API_KEYS.GEMINI,
-      isApiKeyValidated: true,
-      pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
-      isPixabayApiKeyValidated: true,
-      huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
-      isHuggingFaceApiKeyValidated: true,
-    }));
-    console.log('앱 상태에 기본 API 키들이 자동 설정됨');
-  }, []);
+    console.log('앱 상태 초기화 시작 - 기본 API 키 설정');
+    setAppState(prev => {
+      const newState = {
+        ...prev,
+        apiKey: DEFAULT_API_KEYS.GEMINI,
+        isApiKeyValidated: true,
+        pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+        isPixabayApiKeyValidated: true,
+        huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+        isHuggingFaceApiKeyValidated: true,
+      };
+      console.log('기본 API 키들이 앱 상태에 설정됨:', {
+        gemini: newState.apiKey,
+        pixabay: newState.pixabayApiKey,
+        huggingface: newState.huggingFaceApiKey
+      });
+      return newState;
+    });
+  }, []); // 빈 의존성 배열로 한 번만 실행
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
     console.log('앱 상태 업데이트:', newState);
@@ -52,6 +59,7 @@ export const useAppStateManager = () => {
   }, []);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
+    console.log(`${keyType} API 키를 기본값으로 복원`);
     switch (keyType) {
       case 'gemini':
         saveAppState({ apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true });
@@ -67,6 +75,7 @@ export const useAppStateManager = () => {
   }, [saveAppState, toast]);
 
   const resetApp = useCallback(() => {
+    console.log('앱 전체 초기화');
     setAppState(defaultState);
     toast({ title: "초기화 완료", description: "모든 데이터가 초기화되었습니다." });
   }, [toast]);

@@ -16,18 +16,18 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
     const [isHuggingFaceApiKeyValidated, setIsHuggingFaceApiKeyValidated] = useState(props?.initialValidated ?? true);
     const [isHuggingFaceValidating, setIsHuggingFaceValidating] = useState(false);
 
-    // 외부에서 전달된 초기값이 변경되면 내부 상태도 업데이트
+    // 외부에서 전달된 초기값이 변경되면 내부 상태도 즉시 업데이트
     useEffect(() => {
-      if (props?.initialApiKey && props.initialApiKey !== huggingFaceApiKey) {
-        setHuggingFaceApiKey(props.initialApiKey);
+      if (props?.initialApiKey !== undefined && props.initialApiKey !== huggingFaceApiKey) {
         console.log('HuggingFace API 키 동기화:', props.initialApiKey);
+        setHuggingFaceApiKey(props.initialApiKey);
       }
     }, [props?.initialApiKey]);
 
     useEffect(() => {
       if (props?.initialValidated !== undefined && props.initialValidated !== isHuggingFaceApiKeyValidated) {
-        setIsHuggingFaceApiKeyValidated(props.initialValidated);
         console.log('HuggingFace API 키 검증 상태 동기화:', props.initialValidated);
+        setIsHuggingFaceApiKeyValidated(props.initialValidated);
       }
     }, [props?.initialValidated]);
 
@@ -79,6 +79,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
     }, [toast, props]);
 
     const handleSetHuggingFaceApiKey = (key: string) => {
+        console.log('HuggingFace API 키 설정:', key);
         setHuggingFaceApiKey(key);
         setIsHuggingFaceApiKeyValidated(false);
         props?.onApiKeyChange?.(key);
@@ -93,6 +94,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
         isHuggingFaceValidating,
         validateHuggingFaceApiKey: () => validateHuggingFaceApiKeyCallback(huggingFaceApiKey),
         deleteHuggingFaceApiKeyFromStorage: () => {
+            console.log('HuggingFace API 키 기본값 복원');
             setHuggingFaceApiKey(DEFAULT_API_KEYS.HUGGING_FACE);
             setIsHuggingFaceApiKeyValidated(true);
             props?.onApiKeyChange?.(DEFAULT_API_KEYS.HUGGING_FACE);

@@ -23,6 +23,9 @@ const Index = () => {
     handleSignUp,
     handleLogout,
     isAdmin,
+    geminiManager,
+    pixabayManager,
+    huggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
     handleResetApp,
@@ -55,7 +58,11 @@ const Index = () => {
         handleLogout={handleLogout}
       />
       
-      <RefactoredApiKeysSection />
+      <RefactoredApiKeysSection 
+        geminiManager={geminiManager}
+        pixabayManager={pixabayManager}
+        huggingFaceManager={huggingFaceManager}
+      />
 
       {isAdmin && (
         <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">

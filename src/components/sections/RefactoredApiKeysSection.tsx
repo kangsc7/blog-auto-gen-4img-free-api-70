@@ -3,13 +3,18 @@ import React from 'react';
 import { GeminiApiKeyManager } from '@/components/control/GeminiApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
-import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
-import { useAppStateManager } from '@/hooks/useAppStateManager';
 
-export const RefactoredApiKeysSection: React.FC = () => {
-  const { appState, saveAppState } = useAppStateManager();
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
+interface RefactoredApiKeysSectionProps {
+  geminiManager: any;
+  pixabayManager: any;
+  huggingFaceManager: any;
+}
 
+export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> = ({
+  geminiManager,
+  pixabayManager,
+  huggingFaceManager
+}) => {
   return (
     <div className="container mx-auto mt-20 relative z-[200]">
       <div className="flex flex-wrap gap-4 mb-6 justify-center">
