@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, RefreshCw, Ban, Check, Download, Copy } from 'lucide-react';
+import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { ApiKeysSection } from '@/components/sections/ApiKeysSection';
@@ -113,30 +113,6 @@ const Index = () => {
                   허용: 중복된 주제도 허용합니다.
                 </p>
               </div>
-              {!preventDuplicates && (
-                <div className="flex gap-2 mt-2 justify-center">
-                  <Button
-                    onClick={() => utilityFunctions.copyToClipboard(appState.generatedContent, 'HTML')}
-                    disabled={!appState.generatedContent}
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    HTML 복사
-                  </Button>
-                  <Button
-                    onClick={() => utilityFunctions.downloadHTML()}
-                    disabled={!appState.generatedContent}
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    다운로드
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
           <div className="text-center">

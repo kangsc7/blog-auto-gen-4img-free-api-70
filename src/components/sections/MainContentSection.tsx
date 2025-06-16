@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
@@ -6,6 +7,8 @@ import { ImagePaster } from '@/components/control/ImagePaster';
 import { TopicList } from '@/components/display/TopicList';
 import { ArticlePreview } from '@/components/display/ArticlePreview';
 import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
+import { Button } from '@/components/ui/button';
+import { Copy, Download } from 'lucide-react';
 import { AppState } from '@/types';
 
 interface GenerationStatus {
@@ -101,6 +104,33 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     isGeneratingContent={generationStatus.isGeneratingContent}
                     selectedTopic={appState.selectedTopic}
                 />
+
+                {appState.generatedContent && !generationStatus.isGeneratingContent && (
+                    <div className="bg-white rounded-lg shadow-md p-4">
+                        <div className="flex gap-2 justify-center mb-4">
+                            <Button
+                                onClick={() => utilityFunctions.copyToClipboard(appState.generatedContent, 'HTML')}
+                                disabled={!appState.generatedContent}
+                                variant="outline"
+                                size="sm"
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                                <Copy className="h-4 w-4 mr-1" />
+                                HTML 복사
+                            </Button>
+                            <Button
+                                onClick={() => utilityFunctions.downloadHTML()}
+                                disabled={!appState.generatedContent}
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                                <Download className="h-4 w-4 mr-1" />
+                                다운로드
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {appState.generatedContent && !generationStatus.isGeneratingContent && (
                     <SeoAnalyzer 
