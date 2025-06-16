@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -72,7 +73,7 @@ export const useTopicGenerator = (
 
 **절대 지켜야 할 핵심 규칙**:
 1. 모든 제목은 반드시 '${keyword}' 키워드의 핵심 구성 요소를 모두 포함해야 합니다.
-2. 다른 주제(에너지바우처, 70만원 등)는 절대 포함하지 마세요.
+2. 다른 주제는 절대 포함하지 마세요.
 3. 오직 '${keyword}'와 관련된 내용만 생성해주세요.
 
 **핵심 키워드 필수 포함 요소**:
@@ -112,13 +113,14 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
           .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
           .filter(topic => topic.length > 5);
 
-        // 강화된 키워드 검증 로직
+        // 개선된 키워드 검증 로직 - 입력된 키워드와 관련된 내용은 허용
         const validTopics = newTopics.filter(topic => {
-          // 1. 핵심 단어 포함률 체크 (80% 이상)
+          // 1. 핵심 단어 포함률 체크 (60% 이상으로 완화)
           const includedCoreWords = keywordInfo.coreWords.filter(word => 
             topic.toLowerCase().includes(word.toLowerCase())
           );
-          const coreWordRatio = includedCoreWords.length / keywordInfo.coreWords.length;
+          const coreWordRatio = keywordInfo.coreWords.length > 0 ? 
+            includedCoreWords.length / keywordInfo.coreWords.length : 1;
           
           // 2. 년도가 있다면 반드시 포함되어야 함
           const yearCheck = !keywordInfo.year || 
@@ -130,15 +132,24 @@ ${keywordInfo.number ? `- "${keywordInfo.number}"` : ''}
             topic.includes(keywordInfo.number) ||
             topic.includes(keywordInfo.number.replace(/만원?/, ''));
           
-          // 4. 다른 주제 키워드 제외 (에너지바우처, 70만원 등)
-          const excludeOtherTopics = !topic.includes('에너지바우처') && 
-            !topic.includes('70만원') &&
-            !topic.includes('에너지') &&
-            !topic.includes('바우처');
+          // 4. 입력된 키워드와 관련없는 완전히 다른 주제만 제외
+          // 입력된 키워드에 "에너지바우처"가 포함되어 있다면 에너지바우처 관련 주제는 허용
+          const isRelatedToInputKeyword = keywordInfo.coreWords.some(word => 
+            ['에너지', '바우처', '에너지바우처'].includes(word.toLowerCase())
+          );
           
-          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 다른주제제외: ${excludeOtherTopics}`);
+          let excludeOtherTopics = true;
+          if (!isRelatedToInputKeyword) {
+            // 입력 키워드가 에너지바우처와 관련없을 때만 제외
+            excludeOtherTopics = !topic.includes('에너지바우처') && 
+              !topic.includes('70만원') &&
+              !topic.includes('청년도약계좌') &&
+              !topic.includes('국민취업지원제도');
+          }
           
-          return coreWordRatio >= 0.8 && yearCheck && numberCheck && excludeOtherTopics;
+          console.log(`주제 검증: "${topic}" - 핵심단어비율: ${coreWordRatio.toFixed(2)}, 년도: ${yearCheck}, 숫자: ${numberCheck}, 다른주제제외: ${excludeOtherTopics}`);
+          
+          return coreWordRatio >= 0.6 && yearCheck && numberCheck && excludeOtherTopics;
         });
 
         // preventDuplicates 설정에 따라 중복 제거 여부 결정
