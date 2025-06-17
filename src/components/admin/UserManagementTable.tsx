@@ -4,7 +4,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RemainingTime from './RemainingTime';
 import type { UserStatus } from '@/types';
@@ -23,7 +23,7 @@ const getStatusBadgeVariant = (status: UserStatus): 'default' | 'secondary' | 'd
 };
 
 export const UserManagementTable: React.FC = () => {
-  const { users, loading, updateUserStatus } = useUserManagement();
+  const { users, loading, updateUserStatus, deleteUser } = useUserManagement();
 
   if (loading) {
     return (
@@ -135,6 +135,10 @@ export const UserManagementTable: React.FC = () => {
                     <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge></TableCell>
                     <TableCell className="text-right space-x-2">
                        <Button size="sm" variant="outline" onClick={() => updateUserStatus(user.id, 'approved')}>승인</Button>
+                       <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id)}>
+                         <Trash2 className="h-4 w-4" />
+                         삭제
+                       </Button>
                     </TableCell>
                   </TableRow>
                 ))

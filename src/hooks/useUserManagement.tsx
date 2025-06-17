@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile, UserStatus } from '@/types';
@@ -75,5 +76,21 @@ export const useUserManagement = () => {
         return true;
     };
 
-    return { users, loading, updateUserStatus };
+    const deleteUser = async (userId: string) => {
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Error deleting user:', error);
+            toast({ title: "사용자 삭제 실패", description: error.message, variant: "destructive" });
+            return false;
+        }
+
+        toast({ title: "사용자 삭제", description: "사용자가 성공적으로 삭제되었습니다." });
+        return true;
+    };
+
+    return { users, loading, updateUserStatus, deleteUser };
 };

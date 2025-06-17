@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, RefreshCw, Ban, Check } from 'lucide-react';
+import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
@@ -10,7 +10,9 @@ import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRefactoredAppController } from '@/hooks/useRefactoredAppController';
+import { useUserAccess } from '@/hooks/useUserAccess';
 
 const Index = () => {
   const {
@@ -39,17 +41,20 @@ const Index = () => {
     utilityFunctions,
   } = useRefactoredAppController();
 
-  // 디버깅을 위한 콘솔 로그 추가
+  const { hasAccess, isCheckingAccess } = useUserAccess();
+
   console.log('Index 컴포넌트 렌더링 상태:', {
     session: !!session,
     isAdmin,
+    hasAccess,
     preventDuplicates,
     profile: !!profile,
-    authLoading
+    authLoading,
+    isCheckingAccess
   });
 
-  if (authLoading) {
-    console.log('인증 로딩 중...');
+  if (authLoading || isCheckingAccess) {
+    console.log('인증 또는 접근 권한 확인 중...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>로딩 중...</p>
@@ -60,6 +65,63 @@ const Index = () => {
   if (!session) {
     console.log('세션 없음 - 로그인 폼 표시');
     return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
+  }
+
+  // 접근 권한이 없는 경우 (승인 대기, 거절, 만료)
+  if (!hasAccess && !isAdmin) {
+    const getStatusMessage = () => {
+      if (!profile) return { title: "프로필 로딩 중", description: "잠시만 기다려주세요." };
+      
+      switch (profile.status) {
+        case 'pending':
+          return { 
+            title: "승인 대기", 
+            description: "관리자의 승인을 기다리고 있습니다. 승인 후 서비스를 이용하실 수 있습니다.",
+            icon: <Clock className="h-8 w-8 text-yellow-600" />
+          };
+        case 'rejected':
+          return { 
+            title: "접근 거부", 
+            description: "계정이 거절되었거나 이용 기간이 만료되었습니다. 관리자에게 문의하세요.",
+            icon: <AlertTriangle className="h-8 w-8 text-red-600" />
+          };
+        default:
+          return { 
+            title: "접근 제한", 
+            description: "서비스 이용 권한이 없습니다.",
+            icon: <AlertTriangle className="h-8 w-8 text-red-600" />
+          };
+      }
+    };
+
+    const { title, description, icon } = getStatusMessage();
+
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <AppHeader
+          currentUser={profile?.email || appState.currentUser}
+          handleLogout={handleLogout}
+        />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+          <Card className="w-full max-w-md text-center shadow-lg">
+            <CardHeader>
+              <div className="mx-auto bg-gray-100 rounded-full p-3 w-fit">
+                {icon}
+              </div>
+              <CardTitle className="mt-4 text-2xl font-bold">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="mb-6">
+                {description}
+              </CardDescription>
+              <Button onClick={handleLogout} variant="outline">
+                로그아웃
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   console.log('메인 화면 렌더링 시작');
@@ -77,7 +139,7 @@ const Index = () => {
         huggingFaceManager={huggingFaceManager}
       />
 
-      {/* 컨트롤 섹션 - 모든 사용자에게 표시 */}
+      {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
       <div className="container mx-auto mt-8 mb-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -97,7 +159,7 @@ const Index = () => {
               )}
             </div>
             
-            {/* 중복 설정 토글 - 모든 사용자에게 표시 */}
+            {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
             <div className="text-center">
               <div className="mb-2">
                 <span className="text-sm font-medium text-gray-700">중복 주제 설정</span>
@@ -134,7 +196,7 @@ const Index = () => {
               </p>
             </div>
             
-            {/* 초기화 버튼 - 모든 사용자에게 표시 */}
+            {/* 초기화 버튼 - 접근 권한이 있는 사용자에게 표시 */}
             <div className="text-center">
               <Button
                 onClick={handleResetApp}

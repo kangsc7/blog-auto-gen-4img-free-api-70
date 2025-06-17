@@ -10,18 +10,25 @@ import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
+import { useUserAccess } from '@/hooks/useUserAccess';
 
 export const useRefactoredAppController = () => {
   const { toast } = useToast();
   const { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
+  const { hasAccess } = useUserAccess();
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates);
-  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
+  
+  // 접근 권한이 없으면 기능을 비활성화
+  const canUseFeatures = hasAccess || isAdmin;
+  
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates, canUseFeatures);
+  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState, canUseFeatures);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState,
     saveAppState,
-    huggingFaceManager.huggingFaceApiKey
+    huggingFaceManager.huggingFaceApiKey,
+    canUseFeatures
   );
   
   const {
@@ -29,7 +36,7 @@ export const useRefactoredAppController = () => {
     setManualTopic,
     selectTopic,
     handleManualTopicAdd,
-  } = useTopicControls({ appState, saveAppState, preventDuplicates });
+  } = useTopicControls({ appState, saveAppState, preventDuplicates, canUseFeatures });
 
   const {
     copyToClipboard,
@@ -38,6 +45,14 @@ export const useRefactoredAppController = () => {
   } = useAppUtils({ appState });
 
   const handleResetApp = () => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return;
+    }
     resetApp();
     setManualTopic('');
   };
@@ -57,6 +72,15 @@ export const useRefactoredAppController = () => {
   }, [session?.user?.email, saveAppState]);
 
   const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return Promise.resolve();
+    }
+    
     return generateArticle({
       ...options,
       pixabayConfig: { 
@@ -73,7 +97,8 @@ export const useRefactoredAppController = () => {
     selectTopic,
     generateArticleWithPixabay,
     profile,
-    preventDuplicates
+    preventDuplicates,
+    canUseFeatures
   );
 
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
@@ -111,5 +136,6 @@ export const useRefactoredAppController = () => {
     generationFunctions,
     topicControls,
     utilityFunctions,
+    canUseFeatures,
   };
 };
