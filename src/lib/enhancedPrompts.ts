@@ -91,8 +91,8 @@ export const getEnhancedArticlePrompt = async ({
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
         
-        **🚨 5개 H2 섹션으로 구성 - 적정 분량의 깊이 있는 내용 작성 🚨**
-        기존 7개 섹션을 5개로 축소하여 각 섹션당 풍부하지만 적절한 분량의 내용을 작성합니다.
+        **🚨 6개 H2 섹션으로 구성 - 적정 분량의 깊이 있는 내용 작성 🚨**
+        기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
         각 섹션은 해당 동적 소제목의 의도에 맞는 전문적이고 실용적인 내용으로 구성해주세요.
         
         **🚨 각 섹션 글자수 조정 - 200자에서 300자 사이 🚨**
@@ -111,6 +111,12 @@ export const getEnhancedArticlePrompt = async ({
         - FAQ는 최소 4개의 질문과 답변으로 구성해주세요
         - 주의사항은 실제로 주의해야 할 중요한 포인트들로 구성해주세요
         
+        **🚨 6번째 섹션 - 격려와 용기 부여 🚨**
+        - 6번째 섹션은 "더 자세한 세부 정보가 필요하시요? 🌟" 제목으로 고정됩니다
+        - 이 섹션에서는 독자에게 용기와 희망을 주는 격려의 메시지를 담아주세요
+        - "할 수 있다"는 긍정적인 메시지와 성공 사례를 언급하여 독자의 동기를 부여해주세요
+        - 외부 링크 정보([REFERENCE_TEXT])가 이 섹션에 중앙 정렬된 박스 형태로 표시됩니다
+        
         **절대로 섹션을 건너뛰거나 생략하지 마세요!**
         
         **🚨 고급 정보 제공 의무 🚨**
@@ -121,7 +127,7 @@ export const getEnhancedArticlePrompt = async ({
         - 전문가만 아는 숨겨진 팁
         - 주의해야 할 함정이나 놓치기 쉬운 포인트
         - 관련 법령이나 정책 변화 내용
-        
+
         1. **키워드 자연스러운 적용**: 
         - 원본 키워드 "${keyword}"를 그대로 강조하여 사용하지 마세요
         - 대신 자연스러운 키워드 "${naturalKeyword}"나 관련 용어를 사용하세요
@@ -135,6 +141,7 @@ export const getEnhancedArticlePrompt = async ({
         - [SECTION_CONTENT_3] → "${contextualTerms.SECTION_CONTENT_3}"
         - [SECTION_CONTENT_4] → "${contextualTerms.SECTION_CONTENT_4}"
         - [SECTION_CONTENT_5] → "${contextualTerms.SECTION_CONTENT_5}"
+        - [SECTION_CONTENT_6] → "${contextualTerms.SECTION_CONTENT_5}" (6번째 섹션용)
         - [SUMMARY_TITLE] → "${contextualTerms.SUMMARY_TITLE}"
         - [REFERENCE_TEXT] → "${referenceSentence || contextualTerms.REFERENCE_TEXT}"
         - [GENERATED_TAGS] → "${contextualTerms.GENERATED_TAGS}"
@@ -177,17 +184,19 @@ export const getEnhancedArticlePrompt = async ({
         - Original Keyword: ${keyword}
         - Natural Keyword: ${naturalKeyword}
 
-        아래는 반드시 따라야 할 HTML 템플릿입니다 (5개 동적 소제목 포함).
+        아래는 반드시 따라야 할 HTML 템플릿입니다 (6개 동적 소제목 포함).
         
         --- HTML TEMPLATE START ---
 ${htmlTemplate}
 --- HTML TEMPLATE END ---
 
         ⚠️ 재확인 사항:
-        - **5개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
+        - **6개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
         - **각 섹션은 200자에서 300자 사이의 적절한 분량이어야 합니다**
         - **150글자마다 2문장 끝에서 </p> 태그로 문단을 나누고 공백을 넣어야 합니다**
         - **3번째 섹션에는 주의사항 카드, 5번째 섹션에는 FAQ 카드가 반드시 포함되어야 합니다**
+        - **6번째 섹션은 격려와 용기를 주는 내용으로 작성되어야 합니다**
+        - **외부 링크 정보([REFERENCE_TEXT])가 6번째 섹션에 중앙 정렬된 박스로 표시되어야 합니다**
         - 동적 생성된 소제목의 의도에 맞는 전문적인 내용으로 각 섹션을 작성해야 합니다
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
         - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
