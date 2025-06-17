@@ -51,8 +51,8 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
     preventDuplicates = false,
 }) => {
     return (
-        <div className="container mx-auto mt-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="container mx-auto mt-4 px-2 sm:px-4 md:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
                 <LeftSidebar
                     appState={appState}
                     saveAppState={saveAppState}
@@ -75,3 +75,4 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
         </div>
     );
 };
+

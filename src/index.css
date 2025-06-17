@@ -167,3 +167,38 @@
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+/* 모바일 최적화 - 좌우 여백 줄이기 */
+@layer components {
+  .container {
+    @apply mx-auto px-2 sm:px-4 md:px-6 lg:px-8;
+  }
+  
+  /* 모바일에서 카드 여백 조정 */
+  .mobile-optimized {
+    @apply px-2 sm:px-4 md:px-6;
+  }
+  
+  /* 모바일에서 그리드 간격 조정 */
+  .mobile-grid {
+    @apply gap-2 sm:gap-4 md:gap-6;
+  }
+}
+
+/* 모바일 전용 스타일 */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  .card {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+  }
+  
+  .grid {
+    gap: 0.5rem !important;
+  }
+}
+
