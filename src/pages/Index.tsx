@@ -39,7 +39,17 @@ const Index = () => {
     utilityFunctions,
   } = useRefactoredAppController();
 
+  // 디버깅을 위한 콘솔 로그 추가
+  console.log('Index 컴포넌트 렌더링 상태:', {
+    session: !!session,
+    isAdmin,
+    preventDuplicates,
+    profile: !!profile,
+    authLoading
+  });
+
   if (authLoading) {
+    console.log('인증 로딩 중...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>로딩 중...</p>
@@ -48,8 +58,11 @@ const Index = () => {
   }
 
   if (!session) {
+    console.log('세션 없음 - 로그인 폼 표시');
     return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
   }
+
+  console.log('메인 화면 렌더링 시작');
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -64,24 +77,31 @@ const Index = () => {
         huggingFaceManager={huggingFaceManager}
       />
 
-      <div className="container mx-auto mt-20 mb-4">
-        <div className="flex items-center justify-between">
-          {/* 관리자에게만 보이는 사용자 관리 페이지 링크 */}
-          <div className="flex-shrink-0">
-            {isAdmin && (
-              <Link
-                to="/admin/users"
-                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
-              >
-                <Shield className="h-5 w-5 text-red-500" />
-                <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
-              </Link>
-            )}
-          </div>
-          
-          {/* 모든 사용자: 중복 설정 및 초기화 컨트롤 */}
-          <div className="flex items-center gap-8 ml-auto">
+      {/* 컨트롤 섹션 - 모든 사용자에게 표시 */}
+      <div className="container mx-auto mt-8 mb-4">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            
+            {/* 관리자 링크 - 관리자에게만 표시 */}
+            <div className="flex-shrink-0">
+              {isAdmin ? (
+                <Link
+                  to="/admin/users"
+                  className="inline-flex items-center gap-2 bg-red-50 p-3 rounded-lg shadow-sm hover:bg-red-100 transition-colors border border-red-300"
+                >
+                  <Shield className="h-5 w-5 text-red-600" />
+                  <span className="font-semibold text-red-700">사용자 관리 페이지</span>
+                </Link>
+              ) : (
+                <div className="w-48"></div>
+              )}
+            </div>
+            
+            {/* 중복 설정 토글 - 모든 사용자에게 표시 */}
             <div className="text-center">
+              <div className="mb-2">
+                <span className="text-sm font-medium text-gray-700">중복 주제 설정</span>
+              </div>
               <ToggleGroup
                 type="single"
                 value={preventDuplicates ? 'forbid' : 'allow'}
@@ -92,46 +112,40 @@ const Index = () => {
                     console.log('중복 설정 변경:', newPreventDuplicates ? '금지' : '허용');
                   }
                 }}
-                className="inline-flex rounded-lg bg-gray-200 p-1 border shadow-inner"
-                aria-label="중복 주제 설정"
+                className="inline-flex rounded-lg bg-gray-100 p-1"
               >
                 <ToggleGroupItem
                   value="forbid"
-                  aria-label="중복 주제 금지"
-                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="px-4 py-2 text-sm font-medium data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
                 >
-                  <Ban />
+                  <Ban className="h-4 w-4" />
                   중복 금지
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="allow"
-                  aria-label="중복 주제 허용"
-                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="px-4 py-2 text-sm font-medium data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
                 >
-                  <Check />
+                  <Check className="h-4 w-4" />
                   중복 허용
                 </ToggleGroupItem>
               </ToggleGroup>
-              <div className="w-72 mx-auto">
-                <p className="text-xs text-gray-500 mt-1">
-                  현재: {preventDuplicates ? '중복 금지 (키워드/주제 중복 방지)' : '중복 허용 (모든 제한 해제)'}<br />
-                  금지: 70% 이상 유사한 주제를 자동 제거합니다.
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                현재: {preventDuplicates ? '중복 금지' : '중복 허용'}
+              </p>
             </div>
             
-            {/* 모든 사용자: 초기화 버튼 */}
+            {/* 초기화 버튼 - 모든 사용자에게 표시 */}
             <div className="text-center">
               <Button
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-white text-green-600 border-green-600 hover:bg-green-50 rounded-lg shadow-md transition-colors px-16 py-8 min-w-[200px] h-16"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-8 py-4"
               >
-                <RefreshCw className="h-6 w-6" />
-                <span className="font-bold text-lg text-gray-800">초기화</span>
+                <RefreshCw className="h-5 w-5 mr-2" />
+                <span className="font-semibold">초기화</span>
               </Button>
-              <p className="text-xs text-gray-500 mt-1">모든 입력값과 생성된 내용 초기화</p>
+              <p className="text-xs text-gray-500 mt-1">모든 데이터 초기화</p>
             </div>
           </div>
         </div>
@@ -154,6 +168,7 @@ const Index = () => {
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
       />
+      
       <ScrollToTopButton />
     </div>
   );
