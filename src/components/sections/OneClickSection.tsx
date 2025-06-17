@@ -1,87 +1,72 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Zap, TrendingUp, Target, StopCircle } from 'lucide-react';
+import { ProgressTracker } from '@/components/layout/ProgressTracker';
+import { Zap, RefreshCw, StopCircle } from 'lucide-react';
+import { AppState } from '@/types';
 
 interface OneClickSectionProps {
-  isOneClickGenerating: boolean;
-  handleLatestIssueOneClick: () => void;
-  handleEvergreenKeywordOneClick: () => void;
-  handleStopOneClick: () => void;
+    handleLatestIssueOneClick: () => void;
+    handleEvergreenKeywordOneClick: () => void;
+    isOneClickGenerating: boolean;
+    handleStopOneClick: () => void;
+    appState: AppState;
 }
 
 export const OneClickSection: React.FC<OneClickSectionProps> = ({
-  isOneClickGenerating,
-  handleLatestIssueOneClick,
-  handleEvergreenKeywordOneClick,
-  handleStopOneClick,
+    handleLatestIssueOneClick,
+    handleEvergreenKeywordOneClick,
+    isOneClickGenerating,
+    handleStopOneClick,
+    appState,
 }) => {
-  return (
-    <Card className="shadow-md bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-      <CardHeader>
-        <CardTitle className="flex items-center text-purple-700">
-          <Zap className="h-5 w-5 mr-2" />
-          원클릭 콘텐츠 생성
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {isOneClickGenerating ? (
-          <div className="space-y-3">
-            <div className="bg-orange-100 border border-orange-300 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                <span className="text-orange-700 font-medium">콘텐츠 생성 중...</span>
-              </div>
-              <p className="text-orange-600 text-sm mt-2">키워드 → 주제 → 콘텐츠 → 이미지 순서로 진행됩니다</p>
+    return (
+        <div className="max-w-7xl mx-auto my-4">
+            <div className="flex justify-between items-center gap-4 p-6 rounded-xl shadow-lg bg-white border border-gray-200">
+                <Button 
+                    onClick={handleLatestIssueOneClick} 
+                    disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
+                    className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
+                >
+                    <Zap className="mr-3 h-7 w-7" />
+                    <span className="text-center leading-tight">
+                        최신 이슈
+                        <br />
+                        원클릭 생성
+                    </span>
+                </Button>
+                
+                <div className="flex-grow px-4 max-w-2xl">
+                    <ProgressTracker
+                        topics={appState.topics}
+                        generatedContent={appState.generatedContent}
+                        imagePrompt={appState.imagePrompt}
+                    />
+                    {isOneClickGenerating && (
+                         <Button 
+                            variant="destructive" 
+                            onClick={handleStopOneClick}
+                            className="w-full mt-3 py-3 text-lg font-semibold"
+                        >
+                            <StopCircle className="mr-2 h-5 w-5" />
+                            즉시 중단
+                        </Button>
+                    )}
+                </div>
+
+                <Button 
+                    onClick={handleEvergreenKeywordOneClick} 
+                    disabled={isOneClickGenerating || !appState.isApiKeyValidated}
+                    className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
+                >
+                    <RefreshCw className="mr-3 h-7 w-7" />
+                    <span className="text-center leading-tight">
+                        평생 키워드
+                        <br />
+                        원클릭 생성
+                    </span>
+                </Button>
             </div>
-            <Button 
-              onClick={handleStopOneClick}
-              variant="destructive"
-              className="w-full"
-            >
-              <StopCircle className="h-4 w-4 mr-2" />
-              생성 중단
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            <Button 
-              onClick={handleLatestIssueOneClick}
-              className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white py-3 h-auto flex-col"
-            >
-              <div className="flex items-center justify-center w-full">
-                <TrendingUp className="h-5 w-5 mr-2" />
-                <span className="font-bold">최신 이슈 원클릭 생성</span>
-              </div>
-              <span className="text-xs mt-1 opacity-90">실시간 트렌드 키워드로 즉시 블로그 글 생성</span>
-            </Button>
-            
-            <Button 
-              onClick={handleEvergreenKeywordOneClick}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 h-auto flex-col"
-            >
-              <div className="flex items-center justify-center w-full">
-                <Target className="h-5 w-5 mr-2" />
-                <span className="font-bold">평생 키워드 원클릭 생성</span>
-              </div>
-              <span className="text-xs mt-1 opacity-90">장기간 검색되는 평생 키워드로 블로그 글 생성</span>
-            </Button>
-          </div>
-        )}
-        
-        <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-          <strong>📝 원클릭 생성 과정:</strong>
-          <br />
-          1️⃣ AI가 트렌드/평생 키워드 자동 선정
-          <br />
-          2️⃣ 키워드 기반 주제 5개 생성
-          <br />
-          3️⃣ 첫 번째 주제로 블로그 글 작성
-          <br />
-          4️⃣ 이미지 프롬프트 생성 및 이미지 생성
         </div>
-      </CardContent>
-    </Card>
-  );
+    );
 };

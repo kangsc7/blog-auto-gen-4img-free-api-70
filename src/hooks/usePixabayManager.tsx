@@ -71,7 +71,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
             console.log('✅ Pixabay API 검증 성공:', data);
             
             setIsPixabayApiKeyValidated(true);
-            saveValidationStatusToStorage('pixabay', true);
+            saveValidationStatusToStorage('PIXABAY', true);
             props?.onValidationChange?.(true);
             
             if (!silent) {
@@ -86,7 +86,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
         } catch (error) {
             console.error('❌ Pixabay API 키 검증 실패:', error);
             setIsPixabayApiKeyValidated(false);
-            saveValidationStatusToStorage('pixabay', false);
+            saveValidationStatusToStorage('PIXABAY', false);
             props?.onValidationChange?.(false);
             
             if (!silent) {
@@ -107,7 +107,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
         console.log('🔑 Pixabay API 키 설정:', key.substring(0, 20) + '...');
         setPixabayApiKey(key);
         setIsPixabayApiKeyValidated(false);
-        saveValidationStatusToStorage('pixabay', false);
+        saveValidationStatusToStorage('PIXABAY', false);
         props?.onApiKeyChange?.(key);
         props?.onValidationChange?.(false);
     };
@@ -131,7 +131,7 @@ export const usePixabayManager = (props?: UsePixabayManagerProps) => {
             console.log('🔄 Pixabay API 키 기본값 복원');
             setPixabayApiKey(DEFAULT_API_KEYS.PIXABAY);
             setIsPixabayApiKeyValidated(true);
-            saveValidationStatusToStorage('pixabay', true);
+            saveValidationStatusToStorage('PIXABAY', true);
             props?.onApiKeyChange?.(DEFAULT_API_KEYS.PIXABAY);
             props?.onValidationChange?.(true);
             toast({ title: "기본값으로 복원", description: "Pixabay API 키가 기본값으로 복원되었습니다." });

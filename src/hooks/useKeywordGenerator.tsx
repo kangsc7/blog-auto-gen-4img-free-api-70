@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -71,41 +70,33 @@ export const useKeywordGenerator = (appState: AppState) => {
             description: "지금 이 순간의 최신 트렌드를 AI로 분석합니다." 
         });
         
-        // 강화된 실시간 트렌드 분석 프롬프트 - 탄핵 이후 키워드 제외
+        // 강화된 실시간 트렌드 분석 프롬프트
         const realtimePrompt = `🚨 **중요: 정확한 현재 시점 분석 요구사항** 🚨
 
 **현재 정확한 시각: ${exactTime}**
-**절대 금지 키워드: 윤석열, 대통령, 탄핵, 지지율, 정치인 관련**
 
 **필수 준수 사항:**
 1. 반드시 오늘 ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')} 날짜의 최신 이슈만 분석
-2. 24시간 이내(어제 ${currentDay-1}일 이후)에 발생한 실제 이슈만 고려  
+2. 24시간 이내(어제 ${currentDay-1}일 이후)에 발생한 실제 이슈만 고려
 3. 2023년, 2024년 이전 데이터는 절대 사용 금지
 4. 한국 시각 기준 최신 뉴스, 트렌드, 사회적 이슈 분석
-5. **정치 관련 키워드는 절대 생성 금지**
 
-**생성 기준 (정치 제외):**
-- 현재 한국에서 화제가 되고 있는 실시간 경제/사회 이슈
-- 온라인 커뮤니티에서 논의되는 최신 생활/문화 주제
-- 복지정책, 경제 동향, 사회 현상 중 최신 발생 사항
-- 연예, 스포츠, IT, 건강, 교육 분야의 오늘 발생한 이슈
+**생성 기준:**
+- 현재 한국에서 화제가 되고 있는 실시간 이슈
+- 온라인 커뮤니티에서 논의되는 최신 주제
+- 정부 정책, 경제 동향, 사회 현상 중 최신 발생 사항
+- 연예, 스포츠, IT 분야의 오늘 발생한 이슈
 
 다음 중복 방지를 위한 랜덤 카테고리에서 선택:
-${Math.random() < 0.25 ? '경제/재테크/복지' : Math.random() < 0.5 ? '사회/문화/생활' : Math.random() < 0.75 ? '기술/IT/디지털' : '건강/교육/취업'}
+${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테크' : Math.random() < 0.6 ? '사회/문화' : Math.random() < 0.8 ? '기술/IT' : '생활/건강'}
 
-**결과물:** 15자 이내의 검색 가능한 한국어 키워드 1개만 제공 (년도 포함 금지, 정치인명 절대 금지)
+**결과물:** 15자 이내의 검색 가능한 한국어 키워드 1개만 제공 (년도 포함 금지)
 
-**예시 형태:** "○○○ 새로운 혜택", "△△△ 지원금 확대", "□□□ 정책 변화" 등 (정치인명 절대 사용 금지)`;
+**예시 형태:** "○○○ 새로운 정책", "△△△ 논란", "□□□ 혜택 확대" 등`;
 
         console.log('실시간 트렌드 분석 프롬프트:', realtimePrompt);
         
         let result = await callGeminiForKeyword(realtimePrompt);
-        
-        // 정치 관련 키워드 필터링
-        if (result && (result.includes('윤석열') || result.includes('대통령') || result.includes('탄핵') || result.includes('지지율'))) {
-            console.log('정치 관련 키워드 감지됨, 재생성 시도');
-            result = null;
-        }
         
         if (result) {
             console.log(`실시간 키워드 생성 성공 (${exactTime}):`, result);
@@ -116,16 +107,13 @@ ${Math.random() < 0.25 ? '경제/재테크/복지' : Math.random() < 0.5 ? '사�
             return result;
         }
 
-        // 백업 시스템: 시간대별 맞춤 키워드 생성 (정치 제외)
+        // 백업 시스템: 시간대별 맞춤 키워드 생성
         const timeBasedPrompt = `현재 시각 ${currentHour}시를 고려하여, 
         ${currentHour < 9 ? '아침 시간대' : currentHour < 18 ? '낮 시간대' : '저녁 시간대'}에 
         한국인들이 관심 가질만한 ${exactTime} 기준 최신 키워드를 1개만 생성해주세요.
         
         반드시 오늘 날짜 ${currentYear}-${currentMonth}-${currentDay}의 실제 이슈여야 하며,
-        과거 데이터는 절대 사용하지 마세요.
-        **정치인명, 정치 관련 키워드는 절대 생성하지 마세요.**
-        
-        경제, 복지, 생활, 문화, 기술, 건강 분야의 키워드만 생성해주세요.`;
+        과거 데이터는 절대 사용하지 마세요.`;
         
         result = await callGeminiForKeyword(timeBasedPrompt);
         if (result) {

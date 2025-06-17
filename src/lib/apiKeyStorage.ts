@@ -1,76 +1,99 @@
 
-export interface ApiKeyData {
-  key: string;
-  isValidated: boolean;
-  timestamp: number;
-  lastValidation: number;
-}
+// API 키 로컬 스토리지 관리 - 개선된 버전
+const API_KEY_STORAGE_KEYS = {
+  GEMINI: 'gemini_api_key',
+  PIXABAY: 'pixabay_api_key',
+  HUGGING_FACE: 'hugging_face_api_key',
+  GEMINI_VALIDATED: 'gemini_validated',
+  PIXABAY_VALIDATED: 'pixabay_validated',
+  HUGGING_FACE_VALIDATED: 'hugging_face_validated',
+  LAST_VALIDATION_TIME: 'last_validation_time',
+} as const;
 
-export interface AdsenseData {
-  code: string;
-  isEnabled: boolean;
-  client: string;
-  slot: string;
-  timestamp: number;
-}
-
-export interface StoredApiKeys {
-  gemini?: ApiKeyData;
-  pixabay?: ApiKeyData;
-  huggingface?: ApiKeyData;
-  adsense?: AdsenseData;
-}
-
-const STORAGE_KEY = 'blog_generator_api_keys';
-
-export const loadApiKeys = async (): Promise<StoredApiKeys> => {
+// 검증 상태를 더 안전하게 저장
+export const saveApiKeyToStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS, value: string) => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return {};
-    
-    const parsed = JSON.parse(stored);
-    console.log('API 키 로드:', parsed);
-    return parsed;
+    localStorage.setItem(API_KEY_STORAGE_KEYS[keyType], value);
+    // 저장 시간도 함께 기록
+    localStorage.setItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME, Date.now().toString());
+    console.log(`✅ ${keyType} API 키 로컬 스토리지에 저장됨:`, value.substring(0, 20) + '...');
   } catch (error) {
-    console.error('API 키 로드 오류:', error);
-    return {};
+    console.error(`❌ ${keyType} API 키 저장 실패:`, error);
   }
 };
 
-export const saveApiKeys = async (keys: StoredApiKeys): Promise<void> => {
+export const getApiKeyFromStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS): string | null => {
   try {
-    const serialized = JSON.stringify(keys);
-    localStorage.setItem(STORAGE_KEY, serialized);
-    console.log('API 키 저장 완료:', keys);
-  } catch (error) {
-    console.error('API 키 저장 오류:', error);
-    throw error;
-  }
-};
-
-export const clearAllApiKeys = async (): Promise<void> => {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    console.log('모든 API 키 삭제 완료');
-  } catch (error) {
-    console.error('API 키 삭제 오류:', error);
-    throw error;
-  }
-};
-
-export const saveValidationStatusToStorage = async (
-  service: 'gemini' | 'pixabay' | 'huggingface',
-  isValidated: boolean
-): Promise<void> => {
-  try {
-    const currentKeys = await loadApiKeys();
-    if (currentKeys[service]) {
-      currentKeys[service]!.isValidated = isValidated;
-      currentKeys[service]!.lastValidation = Date.now();
-      await saveApiKeys(currentKeys);
-      console.log(`${service} 검증 상태 저장:`, isValidated);
+    const value = localStorage.getItem(API_KEY_STORAGE_KEYS[keyType]);
+    if (value) {
+      console.log(`📖 ${keyType} API 키 로컬 스토리지에서 읽음:`, value.substring(0, 20) + '...');
     }
+    return value;
   } catch (error) {
-    console.error(`${service} 검증 상태 저장 오류:`, error);
+    console.error(`❌ ${keyType} API 키 읽기 실패:`, error);
+    return null;
   }
+};
+
+export const removeApiKeyFromStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS) => {
+  try {
+    localStorage.removeItem(API_KEY_STORAGE_KEYS[keyType]);
+    console.log(`🗑️ ${keyType} API 키 로컬 스토리지에서 삭제됨`);
+  } catch (error) {
+    console.error(`❌ ${keyType} API 키 삭제 실패:`, error);
+  }
+};
+
+export const saveValidationStatusToStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS, validated: boolean) => {
+  try {
+    const validationKey = `${keyType}_VALIDATED` as keyof typeof API_KEY_STORAGE_KEYS;
+    localStorage.setItem(API_KEY_STORAGE_KEYS[validationKey], validated.toString());
+    localStorage.setItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME, Date.now().toString());
+    console.log(`✅ ${keyType} 검증 상태 저장됨:`, validated, '시간:', new Date().toLocaleTimeString());
+  } catch (error) {
+    console.error(`❌ ${keyType} 검증 상태 저장 실패:`, error);
+  }
+};
+
+export const getValidationStatusFromStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS): boolean => {
+  try {
+    const validationKey = `${keyType}_VALIDATED` as keyof typeof API_KEY_STORAGE_KEYS;
+    const stored = localStorage.getItem(API_KEY_STORAGE_KEYS[validationKey]);
+    const result = stored === 'true';
+    console.log(`📖 ${keyType} 검증 상태 읽음:`, result);
+    return result;
+  } catch (error) {
+    console.error(`❌ ${keyType} 검증 상태 읽기 실패:`, error);
+    return false;
+  }
+};
+
+// 모든 API 키와 검증 상태를 한번에 가져오는 함수
+export const getAllApiKeysFromStorage = () => {
+  const geminiKey = getApiKeyFromStorage('GEMINI');
+  const pixabayKey = getApiKeyFromStorage('PIXABAY');
+  const huggingFaceKey = getApiKeyFromStorage('HUGGING_FACE');
+  
+  const geminiValidated = getValidationStatusFromStorage('GEMINI');
+  const pixabayValidated = getValidationStatusFromStorage('PIXABAY');
+  const huggingFaceValidated = getValidationStatusFromStorage('HUGGING_FACE');
+  
+  const lastValidationTime = localStorage.getItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME);
+  
+  console.log('🔄 모든 API 키 상태 로드:', {
+    gemini: { key: geminiKey?.substring(0, 20) + '...', validated: geminiValidated },
+    pixabay: { key: pixabayKey?.substring(0, 20) + '...', validated: pixabayValidated },
+    huggingface: { key: huggingFaceKey?.substring(0, 20) + '...', validated: huggingFaceValidated },
+    lastValidated: lastValidationTime ? new Date(parseInt(lastValidationTime)).toLocaleString() : 'Never'
+  });
+  
+  return {
+    geminiKey,
+    pixabayKey,
+    huggingFaceKey,
+    geminiValidated,
+    pixabayValidated,
+    huggingFaceValidated,
+    lastValidationTime
+  };
 };
