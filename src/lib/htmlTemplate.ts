@@ -22,8 +22,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 실제 신청 과정에서 놓치기 쉬운 부분들까지 상세히 다뤄보겠습니다! 💡
 </p>
-
-<p style="height: 20px;">&nbsp;</p>;
+<p style="height: 20px;">&nbsp;</p>
 `;
 
 // 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
