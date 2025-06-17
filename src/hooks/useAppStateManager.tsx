@@ -31,6 +31,7 @@ const defaultState: AppState = {
   referenceLink: '',
   referenceSentence: '',
   imageStyle: '',
+  preventDuplicates: true,
 };
 
 export const useAppStateManager = () => {
@@ -83,6 +84,14 @@ export const useAppStateManager = () => {
       }));
     }
   }, [loadApiKeysFromStorage]);
+
+  // preventDuplicates 상태 동기화
+  useEffect(() => {
+    setAppState(prev => ({
+      ...prev,
+      preventDuplicates
+    }));
+  }, [preventDuplicates]);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
     console.log('앱 상태 업데이트:', newState);
@@ -142,6 +151,7 @@ export const useAppStateManager = () => {
     removeApiKeyFromStorage('HUGGING_FACE');
     
     setAppState(defaultState);
+    setPreventDuplicates(true);
     hasInitialized.current = false;
     toast({ title: "초기화 완료", description: "모든 데이터가 초기화되었습니다." });
   }, [toast]);

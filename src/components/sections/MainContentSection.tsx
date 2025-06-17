@@ -60,7 +60,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                     generationFunctions={generationFunctions}
                     topicControls={topicControls}
                     utilityFunctions={utilityFunctions}
-                    preventDuplicates={preventDuplicates}
+                    preventDuplicates={appState.preventDuplicates}
                 />
                 
                 <RightContent 

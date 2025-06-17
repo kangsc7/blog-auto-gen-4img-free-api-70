@@ -24,6 +24,7 @@ export interface AppState {
   imageStyle: string;
   imagePrompt: string;
   generatedImageUrl: string;
+  preventDuplicates: boolean;
   saveReferenceTrigger?: boolean;
 }
 

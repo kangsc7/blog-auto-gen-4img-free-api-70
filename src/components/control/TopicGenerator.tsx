@@ -64,7 +64,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
 
         {/* 중복 설정 상태 표시 */}
         <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-          현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
+          현재 설정: {appState.preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
         </div>
 
         <Button 

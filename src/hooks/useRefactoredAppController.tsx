@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -35,7 +36,7 @@ export const useRefactoredAppController = () => {
     setManualTopic,
     selectTopic,
     handleManualTopicAdd,
-  } = useTopicControls({ appState, saveAppState, preventDuplicates, canUseFeatures });
+  } = useTopicControls({ appState, saveAppState, preventDuplicates: appState.preventDuplicates, canUseFeatures });
 
   const {
     copyToClipboard,
@@ -57,10 +58,10 @@ export const useRefactoredAppController = () => {
   };
 
   useEffect(() => {
-    if (!preventDuplicates) {
+    if (!appState.preventDuplicates) {
       console.log('중복 허용 모드 활성화 - 모든 중복 제한 해제');
     }
-  }, [preventDuplicates]);
+  }, [appState.preventDuplicates]);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -96,7 +97,7 @@ export const useRefactoredAppController = () => {
     selectTopic,
     generateArticleWithPixabay,
     profile,
-    preventDuplicates,
+    appState.preventDuplicates,
     canUseFeatures
   );
 
@@ -124,7 +125,7 @@ export const useRefactoredAppController = () => {
     pixabayManager,
     huggingFaceManager,
     deleteApiKeyFromStorage,
-    preventDuplicates,
+    preventDuplicates: appState.preventDuplicates,
     setPreventDuplicates,
     handleResetApp,
     isOneClickGenerating,
