@@ -10,7 +10,7 @@ interface RightContentProps {
     appState: AppState;
     saveAppState: (newState: Partial<AppState>) => void;
     selectTopic: (topic: string) => void;
-    copyToClipboard: (text: string, type: string) => void;
+    copyToClipboard: (text: string, type?: string) => void;
     downloadHTML: () => void;
     isGeneratingContent: boolean;
 }
@@ -24,7 +24,7 @@ export const RightContent: React.FC<RightContentProps> = ({
     isGeneratingContent,
 }) => {
     return (
-        <div className="lg:col-span-8 space-y-6">
+        <div className="space-y-6">
             <TopicList
                 topics={appState.topics}
                 selectedTopic={appState.selectedTopic}
