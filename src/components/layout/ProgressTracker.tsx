@@ -6,45 +6,21 @@ interface ProgressTrackerProps {
   topics: string[];
   generatedContent: string;
   imagePrompt: string;
-  isGeneratingTopics?: boolean;
-  isGeneratingContent?: boolean;
-  isGeneratingImage?: boolean;
 }
 
 const steps = ['주제 생성', '글 작성', '이미지 생성', '최종 완성'];
 
-export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ 
-  topics, 
-  generatedContent, 
-  imagePrompt,
-  isGeneratingTopics = false,
-  isGeneratingContent = false,
-  isGeneratingImage = false
-}) => {
+export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, generatedContent, imagePrompt }) => {
   let preciseActiveStep = 1;
-  if (generatedContent && generatedContent.trim() !== '') {
-    preciseActiveStep = 4; // 글이 완성되면 최종 완성 단계
-  } else if (imagePrompt) {
+  if (imagePrompt) {
+    preciseActiveStep = 4;
+  } else if (generatedContent) {
     preciseActiveStep = 3;
   } else if (topics.length > 0) {
     preciseActiveStep = 2;
   }
 
   const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
-
-  const getStepAnimation = (stepNumber: number) => {
-    if (stepNumber === 1 && isGeneratingTopics) return 'animate-pulse';
-    if (stepNumber === 2 && isGeneratingContent) return 'animate-pulse';
-    if (stepNumber === 3 && isGeneratingImage) return 'animate-pulse';
-    return '';
-  };
-
-  const getStepGlow = (stepNumber: number) => {
-    if (stepNumber === 1 && isGeneratingTopics) return 'shadow-lg shadow-blue-400/50';
-    if (stepNumber === 2 && isGeneratingContent) return 'shadow-lg shadow-green-400/50';
-    if (stepNumber === 3 && isGeneratingImage) return 'shadow-lg shadow-purple-400/50';
-    return '';
-  };
 
   return (
     <div className="w-full mb-4">
@@ -61,15 +37,12 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
                 const stepNumber = index + 1;
                 const isCompleted = stepNumber < preciseActiveStep;
                 const isActive = stepNumber === preciseActiveStep;
-                const animationClass = getStepAnimation(stepNumber);
-                const glowClass = getStepGlow(stepNumber);
-                
                 return (
                   <div key={label} className="relative text-center" style={{ width: '65px' }}>
                     <div
                       className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
                         isActive
-                          ? `bg-blue-500 text-white border-blue-500 scale-110 shadow-lg ${animationClass} ${glowClass}`
+                          ? 'bg-blue-500 text-white border-blue-500 scale-110 shadow-lg'
                           : isCompleted
                           ? 'bg-teal-400 text-white border-teal-400 shadow-md'
                           : 'bg-white text-gray-500 border-gray-300'
@@ -80,7 +53,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
                     <p
                       className={`mt-2 text-xs font-semibold transition-colors duration-500 ${
                         isActive || isCompleted ? 'text-gray-800' : 'text-gray-500'
-                      } ${animationClass}`}
+                      }`}
                     >
                       {label}
                     </p>
@@ -89,6 +62,9 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
               })}
             </div>
           </div>
+        </div>
+        <div className="text-right text-sm text-gray-700 mt-4 font-medium">
+          생성된 주제 목록: {topics.length}개 생성됨
         </div>
       </div>
     </div>

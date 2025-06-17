@@ -7,32 +7,40 @@ import { ImagePaster } from '@/components/control/ImagePaster';
 import { AdsenseManager } from '@/components/control/AdsenseManager';
 import { AppState } from '@/types';
 
+interface GenerationStatus {
+    isGeneratingTopics: boolean;
+    isGeneratingContent: boolean;
+    isGeneratingImage: boolean;
+    isDirectlyGenerating: boolean;
+}
+
+interface GenerationFunctions {
+    generateTopics: () => Promise<string[] | null>;
+    generateArticle: (topic?: string) => Promise<string | null>;
+    createImagePrompt: (text: string) => Promise<boolean>;
+    generateDirectImage: () => Promise<string | null>;
+}
+
+interface TopicControls {
+    manualTopic: string;
+    setManualTopic: (topic: string) => void;
+    handleManualTopicAdd: () => void;
+    selectTopic: (topic: string) => void;
+}
+
+interface UtilityFunctions {
+    copyToClipboard: (text: string, type: string) => void;
+    openWhisk: () => void;
+    downloadHTML: () => void;
+}
+
 interface LeftSidebarProps {
     appState: AppState;
     saveAppState: (newState: Partial<AppState>) => void;
-    generationStatus: {
-        isGeneratingTopics: boolean;
-        isGeneratingContent: boolean;
-        isGeneratingImage: boolean;
-        isDirectlyGenerating: boolean;
-    };
-    generationFunctions: {
-        generateTopics: (keyword?: string) => Promise<string[] | null>;
-        generateArticle: (topic?: string) => Promise<string>;
-        createImagePrompt: () => Promise<void>;
-        generateDirectImage: () => Promise<void>;
-    };
-    topicControls: {
-        manualTopic: string;
-        setManualTopic: (topic: string) => void;
-        handleManualTopicAdd: () => void;
-        selectTopic: (topic: string) => void;
-    };
-    utilityFunctions: {
-        copyToClipboard: (text: string, type?: string) => void;
-        openWhisk: () => void;
-        downloadHTML: () => void;
-    };
+    generationStatus: GenerationStatus;
+    generationFunctions: GenerationFunctions;
+    topicControls: TopicControls;
+    utilityFunctions: UtilityFunctions;
     preventDuplicates: boolean;
 }
 
@@ -46,7 +54,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     preventDuplicates,
 }) => {
     return (
-        <div className="space-y-6">
+        <div className="lg:col-span-4 space-y-6">
             <TopicGenerator
                 appState={appState}
                 saveAppState={saveAppState}
@@ -71,20 +79,15 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   appState={appState}
                   isGeneratingImage={generationStatus.isGeneratingImage}
                   isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-                  createImagePrompt={async (text: string) => {
-                    await generationFunctions.createImagePrompt();
-                    return true;
-                  }}
-                  generateDirectImage={async () => {
-                    await generationFunctions.generateDirectImage();
-                    return '';
-                  }}
-                  copyToClipboard={(text: string, type?: string) => utilityFunctions.copyToClipboard(text, type)}
+                  createImagePrompt={generationFunctions.createImagePrompt}
+                  generateDirectImage={generationFunctions.generateDirectImage}
+                  copyToClipboard={utilityFunctions.copyToClipboard}
                   openWhisk={utilityFunctions.openWhisk}
               />
 
               <ImagePaster />
               
+              {/* 애드센스 관리자를 왼쪽 하단으로 이동 */}
               <AdsenseManager 
                   appState={appState}
                   saveAppState={saveAppState}

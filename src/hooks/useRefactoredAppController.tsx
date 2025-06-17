@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -103,23 +104,13 @@ export const useRefactoredAppController = () => {
     canUseFeatures
   );
 
+  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
+
   const generateArticleForManual = (topic?: string): Promise<string> => {
     return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
-  const generationFunctions = { 
-    generateTopics, 
-    generateArticle: generateArticleForManual, 
-    createImagePrompt: async () => { 
-      await createImagePrompt('');
-    }, 
-    generateDirectImage: async () => { 
-      await generateDirectImage();
-    }
-  };
-
-  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
-
+  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 
