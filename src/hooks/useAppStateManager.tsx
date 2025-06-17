@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from '@/types';
 import { loadApiKeys, saveApiKeys, clearAllApiKeys } from '@/lib/apiKeyStorage';
@@ -24,8 +25,11 @@ const defaultState: AppState = {
   isPixabayLoading: false,
   isHuggingfaceLoading: false,
   saveReferenceTrigger: false,
+  topicCount: 5,
   adsenseCode: '',
   isAdsenseEnabled: false,
+  adsenseClient: '',
+  adsenseSlot: '',
 };
 
 export const useAppStateManager = () => {
@@ -57,6 +61,8 @@ export const useAppStateManager = () => {
       if (storedKeys.adsense) {
         updates.adsenseCode = storedKeys.adsense.code;
         updates.isAdsenseEnabled = storedKeys.adsense.isEnabled;
+        updates.adsenseClient = storedKeys.adsense.client || '';
+        updates.adsenseSlot = storedKeys.adsense.slot || '';
       }
       
       if (Object.keys(updates).length > 0) {
@@ -116,11 +122,13 @@ export const useAppStateManager = () => {
         needsSave = true;
       }
 
-      if (newState.adsenseCode !== undefined || newState.isAdsenseEnabled !== undefined) {
+      if (newState.adsenseCode !== undefined || newState.isAdsenseEnabled !== undefined || newState.adsenseClient !== undefined || newState.adsenseSlot !== undefined) {
         const currentAdsense = currentKeys.adsense;
         currentKeys.adsense = {
           code: newState.adsenseCode ?? currentAdsense?.code ?? '',
           isEnabled: newState.isAdsenseEnabled ?? currentAdsense?.isEnabled ?? false,
+          client: newState.adsenseClient ?? currentAdsense?.client ?? '',
+          slot: newState.adsenseSlot ?? currentAdsense?.slot ?? '',
           timestamp: Date.now()
         };
         needsSave = true;
@@ -161,10 +169,28 @@ export const useAppStateManager = () => {
 
   const resetApp = useCallback(async () => {
     try {
-      await clearAllApiKeys();
-      setAppState(defaultState);
+      // API 키는 보존하고 다른 데이터만 초기화
+      const currentKeys = await loadApiKeys();
+      setAppState(prev => ({
+        ...defaultState,
+        // API 키 관련 상태는 보존
+        apiKey: prev.apiKey,
+        isApiKeyValidated: prev.isApiKeyValidated,
+        pixabayApiKey: prev.pixabayApiKey,
+        isPixabayApiKeyValidated: prev.isPixabayApiKeyValidated,
+        huggingfaceApiKey: prev.huggingfaceApiKey,
+        isHuggingfaceApiKeyValidated: prev.isHuggingfaceApiKeyValidated,
+        // 애드센스 설정도 보존
+        adsenseCode: prev.adsenseCode,
+        isAdsenseEnabled: prev.isAdsenseEnabled,
+        adsenseClient: prev.adsenseClient,
+        adsenseSlot: prev.adsenseSlot,
+        // 로그인 상태도 보존
+        isLoggedIn: prev.isLoggedIn,
+        currentUser: prev.currentUser,
+      }));
       setPreventDuplicates(true);
-      console.log('앱 초기화 완료');
+      console.log('앱 초기화 완료 (API 키 및 설정 보존)');
     } catch (error) {
       console.error('앱 초기화 오류:', error);
     }

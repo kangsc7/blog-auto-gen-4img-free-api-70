@@ -42,6 +42,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
   const approvedUsers = users.filter((user) => user.status === 'approved');
   const rejectedUsers = users.filter((user) => user.status === 'rejected');
 
+  // 관리자 이메일 확인
+  const isAdminUser = (email: string) => email === '5321497@naver.com';
+
   return (
     <div className="space-y-8">
       <Card>
@@ -116,7 +119,10 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                     <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge></TableCell>
                     {isAdmin && (
                       <TableCell className="text-right space-x-2">
-                         <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
+                        {/* 관리자는 승인취소 버튼을 보여주지 않음 */}
+                        {!isAdminUser(user.email) && (
+                          <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
+                        )}
                       </TableCell>
                     )}
                   </TableRow>

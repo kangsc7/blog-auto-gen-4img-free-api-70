@@ -1,6 +1,7 @@
+
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
-  .wrapper-div { padding: 0 15px; }
+  .wrapper-div { padding: 0 15px !important; }
   /* 모바일에서 이미지 더 크게 표시 */
   img { 
     max-width: 100% !important; 
@@ -13,8 +14,28 @@ const getCssStyles = (colors: any): string => `
   img { 
     min-height: 200px !important; 
   }
+  .wrapper-div { 
+    padding: 0 10px !important; 
+    margin: 0 !important;
+  }
 }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
+/* 최강 우선순위 모바일 여백 설정 */
+* {
+  box-sizing: border-box !important;
+}
+@media (max-width: 768px) {
+  body, html {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .wrapper-div, div[style*="max-width"], div[style*="margin"] {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
 `;
 
 const getHeaderSection = (topic: string): string => `
@@ -25,46 +46,69 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
 <b>📢 중요한 소식!</b> [INTRO_KEYWORD_CONTEXT]에 대해 궁금하셨나요? 이 글을 끝까지 읽으시면 정확한 정보와 함께 실질적인 도움을 받으실 수 있을 거예요!
 </div>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 최근 많은 분들이 [CONTENT_KEYWORD_1]에 대해 관심을 갖고 계시는데요. 실제로 저도 이 제도를 통해 도움을 받았던 경험이 있어요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 처음엔 복잡한 절차와 조건들 때문에 포기하려고 했었는데, 차근차근 알아보니 생각보다 어렵지 않더라고요. 😊 이 글에서는 복잡한 용어나 절차를 쉽게 풀어서 설명드릴 예정이에요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 실제 신청 과정에서 놓치기 쉬운 부분들까지 상세히 다뤄보겠습니다! 💡
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (글자수 제한 200-250자)
+// 동적 섹션 생성 함수 (글자수 제한 200-250자, 애드센스 코드 삽입)
 const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number, adsenseCode?: string): string => `
 ${adsenseCode && sectionNumber > 1 ? `
+<p style="height: 20px;">&nbsp;</p>
 <!-- 중간 애드센스 광고 -->
 ${adsenseCode}
+<p style="height: 20px;">&nbsp;</p>
 ` : ''}
+
+<p style="height: 20px;">&nbsp;</p>
+
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_${sectionNumber}] 관련해서 핵심적인 정보를 전문가 수준으로 설명드리겠어요. 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 간결하게 다뤄보겠습니다.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 전문가만의 노하우와 실무에서 바로 적용 가능한 핵심 팁들을 제공해드릴게요. 단계별로 따라하시면 누구나 성공할 수 있답니다. 💡
+${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 전문가만의 노하우와 실무에서 바로 적용 가능한 핵심 팁들을 제공해드릴게요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+단계별로 따라하시면 누구나 성공할 수 있답니다. 💡
+</p>
+
+<p style="height: 20px;">&nbsp;</p>
+
 ${sectionNumber === 2 ? `
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
-<table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
-<thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">신청 방법</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">필요 서류</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">소요 기간</th></tr></thead>
+<table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto; border: 2px solid ${colors.primary};">
+<thead><tr><th style="padding:14px;text-align:left;border:1px solid ${colors.primary};background-color:${colors.highlight};font-weight:bold;color:${colors.primary};">단계</th><th style="padding:14px;text-align:left;border:1px solid ${colors.primary};background-color:${colors.highlight};font-weight:bold;color:${colors.primary};">신청 방법</th><th style="padding:14px;text-align:left;border:1px solid ${colors.primary};background-color:${colors.highlight};font-weight:bold;color:${colors.primary};">필요 서류</th><th style="padding:14px;text-align:left;border:1px solid ${colors.primary};background-color:${colors.highlight};font-weight:bold;color:${colors.primary};">소요 기간</th></tr></thead>
 <tbody>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">자격 요건 확인 후 거주지 주민센터 방문 또는 온라인 신청 사이트 접속</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신분증, 가족관계증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">즉시</td></tr>
-<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신청서 작성 및 소득·재산 관련 서류 제출</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">소득증명서, 재산세 납세증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1-2일</td></tr>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">접수 완료 후 심사 진행 (약 2주 소요)</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">통장 사본</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">14일</td></tr>
-<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">-</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3-5일</td></tr>
+<tr><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">자격 요건 확인 후 거주지 주민센터 방문 또는 온라인 신청 사이트 접속</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">신분증, 가족관계증명서</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">즉시</td></tr>
+<tr style="background-color: ${colors.secondary};"><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">신청서 작성 및 소득·재산 관련 서류 제출</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">소득증명서, 재산세 납세증명서</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">1-2일</td></tr>
+<tr><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">접수 완료 후 심사 진행 (약 2주 소요)</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">통장 사본</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">14일</td></tr>
+<tr style="background-color: ${colors.secondary};"><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">-</td><td style="padding:14px;text-align:left;border:1px solid ${colors.primary};line-height:1.6;">3-5일</td></tr>
 </tbody></table></div>
 ` : ''}
+
 ${sectionNumber === 3 ? `
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 전문가 팁 - 꼭 확인하세요!</strong><br>
@@ -77,19 +121,111 @@ ${sectionNumber === 3 ? `
     </ul>
 </div>
 ` : ''}
+
 ${sectionNumber === 5 ? `
-<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid ${colors.highlightBorder};">
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 신청 후 언제부터 사용 가능한가요?</strong><br>
 A: 승인 후 약 1-2주 내에 카드가 발급되며, 발급 즉시 사용 가능합니다. 카드 활성화는 자동으로 처리되니 별도 절차는 불필요해요.</p>
+
+<p style="height: 10px;">&nbsp;</p>
+
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
 A: 세대주 또는 배우자만 신청 가능하며, 위임장과 함께 인감증명서가 있으면 대리 신청도 가능합니다. 단, 대리인은 성인이어야 해요.</p>
+
+<p style="height: 10px;">&nbsp;</p>
+
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
 A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능하며, 카드 재발급 없이 기존 카드로 이용할 수 있어요.</p>
+
+<p style="height: 10px;">&nbsp;</p>
+
 <p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
 A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
 </div>
 ` : ''}
+
 <p style="height: 20px;">&nbsp;</p>
+`;
+
+// 격려 섹션
+const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>마무리하며 💪</b></h2>
+
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+여기까지 ${keyword}에 대해 자세히 알아보았습니다. 처음에는 복잡해 보일 수 있지만, 한 단계씩 차근차근 따라가시면 분명히 좋은 결과를 얻으실 수 있을 거예요.
+</p>
+
+<p style="height: 20px;">&nbsp;</p>
+
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+무엇보다 포기하지 마시고 끝까지 도전해보세요! 🌟 작은 변화가 큰 차이를 만들어낼 수 있답니다.
+</p>
+
+<p style="height: 20px;">&nbsp;</p>
+
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+${referenceSentence || `더 많은 정보가 필요하시다면 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline; font-weight: bold; font-size: 18px;">워드프레스 꿀팁 더 알아보기</a>를 참고해보세요!`}
+</p>
+
+<p style="height: 20px;">&nbsp;</p>
+`;
+
+// 요약 카드 섹션
+const getSummaryCardSection = (keyword: string): string => `
+<div class="single-summary-card-container">
+  <div class="single-summary-card">
+    <div class="card-header">
+      <div class="card-header-icon">💡</div>
+      <h3>${keyword} 핵심 포인트</h3>
+    </div>
+    <div class="card-content">
+      <div class="section">
+        <strong>✅ 신청 자격:</strong> 소득·재산 기준 충족 필수
+      </div>
+      <div class="section">
+        <strong>✅ 신청 방법:</strong> 주민센터 방문 또는 온라인 신청
+      </div>
+      <div class="section">
+        <strong>✅ 처리 기간:</strong> 신청 후 약 2-3주 소요
+      </div>
+      <div class="section">
+        <strong>✅ 주의사항:</strong> 신청 기간 및 필요 서류 미리 확인
+      </div>
+    </div>
+    <div class="card-footer">
+      💪 포기하지 마시고 끝까지 도전해보세요!
+    </div>
+  </div>
+</div>
+`;
+
+// 마무리 섹션
+const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7; text-align: center;" data-ke-size="size16">
+🙏 이 글이 도움이 되셨다면 주변 분들에게도 공유해주세요!<br>
+함께 나누는 정보가 더 큰 힘이 됩니다.
+</p>
+
+<p style="height: 20px;">&nbsp;</p>
+
+<div style="background-color: #f0f8ff; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; border: 2px dashed #4A90E2;">
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #2C5282;">
+💌 <strong>더 많은 유용한 정보가 궁금하시다면?</strong><br>
+${referenceSentence || `<a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline; font-weight: bold;">워드프레스 꿀팁 더 알아보기</a>에서 확인해보세요!`}
+</p>
+</div>
+
+<p style="height: 20px;">&nbsp;</p>
+`;
+
+// 태그 섹션 (쉼표로 구분, 7개, 사각 배경 제거)
+const getTagsSection = (topic: string, keyword: string): string => `
+
+<p style="height: 20px;">&nbsp;</p>
+
+<p style="font-size: 14px; color: #666; text-align: center; line-height: 1.6;" data-ke-size="size12">
+#${keyword}, #정부지원금, #복지혜택, #신청방법, #자격요건, #온라인신청, #생활정보
+</p>
 `;
 
 // 동적 HTML 템플릿 생성 함수 수정 - 애드센스 코드 전달

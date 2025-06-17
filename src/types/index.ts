@@ -21,9 +21,12 @@ export interface AppState {
   isPixabayLoading: boolean;
   isHuggingfaceLoading: boolean;
   saveReferenceTrigger: boolean;
+  topicCount: number;
   // 애드센스 설정 추가
   adsenseCode: string;
   isAdsenseEnabled: boolean;
+  adsenseClient: string;
+  adsenseSlot: string;
 }
 
 export interface ColorTheme {
@@ -45,4 +48,15 @@ export interface UserProfile {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   expires_at?: string;
+}
+
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+
+export interface Profile {
+  id: string;
+  email: string;
+  status: UserStatus;
+  created_at: string;
+  updated_at: string;
+  approved_at?: string;
 }
