@@ -61,34 +61,72 @@ export const useKeywordGenerator = (appState: AppState) => {
         const currentMonth = new Date().getMonth() + 1;
         const currentDay = new Date().getDate();
         
-        // 다양한 최신 트렌드 생성 프롬프트
-        const trendPrompts = [
-            `${currentYear}년 ${currentMonth}월 현재 한국에서 가장 주목받고 있는 정부 정책이나 지원제도 키워드를 1개만 생성해주세요. 실제 시행되고 있거나 곧 시행될 정책 위주로 부탁드립니다.`,
+        // 1차: Gemini의 실시간 추론 능력 활용
+        const realtimePrompt = `현재 ${currentYear}년 ${currentMonth}월 ${currentDay}일 기준으로, 한국에서 지금 가장 화제가 되고 있는 이슈나 트렌드를 분석해서 블로그 키워드 1개만 생성해주세요. 
+
+다음 조건을 만족해야 합니다:
+- 실제로 현재 시점에서 관심이 높은 주제
+- 블로그로 작성하기 적합한 주제
+- 일반인들이 검색할 만한 키워드
+- 15자 이내의 간결한 키워드
+
+년도는 포함하지 말고, 다른 설명 없이 키워드만 텍스트로 제공해주세요.`;
+
+        console.log('1차 실시간 트렌드 생성 프롬프트:', realtimePrompt);
+        
+        let result = await callGeminiForKeyword(realtimePrompt);
+        
+        // 1차 결과가 있으면 반환
+        if (result) {
+            console.log('1차 실시간 트렌드 키워드 생성 성공:', result);
+            toast({ title: "실시간 트렌드 키워드 생성 완료", description: `"${result}" - AI 실시간 추론으로 생성` });
+            return result;
+        }
+
+        // 2차: 백업 - 카테고리별 동적 생성
+        toast({ title: "백업 시스템 작동", description: "10개 카테고리에서 최신 트렌드 키워드를 동적 생성합니다." });
+        
+        const categoryTrendPrompts = [
+            // 테크/IT 카테고리
+            `${currentYear}년 ${currentMonth}월 현재 한국의 IT/테크 분야에서 가장 주목받는 트렌드나 기술 키워드를 1개만 생성해주세요. 예: AI 서비스, 새로운 앱, 디지털 혁신 등`,
             
-            `${currentYear}년 ${currentMonth}월 기준 한국 사회에서 화제가 되고 있는 경제 혜택이나 지원금 관련 키워드를 1개만 만들어주세요. 청년, 중장년, 노인층이 관심 가질만한 내용으로 부탁드립니다.`,
+            // 라이프스타일 카테고리
+            `${currentYear}년 ${currentMonth}월 기준 한국인들 사이에서 인기 있는 라이프스타일 트렌드 키워드를 1개만 만들어주세요. 예: 건강 관리법, 취미 활동, 생활 패턴 등`,
             
-            `현재 ${currentYear}년 ${currentMonth}월에 한국에서 새롭게 시작되거나 변경된 제도, 서비스 관련 키워드를 1개만 제안해주세요. 일반인이 놓치기 쉬운 중요한 정보를 우선으로 부탁드립니다.`,
+            // 경제/재테크 카테고리
+            `현재 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 경제/재테크 관련 키워드를 1개만 생성해주세요. 예: 투자 트렌드, 금융 상품, 절약 방법 등`,
             
-            `${currentYear}년 ${currentMonth}월 현재 한국의 디지털 정부 서비스나 온라인 신청 가능한 혜택 중에서 키워드를 1개만 생성해주세요. 편리하면서도 많은 사람들이 모르는 서비스 위주로 부탁드립니다.`,
+            // 교육/자기계발 카테고리
+            `${currentYear}년 ${currentMonth}월 현재 한국에서 인기 있는 교육이나 자기계발 관련 키워드를 1개만 만들어주세요. 예: 온라인 강의, 새로운 학습법, 자격증 등`,
             
-            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 부동산, 주택 관련해서 새로 생긴 정책이나 지원제도 키워드를 1개만 만들어주세요. 실제 도움이 되는 실용적인 내용으로 부탁드립니다.`,
+            // 문화/엔터테인먼트 카테고리
+            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 문화/엔터테인먼트 키워드를 1개만 생성해주세요. 예: 드라마, 음악, 예능, 문화 현상 등`,
             
-            `현재 ${currentYear}년 ${currentMonth}월 한국의 건강보험, 의료 혜택 분야에서 새롭거나 개선된 제도 키워드를 1개만 생성해주세요. 국민건강보험공단 서비스나 정부 의료 지원 위주로 부탁드립니다.`,
+            // 건강/의료 카테고리
+            `현재 ${currentYear}년 ${currentMonth}월 기준 한국에서 관심이 높은 건강/의료 관련 키워드를 1개만 만들어주세요. 예: 새로운 건강법, 의료 서비스, 질병 예방 등`,
             
-            `${currentYear}년 ${currentMonth}월 기준 한국의 교육비 지원, 학습 지원 관련 정부 정책 키워드를 1개만 만들어주세요. 평생교육, 직업교육, 자격증 지원 등을 포함해서 부탁드립니다.`,
+            // 부동산/주거 카테고리
+            `${currentYear}년 ${currentMonth}월 현재 한국 부동산/주거 분야에서 주목받는 키워드를 1개만 생성해주세요. 예: 주택 정책, 임대차 제도, 주거 트렌드 등`,
             
-            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 창업 지원, 소상공인 지원 관련 새로운 정책이나 프로그램 키워드를 1개만 생성해주세요. 실제 창업가들이 활용할 수 있는 내용으로 부탁드립니다.`
+            // 환경/지속가능성 카테고리
+            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 환경이나 지속가능성 관련 키워드를 1개만 만들어주세요. 예: 친환경 제품, 재활용, 에너지 절약 등`,
+            
+            // 사회이슈 카테고리
+            `현재 ${currentYear}년 ${currentMonth}월 기준 한국 사회에서 관심이 높은 사회 이슈 키워드를 1개만 생성해주세요. 예: 사회 제도, 복지 정책, 사회 현상 등`,
+            
+            // 푸드/요리 카테고리
+            `${currentYear}년 ${currentMonth}월 현재 한국에서 인기 있는 음식/요리 트렌드 키워드를 1개만 만들어주세요. 예: 새로운 요리법, 인기 음식, 건강 식단 등`
         ];
         
-        const randomPrompt = trendPrompts[Math.floor(Math.random() * trendPrompts.length)];
-        const finalPrompt = `${randomPrompt} 다른 설명 없이 키워드만 텍스트로 제공해주세요.`;
+        const randomPrompt = categoryTrendPrompts[Math.floor(Math.random() * categoryTrendPrompts.length)];
+        const finalPrompt = `${randomPrompt} 년도는 포함하지 말고, 다른 설명 없이 키워드만 텍스트로 제공해주세요.`;
         
-        console.log('최신 트렌드 생성 프롬프트:', finalPrompt);
+        console.log('2차 카테고리별 트렌드 생성 프롬프트:', finalPrompt);
         
-        const result = await callGeminiForKeyword(finalPrompt);
+        result = await callGeminiForKeyword(finalPrompt);
         if (result) {
-            console.log('생성된 최신 트렌드 키워드:', result);
-            toast({ title: "AI 최신 트렌드 키워드 생성 완료", description: `"${result}" - AI 추론으로 생성된 실시간 트렌드` });
+            console.log('2차 카테고리별 트렌드 키워드 생성 성공:', result);
+            toast({ title: "카테고리별 최신 키워드 생성 완료", description: `"${result}" - 10개 카테고리 중 동적 선택` });
         }
         
         return result;
