@@ -24,7 +24,7 @@ export const useRefactoredAppController = () => {
   
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
+  const { isGeneratingPrompt, generateImagePrompt, generateImage } = useImagePromptGenerator(
     appState,
     saveAppState
   );
@@ -104,13 +104,13 @@ export const useRefactoredAppController = () => {
     canUseFeatures
   );
 
-  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
+  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage: isGeneratingPrompt, isDirectlyGenerating: isGeneratingPrompt };
 
   const generateArticleForManual = (topic?: string): Promise<string> => {
     return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
-  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
+  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt: generateImagePrompt, generateDirectImage: generateImage };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 

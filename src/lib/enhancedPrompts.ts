@@ -10,6 +10,36 @@ interface EnhancedArticlePromptParams {
   apiKey: string;
 }
 
+export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
+  const currentDate = new Date().toLocaleDateString('ko-KR');
+  
+  return `당신은 전문적인 블로그 주제 생성 전문가입니다. 다음 지침에 따라 SEO에 최적화된 고품질 블로그 주제들을 생성해주세요.
+
+**핵심 키워드**: ${keyword}
+**생성할 주제 수**: ${count}개
+**현재 날짜**: ${currentDate}
+
+다음 지침을 정확히 따라주세요:
+
+1. **SEO 최적화**: 검색량이 높고 경쟁도가 적절한 롱테일 키워드 포함
+2. **실용성**: 독자에게 실질적인 도움이 되는 정보성 주제
+3. **최신성**: ${currentDate} 기준 최신 트렌드와 이슈 반영
+4. **구체성**: 모호하지 않고 명확한 주제
+5. **다양성**: 다양한 관점과 접근 방식 포함
+
+**제외할 내용**:
+- 과거 정치인이나 탄핵 관련 주제
+- 3년 이상 된 오래된 이슈
+- 너무 일반적이거나 광범위한 주제
+
+각 주제는 다음 형식으로 작성해주세요:
+- 35-50자 내외
+- 핵심 키워드 "${keyword}" 자연스럽게 포함
+- 독자의 궁금증을 자극하는 제목
+
+응답은 각 주제를 새로운 줄에 작성해주세요.`;
+};
+
 export const getEnhancedArticlePrompt = async ({
   topic,
   keyword,
@@ -66,8 +96,8 @@ ${crawledData}
 
 5. **주의사항 박스** (필요시):
    - background-color: ${colors.highlight}
-   - border: 2px solid #ffc107
-   - border-left: 5px solid #ffc107
+   - border: 2px solid #d97706
+   - border-left: 5px solid #d97706
    - padding: 18px, margin: 25px 0
    - border-radius: 10px
    - ⚠️ 아이콘 사용
