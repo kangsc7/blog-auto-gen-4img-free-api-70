@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -55,122 +54,71 @@ export const useKeywordGenerator = (appState: AppState) => {
         }
     };
 
-    const generateCurrentTrendKeywords = (): string[] => {
-        const today = new Date();
-        const currentMonth = today.getMonth() + 1;
-        
-        // 현재 시점 기준 실제 진행 중인 이슈들
-        const currentIssues = [
-            '2025년 정부지원금',
-            '새해 취업지원제도', 
-            '연말정산 변경사항',
-            '1월 부동산 정책',
-            '새해 건강보험 혜택',
-            '2025년 청년정책',
-            '신년 경제정책',
-            '올해 교육지원 확대',
-            '새해 복지제도 변화',
-            '2025년 세제혜택'
-        ];
-        
-        return currentIssues.slice(0, 5);
-    };
-
-    const fetchRealTimeNews = async (): Promise<string[]> => {
-        try {
-            // 네이버 뉴스 RSS API 사용 (실시간 뉴스)
-            const today = new Date();
-            const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-            
-            console.log(`실시간 뉴스 검색 시작 - 오늘: ${today.toISOString()}, 어제: ${yesterday.toISOString()}`);
-            
-            // 실제 뉴스 API 대신 현재 시점의 실시간 이슈 키워드 생성
-            const realTimePrompt = `**중요: 실시간 분석 요구사항**
-
-현재 정확한 시각: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${today.getHours()}시 ${today.getMinutes()}분
-
-**필수 준수 사항:**
-1. 반드시 최근 24시간 이내(${yesterday.getDate()}일 이후)에 실제 발생한 이슈만 고려
-2. 다음 중 하나의 카테고리에서 TODAY 현재 진행 중인 실제 이슈:
-   - 정부 정책 발표나 변화 (최근 24시간)
-   - 경제/금융 시장 동향 (오늘의 변화)
-   - 사회적 이슈나 사건 (진행 중인 현안)
-   - 기술/IT 업계 소식 (최신 발표)
-   - 국제 정세 변화 (한국 관련)
-
-**절대 피해야 할 키워드:**
-- 과거 인물이나 이미 종료된 사건
-- 탄핵, 과거 정치인, 예전 스캔들
-- 작년이나 몇 달 전 이슈
-
-**생성 기준:**
-- 한국에서 오늘 화제가 되고 있는 실시간 이슈
-- 온라인에서 현재 논의되는 최신 주제
-- 24시간 이내 발생한 뉴스나 발표
-
-**결과물:** 15자 이내의 현재 진행형 키워드 1개만 (년도 포함 금지)
-
-**예시:** "새해 정부지원금", "코인 급등", "취업지원 확대", "부동산 정책 변화" 등`;
-
-            console.log('실시간 뉴스 기반 키워드 생성 프롬프트:', realTimePrompt);
-            
-            const keyword = await callGeminiForKeyword(realTimePrompt);
-            
-            if (keyword) {
-                // 과거 이슈 키워드 필터링
-                const pastIssueKeywords = ['윤석열', '탄핵', '조국', '문재인', '박근혜', '이재명', '검찰', '수사'];
-                const isPastIssue = pastIssueKeywords.some(pastKeyword => 
-                    keyword.toLowerCase().includes(pastKeyword.toLowerCase())
-                );
-                
-                if (isPastIssue) {
-                    console.warn('과거 이슈 키워드 감지됨, 재생성:', keyword);
-                    return generateCurrentTrendKeywords();
-                }
-                
-                console.log('실시간 뉴스 키워드 생성 성공:', keyword);
-                return [keyword];
-            }
-            
-            return generateCurrentTrendKeywords();
-        } catch (error) {
-            console.error('실시간 뉴스 조회 오류:', error);
-            return generateCurrentTrendKeywords();
-        }
-    };
-
     const generateLatestKeyword = async (): Promise<string | null> => {
         const now = new Date();
-        const exactTime = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${now.getHours()}시 ${now.getMinutes()}분`;
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentDay = now.getDate();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // 정확한 현재 시간을 명시하여 최신성 강조
+        const exactTime = `${currentYear}년 ${currentMonth}월 ${currentDay}일 ${currentHour}시 ${currentMinute}분`;
         
         toast({ 
-            title: `🔴 실시간 뉴스 분석 중... (${exactTime})`, 
-            description: "최신 뉴스를 분석하여 현재 진행 중인 이슈를 찾습니다." 
+            title: `🔴 실시간 분석 중... (${exactTime})`, 
+            description: "지금 이 순간의 최신 트렌드를 AI로 분석합니다." 
         });
         
-        // 실시간 뉴스 기반 키워드 생성
-        const newsKeywords = await fetchRealTimeNews();
+        // 강화된 실시간 트렌드 분석 프롬프트
+        const realtimePrompt = `🚨 **중요: 정확한 현재 시점 분석 요구사항** 🚨
+
+**현재 정확한 시각: ${exactTime}**
+
+**필수 준수 사항:**
+1. 반드시 오늘 ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')} 날짜의 최신 이슈만 분석
+2. 24시간 이내(어제 ${currentDay-1}일 이후)에 발생한 실제 이슈만 고려
+3. 2023년, 2024년 이전 데이터는 절대 사용 금지
+4. 한국 시각 기준 최신 뉴스, 트렌드, 사회적 이슈 분석
+
+**생성 기준:**
+- 현재 한국에서 화제가 되고 있는 실시간 이슈
+- 온라인 커뮤니티에서 논의되는 최신 주제
+- 정부 정책, 경제 동향, 사회 현상 중 최신 발생 사항
+- 연예, 스포츠, IT 분야의 오늘 발생한 이슈
+
+다음 중복 방지를 위한 랜덤 카테고리에서 선택:
+${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테크' : Math.random() < 0.6 ? '사회/문화' : Math.random() < 0.8 ? '기술/IT' : '생활/건강'}
+
+**결과물:** 15자 이내의 검색 가능한 한국어 키워드 1개만 제공 (년도 포함 금지)
+
+**예시 형태:** "○○○ 새로운 정책", "△△△ 논란", "□□□ 혜택 확대" 등`;
+
+        console.log('실시간 트렌드 분석 프롬프트:', realtimePrompt);
         
-        if (newsKeywords.length > 0) {
-            const selectedKeyword = newsKeywords[Math.floor(Math.random() * newsKeywords.length)];
+        let result = await callGeminiForKeyword(realtimePrompt);
+        
+        if (result) {
+            console.log(`실시간 키워드 생성 성공 (${exactTime}):`, result);
             toast({ 
-                title: "🔥 실시간 이슈 키워드 완성", 
-                description: `"${selectedKeyword}" - ${exactTime} 기준 최신 분석` 
+                title: "🔥 실시간 트렌드 키워드 완성", 
+                description: `"${result}" - ${exactTime} 기준 최신 분석` 
             });
-            return selectedKeyword;
+            return result;
         }
 
-        // 백업: 현재 진행형 키워드 생성
-        const backupPrompt = `현재 ${exactTime} 기준으로 한국에서 진행 중인 실제 이슈 중에서 
-        블로그 주제로 적합한 키워드를 1개만 생성해주세요.
+        // 백업 시스템: 시간대별 맞춤 키워드 생성
+        const timeBasedPrompt = `현재 시각 ${currentHour}시를 고려하여, 
+        ${currentHour < 9 ? '아침 시간대' : currentHour < 18 ? '낮 시간대' : '저녁 시간대'}에 
+        한국인들이 관심 가질만한 ${exactTime} 기준 최신 키워드를 1개만 생성해주세요.
         
-        중요: 과거 정치인이나 탄핵 같은 지난 이슈는 절대 포함하지 마세요.
-        현재 진행 중인 정책, 경제, 사회 이슈만 고려해주세요.`;
+        반드시 오늘 날짜 ${currentYear}-${currentMonth}-${currentDay}의 실제 이슈여야 하며,
+        과거 데이터는 절대 사용하지 마세요.`;
         
-        const result = await callGeminiForKeyword(backupPrompt);
+        result = await callGeminiForKeyword(timeBasedPrompt);
         if (result) {
             toast({ 
-                title: "현재 진행 이슈 키워드 생성", 
+                title: "시간대별 최신 키워드 생성", 
                 description: `"${result}" - ${exactTime} 맞춤 분석` 
             });
         }
@@ -183,15 +131,34 @@ export const useKeywordGenerator = (appState: AppState) => {
         
         // 다양한 카테고리의 평생 키워드 생성 프롬프트
         const evergreenPrompts = [
+            // 재테크 카테고리
             `일반인이 놓치기 쉬운 금융 혜택이나 절약 방법 관련 키워드를 1개만 생성해주세요. 예: 적금, 펀드, 보험, 세금 절약 등의 분야에서 구체적이고 실용적인 내용으로 부탁드립니다.`,
+            
+            // 건강 카테고리  
             `평생 건강 관리에 도움이 되는 실용적인 키워드를 1개만 만들어주세요. 예: 운동법, 식단, 건강검진, 질병 예방 등의 분야에서 누구나 실천할 수 있는 내용으로 부탁드립니다.`,
+            
+            // 생활정보 카테고리
             `일상생활에서 계속 도움이 되는 절약이나 효율성 관련 키워드를 1개만 생성해주세요. 예: 전기료, 통신비, 생활용품 관리 등의 분야에서 실용적인 내용으로 부탁드립니다.`,
+            
+            // 자기계발 카테고리
             `개인 성장과 자기계발에 평생 도움이 되는 키워드를 1개만 만들어주세요. 예: 학습법, 독서, 시간관리, 목표설정 등의 분야에서 지속가능한 내용으로 부탁드립니다.`,
+            
+            // 요리 카테고리
             `집에서 평생 활용할 수 있는 요리나 식재료 관련 키워드를 1개만 생성해주세요. 예: 기본 요리법, 보관법, 영양 관리 등의 분야에서 실용적인 내용으로 부탁드립니다.`,
+            
+            // 육아 카테고리
             `육아나 가족 관계에서 평생 도움이 되는 키워드를 1개만 만들어주세요. 예: 아이 교육, 소통법, 발달 단계별 관리 등의 분야에서 실용적인 내용으로 부탁드립니다.`,
+            
+            // 주거 관리 카테고리
             `집 관리나 인테리어에서 평생 유용한 키워드를 1개만 생성해주세요. 예: 청소법, 정리정돈, 홈케어, 에너지 절약 등의 분야에서 실용적인 내용으로 부탁드립니다.`,
+            
+            // 인간관계 카테고리
             `인간관계나 소통에서 평생 도움이 되는 키워드를 1개만 만들어주세요. 예: 대화법, 갈등 해결, 네트워킹, 예의 등의 분야에서 실용적인 내용으로 부탁드립니다.`,
+            
+            // 취미/여가 카테고리
             `취미나 여가 활동에서 평생 즐길 수 있는 키워드를 1개만 생성해주세요. 예: 독서, 운동, 여행, 창작 활동 등의 분야에서 지속가능한 내용으로 부탁드립니다.`,
+            
+            // 디지털 활용 카테고리
             `디지털 기기나 온라인 서비스 활용에서 평생 유용한 키워드를 1개만 만들어주세요. 예: 스마트폰 활용, 온라인 쇼핑, 디지털 정리 등의 분야에서 실용적인 내용으로 부탁드립니다.`
         ];
         
