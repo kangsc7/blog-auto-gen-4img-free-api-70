@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -22,7 +21,7 @@ export const useRefactoredAppController = () => {
   // 접근 권한이 없으면 기능을 비활성화
   const canUseFeatures = hasAccess || isAdmin;
   
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState, preventDuplicates);
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState, canUseFeatures);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState,

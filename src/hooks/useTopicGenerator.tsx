@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -24,8 +23,7 @@ const calculateSimilarity = (str1: string, str2: string): number => {
 
 export const useTopicGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void,
-  preventDuplicates: boolean
+  saveAppState: (newState: Partial<AppState>) => void
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
@@ -103,6 +101,9 @@ export const useTopicGenerator = (
         .filter(topic => topic.length > 10);
 
       let finalTopics = newTopics;
+
+      // Get preventDuplicates from appState
+      const preventDuplicates = appState.preventDuplicates || false;
 
       // 중복 금지 설정이 활성화된 경우에만 유사도 검사
       if (preventDuplicates && appState.topics.length > 0) {
