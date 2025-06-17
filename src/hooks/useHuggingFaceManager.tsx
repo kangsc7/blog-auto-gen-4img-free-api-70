@@ -78,7 +78,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
             }
 
             setIsHuggingFaceApiKeyValidated(true);
-            saveValidationStatusToStorage('HUGGING_FACE', true);
+            saveValidationStatusToStorage('huggingface', true);
             props?.onValidationChange?.(true);
             
             if (!silent) {
@@ -93,7 +93,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
         } catch (error) {
             console.error('❌ HuggingFace API 키 검증 실패:', error);
             setIsHuggingFaceApiKeyValidated(false);
-            saveValidationStatusToStorage('HUGGING_FACE', false);
+            saveValidationStatusToStorage('huggingface', false);
             props?.onValidationChange?.(false);
             
             if (!silent) {
@@ -114,7 +114,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
         console.log('🔑 HuggingFace API 키 설정:', key.substring(0, 20) + '...');
         setHuggingFaceApiKey(key);
         setIsHuggingFaceApiKeyValidated(false);
-        saveValidationStatusToStorage('HUGGING_FACE', false);
+        saveValidationStatusToStorage('huggingface', false);
         props?.onApiKeyChange?.(key);
         props?.onValidationChange?.(false);
     };
@@ -138,7 +138,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
             console.log('🔄 HuggingFace API 키 기본값 복원');
             setHuggingFaceApiKey(DEFAULT_API_KEYS.HUGGING_FACE);
             setIsHuggingFaceApiKeyValidated(true);
-            saveValidationStatusToStorage('HUGGING_FACE', true);
+            saveValidationStatusToStorage('huggingface', true);
             props?.onApiKeyChange?.(DEFAULT_API_KEYS.HUGGING_FACE);
             props?.onValidationChange?.(true);
             toast({ title: "기본값으로 복원", description: "Hugging Face API 키가 기본값으로 복원되었습니다." });

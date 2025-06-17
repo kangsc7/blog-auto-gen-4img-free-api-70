@@ -18,10 +18,10 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
   console.log('🔄 useAllApiKeysManager 호출됨 - 현재 앱 상태:', {
     gemini: appState.apiKey?.substring(0, 20) + '...',
     pixabay: appState.pixabayApiKey?.substring(0, 20) + '...',
-    huggingface: appState.huggingFaceApiKey?.substring(0, 20) + '...',
+    huggingface: appState.huggingfaceApiKey?.substring(0, 20) + '...',
     geminiValidated: appState.isApiKeyValidated,
     pixabayValidated: appState.isPixabayApiKeyValidated,
-    huggingfaceValidated: appState.isHuggingFaceApiKeyValidated,
+    huggingfaceValidated: appState.isHuggingfaceApiKeyValidated,
     hasInitialized: hasInitialized.current
   });
 
@@ -35,7 +35,7 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
       const needsUpdate = 
         !appState.apiKey || 
         !appState.pixabayApiKey || 
-        !appState.huggingFaceApiKey;
+        !appState.huggingfaceApiKey;
 
       if (needsUpdate) {
         console.log('⚠️ API 키 누락 감지, 기본값으로 설정');
@@ -51,9 +51,9 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
           updates.pixabayApiKey = DEFAULT_API_KEYS.PIXABAY;
           updates.isPixabayApiKeyValidated = true;
         }
-        if (!appState.huggingFaceApiKey) {
-          updates.huggingFaceApiKey = DEFAULT_API_KEYS.HUGGING_FACE;
-          updates.isHuggingFaceApiKeyValidated = true;
+        if (!appState.huggingfaceApiKey) {
+          updates.huggingfaceApiKey = DEFAULT_API_KEYS.HUGGING_FACE;
+          updates.isHuggingfaceApiKeyValidated = true;
         }
         
         if (Object.keys(updates).length > 0) {
@@ -67,7 +67,7 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
       
       syncLock.current = false;
     }
-  }, [appState.apiKey, appState.pixabayApiKey, appState.huggingFaceApiKey, saveAppState]);
+  }, [appState.apiKey, appState.pixabayApiKey, appState.huggingfaceApiKey, saveAppState]);
 
   const geminiManager = useGeminiManager({
     initialApiKey: appState.apiKey || DEFAULT_API_KEYS.GEMINI,
@@ -96,15 +96,15 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
   });
 
   const huggingFaceManager = useHuggingFaceManager({
-    initialApiKey: appState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
-    initialValidated: appState.isHuggingFaceApiKeyValidated ?? true,
+    initialApiKey: appState.huggingfaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
+    initialValidated: appState.isHuggingfaceApiKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('🤗 HuggingFace API 키 변경됨:', key.substring(0, 20) + '...');
-      saveAppState({ huggingFaceApiKey: key });
+      saveAppState({ huggingfaceApiKey: key });
     },
     onValidationChange: (validated) => {
       console.log('✅ HuggingFace API 키 검증 상태 변경됨:', validated);
-      saveAppState({ isHuggingFaceApiKeyValidated: validated });
+      saveAppState({ isHuggingfaceApiKeyValidated: validated });
     },
   });
 
