@@ -3,7 +3,7 @@ import { useGeminiManager } from '@/hooks/useGeminiManager';
 import { usePixabayManager } from '@/hooks/usePixabayManager';
 import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { AppState } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 interface UseAllApiKeysManagerProps {
@@ -12,19 +12,24 @@ interface UseAllApiKeysManagerProps {
 }
 
 export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysManagerProps) => {
+  const hasInitialized = useRef(false);
+  
   console.log('useAllApiKeysManager 호출됨 - 현재 앱 상태:', {
     gemini: appState.apiKey,
     pixabay: appState.pixabayApiKey,
     huggingface: appState.huggingFaceApiKey,
     geminiValidated: appState.isApiKeyValidated,
     pixabayValidated: appState.isPixabayApiKeyValidated,
-    huggingfaceValidated: appState.isHuggingFaceApiKeyValidated
+    huggingfaceValidated: appState.isHuggingFaceApiKeyValidated,
+    hasInitialized: hasInitialized.current
   });
 
-  // 앱 상태에 API 키가 없는 경우 기본값으로 설정
+  // API 키 초기값 설정 - 한 번만 실행
   useEffect(() => {
-    if (!appState.apiKey || !appState.pixabayApiKey || !appState.huggingFaceApiKey) {
-      console.log('API 키 누락 감지, 기본값으로 설정');
+    if (!hasInitialized.current && (!appState.apiKey || !appState.pixabayApiKey || !appState.huggingFaceApiKey)) {
+      console.log('API 키 누락 감지, 기본값으로 설정 (최초 1회만)');
+      hasInitialized.current = true;
+      
       saveAppState({
         apiKey: appState.apiKey || DEFAULT_API_KEYS.GEMINI,
         pixabayApiKey: appState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY,
@@ -34,7 +39,7 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
         isHuggingFaceApiKeyValidated: true,
       });
     }
-  }, [appState.apiKey, appState.pixabayApiKey, appState.huggingFaceApiKey, saveAppState]);
+  }, []); // 빈 의존성 배열로 최초 1회만 실행
 
   const geminiManager = useGeminiManager({
     initialApiKey: appState.apiKey || DEFAULT_API_KEYS.GEMINI,
@@ -75,7 +80,7 @@ export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysMa
     },
   });
 
-  // 매니저 상태가 제대로 초기화되었는지 확인
+  // 매니저 상태 확인 (디버깅용)
   useEffect(() => {
     console.log('API 키 매니저들 현재 상태:', {
       gemini: { key: geminiManager.geminiApiKey, validated: geminiManager.isGeminiApiKeyValidated },
