@@ -4,6 +4,7 @@ import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { ImagePaster } from '@/components/control/ImagePaster';
+import { AdsenseManager } from '@/components/control/AdsenseManager';
 import { AppState } from '@/types';
 
 interface GenerationStatus {
@@ -85,6 +86,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               />
 
               <ImagePaster />
+              
+              {/* 애드센스 관리자를 왼쪽 하단으로 이동 */}
+              <AdsenseManager 
+                  appState={appState}
+                  saveAppState={saveAppState}
+              />
             </div>
         </div>
     );

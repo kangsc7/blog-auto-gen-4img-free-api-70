@@ -31,8 +31,11 @@ export const AdsenseManager: React.FC<AdsenseManagerProps> = ({
   });
 
   const generateAdsenseCode = (clientId: string, slotId: string) => {
-    return `<ins class="adsbygoogle"
-     style="display:block; margin:30px 0;"
+    return `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}"
+     crossorigin="anonymous"></script>
+<!-- 중간 광고 -->
+<ins class="adsbygoogle"
+     style="display:block"
      data-ad-client="${clientId}"
      data-ad-slot="${slotId}"
      data-ad-format="auto"
@@ -105,7 +108,7 @@ export const AdsenseManager: React.FC<AdsenseManagerProps> = ({
         <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              애드센스 클라이언트 ID
+              data-ad-client
             </label>
             <Input
               placeholder="ca-pub-1234567890123456"
@@ -120,7 +123,7 @@ export const AdsenseManager: React.FC<AdsenseManagerProps> = ({
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              애드센스 슬롯 ID
+              data-ad-slot
             </label>
             <Input
               placeholder="1234567890"

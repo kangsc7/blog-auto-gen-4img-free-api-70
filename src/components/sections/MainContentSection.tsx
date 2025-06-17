@@ -3,7 +3,6 @@ import React from 'react';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { RightContent } from '@/components/layout/RightContent';
 import { AppState } from '@/types';
-import { AdsenseManager } from '@/components/control/AdsenseManager';
 
 interface GenerationStatus {
     isGeneratingTopics: boolean;
@@ -53,7 +52,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
 }) => {
     return (
         <div className="container mx-auto p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 왼쪽 사이드바 */}
                 <LeftSidebar
                     appState={appState}
@@ -66,22 +65,14 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                 />
 
                 {/* 오른쪽 콘텐츠 */}
-                <div className="space-y-6">
-                    <RightContent 
-                        appState={appState}
-                        saveAppState={saveAppState}
-                        selectTopic={topicControls.selectTopic}
-                        copyToClipboard={utilityFunctions.copyToClipboard}
-                        downloadHTML={utilityFunctions.downloadHTML}
-                        isGeneratingContent={generationStatus.isGeneratingContent}
-                    />
-                    
-                    {/* 애드센스 관리자를 오른쪽 아래로 이동 */}
-                    <AdsenseManager 
-                        appState={appState}
-                        saveAppState={saveAppState}
-                    />
-                </div>
+                <RightContent 
+                    appState={appState}
+                    saveAppState={saveAppState}
+                    selectTopic={topicControls.selectTopic}
+                    copyToClipboard={utilityFunctions.copyToClipboard}
+                    downloadHTML={utilityFunctions.downloadHTML}
+                    isGeneratingContent={generationStatus.isGeneratingContent}
+                />
             </div>
         </div>
     );
