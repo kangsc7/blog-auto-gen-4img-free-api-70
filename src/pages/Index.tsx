@@ -203,12 +203,12 @@ const Index = () => {
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-12 py-8 h-auto shadow-lg hover:shadow-xl"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-20 py-16 h-auto shadow-lg hover:shadow-xl"
               >
-                <RefreshCw className="h-8 w-8 mr-3" />
-                <span className="font-bold text-2xl">초기화</span>
+                <RefreshCw className="h-12 w-12 mr-4" />
+                <span className="font-bold text-4xl">초기화</span>
               </Button>
-              <p className="text-lg text-gray-800 mt-2 font-bold">모든 데이터 초기화</p>
+              <p className="text-2xl text-gray-800 mt-3 font-black">모든 데이터 초기화</p>
             </div>
           </div>
         </div>

@@ -26,9 +26,6 @@ interface UserManagementTableProps {
   isAdmin?: boolean;
 }
 
-// 관리자 이메일 목록
-const ADMIN_EMAILS = ['5321497@naver.com'];
-
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmin = false }) => {
   const { users, loading, updateUserStatus, deleteUser } = useUserManagement();
 
@@ -112,26 +109,18 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
               {approvedUsers.length === 0 ? (
                 <TableRow><TableCell colSpan={isAdmin ? 4 : 3} className="h-24 text-center">승인된 사용자가 없습니다.</TableCell></TableRow>
               ) : (
-                approvedUsers.map((user) => {
-                  const isAdminUser = ADMIN_EMAILS.includes(user.email);
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.email}
-                        {isAdminUser && <Badge variant="secondary" className="ml-2">관리자</Badge>}
+                approvedUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.email}</TableCell>
+                    <TableCell><RemainingTime approvedAt={user.approved_at} /></TableCell>
+                    <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge></TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right space-x-2">
+                         <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
                       </TableCell>
-                      <TableCell><RemainingTime approvedAt={user.approved_at} /></TableCell>
-                      <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge></TableCell>
-                      {isAdmin && (
-                        <TableCell className="text-right space-x-2">
-                          {!isAdminUser && (
-                            <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
-                          )}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })
+                    )}
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
@@ -170,16 +159,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                     {isAdmin && (
                       <TableCell className="text-right space-x-2">
                          <Button size="sm" variant="outline" onClick={() => updateUserStatus(user.id, 'approved')}>승인</Button>
-                         <Button 
-                           size="sm" 
-                           variant="destructive" 
-                           onClick={async () => {
-                             const success = await deleteUser(user.id);
-                             if (success) {
-                               console.log(`사용자 ${user.email} 삭제 완료`);
-                             }
-                           }}
-                         >
+                         <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id)}>
                            <Trash2 className="h-4 w-4" />
                            삭제
                          </Button>

@@ -205,12 +205,9 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     }
     headingsScore = Math.min(headingsScore, 100);
 
-    // 5. Lists Score - FAQ 섹션 감지로 개선
+    // 5. Lists Score
     const listCount = doc.querySelectorAll('ul, ol').length;
-    // FAQ 패턴 감지: Q:, A: 형태의 패턴이 있으면 100점
-    const faqPattern = /Q:\s*.*A:\s*/gi;
-    const hasFaq = faqPattern.test(textContent);
-    const listsScore = (listCount > 0 || hasFaq) ? 100 : 0;
+    const listsScore = listCount > 0 ? 100 : 0;
 
     // 6. Links Score
     const linkCount = doc.querySelectorAll('a').length;
@@ -223,8 +220,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       h2WithKeywordCount,
       h2Texts: h2Texts.join(', '),
       linkCount,
-      listCount,
-      hasFaq
+      listCount
     };
 
     setDebugInfo(newDebugInfo);
@@ -267,7 +263,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
         
         {/* 디버그 정보 (개발용) */}
         <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-          <p>디버그: 단어수 {debugInfo.wordCount}, 키워드밀도 {debugInfo.actualDensity}%, H2개수 {debugInfo.h2Count}, 키워드H2 {debugInfo.h2WithKeywordCount}개, FAQ여부 {debugInfo.hasFaq ? 'Yes' : 'No'}</p>
+          <p>디버그: 단어수 {debugInfo.wordCount}, 키워드밀도 {debugInfo.actualDensity}%, H2개수 {debugInfo.h2Count}, 키워드H2 {debugInfo.h2WithKeywordCount}개</p>
           <p>H2 제목들: {debugInfo.h2Texts}</p>
         </div>
         

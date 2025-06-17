@@ -1,135 +1,174 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+import { loadApiKeys, saveApiKeys, clearAllApiKeys } from '@/lib/apiKeyStorage';
 
-const initialState: AppState = {
+const defaultState: AppState = {
+  keyword: '',
   topics: [],
   selectedTopic: '',
-  keyword: '',
-  topicCount: 10,
   generatedContent: '',
-  colorTheme: '',
-  referenceLink: '',
-  referenceSentence: '',
   imagePrompt: '',
-  isApiKeyValidated: false,
   apiKey: '',
+  isApiKeyValidated: false,
   pixabayApiKey: '',
   isPixabayApiKeyValidated: false,
   huggingfaceApiKey: '',
   isHuggingfaceApiKeyValidated: false,
+  colorTheme: '',
+  referenceLink: '',
+  referenceSentence: '',
   isLoggedIn: false,
   currentUser: '',
   preventDuplicates: true,
+  isGeminiLoading: false,
+  isPixabayLoading: false,
+  isHuggingfaceLoading: false,
+  saveReferenceTrigger: false,
   adsenseCode: '',
   isAdsenseEnabled: false,
-  saveReferenceTrigger: false,
 };
 
-const STORAGE_KEY = 'blog-generator-state';
-
 export const useAppStateManager = () => {
-  const { toast } = useToast();
-  
-  // 로컬 스토리지에서 상태 로드
-  const loadStateFromStorage = useCallback((): AppState => {
+  const [appState, setAppState] = useState<AppState>(defaultState);
+  const [preventDuplicates, setPreventDuplicates] = useState(true);
+
+  const syncWithStorage = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsedState = JSON.parse(stored);
-        return { ...initialState, ...parsedState };
+      const storedKeys = await loadApiKeys();
+      console.log('Storage와 상태 동기화 시작:', storedKeys);
+      
+      const updates: Partial<AppState> = {};
+      
+      if (storedKeys.gemini) {
+        updates.apiKey = storedKeys.gemini.key;
+        updates.isApiKeyValidated = storedKeys.gemini.isValidated;
+      }
+      
+      if (storedKeys.pixabay) {
+        updates.pixabayApiKey = storedKeys.pixabay.key;
+        updates.isPixabayApiKeyValidated = storedKeys.pixabay.isValidated;
+      }
+      
+      if (storedKeys.huggingface) {
+        updates.huggingfaceApiKey = storedKeys.huggingface.key;
+        updates.isHuggingfaceApiKeyValidated = storedKeys.huggingface.isValidated;
+      }
+
+      if (storedKeys.adsense) {
+        updates.adsenseCode = storedKeys.adsense.code;
+        updates.isAdsenseEnabled = storedKeys.adsense.isEnabled;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        setAppState(prev => ({ ...prev, ...updates }));
+        console.log('상태 동기화 완료:', updates);
       }
     } catch (error) {
-      console.error('상태 로드 실패:', error);
-    }
-    return initialState;
-  }, []);
-
-  const [appState, setAppState] = useState<AppState>(loadStateFromStorage);
-
-  // 상태를 로컬 스토리지에 저장
-  const saveStateToStorage = useCallback((state: AppState) => {
-    try {
-      // API 키는 별도 저장소에 저장하므로 제외
-      const stateToSave = {
-        ...state,
-        apiKey: '',
-        pixabayApiKey: '',
-        huggingfaceApiKey: '',
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    } catch (error) {
-      console.error('상태 저장 실패:', error);
+      console.error('Storage 동기화 오류:', error);
     }
   }, []);
 
-  // 상태 업데이트 함수
-  const saveAppState = useCallback((newState: Partial<AppState>) => {
-    setAppState(prevState => {
-      const updatedState = { ...prevState, ...newState };
-      saveStateToStorage(updatedState);
-      return updatedState;
+  useEffect(() => {
+    syncWithStorage();
+  }, [syncWithStorage]);
+
+  const saveAppState = useCallback(async (newState: Partial<AppState>) => {
+    setAppState(prev => {
+      const updated = { ...prev, ...newState };
+      console.log('앱 상태 업데이트:', newState);
+      return updated;
     });
-  }, [saveStateToStorage]);
 
-  // 중복 설정 업데이트
-  const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates);
-
-  useEffect(() => {
-    saveAppState({ preventDuplicates });
-  }, [preventDuplicates, saveAppState]);
-
-  // API 키 삭제
-  const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
     try {
-      localStorage.removeItem(`${keyType}_api_key`);
-      if (keyType === 'gemini') {
-        saveAppState({ apiKey: '', isApiKeyValidated: false });
-      } else if (keyType === 'pixabay') {
-        saveAppState({ pixabayApiKey: '', isPixabayApiKeyValidated: false });
-      } else if (keyType === 'huggingface') {
-        saveAppState({ huggingfaceApiKey: '', isHuggingfaceApiKeyValidated: false });
+      const currentKeys = await loadApiKeys();
+      let needsSave = false;
+
+      if (newState.apiKey !== undefined || newState.isApiKeyValidated !== undefined) {
+        const currentGemini = currentKeys.gemini;
+        currentKeys.gemini = {
+          key: newState.apiKey ?? currentGemini?.key ?? '',
+          isValidated: newState.isApiKeyValidated ?? currentGemini?.isValidated ?? false,
+          timestamp: currentGemini?.timestamp ?? Date.now(),
+          lastValidation: (newState.isApiKeyValidated ?? currentGemini?.isValidated) ? Date.now() : (currentGemini?.lastValidation ?? 0)
+        };
+        needsSave = true;
       }
-      toast({ title: "API 키 삭제 완료", description: `${keyType} API 키가 삭제되었습니다.` });
-    } catch (error) {
-      console.error('API 키 삭제 실패:', error);
-      toast({ title: "삭제 실패", description: "API 키 삭제 중 오류가 발생했습니다.", variant: "destructive" });
-    }
-  }, [saveAppState, toast]);
 
-  // 전체 리셋
-  const resetApp = useCallback(() => {
+      if (newState.pixabayApiKey !== undefined || newState.isPixabayApiKeyValidated !== undefined) {
+        const currentPixabay = currentKeys.pixabay;
+        currentKeys.pixabay = {
+          key: newState.pixabayApiKey ?? currentPixabay?.key ?? '',
+          isValidated: newState.isPixabayApiKeyValidated ?? currentPixabay?.isValidated ?? false,
+          timestamp: currentPixabay?.timestamp ?? Date.now(),
+          lastValidation: (newState.isPixabayApiKeyValidated ?? currentPixabay?.isValidated) ? Date.now() : (currentPixabay?.lastValidation ?? 0)
+        };
+        needsSave = true;
+      }
+
+      if (newState.huggingfaceApiKey !== undefined || newState.isHuggingfaceApiKeyValidated !== undefined) {
+        const currentHuggingface = currentKeys.huggingface;
+        currentKeys.huggingface = {
+          key: newState.huggingfaceApiKey ?? currentHuggingface?.key ?? '',
+          isValidated: newState.isHuggingfaceApiKeyValidated ?? currentHuggingface?.isValidated ?? false,
+          timestamp: currentHuggingface?.timestamp ?? Date.now(),
+          lastValidation: (newState.isHuggingfaceApiKeyValidated ?? currentHuggingface?.isValidated) ? Date.now() : (currentHuggingface?.lastValidation ?? 0)
+        };
+        needsSave = true;
+      }
+
+      if (newState.adsenseCode !== undefined || newState.isAdsenseEnabled !== undefined) {
+        const currentAdsense = currentKeys.adsense;
+        currentKeys.adsense = {
+          code: newState.adsenseCode ?? currentAdsense?.code ?? '',
+          isEnabled: newState.isAdsenseEnabled ?? currentAdsense?.isEnabled ?? false,
+          timestamp: Date.now()
+        };
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        await saveApiKeys(currentKeys);
+      }
+    } catch (error) {
+      console.error('API 키 저장 오류:', error);
+    }
+  }, []);
+
+  const deleteApiKeyFromStorage = useCallback(async (service: 'gemini' | 'pixabay' | 'huggingface') => {
     try {
-      // 상태만 초기화하고 API 키는 유지
-      const currentApiKeys = {
-        apiKey: appState.apiKey,
-        isApiKeyValidated: appState.isApiKeyValidated,
-        pixabayApiKey: appState.pixabayApiKey,
-        isPixabayApiKeyValidated: appState.isPixabayApiKeyValidated,
-        huggingfaceApiKey: appState.huggingfaceApiKey,
-        isHuggingfaceApiKeyValidated: appState.isHuggingfaceApiKeyValidated,
-        isLoggedIn: appState.isLoggedIn,
-        currentUser: appState.currentUser,
-        adsenseCode: appState.adsenseCode,
-        isAdsenseEnabled: appState.isAdsenseEnabled,
-      };
+      const currentKeys = await loadApiKeys();
+      delete currentKeys[service];
+      await saveApiKeys(currentKeys);
       
-      const resetState = { ...initialState, ...currentApiKeys };
-      setAppState(resetState);
-      saveStateToStorage(resetState);
+      const stateUpdates: Partial<AppState> = {};
+      if (service === 'gemini') {
+        stateUpdates.apiKey = '';
+        stateUpdates.isApiKeyValidated = false;
+      } else if (service === 'pixabay') {
+        stateUpdates.pixabayApiKey = '';
+        stateUpdates.isPixabayApiKeyValidated = false;
+      } else if (service === 'huggingface') {
+        stateUpdates.huggingfaceApiKey = '';
+        stateUpdates.isHuggingfaceApiKeyValidated = false;
+      }
       
-      toast({ title: "초기화 완료", description: "모든 데이터가 초기화되었습니다." });
+      saveAppState(stateUpdates);
+      console.log(`${service} API 키 삭제 완료`);
     } catch (error) {
-      console.error('앱 초기화 실패:', error);
-      toast({ title: "초기화 실패", description: "초기화 중 오류가 발생했습니다.", variant: "destructive" });
+      console.error(`${service} API 키 삭제 오류:`, error);
     }
-  }, [appState, saveStateToStorage, toast]);
+  }, [saveAppState]);
 
-  // 컴포넌트 마운트 시 저장된 상태 로드
-  useEffect(() => {
-    const savedState = loadStateFromStorage();
-    setAppState(savedState);
-  }, [loadStateFromStorage]);
+  const resetApp = useCallback(async () => {
+    try {
+      await clearAllApiKeys();
+      setAppState(defaultState);
+      setPreventDuplicates(true);
+      console.log('앱 초기화 완료');
+    } catch (error) {
+      console.error('앱 초기화 오류:', error);
+    }
+  }, []);
 
   return {
     appState,
@@ -138,5 +177,6 @@ export const useAppStateManager = () => {
     resetApp,
     preventDuplicates,
     setPreventDuplicates,
+    syncWithStorage,
   };
 };

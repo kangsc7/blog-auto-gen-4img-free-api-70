@@ -184,20 +184,6 @@ export const updateApiKeyValidation = async (service: 'gemini' | 'pixabay' | 'hu
   }
 };
 
-// 검증 상태 저장 (레거시 함수명 지원)
-export const saveValidationStatusToStorage = async (service: string, isValidated: boolean): Promise<void> => {
-  const serviceMap: { [key: string]: 'gemini' | 'pixabay' | 'huggingface' } = {
-    'GEMINI': 'gemini',
-    'PIXABAY': 'pixabay', 
-    'HUGGING_FACE': 'huggingface'
-  };
-  
-  const mappedService = serviceMap[service];
-  if (mappedService) {
-    await updateApiKeyValidation(mappedService, isValidated);
-  }
-};
-
 // 전체 데이터 초기화
 export const clearAllApiKeys = async (): Promise<void> => {
   localStorage.removeItem(STORAGE_KEY);
