@@ -1,5 +1,6 @@
 
 import { getColors } from '@/lib/promptUtils';
+import { webCrawl } from '@/lib/webCrawler';
 
 interface EnhancedArticlePromptParams {
   topic: string;
@@ -21,9 +22,16 @@ export const getEnhancedArticlePrompt = async ({
   
   const colors = getColors(selectedColorTheme);
   
-  // 웹 크롤링 대신 최신 정보 기반 프롬프트 생성
-  const currentDate = new Date().toLocaleDateString('ko-KR');
-  let crawledData = `${currentDate} 기준 최신 정보를 반영하여 ${keyword}에 대한 정확하고 실용적인 내용을 작성합니다.`;
+  // 웹 크롤링 실행
+  let crawledData = '';
+  try {
+    console.log('🔍 웹 크롤링 시작:', keyword);
+    crawledData = await webCrawl(keyword, apiKey);
+    console.log('✅ 웹 크롤링 완료, 데이터 길이:', crawledData.length);
+  } catch (error) {
+    console.error('❌ 웹 크롤링 실패:', error);
+    crawledData = '웹 크롤링 데이터를 가져올 수 없어 AI 지식을 활용합니다.';
+  }
 
   return `당신은 전문적인 블로그 작성자입니다. 다음 지침에 따라 SEO에 최적화된 고품질 블로그 글을 작성해주세요.
 
@@ -34,7 +42,7 @@ export const getEnhancedArticlePrompt = async ({
 **참고 링크**: ${referenceLink}
 **참고 문장**: ${referenceSentence}
 
-**최신 정보 기반**:
+**웹 크롤링 최신 정보**:
 ${crawledData}
 
 다음 HTML 구조와 스타일 지침을 정확히 따라주세요:
@@ -53,7 +61,7 @@ ${crawledData}
 
 3. **메타 설명 박스**:
    - background-color: ${colors.highlight}
-   - border: 2px solid ${colors.primary}
+   - border: 2px solid ${colors.highlightBorder}
    - padding: 20px, border-radius: 10px
    - 핵심 내용 요약 (50-70자)
 
@@ -65,11 +73,10 @@ ${crawledData}
    - 관련 이모티콘 포함
 
 5. **주의사항 박스** (필요시):
-   - background-color: ${colors.highlight}
-   - border: 2px solid #ffc107
-   - border-left: 5px solid #ffc107
+   - background-color: #fff8e1
+   - border-left: 5px solid #ffb74d
    - padding: 18px, margin: 25px 0
-   - border-radius: 10px
+   - border-radius: 0 10px 10px 0
    - ⚠️ 아이콘 사용
 
 6. **팁/알림 박스**:
@@ -82,8 +89,8 @@ ${crawledData}
    - 모바일 반응형 CSS 포함
 
 8. **섹션 구성**:
-   - 1-5번째: 주요 내용 섹션 (각 섹션마다 중요 키워드 1개를 <strong> 태그로 굵게 표시)
-   - 6번째: 용기와 응원을 주는 감동적인 섹션
+   - 1-5번째: 주요 내용 섹션 (각 섹션마다 중요 키워드 1개를 굵게 표시)
+   - 6번째: 용이와 응원을 주는 감동적인 섹션
    - 7번째: FAQ 섹션
 
 9. **FAQ 섹션**:
@@ -93,17 +100,16 @@ ${crawledData}
 
 10. **마무리**:
     - 참고 링크 박스 (background: #fff8e1, border: 2px solid #ffb74d)
-    - 태그 7개 (핵심 키워드 중심, 최대 3단어, 콜론(:) 사용 금지)
+    - 태그 7개 (핵심 키워드 중심, 최대 3단어)
 
 **작성 요구사항**:
 - 한글 2500-3000자 분량
 - 친근한 대화체 사용
-- 최신 정보를 적극 활용
+- 웹 크롤링 정보를 적극 활용
 - 실용적이고 구체적인 정보 제공
 - 각 섹션별로 중요 키워드 1개를 <strong> 태그로 굵게 표시
 - SEO 최적화 (키워드 자연스럽게 분산)
 - 모든 스타일은 인라인으로 적용
-- 태그는 콜론(:) 없이 핵심 단어만 사용
 
 위 지침을 모두 반영하여 완성된 HTML 코드만 출력해주세요.`;
 };

@@ -1,3 +1,4 @@
+
 // 격려 섹션 생성
 const getEncouragementSection = (): string => {
   return `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin: 40px 0; text-align: center;">
@@ -25,26 +26,21 @@ const getClosingSection = (): string => {
   </div>`;
 };
 
-// 태그 섹션 생성 - 핵심 키워드 중심의 간결한 태그 생성 (7개 제한, 콜론 제거)
+// 태그 섹션 생성 - 핵심 키워드 중심의 간결한 태그 생성 (7개 제한)
 const getTagsSection = (topic: string, headings: Array<{title: string, emoji: string, content: string}>): string => {
-  // 주제에서 핵심 키워드 추출 (콜론과 긴 문장 제거)
-  const cleanTopic = topic.replace(/[:\-_]/g, ' ').trim();
-  const topicWords = cleanTopic.split(' ').filter(word => word.length > 1).slice(0, 2);
+  // 주제에서 핵심 키워드 추출
+  const topicKeywords = topic.split(' ').slice(0, 2);
   
-  // 소제목에서 핵심 키워드 추출 (이모티콘과 콜론 제거, 짧은 단어들만)
+  // 소제목에서 핵심 키워드 추출 (이모티콘 제거하고 짧은 단어들만)
   const headingKeywords = headings.slice(0, 5).map(h => {
     const cleanTitle = h.title.replace(/[^\w\s가-힣]/g, '').trim();
-    const words = cleanTitle.split(' ').filter(word => word.length > 1);
-    
-    // 90% 확률로 1-2단어, 10% 확률로 3단어
-    const shouldUseThreeWords = Math.random() < 0.1;
-    const maxWords = shouldUseThreeWords ? 3 : 2;
-    
-    return words.length <= maxWords ? words.slice(0, maxWords).join(' ') : words.slice(0, 2).join(' ');
-  }).filter(keyword => keyword.length > 0);
+    const words = cleanTitle.split(' ');
+    // 2단어 이하의 간결한 키워드만 선택
+    return words.length <= 2 ? cleanTitle : words.slice(0, 2).join(' ');
+  });
   
-  // 전체 태그 목록을 7개로 제한하고 중복 제거
-  const allTags = [...new Set([...topicWords, ...headingKeywords])].slice(0, 7);
+  // 전체 태그 목록을 7개로 제한
+  const allTags = [...topicKeywords, ...headingKeywords].slice(0, 7);
   
   const tagElements = allTags.map(tag => 
     `<span style="background: #e3f2fd; color: #1976d2; padding: 8px 16px; border-radius: 20px; margin: 5px; display: inline-block; font-size: 14px;">#${tag.trim()}</span>`
@@ -105,7 +101,7 @@ export const getHtmlTemplate = (
     <div style="max-width: 800px !important; margin: 0 auto !important; padding: 20px !important; font-family: 'Malgun Gothic', sans-serif !important; line-height: 1.8 !important;">
       <h1 style="color: ${colors.primary} !important; text-align: center !important; border-bottom: 3px solid ${colors.primary} !important; padding-bottom: 10px !important;">[TOPIC_TITLE]</h1>
       
-      <div style="background: ${colors.highlight} !important; border: 2px solid ${colors.primary} !important; padding: 20px !important; border-radius: 10px !important; margin: 30px 0 !important;">
+      <div style="background: ${colors.highlight} !important; border: 2px solid ${colors.highlightBorder} !important; padding: 20px !important; border-radius: 10px !important; margin: 30px 0 !important;">
         <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">[INTRO_CONTENT]</p>
       </div>
 

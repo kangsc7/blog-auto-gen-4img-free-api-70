@@ -17,8 +17,8 @@ const initialState: AppState = {
   apiKey: '',
   pixabayApiKey: '',
   isPixabayApiKeyValidated: false,
-  huggingfaceApiKey: '',
-  isHuggingfaceApiKeyValidated: false,
+  huggingFaceApiKey: '',
+  isHuggingFaceApiKeyValidated: false,
   isLoggedIn: false,
   currentUser: '',
   preventDuplicates: true,
@@ -56,7 +56,7 @@ export const useAppStateManager = () => {
         ...state,
         apiKey: '',
         pixabayApiKey: '',
-        huggingfaceApiKey: '',
+        huggingFaceApiKey: '',
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
@@ -89,7 +89,7 @@ export const useAppStateManager = () => {
       } else if (keyType === 'pixabay') {
         saveAppState({ pixabayApiKey: '', isPixabayApiKeyValidated: false });
       } else if (keyType === 'huggingface') {
-        saveAppState({ huggingfaceApiKey: '', isHuggingfaceApiKeyValidated: false });
+        saveAppState({ huggingFaceApiKey: '', isHuggingFaceApiKeyValidated: false });
       }
       toast({ title: "API 키 삭제 완료", description: `${keyType} API 키가 삭제되었습니다.` });
     } catch (error) {
@@ -107,8 +107,8 @@ export const useAppStateManager = () => {
         isApiKeyValidated: appState.isApiKeyValidated,
         pixabayApiKey: appState.pixabayApiKey,
         isPixabayApiKeyValidated: appState.isPixabayApiKeyValidated,
-        huggingfaceApiKey: appState.huggingfaceApiKey,
-        isHuggingfaceApiKeyValidated: appState.isHuggingfaceApiKeyValidated,
+        huggingFaceApiKey: appState.huggingFaceApiKey,
+        isHuggingFaceApiKeyValidated: appState.isHuggingFaceApiKeyValidated,
         isLoggedIn: appState.isLoggedIn,
         currentUser: appState.currentUser,
         adsenseCode: appState.adsenseCode,
