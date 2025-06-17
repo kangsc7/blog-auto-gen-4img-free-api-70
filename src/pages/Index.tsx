@@ -197,18 +197,18 @@ const Index = () => {
               </p>
             </div>
             
-            {/* 초기화 버튼 - 접근 권한이 있는 사용자에게 표시 */}
+            {/* 초기화 버튼 - 크기 조정 */}
             <div className="text-center">
               <Button
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-20 py-16 h-auto shadow-lg hover:shadow-xl"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-12 py-8 h-auto shadow-lg hover:shadow-xl"
               >
-                <RefreshCw className="h-12 w-12 mr-4" />
-                <span className="font-bold text-4xl">초기화</span>
+                <RefreshCw className="h-8 w-8 mr-3" />
+                <span className="font-bold text-2xl">초기화</span>
               </Button>
-              <p className="text-2xl text-gray-800 mt-3 font-black">모든 데이터 초기화</p>
+              <p className="text-lg text-gray-800 mt-2 font-bold">모든 데이터 초기화</p>
             </div>
           </div>
         </div>
@@ -219,7 +219,6 @@ const Index = () => {
         handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
         isOneClickGenerating={isOneClickGenerating}
         handleStopOneClick={handleStopOneClick}
-        appState={appState}
       />
       
       <MainContentSection

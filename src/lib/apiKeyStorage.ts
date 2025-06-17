@@ -13,10 +13,12 @@ const API_KEY_STORAGE_KEYS = {
 // 검증 상태를 더 안전하게 저장
 export const saveApiKeyToStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS, value: string) => {
   try {
-    localStorage.setItem(API_KEY_STORAGE_KEYS[keyType], value);
-    // 저장 시간도 함께 기록
-    localStorage.setItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME, Date.now().toString());
-    console.log(`✅ ${keyType} API 키 로컬 스토리지에 저장됨:`, value.substring(0, 20) + '...');
+    // 초기화나 로그아웃 시에도 API 키는 유지
+    if (value && value.trim()) {
+      localStorage.setItem(API_KEY_STORAGE_KEYS[keyType], value);
+      localStorage.setItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME, Date.now().toString());
+      console.log(`✅ ${keyType} API 키 영구 저장됨:`, value.substring(0, 20) + '...');
+    }
   } catch (error) {
     console.error(`❌ ${keyType} API 키 저장 실패:`, error);
   }
@@ -47,9 +49,10 @@ export const removeApiKeyFromStorage = (keyType: keyof typeof API_KEY_STORAGE_KE
 export const saveValidationStatusToStorage = (keyType: keyof typeof API_KEY_STORAGE_KEYS, validated: boolean) => {
   try {
     const validationKey = `${keyType}_VALIDATED` as keyof typeof API_KEY_STORAGE_KEYS;
+    // 검증 상태도 영구 저장
     localStorage.setItem(API_KEY_STORAGE_KEYS[validationKey], validated.toString());
     localStorage.setItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME, Date.now().toString());
-    console.log(`✅ ${keyType} 검증 상태 저장됨:`, validated, '시간:', new Date().toLocaleTimeString());
+    console.log(`✅ ${keyType} 검증 상태 영구 저장됨:`, validated, '시간:', new Date().toLocaleTimeString());
   } catch (error) {
     console.error(`❌ ${keyType} 검증 상태 저장 실패:`, error);
   }
@@ -80,7 +83,7 @@ export const getAllApiKeysFromStorage = () => {
   
   const lastValidationTime = localStorage.getItem(API_KEY_STORAGE_KEYS.LAST_VALIDATION_TIME);
   
-  console.log('🔄 모든 API 키 상태 로드:', {
+  console.log('🔄 모든 API 키 상태 로드 (영구 저장):', {
     gemini: { key: geminiKey?.substring(0, 20) + '...', validated: geminiValidated },
     pixabay: { key: pixabayKey?.substring(0, 20) + '...', validated: pixabayValidated },
     huggingface: { key: huggingFaceKey?.substring(0, 20) + '...', validated: huggingFaceValidated },
@@ -96,4 +99,12 @@ export const getAllApiKeysFromStorage = () => {
     huggingFaceValidated,
     lastValidationTime
   };
+};
+
+// 초기화 시에도 API 키는 보존하는 함수
+export const preserveApiKeysOnReset = () => {
+  console.log('🔐 초기화 시 API 키 상태 보존');
+  // API 키들은 그대로 유지하고 검증 상태만 확인
+  const allKeys = getAllApiKeysFromStorage();
+  return allKeys;
 };
