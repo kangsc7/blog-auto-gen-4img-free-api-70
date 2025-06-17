@@ -65,56 +65,61 @@ const Index = () => {
         huggingFaceManager={huggingFaceManager}
       />
 
-      {/* 관리자 전용 컨트롤은 별도로 표시 */}
-      {isAdmin && (
-        <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">
-          <div className="flex items-start gap-8">
-            <Link
-              to="/admin/users"
-              className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
+      {/* 모든 사용자에게 기본 컨트롤 제공 */}
+      <div className="container mx-auto mt-20 mb-4 flex items-center justify-between">
+        {/* 관리자 전용: 사용자 관리 페이지 링크 */}
+        {isAdmin && (
+          <Link
+            to="/admin/users"
+            className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
+          >
+            <Shield className="h-5 w-5 text-red-500" />
+            <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
+          </Link>
+        )}
+        
+        {/* 모든 사용자: 중복 설정 컨트롤 */}
+        <div className="flex items-start gap-8">
+          <div className="text-center">
+            <ToggleGroup
+              type="single"
+              value={preventDuplicates ? 'forbid' : 'allow'}
+              onValueChange={(value) => {
+                if (value) {
+                  const newPreventDuplicates = value === 'forbid';
+                  setPreventDuplicates(newPreventDuplicates);
+                  console.log('중복 설정 변경:', newPreventDuplicates ? '금지' : '허용');
+                }
+              }}
+              className="inline-flex rounded-lg bg-gray-200 p-1 border shadow-inner"
+              aria-label="중복 주제 설정"
             >
-              <Shield className="h-5 w-5 text-red-500" />
-              <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
-            </Link>
-            <div className="text-center">
-              <ToggleGroup
-                type="single"
-                value={preventDuplicates ? 'forbid' : 'allow'}
-                onValueChange={(value) => {
-                  if (value) {
-                    const newPreventDuplicates = value === 'forbid';
-                    setPreventDuplicates(newPreventDuplicates);
-                    console.log('중복 설정 변경:', newPreventDuplicates ? '금지' : '허용');
-                  }
-                }}
-                className="inline-flex rounded-lg bg-gray-200 p-1 border shadow-inner"
-                aria-label="중복 주제 설정"
+              <ToggleGroupItem
+                value="forbid"
+                aria-label="중복 주제 금지"
+                className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
               >
-                <ToggleGroupItem
-                  value="forbid"
-                  aria-label="중복 주제 금지"
-                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-red-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
-                >
-                  <Ban />
-                  중복 금지
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="allow"
-                  aria-label="중복 주제 허용"
-                  className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
-                >
-                  <Check />
-                  중복 허용
-                </ToggleGroupItem>
-              </ToggleGroup>
-              <div className="w-72 mx-auto">
-                <p className="text-xs text-gray-500 mt-1">
-                  현재: {preventDuplicates ? '중복 금지 (키워드/주제 중복 방지)' : '중복 허용 (모든 제한 해제)'}<br />
-                  금지: 70% 이상 유사한 주제를 자동 제거합니다.
-                </p>
-              </div>
+                <Ban />
+                중복 금지
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="allow"
+                aria-label="중복 주제 허용"
+                className="w-36 rounded-md px-4 py-2 text-sm font-semibold data-[state=on]:bg-green-500 data-[state=on]:text-white data-[state=on]:shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <Check />
+                중복 허용
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <div className="w-72 mx-auto">
+              <p className="text-xs text-gray-500 mt-1">
+                현재: {preventDuplicates ? '중복 금지 (키워드/주제 중복 방지)' : '중복 허용 (모든 제한 해제)'}<br />
+                금지: 70% 이상 유사한 주제를 자동 제거합니다.
+              </p>
             </div>
           </div>
+          
+          {/* 모든 사용자: 초기화 버튼 */}
           <div className="text-center">
             <Button
               onClick={handleResetApp}
@@ -128,7 +133,7 @@ const Index = () => {
             <p className="text-xs text-gray-500 mt-1">모든 입력값과 생성된 내용 초기화</p>
           </div>
         </div>
-      )}
+      </div>
 
       <OneClickSection
         handleLatestIssueOneClick={handleLatestIssueOneClick}
