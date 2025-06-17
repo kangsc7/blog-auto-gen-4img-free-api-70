@@ -1,79 +1,85 @@
 
 import React from 'react';
+import { ProgressTracker } from '@/components/layout/ProgressTracker';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { RightContent } from '@/components/layout/RightContent';
 import { AppState } from '@/types';
 
-interface GenerationStatus {
+interface MainContentSectionProps {
+  appState: AppState;
+  saveAppState: (newState: Partial<AppState>) => void;
+  generationStatus: {
     isGeneratingTopics: boolean;
     isGeneratingContent: boolean;
     isGeneratingImage: boolean;
     isDirectlyGenerating: boolean;
-}
-
-interface GenerationFunctions {
-    generateTopics: () => Promise<string[] | null>;
+  };
+  generationFunctions: {
+    generateTopics: (keyword?: string) => Promise<void>;
     generateArticle: (topic?: string) => Promise<string>;
-    createImagePrompt: (text: string) => Promise<boolean>;
-    generateDirectImage: () => Promise<string | null>;
-}
-
-interface TopicControls {
+    createImagePrompt: () => Promise<void>;
+    generateDirectImage: () => Promise<void>;
+  };
+  topicControls: {
     manualTopic: string;
     setManualTopic: (topic: string) => void;
     handleManualTopicAdd: () => void;
     selectTopic: (topic: string) => void;
-}
-
-interface UtilityFunctions {
-    copyToClipboard: (text: string, type: string) => void;
+  };
+  utilityFunctions: {
+    copyToClipboard: (text: string) => void;
     openWhisk: () => void;
     downloadHTML: () => void;
-}
-
-interface MainContentSectionProps {
-    appState: AppState;
-    saveAppState: (newState: Partial<AppState>) => void;
-    generationStatus: GenerationStatus;
-    generationFunctions: GenerationFunctions;
-    topicControls: TopicControls;
-    utilityFunctions: UtilityFunctions;
-    preventDuplicates?: boolean;
+  };
+  preventDuplicates: boolean;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
-    appState,
-    saveAppState,
-    generationStatus,
-    generationFunctions,
-    topicControls,
-    utilityFunctions,
-    preventDuplicates = false,
+  appState,
+  saveAppState,
+  generationStatus,
+  generationFunctions,
+  topicControls,
+  utilityFunctions,
+  preventDuplicates,
 }) => {
-    return (
-        <div className="container mx-auto p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* 왼쪽 사이드바 */}
-                <LeftSidebar
-                    appState={appState}
-                    saveAppState={saveAppState}
-                    generationStatus={generationStatus}
-                    generationFunctions={generationFunctions}
-                    topicControls={topicControls}
-                    utilityFunctions={utilityFunctions}
-                    preventDuplicates={appState.preventDuplicates}
-                />
+  return (
+    <div className="container mx-auto">
+      <ProgressTracker
+        topics={appState.topics}
+        generatedContent={appState.generatedContent}
+        imagePrompt={appState.imagePrompt}
+        isGeneratingTopics={generationStatus.isGeneratingTopics}
+        isGeneratingContent={generationStatus.isGeneratingContent}
+        isGeneratingImage={generationStatus.isGeneratingImage || generationStatus.isDirectlyGenerating}
+      />
 
-                {/* 오른쪽 콘텐츠 */}
-                <RightContent 
-                    appState={appState}
-                    saveAppState={saveAppState}
-                    selectTopic={topicControls.selectTopic}
-                    copyToClipboard={utilityFunctions.copyToClipboard}
-                    downloadHTML={utilityFunctions.downloadHTML}
-                    isGeneratingContent={generationStatus.isGeneratingContent}
-                />
-            </div>
-        </div>
-    );
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <LeftSidebar
+          appState={appState}
+          saveAppState={saveAppState}
+          isGeneratingTopics={generationStatus.isGeneratingTopics}
+          generateTopics={generationFunctions.generateTopics}
+          isGeneratingContent={generationStatus.isGeneratingContent}
+          generateArticleContent={generationFunctions.generateArticle}
+          isGeneratingImage={generationStatus.isGeneratingImage}
+          createImagePrompt={generationFunctions.createImagePrompt}
+          isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+          generateDirectImage={generationFunctions.generateDirectImage}
+          manualTopic={topicControls.manualTopic}
+          setManualTopic={topicControls.setManualTopic}
+          handleManualTopicAdd={topicControls.handleManualTopicAdd}
+          selectTopic={topicControls.selectTopic}
+          preventDuplicates={preventDuplicates}
+        />
+
+        <RightContent
+          appState={appState}
+          copyToClipboard={utilityFunctions.copyToClipboard}
+          openWhisk={utilityFunctions.openWhisk}
+          downloadHTML={utilityFunctions.downloadHTML}
+        />
+      </div>
+    </div>
+  );
 };

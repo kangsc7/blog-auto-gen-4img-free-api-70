@@ -36,10 +36,25 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
       return;
     }
     
-    saveAppState({ saveReferenceTrigger: true });
+    // 외부 링크 정보를 즉시 appState에 저장
+    const updates: Partial<AppState> = {};
+    
+    if (appState.referenceLink) {
+      updates.referenceLink = appState.referenceLink;
+    }
+    
+    if (appState.referenceSentence) {
+      updates.referenceSentence = appState.referenceSentence;
+    }
+    
+    // saveReferenceTrigger를 true로 설정하여 저장 트리거
+    updates.saveReferenceTrigger = true;
+    
+    saveAppState(updates);
+    
     toast({
       title: "외부 링크 정보 저장 완료",
-      description: "외부 링크 정보가 성공적으로 저장되었습니다."
+      description: `외부 링크: ${appState.referenceLink || '미설정'}, 링크 문장: ${appState.referenceSentence || '미설정'}`
     });
   };
 
@@ -90,34 +105,40 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
 
         <div className="border p-4 rounded-lg space-y-4 bg-gray-50/50 shadow-inner">
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  외부 링크 
+                  <span className="text-xs text-gray-500 ml-2">(글 하단에 표시됩니다)</span>
+                </label>
                 <Input
                     placeholder="예: https://worldpis.com"
-                    value={appState.referenceLink}
+                    value={appState.referenceLink || ''}
                     onChange={(e) => saveAppState({ referenceLink: e.target.value })}
                     disabled={!appState.selectedTopic}
                 />
-                <p className="text-xs text-gray-500 mt-1">예: https://worldpis.com</p>
+                <p className="text-xs text-gray-500 mt-1">완전한 URL을 입력해주세요 (http:// 또는 https:// 포함)</p>
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크 문장</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  외부 링크 문장
+                  <span className="text-xs text-gray-500 ml-2">(클릭 가능한 텍스트)</span>
+                </label>
                 <Input
-                    placeholder="예: 워드프레스 꿀팁 더 보러가기"
-                    value={appState.referenceSentence}
+                    placeholder="예: 더 많은 정보 확인하기"
+                    value={appState.referenceSentence || ''}
                     onChange={(e) => saveAppState({ referenceSentence: e.target.value })}
                     disabled={!appState.selectedTopic}
                 />
-                <p className="text-xs text-gray-500 mt-1">글 마지막에 삽입될 링크의 텍스트입니다.</p>
+                <p className="text-xs text-gray-500 mt-1">사용자가 클릭할 링크의 텍스트입니다.</p>
             </div>
 
             <Button
               variant="outline"
-              className="w-full bg-white"
+              className="w-full bg-white hover:bg-gray-50"
               onClick={handleSaveReferenceInfo}
               disabled={!appState.selectedTopic}
             >
-              외부 링크 정보 저장
+              외부 링크 정보 즉시 적용
             </Button>
         </div>
 
