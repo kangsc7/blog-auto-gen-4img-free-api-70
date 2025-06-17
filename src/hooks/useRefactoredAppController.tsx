@@ -36,7 +36,12 @@ export const useRefactoredAppController = () => {
     setManualTopic,
     selectTopic,
     handleManualTopicAdd,
-  } = useTopicControls({ appState, saveAppState, canUseFeatures });
+  } = useTopicControls({ 
+    appState, 
+    saveAppState, 
+    preventDuplicates: appState.preventDuplicates,
+    canUseFeatures 
+  });
 
   const {
     copyToClipboard,
