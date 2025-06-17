@@ -1,20 +1,53 @@
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
-  .wrapper-div { padding: 0 15px; }
-  /* 모바일에서 이미지 더 크게 표시 */
+  .wrapper-div { padding: 0 15px !important; }
+  /* 모바일에서 이미지 더 크게 표시 - !important 추가 */
   img { 
     max-width: 100% !important; 
     min-height: 250px !important; 
     object-fit: cover !important;
+    margin: 20px 0 !important;
+  }
+  /* 모바일에서 여백 강제 조정 */
+  .wrapper-div * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    box-sizing: border-box !important;
+  }
+  /* 특정 요소들은 패딩 초기화 */
+  .wrapper-div h1, .wrapper-div h2, .wrapper-div h3, .wrapper-div p, .wrapper-div div {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
 @media (max-width: 480px) {
-  /* 작은 모바일에서도 충분한 크기 보장 */
+  /* 작은 모바일에서도 충분한 크기 보장 - !important 추가 */
   img { 
     min-height: 200px !important; 
   }
+  .wrapper-div {
+    padding: 0 10px !important;
+  }
 }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
+`;
+
+// AdSense 광고 코드 생성 함수
+const generateAdSenseCode = (adClient: string, adSlot: string): string => `
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-${adClient}"
+     crossorigin="anonymous"></script>
+<!-- 중간 광고 -->
+<ins class="adsbygoogle"
+     style="display:block; margin:30px 0 !important;"
+     data-ad-client="ca-pub-${adClient}"
+     data-ad-slot="${adSlot}"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
 `;
 
 const getHeaderSection = (topic: string): string => `
@@ -39,8 +72,9 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
-const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => `
+// 동적 섹션 생성 함수 수정 - AdSense 광고 삽입 기능 추가
+const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number, adSenseSettings?: any, shouldIncludeAd?: boolean): string => `
+${shouldIncludeAd && adSenseSettings?.enabled ? generateAdSenseCode(adSenseSettings.adClient, adSenseSettings.adSlot) : ''}
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다.
@@ -95,7 +129,6 @@ A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시�
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
 const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
@@ -214,35 +247,67 @@ const getTagsSection = (topic: string, keyword: string): string => {
 <p style="height: 20px;">&nbsp;</p>`;
 };
 
-// 동적 HTML 템플릿 생성 함수 수정 - refLink와 referenceSentence를 격려 섹션에 전달
+// 동적 HTML 템플릿 생성 함수 수정 - AdSense 설정 추가
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
   keyword: string, 
   refLink: string, 
   referenceSentence?: string,
-  dynamicHeadings?: Array<{ title: string; emoji: string; content: string }>
+  dynamicHeadings?: Array<{ title: string; emoji: string; content: string }>,
+  adSenseSettings?: { enabled: boolean; adClient: string; adSlot: string; adCount: number }
 ): string => {
   const htmlParts = [
     getHeaderSection(topic),
     getIntroSection(colors, keyword),
   ];
 
+  // H2 섹션의 총 개수 계산
+  const totalSections = dynamicHeadings && dynamicHeadings.length >= 5 ? 5 : 5;
+  
+  // 광고 삽입 위치 계산
+  const getAdPositions = (adCount: number, totalSections: number): number[] => {
+    if (adCount <= 0 || !adSenseSettings?.enabled) return [];
+    
+    const positions: number[] = [];
+    if (adCount === 1) {
+      // 1개일 때는 가운데 부분
+      positions.push(Math.floor(totalSections / 2));
+    } else {
+      // 2개 이상일 때는 균등 분할
+      const interval = totalSections / adCount;
+      for (let i = 0; i < adCount; i++) {
+        positions.push(Math.floor(interval * (i + 1)) - 1);
+      }
+    }
+    return positions.filter(pos => pos >= 0 && pos < totalSections);
+  };
+
+  const adPositions = adSenseSettings ? getAdPositions(adSenseSettings.adCount, totalSections) : [];
+
   // 동적 소제목이 있으면 5개만 사용, 없으면 기본 5개 섹션 사용
   if (dynamicHeadings && dynamicHeadings.length >= 5) {
     dynamicHeadings.slice(0, 5).forEach((heading, index) => {
-      htmlParts.push(getDynamicSection(colors, heading, index + 1));
+      const shouldIncludeAd = adPositions.includes(index);
+      htmlParts.push(getDynamicSection(colors, heading, index + 1, adSenseSettings, shouldIncludeAd));
     });
   } else {
     // 기본 5개 섹션들
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 핵심 정보와 완벽 분석`, emoji: '💡', content: '기본 정보를 전문가 수준으로 분석합니다' }, 1));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 신청 방법 완벽 가이드`, emoji: '📝', content: '신청 절차를 상세하게 안내합니다' }, 2));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 자격 요건과 전문가 팁`, emoji: '👥', content: '자격 요건과 숨겨진 팁을 공개합니다' }, 3));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 혜택 분석과 활용법`, emoji: '💰', content: '혜택을 최대화하는 방법을 알려드립니다' }, 4));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
+    const defaultHeadings = [
+      { title: `${keyword} 핵심 정보와 완벽 분석`, emoji: '💡', content: '기본 정보를 전문가 수준으로 분석합니다' },
+      { title: `${keyword} 신청 방법 완벽 가이드`, emoji: '📝', content: '신청 절차를 상세하게 안내합니다' },
+      { title: `${keyword} 자격 요건과 전문가 팁`, emoji: '👥', content: '자격 요건과 숨겨진 팁을 공개합니다' },
+      { title: `${keyword} 혜택 분석과 활용법`, emoji: '💰', content: '혜택을 최대화하는 방법을 알려드립니다' },
+      { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }
+    ];
+    
+    defaultHeadings.forEach((heading, index) => {
+      const shouldIncludeAd = adPositions.includes(index);
+      htmlParts.push(getDynamicSection(colors, heading, index + 1, adSenseSettings, shouldIncludeAd));
+    });
   }
 
-  // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달
+  // 6번째 섹션 (격려 섹션) 추가
   htmlParts.push(getEncouragementSection(colors, keyword, refLink, referenceSentence));
   htmlParts.push(getSummaryCardSection(keyword));
   htmlParts.push(getClosingSection(colors, refLink, referenceSentence));

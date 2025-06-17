@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -34,6 +33,12 @@ const defaultState: AppState = {
   referenceSentence: '',
   imageStyle: '',
   preventDuplicates: true,
+  adSenseSettings: {
+    enabled: false,
+    adClient: '',
+    adSlot: '',
+    adCount: 1
+  }
 };
 
 // localStorage 키 상수들
@@ -57,6 +62,7 @@ export const useAppStateManager = () => {
   // localStorage에서 블로그 관련 데이터 로드
   const loadBlogDataFromStorage = useCallback(() => {
     try {
+      const adSenseSettings = localStorage.getItem('adsense_settings');
       return {
         generatedContent: localStorage.getItem(STORAGE_KEYS.GENERATED_CONTENT) || '',
         referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
@@ -64,7 +70,13 @@ export const useAppStateManager = () => {
         selectedTopic: localStorage.getItem(STORAGE_KEYS.SELECTED_TOPIC) || '',
         topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
         keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
-        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || ''
+        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || '',
+        adSenseSettings: adSenseSettings ? JSON.parse(adSenseSettings) : {
+          enabled: false,
+          adClient: '',
+          adSlot: '',
+          adCount: 1
+        }
       };
     } catch (error) {
       console.error('블로그 데이터 로드 실패:', error);
@@ -95,6 +107,9 @@ export const useAppStateManager = () => {
       }
       if (data.colorTheme !== undefined) {
         localStorage.setItem(STORAGE_KEYS.COLOR_THEME, data.colorTheme);
+      }
+      if (data.adSenseSettings !== undefined) {
+        localStorage.setItem('adsense_settings', JSON.stringify(data.adSenseSettings));
       }
     } catch (error) {
       console.error('블로그 데이터 저장 실패:', error);

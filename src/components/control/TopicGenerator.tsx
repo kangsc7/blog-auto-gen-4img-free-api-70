@@ -27,6 +27,16 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
 }) => {
+  const handleManualTopicAddWithSelect = () => {
+    if (!manualTopic.trim()) return;
+    
+    // 수동 주제 추가
+    handleManualTopicAdd();
+    
+    // 추가된 주제를 자동으로 선택
+    saveAppState({ selectedTopic: manualTopic.trim() });
+  };
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -98,9 +108,14 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
               value={manualTopic}
               onChange={(e) => setManualTopic(e.target.value)}
               className="flex-1"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleManualTopicAddWithSelect();
+                }
+              }}
             />
             <Button 
-              onClick={handleManualTopicAdd}
+              onClick={handleManualTopicAddWithSelect}
               disabled={!manualTopic.trim()}
               variant="outline"
               className="text-blue-600 border-blue-600 hover:bg-blue-50"

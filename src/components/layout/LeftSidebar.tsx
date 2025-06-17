@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { ImagePaster } from '@/components/control/ImagePaster';
+import { AdSenseSettings } from '@/components/control/AdSenseSettings';
 import { AppState } from '@/types';
 
 interface GenerationStatus {
@@ -33,6 +34,13 @@ interface UtilityFunctions {
     downloadHTML: () => void;
 }
 
+interface AdSenseSettingsType {
+    enabled: boolean;
+    adClient: string;
+    adSlot: string;
+    adCount: number;
+}
+
 interface LeftSidebarProps {
     appState: AppState;
     saveAppState: (newState: Partial<AppState>) => void;
@@ -52,6 +60,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     utilityFunctions,
     preventDuplicates,
 }) => {
+    const [adSenseSettings, setAdSenseSettings] = useState<AdSenseSettingsType>({
+        enabled: false,
+        adClient: '',
+        adSlot: '',
+        adCount: 1
+    });
+
+    const handleAdSenseSettingsChange = (settings: AdSenseSettingsType) => {
+        setAdSenseSettings(settings);
+        saveAppState({ adSenseSettings: settings });
+    };
+
     return (
         <div className="lg:col-span-4 space-y-6">
             <TopicGenerator
@@ -72,6 +92,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 isGeneratingContent={generationStatus.isGeneratingContent}
                 generateArticleContent={generationFunctions.generateArticle}
             />
+
+            <AdSenseSettings onSettingsChange={handleAdSenseSettingsChange} />
 
             <div className="sticky top-6 space-y-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-lg pr-2">
               <ImageCreation
