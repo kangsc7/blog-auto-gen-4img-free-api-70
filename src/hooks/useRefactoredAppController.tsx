@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -110,7 +109,12 @@ export const useRefactoredAppController = () => {
     return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
-  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
+  const generationFunctions = { 
+    generateTopics, 
+    generateArticle: generateArticleForManual, 
+    createImagePrompt: () => createImagePrompt(''), 
+    generateDirectImage 
+  };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 

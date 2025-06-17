@@ -15,7 +15,7 @@ interface MainContentSectionProps {
     isDirectlyGenerating: boolean;
   };
   generationFunctions: {
-    generateTopics: (keyword?: string) => Promise<void>;
+    generateTopics: (keyword?: string) => Promise<string[] | null>;
     generateArticle: (topic?: string) => Promise<string>;
     createImagePrompt: () => Promise<void>;
     generateDirectImage: () => Promise<void>;
@@ -58,18 +58,10 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
         <LeftSidebar
           appState={appState}
           saveAppState={saveAppState}
-          isGeneratingTopics={generationStatus.isGeneratingTopics}
-          generateTopics={generationFunctions.generateTopics}
-          isGeneratingContent={generationStatus.isGeneratingContent}
-          generateArticleContent={generationFunctions.generateArticle}
-          isGeneratingImage={generationStatus.isGeneratingImage}
-          createImagePrompt={generationFunctions.createImagePrompt}
-          isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-          generateDirectImage={generationFunctions.generateDirectImage}
-          manualTopic={topicControls.manualTopic}
-          setManualTopic={topicControls.setManualTopic}
-          handleManualTopicAdd={topicControls.handleManualTopicAdd}
-          selectTopic={topicControls.selectTopic}
+          generationStatus={generationStatus}
+          generationFunctions={generationFunctions}
+          topicControls={topicControls}
+          utilityFunctions={utilityFunctions}
           preventDuplicates={preventDuplicates}
         />
 
