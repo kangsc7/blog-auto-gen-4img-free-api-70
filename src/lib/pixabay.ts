@@ -17,8 +17,8 @@ const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<s
     }
 };
 
-const searchPixabayImages = async (keyword: string, pixabayApiKey: string) => {
-    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=50&lang=ko`;
+const searchPixabayImages = async (keyword: string, pixabayApiKey: string, page: number = 1) => {
+    const imageSearchUrl = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&safesearch=true&per_page=50&page=${page}&lang=ko`;
     try {
         const imageResponse = await fetch(imageSearchUrl);
         if (!imageResponse.ok) return null;
@@ -27,6 +27,28 @@ const searchPixabayImages = async (keyword: string, pixabayApiKey: string) => {
         console.error("Error searching pixabay images:", error);
         return null;
     }
+};
+
+// 여러 페이지에서 이미지를 수집하는 함수
+const collectImagesFromMultiplePages = async (keyword: string, pixabayApiKey: string, maxPages: number = 10): Promise<any[]> => {
+    const allImages: any[] = [];
+    
+    for (let page = 1; page <= maxPages; page++) {
+        try {
+            const imageData = await searchPixabayImages(keyword, pixabayApiKey, page);
+            if (imageData?.hits && imageData.hits.length > 0) {
+                allImages.push(...imageData.hits);
+            } else {
+                // 더 이상 이미지가 없으면 중단
+                break;
+            }
+        } catch (error) {
+            console.error(`Error fetching page ${page}:`, error);
+            break;
+        }
+    }
+    
+    return allImages;
 };
 
 export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
@@ -62,7 +84,7 @@ export const integratePixabayImages = async (
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const h2s = Array.from(doc.querySelectorAll('h2'));
     let imageCount = 0;
-    const MAX_IMAGES = 4;
+    const MAX_IMAGES = 5; // 4장에서 5장으로 증가
     const usedImageUrls = new Set<string>(); // 중복 이미지 추적을 위한 Set
 
     if (h2s.length > 0) {
@@ -89,12 +111,14 @@ export const integratePixabayImages = async (
                     const keyword = await getSummaryKeywords(textToSummarize, geminiApiKey);
                     if (!keyword) continue;
 
-                    const imageData = await searchPixabayImages(keyword, pixabayApiKey);
+                    // 10페이지까지 검색하여 더 많은 이미지 수집
+                    const allImages = await collectImagesFromMultiplePages(keyword, pixabayApiKey, 10);
                     
                     // 사용하지 않은 이미지만 필터링
-                    const availableImages = imageData?.hits?.filter(hit => !usedImageUrls.has(hit.webformatURL)) || [];
+                    const availableImages = allImages.filter(hit => !usedImageUrls.has(hit.webformatURL));
 
                     if (availableImages.length > 0) {
+                        // 랜덤하게 이미지 선택하여 중복 방지
                         const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
                         const imageUrl = randomImage.webformatURL;
                         usedImageUrls.add(imageUrl); // 사용된 이미지 URL 추가

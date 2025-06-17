@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -119,6 +120,20 @@ export const getEnhancedArticlePrompt = async ({
         
         **절대로 섹션을 건너뛰거나 생략하지 마세요!**
         
+        **🚨 자연스러운 키워드 사용 - 반복 금지 🚨**
+        - 각 섹션에서 동일한 키워드나 표현을 반복하지 마세요
+        - 자연스러운 동의어와 유사 표현을 활용하세요
+        - 독자들이 "똑같은 내용의 반복"이라고 느끼지 않도록 다양한 표현을 사용하세요
+        - 키워드 밀도는 자연스럽게 1.5-2% 수준으로 유지하되, 억지로 반복하지 마세요
+
+        **🚨 공식 사이트 자동 링크 연결 🚨**
+        다음 공식 사이트들은 언급 시 자동으로 하이퍼링크를 적용해주세요 (URL 주소 표기 금지):
+        - 홈택스 → <a href="https://www.hometax.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">홈택스</a>
+        - 법제처 → <a href="https://www.law.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">법제처</a>
+        - 국세청 → <a href="https://www.nts.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">국세청</a>
+        - 보건복지부 → <a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>
+        - 행정안전부 → <a href="https://www.mois.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">행정안전부</a>
+        
         **🚨 고급 정보 제공 의무 🚨**
         각 섹션에서는 다음을 반드시 포함해야 합니다:
         - 구체적인 수치 데이터 (금액, 비율, 기간 등)
@@ -150,9 +165,6 @@ export const getEnhancedArticlePrompt = async ({
 
         3. **공식 링크 필수 포함 및 하이퍼링크 적용**: 
         크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 3-4개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
-        
-        **반드시 사용해야 할 올바른 링크 형식:**
-        \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
 
         4. **깊이 있는 전문 콘텐츠**: 
         - "알아보겠어요", "확인해보세요" 같은 애매한 표현 금지
@@ -207,6 +219,8 @@ ${htmlTemplate}
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
         - "알아보겠어요" 같은 애매한 표현 대신 구체적인 정보를 제공해야 합니다
+        - 각 섹션마다 동일한 키워드나 표현을 반복하지 말고 자연스러운 다양성을 유지해야 합니다
+        - 홈택스, 법제처 등 공식 사이트는 하이퍼링크로 연결하되 URL 주소는 표기하지 마세요
       `;
 };
 
