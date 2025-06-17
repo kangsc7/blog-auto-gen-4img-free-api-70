@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
   .wrapper-div { padding: 0 15px; }
@@ -40,24 +39,21 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
-const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => `
+// 동적 섹션 생성 함수 (글자수 제한 200-250자)
+const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number, adsenseCode?: string): string => `
+${adsenseCode && sectionNumber > 1 ? `
+<!-- 중간 애드센스 광고 -->
+${adsenseCode}
+` : ''}
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다.
+[SECTION_CONTENT_${sectionNumber}] 관련해서 핵심적인 정보를 전문가 수준으로 설명드리겠어요. 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 간결하게 다뤄보겠습니다.
 </p>
 <p style="height: 20px;">&nbsp;</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다.
+${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 전문가만의 노하우와 실무에서 바로 적용 가능한 핵심 팁들을 제공해드릴게요. 단계별로 따라하시면 누구나 성공할 수 있답니다. 💡
 </p>
 <p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요. 실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
-</p>
 ${sectionNumber === 2 ? `
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
 <table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
@@ -96,133 +92,15 @@ A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시�
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
-const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
-<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
-<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-여러분도 충분히 할 수 있어요! 많은 분들이 이미 성공적으로 혜택을 받고 계시니까 포기하지 마시고 도전해보세요. 💪 작은 한 걸음이 큰 변화를 만들어낼 거예요.
-</p>
-<p style="height: 20px;">&nbsp;</p>
-`;
-
-const getSummaryCardSection = (naturalKeyword: string): string => `
-<div class="single-summary-card-container">
-<div class="single-summary-card">
-<div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">[SUMMARY_TITLE] 핵심 정보 요약</h3></div>
-<div class="card-content">
-<div class="section"><strong>지원 대상:</strong> <span class="highlight">기준 중위소득 60% 이하 가구 (생계·의료급여 수급자, 차상위계층)</span></div>
-<div class="section"><strong>지원 금액:</strong> <span class="highlight">가구원 수에 따라 22만원~70만원 차등 지급</span></div>
-<div class="section"><strong>신청 방법:</strong><div class="formula">거주지 주민센터 방문 또는 온라인 신청</div></div>
-<div class="section"><strong>사용 용도:</strong> <span class="highlight">전기·가스·지역난방비, 연탄·등유 구매</span></div>
-<div class="section"><strong>신청 기간:</strong> <span class="highlight">매년 11월부터 다음해 10월까지 (연중 신청 가능)</span></div>
-</div>
-<div class="card-footer">성공적인 신청을 위한 필수 체크리스트!</div>
-</div>
-</div>
-`;
-
-const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
-<p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 전문가 수준의 깊이 있는 내용으로 다뤄봤는데요, 실제로 도움이 되는 정보들을 얻으셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요.
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 위에서 알려드린 전문가 팁들을 활용하시면 더욱 원활하게 진행하실 수 있을 거예요. 😊
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
-<p style="height: 30px;">&nbsp;</p>
-`;
-
-const getTagsSection = (topic: string, keyword: string): string => {
-  // 주제에서 핵심 키워드 추출 - 더 유연한 로직으로 개선
-  const extractKeywordsFromTopic = (topicText: string): string[] => {
-    console.log('Original topic:', topicText);
-    
-    // 불필요한 단어들 제거
-    const stopWords = [
-      '활용법', '방법', '전략', '가이드', '완벽', '최신', '최대한', '확실하게', 
-      '업법', '성공률', '높이는', '꿀팁', '노하우', '비법', '총정리', '정리',
-      '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택'
-    ];
-    
-    let cleanedTopic = topicText;
-    
-    // 불필요한 단어들 제거
-    stopWords.forEach(word => {
-      cleanedTopic = cleanedTopic.replace(new RegExp(word, 'g'), '');
-    });
-    
-    // 특수문자 제거 및 공백 정리
-    cleanedTopic = cleanedTopic
-      .replace(/[:]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    console.log('Cleaned topic:', cleanedTopic);
-    
-    // 50자 이하이고 의미있는 내용이면 포함
-    if (cleanedTopic.length <= 50 && cleanedTopic.length > 2) {
-      return [cleanedTopic];
-    }
-    
-    // 긴 주제의 경우 핵심 단어만 추출 시도
-    const words = cleanedTopic.split(' ').filter(word => word.length > 1);
-    const meaningfulWords = words.filter(word => 
-      !stopWords.includes(word) && 
-      word.length >= 2 && 
-      word.length <= 15
-    );
-    
-    console.log('Meaningful words:', meaningfulWords);
-    return meaningfulWords.slice(0, 2); // 최대 2개까지만
-  };
-
-  // 기본 태그들을 생성 (keyword는 항상 포함)
-  const baseTags = [keyword];
-  
-  // 주제에서 추출한 핵심 키워드
-  const topicKeywords = extractKeywordsFromTopic(topic);
-  console.log('Extracted topic keywords:', topicKeywords);
-  
-  const additionalTags = [
-    '신청방법',
-    '지원대상', 
-    '혜택',
-    '정부지원',
-    '2025년',
-    '교육과정',
-    '생활정보'
-  ];
-  
-  // 중복 제거 후 태그 조합
-  const allTags = [...new Set([...baseTags, ...topicKeywords, ...additionalTags])];
-  console.log('Final tags:', allTags);
-  
-  return `
-<div style="margin-top: 30px; padding: 15px 0;">
-<p style="font-size: 14px; line-height: 1.4; color: #666; text-align: left;">${allTags.join(', ')}</p>
-</div>
-<p style="height: 20px;">&nbsp;</p>`;
-};
-
-// 동적 HTML 템플릿 생성 함수 수정 - refLink와 referenceSentence를 격려 섹션에 전달
+// 동적 HTML 템플릿 생성 함수 수정 - 애드센스 코드 전달
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
   keyword: string, 
   refLink: string, 
   referenceSentence?: string,
-  dynamicHeadings?: Array<{ title: string; emoji: string; content: string }>
+  dynamicHeadings?: Array<{ title: string; emoji: string; content: string }>,
+  adsenseCode?: string
 ): string => {
   const htmlParts = [
     getHeaderSection(topic),
@@ -232,15 +110,15 @@ export const getHtmlTemplate = (
   // 동적 소제목이 있으면 5개만 사용, 없으면 기본 5개 섹션 사용
   if (dynamicHeadings && dynamicHeadings.length >= 5) {
     dynamicHeadings.slice(0, 5).forEach((heading, index) => {
-      htmlParts.push(getDynamicSection(colors, heading, index + 1));
+      htmlParts.push(getDynamicSection(colors, heading, index + 1, adsenseCode));
     });
   } else {
     // 기본 5개 섹션들
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 핵심 정보와 완벽 분석`, emoji: '💡', content: '기본 정보를 전문가 수준으로 분석합니다' }, 1));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 신청 방법 완벽 가이드`, emoji: '📝', content: '신청 절차를 상세하게 안내합니다' }, 2));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 자격 요건과 전문가 팁`, emoji: '👥', content: '자격 요건과 숨겨진 팁을 공개합니다' }, 3));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 혜택 분석과 활용법`, emoji: '💰', content: '혜택을 최대화하는 방법을 알려드립니다' }, 4));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
+    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 핵심 정보와 완벽 분석`, emoji: '💡', content: '기본 정보를 전문가 수준으로 분석합니다' }, 1, adsenseCode));
+    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 신청 방법 완벽 가이드`, emoji: '📝', content: '신청 절차를 상세하게 안내합니다' }, 2, adsenseCode));
+    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 자격 요건과 전문가 팁`, emoji: '👥', content: '자격 요건과 숨겨진 팁을 공개합니다' }, 3, adsenseCode));
+    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 혜택 분석과 활용법`, emoji: '💰', content: '혜택을 최대화하는 방법을 알려드립니다' }, 4, adsenseCode));
+    htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5, adsenseCode));
   }
 
   // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달

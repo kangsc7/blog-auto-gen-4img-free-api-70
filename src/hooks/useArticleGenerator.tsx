@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -75,7 +74,7 @@ export const useArticleGenerator = (
       const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: 8192,
+          maxOutputTokens: 8000,
           temperature: 0.7,
         },
       };
@@ -112,6 +111,13 @@ export const useArticleGenerator = (
       const rawContent = data.candidates[0].content.parts[0].text;
       const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
       let finalHtml = htmlContent;
+
+      // 애드센스 광고 삽입 (활성화된 경우)
+      if (appState.isAdsenseEnabled && appState.adsenseCode.trim()) {
+        // HTML 템플릿에 애드센스 코드가 이미 적용되어 있으므로 별도 처리 불필요
+        console.log('애드센스 광고가 활성화되어 HTML에 포함됨');
+      }
+
       let pixabayImagesAdded = false;
 
       const pixabayConfig = options?.pixabayConfig;
