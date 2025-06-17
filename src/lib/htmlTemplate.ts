@@ -1,3 +1,4 @@
+
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { .wrapper-div { padding: 0 15px; } }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -81,11 +82,11 @@ A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시�
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 6번째 섹션 (격려 섹션) 생성 함수 추가
-const getEncouragementSection = (colors: any, keyword: string): string => `
+// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
+const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7; text-align: center; background-color: ${colors.secondary}; padding: 20px; border-radius: 10px;" data-ke-size="size16">
-<strong>👉 [REFERENCE_TEXT]</strong>
+<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
+<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
 </p>
 <p style="height: 20px;">&nbsp;</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
@@ -173,7 +174,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
 <p style="height: 20px;">&nbsp;</p>`;
 };
 
-// 동적 HTML 템플릿 생성 함수 (6개 섹션으로 확장)
+// 동적 HTML 템플릿 생성 함수 수정 - refLink와 referenceSentence를 격려 섹션에 전달
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
@@ -201,8 +202,8 @@ export const getHtmlTemplate = (
     htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
   }
 
-  // 6번째 섹션 (격려 섹션) 추가
-  htmlParts.push(getEncouragementSection(colors, keyword));
+  // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달
+  htmlParts.push(getEncouragementSection(colors, keyword, refLink, referenceSentence));
   htmlParts.push(getSummaryCardSection(keyword));
   htmlParts.push(getClosingSection(colors, refLink, referenceSentence));
   htmlParts.push(getTagsSection(topic, keyword));
