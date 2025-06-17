@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -24,9 +25,6 @@ const initialState: AppState = {
   adsenseCode: '',
   isAdsenseEnabled: false,
   saveReferenceTrigger: false,
-  isGeminiLoading: false,
-  isPixabayLoading: false,
-  isHuggingfaceLoading: false,
 };
 
 const STORAGE_KEY = 'blog-generator-state';
