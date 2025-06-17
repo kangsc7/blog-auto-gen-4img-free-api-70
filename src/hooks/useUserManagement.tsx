@@ -77,19 +77,50 @@ export const useUserManagement = () => {
     };
 
     const deleteUser = async (userId: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
+        try {
+            console.log('사용자 삭제 시도:', userId);
+            
+            // 먼저 auth.users에서 삭제 시도
+            const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+            
+            if (authError) {
+                console.warn('Auth 사용자 삭제 실패 (계속 진행):', authError);
+            } else {
+                console.log('Auth 사용자 삭제 성공');
+            }
 
-        if (error) {
-            console.error('Error deleting user:', error);
-            toast({ title: "사용자 삭제 실패", description: error.message, variant: "destructive" });
+            // profiles 테이블에서 삭제
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', userId);
+
+            if (profileError) {
+                console.error('Profile 삭제 실패:', profileError);
+                toast({ 
+                    title: "사용자 삭제 실패", 
+                    description: `Profile 삭제 중 오류: ${profileError.message}`, 
+                    variant: "destructive" 
+                });
+                return false;
+            }
+
+            console.log('Profile 삭제 성공');
+            toast({ title: "사용자 삭제", description: "사용자가 성공적으로 삭제되었습니다." });
+            
+            // 즉시 사용자 목록 새로고침
+            await fetchUsers();
+            
+            return true;
+        } catch (error) {
+            console.error('사용자 삭제 중 예상치 못한 오류:', error);
+            toast({ 
+                title: "사용자 삭제 실패", 
+                description: `예상치 못한 오류가 발생했습니다: ${error}`, 
+                variant: "destructive" 
+            });
             return false;
         }
-
-        toast({ title: "사용자 삭제", description: "사용자가 성공적으로 삭제되었습니다." });
-        return true;
     };
 
     return { users, loading, updateUserStatus, deleteUser };

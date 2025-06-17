@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from '@/types';
 import { loadApiKeys, saveApiKeys, clearAllApiKeys } from '@/lib/apiKeyStorage';
+import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
 const defaultState: AppState = {
   keyword: '',
@@ -9,12 +10,12 @@ const defaultState: AppState = {
   selectedTopic: '',
   generatedContent: '',
   imagePrompt: '',
-  apiKey: '',
-  isApiKeyValidated: false,
-  pixabayApiKey: '',
-  isPixabayApiKeyValidated: false,
-  huggingfaceApiKey: '',
-  isHuggingfaceApiKeyValidated: false,
+  apiKey: DEFAULT_API_KEYS.GEMINI,
+  isApiKeyValidated: true,
+  pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+  isPixabayApiKeyValidated: true,
+  huggingfaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+  isHuggingfaceApiKeyValidated: true,
   colorTheme: '',
   referenceLink: '',
   referenceSentence: '',
@@ -163,14 +164,48 @@ export const useAppStateManager = () => {
 
   const resetApp = useCallback(async () => {
     try {
-      await clearAllApiKeys();
-      setAppState(defaultState);
+      // API 키는 기본값으로 유지하면서 다른 데이터만 초기화
+      const resetStateWithApiKeys = {
+        ...defaultState,
+        apiKey: DEFAULT_API_KEYS.GEMINI,
+        isApiKeyValidated: true,
+        pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
+        isPixabayApiKeyValidated: true,
+        huggingfaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
+        isHuggingfaceApiKeyValidated: true,
+        isLoggedIn: appState.isLoggedIn, // 로그인 상태 유지
+        currentUser: appState.currentUser, // 현재 사용자 유지
+      };
+      
+      // API 키를 기본값으로 저장
+      await saveApiKeys({
+        gemini: {
+          key: DEFAULT_API_KEYS.GEMINI,
+          isValidated: true,
+          timestamp: Date.now(),
+          lastValidation: Date.now()
+        },
+        pixabay: {
+          key: DEFAULT_API_KEYS.PIXABAY,
+          isValidated: true,
+          timestamp: Date.now(),
+          lastValidation: Date.now()
+        },
+        huggingface: {
+          key: DEFAULT_API_KEYS.HUGGING_FACE,
+          isValidated: true,
+          timestamp: Date.now(),
+          lastValidation: Date.now()
+        }
+      });
+      
+      setAppState(resetStateWithApiKeys);
       setPreventDuplicates(true);
-      console.log('앱 초기화 완료');
+      console.log('앱 초기화 완료 - API 키는 기본값으로 유지됨');
     } catch (error) {
       console.error('앱 초기화 오류:', error);
     }
-  }, []);
+  }, [appState.isLoggedIn, appState.currentUser]);
 
   return {
     appState,
