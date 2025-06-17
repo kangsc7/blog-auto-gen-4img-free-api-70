@@ -26,7 +26,7 @@ const getClosingSection = (): string => {
   </div>`;
 };
 
-// 태그 섹션 생성 (짧은 태그로 개선)
+// 태그 섹션 생성 (태그: 텍스트 제거)
 const getTagsSection = (tags: string[]): string => {
   if (!tags || tags.length === 0) return '';
   
@@ -193,7 +193,7 @@ export const getHtmlTemplate = (
       </div>
 
       <div style="margin: 40px 0 !important;">
-        <p style="font-size: 14px !important; color: #666 !important;">태그: [GENERATED_TAGS]</p>
+        <p style="font-size: 14px !important; color: #666 !important;">[GENERATED_TAGS]</p>
       </div>
     </div>
   `;

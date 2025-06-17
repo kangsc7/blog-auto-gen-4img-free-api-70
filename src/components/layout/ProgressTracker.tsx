@@ -22,9 +22,9 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   isGeneratingImage = false
 }) => {
   let preciseActiveStep = 1;
-  if (imagePrompt) {
-    preciseActiveStep = 4;
-  } else if (generatedContent) {
+  if (generatedContent && generatedContent.trim() !== '') {
+    preciseActiveStep = 4; // 글이 완성되면 최종 완성 단계
+  } else if (imagePrompt) {
     preciseActiveStep = 3;
   } else if (topics.length > 0) {
     preciseActiveStep = 2;
@@ -89,9 +89,6 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
               })}
             </div>
           </div>
-        </div>
-        <div className="text-right text-sm text-gray-700 mt-4 font-medium">
-          생성된 주제 목록: {topics.length}개
         </div>
       </div>
     </div>
