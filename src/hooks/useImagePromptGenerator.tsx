@@ -89,7 +89,7 @@ export const useImagePromptGenerator = (
       return null;
     }
 
-    if (!appState.isHuggingFaceApiKeyValidated) {
+    if (!appState.isHuggingfaceApiKeyValidated) {
       toast({
         title: "HuggingFace API 키 필요",
         description: "이미지 생성을 위해 HuggingFace API 키가 필요합니다.",
@@ -107,7 +107,7 @@ export const useImagePromptGenerator = (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: appState.imagePrompt,
-          huggingface_api_key: appState.huggingFaceApiKey
+          huggingface_api_key: appState.huggingfaceApiKey
         })
       });
 

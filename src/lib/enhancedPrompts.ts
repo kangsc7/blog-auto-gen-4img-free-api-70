@@ -1,6 +1,6 @@
 
 import { getColors } from '@/lib/promptUtils';
-import { webCrawl } from '@/lib/webCrawler';
+import { WebCrawlerService } from '@/lib/webCrawler';
 
 interface EnhancedArticlePromptParams {
   topic: string;
@@ -26,7 +26,7 @@ export const getEnhancedArticlePrompt = async ({
   let crawledData = '';
   try {
     console.log('🔍 웹 크롤링 시작:', keyword);
-    crawledData = await webCrawl(keyword, apiKey);
+    crawledData = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
     console.log('✅ 웹 크롤링 완료, 데이터 길이:', crawledData.length);
   } catch (error) {
     console.error('❌ 웹 크롤링 실패:', error);
@@ -112,4 +112,48 @@ ${crawledData}
 - 모든 스타일은 인라인으로 적용
 
 위 지침을 모두 반영하여 완성된 HTML 코드만 출력해주세요.`;
+};
+
+export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
+  return `당신은 전문적인 블로그 주제 생성 전문가입니다. 주어진 키워드를 바탕으로 SEO에 최적화된 고품질 블로그 주제를 생성해주세요.
+
+**핵심 키워드**: ${keyword}
+**생성할 주제 개수**: ${count}개
+
+다음 지침을 반드시 따라주세요:
+
+1. **주제 형식**:
+   - 각 주제는 한 줄에 하나씩 작성
+   - 번호나 기호 없이 순수한 제목만 작성
+   - 40-50자 내외로 작성 (너무 길지 않게)
+
+2. **키워드 활용**:
+   - 핵심 키워드 "${keyword}"를 자연스럽게 포함
+   - 롱테일 키워드 조합 활용
+   - 검색 의도를 반영한 제목 구성
+
+3. **다양성 확보**:
+   - How-to (방법론) 주제
+   - 비교/분석 주제  
+   - 팁/꿀팁 주제
+   - 트렌드/최신 정보 주제
+   - 문제 해결 주제
+
+4. **SEO 최적화**:
+   - 검색량이 높을 것으로 예상되는 주제
+   - 클릭률을 높일 수 있는 매력적인 제목
+   - 타겟 독자의 관심사 반영
+
+5. **감정적 어필**:
+   - 호기심을 자극하는 제목
+   - 실용적 가치를 전달하는 제목
+   - 문제 해결에 도움이 되는 제목
+
+**예시 패턴**:
+- "${keyword} 완벽 가이드: 초보자도 쉽게 따라하는 방법"
+- "2025년 ${keyword} 트렌드와 전망"
+- "${keyword} 실수하지 않는 7가지 팁"
+- "${keyword} vs 대안: 어떤 것이 더 나을까?"
+
+위 지침을 모두 반영하여 ${count}개의 블로그 주제를 생성해주세요. 각 주제는 개행으로 구분하여 작성하세요.`;
 };
