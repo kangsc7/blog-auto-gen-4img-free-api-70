@@ -26,14 +26,23 @@ const getClosingSection = (): string => {
   </div>`;
 };
 
-// 태그 섹션 생성 - 7개로 제한하고 "태그:" 텍스트 제거
-const getTagsSection = (tags: string[]): string => {
-  if (!tags || tags.length === 0) return '';
+// 태그 섹션 생성 - 핵심 키워드 중심의 간결한 태그 생성 (7개 제한)
+const getTagsSection = (topic: string, headings: Array<{title: string, emoji: string, content: string}>): string => {
+  // 주제에서 핵심 키워드 추출
+  const topicKeywords = topic.split(' ').slice(0, 2);
   
-  // 태그를 7개로 제한
-  const limitedTags = tags.slice(0, 7);
+  // 소제목에서 핵심 키워드 추출 (이모티콘 제거하고 짧은 단어들만)
+  const headingKeywords = headings.slice(0, 5).map(h => {
+    const cleanTitle = h.title.replace(/[^\w\s가-힣]/g, '').trim();
+    const words = cleanTitle.split(' ');
+    // 2단어 이하의 간결한 키워드만 선택
+    return words.length <= 2 ? cleanTitle : words.slice(0, 2).join(' ');
+  });
   
-  const tagElements = limitedTags.map(tag => 
+  // 전체 태그 목록을 7개로 제한
+  const allTags = [...topicKeywords, ...headingKeywords].slice(0, 7);
+  
+  const tagElements = allTags.map(tag => 
     `<span style="background: #e3f2fd; color: #1976d2; padding: 8px 16px; border-radius: 20px; margin: 5px; display: inline-block; font-size: 14px;">#${tag.trim()}</span>`
   ).join('');
   
@@ -103,7 +112,7 @@ export const getHtmlTemplate = (
         <div>[SECTION_CONTENT_${index + 1}]</div>
       `).join('')}
 
-      <div style="background: ${colors.warnBg} !important; border: 2px solid ${colors.warnBorder} !important; padding: 20px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important;">
+      <div style="background: #fff8e1 !important; border: 2px solid #ffb74d !important; padding: 20px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important;">
         <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">
           <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link} !important; text-decoration: underline !important;">
             ${referenceSentence || '더 많은 정보 확인하기'}
@@ -124,7 +133,9 @@ export const createBlogTemplate = (
   metaDescription?: string,
   tags: string[] = [],
   adsenseCode?: string,
-  isAdsenseEnabled?: boolean
+  isAdsenseEnabled?: boolean,
+  topic?: string,
+  headings?: Array<{title: string, emoji: string, content: string}>
 ): string => {
   let processedContent = content;
   
@@ -137,7 +148,7 @@ export const createBlogTemplate = (
   const encouragementSection = getEncouragementSection();
   const summarySection = getSummaryCardSection(content);
   const closingSection = getClosingSection();
-  const tagsSection = getTagsSection(tags);
+  const tagsSection = getTagsSection(topic || title, headings || []);
   
   // 본문에 추가 섹션들 삽입
   const finalContent = `${processedContent}

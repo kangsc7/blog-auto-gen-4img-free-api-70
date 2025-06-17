@@ -32,16 +32,18 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             <div className="mt-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             </div>
-            <style jsx>{`
-              @keyframes wave {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-10px); }
-              }
-              .animate-wave {
-                animation: wave 1.5s ease-in-out infinite;
-                display: inline-block;
-              }
-            `}</style>
+            <style>
+              {`
+                @keyframes wave {
+                  0%, 100% { transform: translateY(0px); }
+                  50% { transform: translateY(-10px); }
+                }
+                .animate-wave {
+                  animation: wave 1.5s ease-in-out infinite;
+                  display: inline-block;
+                }
+              `}
+            </style>
           </div>
         ) : generatedContent ? (
           <div 
