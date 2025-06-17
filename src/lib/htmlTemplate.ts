@@ -1,7 +1,7 @@
 
 // 격려 섹션 생성
 const getEncouragementSection = (): string => {
-  return `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin: 40px 0; text-align: center;">
+  return `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin: 40px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
     <h3 style="color: white; margin-bottom: 15px;">💪 함께 성장해요!</h3>
     <p style="font-size: 16px; line-height: 1.8; margin: 0;">작은 변화도 큰 성과의 시작입니다. 오늘도 한 걸음씩 전진해보세요!</p>
   </div>`;
@@ -12,7 +12,7 @@ const getSummaryCardSection = (content: string): string => {
   const sentences = content.split('.').filter(s => s.trim().length > 10);
   const keyPoints = sentences.slice(0, 3).map(s => s.trim()).join('. ');
   
-  return `<div style="background: #f8f9fa; border-left: 5px solid #007bff; padding: 25px; margin: 30px 0; border-radius: 10px;">
+  return `<div style="background: #f8f9fa; border-left: 5px solid #007bff; padding: 25px; margin: 30px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
     <h4 style="color: #007bff; margin-bottom: 15px;">📝 핵심 요약</h4>
     <p style="font-size: 16px; line-height: 1.8; margin: 0;">${keyPoints}</p>
   </div>`;
@@ -20,7 +20,7 @@ const getSummaryCardSection = (content: string): string => {
 
 // 마무리 섹션 생성
 const getClosingSection = (): string => {
-  return `<div style="background: #e8f5e8; padding: 25px; border-radius: 10px; margin: 30px 0; text-align: center;">
+  return `<div style="background: #e8f5e8; padding: 25px; border-radius: 10px; margin: 30px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
     <h4 style="color: #28a745; margin-bottom: 15px;">🌟 마무리</h4>
     <p style="font-size: 16px; line-height: 1.8; margin: 0;">이 정보가 도움이 되셨나요? 더 많은 유용한 콘텐츠로 찾아뵙겠습니다!</p>
   </div>`;
@@ -69,7 +69,7 @@ const getTagsSection = (tags: string[]): string => {
     `<span style="background: #e3f2fd; color: #1976d2; padding: 8px 16px; border-radius: 20px; margin: 5px; display: inline-block; font-size: 14px;">#${tag.trim()}</span>`
   ).join('');
   
-  return `<div style="margin: 40px 0; padding: 25px; background: #fafafa; border-radius: 10px;">
+  return `<div style="margin: 40px 0; padding: 25px; background: #fafafa; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
     <h4 style="color: #333; margin-bottom: 15px;">🏷️ 관련 태그</h4>
     <div>${tagElements}</div>
   </div>`;
@@ -173,7 +173,7 @@ export const getHtmlTemplate = (
     <div style="max-width: 800px !important; margin: 0 auto !important; padding: 20px !important; font-family: 'Malgun Gothic', sans-serif !important; line-height: 1.8 !important;">
       <h1 style="color: ${adjustedColors.primary} !important; text-align: center !important; border-bottom: 3px solid ${adjustedColors.primary} !important; padding-bottom: 10px !important; margin-bottom: 30px !important;">[TOPIC_TITLE]</h1>
       
-      <div style="background: ${adjustedColors.highlight} !important; border: 2px solid ${adjustedColors.highlightBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 30px 0 !important;">
+      <div style="background: ${adjustedColors.highlight} !important; border: 2px solid ${adjustedColors.highlightBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 30px 0 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;">
         <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.8 !important; color: #1a202c !important;">[INTRO_CONTENT]</p>
       </div>
 
@@ -184,7 +184,7 @@ export const getHtmlTemplate = (
         <div style="margin-bottom: 30px !important; line-height: 1.8 !important;">[SECTION_CONTENT_${index + 1}]</div>
       `).join('')}
 
-      <div style="background: ${adjustedColors.warnBg} !important; border: 2px solid ${adjustedColors.warnBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important;">
+      <div style="background: ${adjustedColors.warnBg} !important; border: 2px solid ${adjustedColors.warnBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;">
         <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.8 !important; color: #1a202c !important;">
           <a href="${refLink}" target="_blank" rel="noopener" style="color: ${adjustedColors.link} !important; text-decoration: underline !important;">
             ${referenceSentence || '더 많은 정보 확인하기'}
@@ -222,10 +222,10 @@ export const createBlogTemplate = (
     processedContent = insertAdsenseCode(processedContent, adsenseCode);
   }
   
-  // FAQ 섹션의 카드 박스 제거 및 스타일 개선
+  // FAQ 섹션을 H2로 변경
   processedContent = processedContent.replace(
-    /<div[^>]*style="[^"]*background[^"]*"[^>]*>(\s*<h[^>]*>.*?FAQ.*?<\/h[^>]*>.*?)<\/div>/gsi,
-    '$1'
+    /(자주\s*묻는\s*질문|FAQ)/gi,
+    '<h2 style="color: #1a202c !important; border-left: 4px solid #1a202c !important; padding-left: 15px !important; margin-top: 40px !important; margin-bottom: 20px !important;">❓ $1</h2>'
   );
   
   // 추가 섹션들 삽입
@@ -309,13 +309,7 @@ export const createBlogTemplate = (
             border-radius: 8px !important; 
             margin: 25px 0 !important; 
             line-height: 1.8 !important;
-        }
-        
-        /* FAQ 스타일 개선 - 카드 박스 없이 */
-        h2:contains("FAQ"), h3:contains("FAQ"), h4:contains("자주") {
-            background: none !important;
-            border: none !important;
-            padding-left: 15px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
         }
         
         @media (max-width: 768px) {

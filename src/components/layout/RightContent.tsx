@@ -25,15 +25,6 @@ export const RightContent: React.FC<RightContentProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <ProgressTracker
-        topics={appState.topics}
-        generatedContent={appState.generatedContent}
-        imagePrompt={appState.imagePrompt}
-        isGeneratingTopics={false}
-        isGeneratingContent={isGeneratingContent}
-        isGeneratingImage={false}
-      />
-
       <TopicList
         topics={appState.topics}
         selectedTopic={appState.selectedTopic}
@@ -42,12 +33,13 @@ export const RightContent: React.FC<RightContentProps> = ({
 
       <ArticlePreview
         generatedContent={appState.generatedContent}
-        copyToClipboard={copyToClipboard}
         downloadHTML={downloadHTML}
       />
 
       <SeoAnalyzer
-        appState={appState}
+        generatedContent={appState.generatedContent}
+        selectedTopic={appState.selectedTopic}
+        keyword={appState.keyword}
         saveAppState={saveAppState}
       />
     </div>
