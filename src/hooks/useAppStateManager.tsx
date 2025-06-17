@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { AppState } from '@/types';
 import { loadApiKeys, saveApiKeys, clearAllApiKeys } from '@/lib/apiKeyStorage';
@@ -24,6 +25,7 @@ const defaultState: AppState = {
   isPixabayLoading: false,
   isHuggingfaceLoading: false,
   saveReferenceTrigger: false,
+  topicCount: 5,
   adsenseCode: '',
   isAdsenseEnabled: false,
 };

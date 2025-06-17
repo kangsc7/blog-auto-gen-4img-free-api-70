@@ -1,3 +1,4 @@
+
 // 격려 섹션 생성
 const getEncouragementSection = (): string => {
   return `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin: 40px 0; text-align: center;">
@@ -66,6 +67,53 @@ const insertAdsenseCode = (content: string, adsenseCode: string): string => {
   }
   
   return content;
+};
+
+// HTML 템플릿 생성 함수 (기존 createBlogTemplate과 동일한 기능)
+export const getHtmlTemplate = (
+  colors: any,
+  topic: string,
+  keyword: string,
+  refLink: string,
+  referenceSentence?: string,
+  dynamicHeadings?: Array<{title: string, emoji: string, content: string}>
+): string => {
+  const headings = dynamicHeadings || [
+    { title: "기본 정보", emoji: "📋", content: "기본적인 정보를 확인해보세요" },
+    { title: "신청 방법", emoji: "📝", content: "신청 절차를 알아보세요" },
+    { title: "주의사항", emoji: "⚠️", content: "놓치면 안 되는 중요한 포인트" },
+    { title: "활용 팁", emoji: "💡", content: "더 효과적으로 활용하는 방법" },
+    { title: "자주 묻는 질문", emoji: "❓", content: "많이 궁금해하는 내용들" }
+  ];
+
+  return `
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Malgun Gothic', sans-serif; line-height: 1.8;">
+      <h1 style="color: ${colors.primary}; text-align: center; border-bottom: 3px solid ${colors.primary}; padding-bottom: 10px;">[TOPIC_TITLE]</h1>
+      
+      <div style="background: ${colors.highlight}; border: 2px solid ${colors.highlightBorder}; padding: 20px; border-radius: 10px; margin: 30px 0;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6;">[INTRO_CONTENT]</p>
+      </div>
+
+      ${headings.map((heading, index) => `
+        <h2 style="color: ${colors.secondary}; border-left: 4px solid ${colors.secondary}; padding-left: 15px; margin-top: 40px;">
+          ${heading.emoji} ${heading.title}
+        </h2>
+        <div>[SECTION_CONTENT_${index + 1}]</div>
+      `).join('')}
+
+      <div style="background: ${colors.warnBg}; border: 2px solid ${colors.warnBorder}; padding: 20px; border-radius: 10px; margin: 40px 0; text-align: center;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6;">
+          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">
+            ${referenceSentence || '더 많은 정보 확인하기'}
+          </a>
+        </p>
+      </div>
+
+      <div style="margin: 40px 0;">
+        <p style="font-size: 14px; color: #666;">태그: [GENERATED_TAGS]</p>
+      </div>
+    </div>
+  `;
 };
 
 export const createBlogTemplate = (
