@@ -103,20 +103,42 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 `;
 
 const getTagsSection = (topic: string, keyword: string): string => {
-  // 기본 태그들을 생성
-  const baseTags = [keyword, topic];
+  // 주제에서 핵심 키워드만 추출 (긴 문장은 태그에서 제외)
+  const extractKeywordsFromTopic = (topicText: string): string[] => {
+    // 주제가 너무 길면 (30자 이상) 태그에서 제외
+    if (topicText.length > 30) {
+      return [];
+    }
+    
+    // 불필요한 단어들 제거하여 핵심만 추출
+    const cleanedTopic = topicText
+      .replace(/활용법|방법|전략|가이드|완벽|최신|최대한|확실하게|업법|성공률|높이는/g, '')
+      .replace(/:/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // 정리된 주제가 20자 이하일 때만 포함
+    return cleanedTopic.length <= 20 && cleanedTopic.length > 0 ? [cleanedTopic] : [];
+  };
+
+  // 기본 태그들을 생성 (keyword는 항상 포함)
+  const baseTags = [keyword];
+  
+  // 주제에서 추출한 핵심 키워드 (조건부 포함)
+  const topicKeywords = extractKeywordsFromTopic(topic);
+  
   const additionalTags = [
     '신청방법',
     '지원대상', 
     '혜택',
     '정부지원',
     '2025년',
-    '에너지바우처',
+    '교육과정',
     '생활정보'
   ];
   
-  // 중복 제거 후 태그 조합
-  const allTags = [...new Set([...baseTags, ...additionalTags])];
+  // 중복 제거 후 태그 조합 (topic 전체는 제외하고 추출된 키워드만 포함)
+  const allTags = [...new Set([...baseTags, ...topicKeywords, ...additionalTags])];
   
   return `
 <div style="margin-top: 30px; padding: 15px 0;">
