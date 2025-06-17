@@ -17,7 +17,8 @@ export const useOneClick = (
   selectTopic: (topic: string) => void,
   generateArticle: GenerateArticleFunc,
   profile: { id: string; } | null,
-  preventDuplicates: boolean
+  preventDuplicates: boolean,
+  canUseFeatures: boolean
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
@@ -176,6 +177,15 @@ export const useOneClick = (
   };
 
   const runOneClickFlow = async (keywordSource: 'latest' | 'evergreen') => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (isOneClickGenerating) return;
     if (!profile) {
         toast({ title: "오류", description: "사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.", variant: "destructive" });
