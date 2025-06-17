@@ -8,7 +8,8 @@ import {
   getApiKeyFromStorage, 
   saveValidationStatusToStorage, 
   getValidationStatusFromStorage,
-  removeApiKeyFromStorage 
+  removeApiKeyFromStorage,
+  getAllApiKeysFromStorage
 } from '@/lib/apiKeyStorage';
 
 const defaultState: AppState = {
@@ -39,49 +40,56 @@ export const useAppStateManager = () => {
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
   const hasInitialized = useRef(false);
+  const initializationLock = useRef(false);
 
-  // localStorage에서 API 키 복원
+  // localStorage에서 API 키 복원 - 개선된 버전
   const loadApiKeysFromStorage = useCallback(() => {
-    const storedGemini = getApiKeyFromStorage('GEMINI');
-    const storedPixabay = getApiKeyFromStorage('PIXABAY');
-    const storedHuggingFace = getApiKeyFromStorage('HUGGING_FACE');
+    console.log('🔄 API 키 로드 시작...');
     
-    const geminiValidated = getValidationStatusFromStorage('GEMINI');
-    const pixabayValidated = getValidationStatusFromStorage('PIXABAY');
-    const huggingFaceValidated = getValidationStatusFromStorage('HUGGING_FACE');
-
-    return {
-      apiKey: storedGemini || DEFAULT_API_KEYS.GEMINI,
-      pixabayApiKey: storedPixabay || DEFAULT_API_KEYS.PIXABAY,
-      huggingFaceApiKey: storedHuggingFace || DEFAULT_API_KEYS.HUGGING_FACE,
-      isApiKeyValidated: storedGemini ? geminiValidated : true,
-      isPixabayApiKeyValidated: storedPixabay ? pixabayValidated : true,
-      isHuggingFaceApiKeyValidated: storedHuggingFace ? huggingFaceValidated : true,
+    const allKeys = getAllApiKeysFromStorage();
+    
+    // 기본값과 저장된 값 비교하여 올바른 값 선택
+    const finalState = {
+      apiKey: allKeys.geminiKey || DEFAULT_API_KEYS.GEMINI,
+      pixabayApiKey: allKeys.pixabayKey || DEFAULT_API_KEYS.PIXABAY,
+      huggingFaceApiKey: allKeys.huggingFaceKey || DEFAULT_API_KEYS.HUGGING_FACE,
+      // 저장된 키가 있으면 검증 상태를 사용, 없으면 기본값은 true
+      isApiKeyValidated: allKeys.geminiKey ? allKeys.geminiValidated : true,
+      isPixabayApiKeyValidated: allKeys.pixabayKey ? allKeys.pixabayValidated : true,
+      isHuggingFaceApiKeyValidated: allKeys.huggingFaceKey ? allKeys.huggingFaceValidated : true,
     };
+
+    console.log('✅ 최종 로드된 API 키 상태:', {
+      gemini: { hasKey: !!finalState.apiKey, validated: finalState.isApiKeyValidated },
+      pixabay: { hasKey: !!finalState.pixabayApiKey, validated: finalState.isPixabayApiKeyValidated },
+      huggingface: { hasKey: !!finalState.huggingFaceApiKey, validated: finalState.isHuggingFaceApiKeyValidated }
+    });
+
+    return finalState;
   }, []);
 
-  // 앱 상태 초기화 시 localStorage에서 API 키 복원
+  // 앱 상태 초기화 - 한 번만 실행되도록 보장
   useEffect(() => {
-    if (!hasInitialized.current) {
-      console.log('useAppStateManager 초기화 - localStorage에서 API 키 복원');
+    if (!hasInitialized.current && !initializationLock.current) {
+      console.log('🚀 useAppStateManager 초기화 시작');
+      initializationLock.current = true;
       
       const storedApiKeys = loadApiKeysFromStorage();
       
-      console.log('복원된 API 키들:', {
-        gemini: storedApiKeys.apiKey,
-        pixabay: storedApiKeys.pixabayApiKey,
-        huggingface: storedApiKeys.huggingFaceApiKey,
-        geminiValidated: storedApiKeys.isApiKeyValidated,
-        pixabayValidated: storedApiKeys.isPixabayApiKeyValidated,
-        huggingfaceValidated: storedApiKeys.isHuggingFaceApiKeyValidated
-      });
-      
       hasInitialized.current = true;
       
-      setAppState(prev => ({
-        ...prev,
-        ...storedApiKeys
-      }));
+      setAppState(prev => {
+        const newState = { ...prev, ...storedApiKeys };
+        console.log('✅ 앱 상태 초기화 완료:', newState);
+        return newState;
+      });
+      
+      // 모든 검증 상태를 localStorage에 즉시 저장하여 동기화
+      setTimeout(() => {
+        saveValidationStatusToStorage('GEMINI', storedApiKeys.isApiKeyValidated);
+        saveValidationStatusToStorage('PIXABAY', storedApiKeys.isPixabayApiKeyValidated);
+        saveValidationStatusToStorage('HUGGING_FACE', storedApiKeys.isHuggingFaceApiKeyValidated);
+      }, 100);
     }
   }, [loadApiKeysFromStorage]);
 
@@ -94,9 +102,9 @@ export const useAppStateManager = () => {
   }, [preventDuplicates]);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
-    console.log('앱 상태 업데이트:', newState);
+    console.log('💾 앱 상태 업데이트 요청:', newState);
     
-    // API 키 관련 상태가 변경되면 localStorage에도 저장
+    // API 키 관련 상태가 변경되면 localStorage에도 즉시 저장
     if (newState.apiKey !== undefined) {
       saveApiKeyToStorage('GEMINI', newState.apiKey);
     }
@@ -118,13 +126,17 @@ export const useAppStateManager = () => {
 
     setAppState(prev => {
       const updatedState = { ...prev, ...newState };
-      console.log('업데이트된 전체 상태:', updatedState);
+      console.log('✅ 앱 상태 업데이트 완료:', {
+        gemini: { key: updatedState.apiKey?.substring(0, 20) + '...', validated: updatedState.isApiKeyValidated },
+        pixabay: { key: updatedState.pixabayApiKey?.substring(0, 20) + '...', validated: updatedState.isPixabayApiKeyValidated },
+        huggingface: { key: updatedState.huggingFaceApiKey?.substring(0, 20) + '...', validated: updatedState.isHuggingFaceApiKeyValidated }
+      });
       return updatedState;
     });
   }, []);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
-    console.log(`${keyType} API 키를 기본값으로 복원`);
+    console.log(`🗑️ ${keyType} API 키를 기본값으로 복원`);
     switch (keyType) {
       case 'gemini':
         removeApiKeyFromStorage('GEMINI');
@@ -143,7 +155,7 @@ export const useAppStateManager = () => {
   }, [saveAppState, toast]);
 
   const resetApp = useCallback(() => {
-    console.log('앱 전체 초기화');
+    console.log('🔄 앱 전체 초기화');
     
     // localStorage의 API 키들도 모두 삭제
     removeApiKeyFromStorage('GEMINI');
@@ -153,6 +165,7 @@ export const useAppStateManager = () => {
     setAppState(defaultState);
     setPreventDuplicates(true);
     hasInitialized.current = false;
+    initializationLock.current = false;
     toast({ title: "초기화 완료", description: "모든 데이터가 초기화되었습니다." });
   }, [toast]);
 
