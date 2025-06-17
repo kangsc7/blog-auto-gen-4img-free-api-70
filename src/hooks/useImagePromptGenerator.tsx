@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -10,14 +9,14 @@ export const useImagePromptGenerator = (
   const { toast } = useToast();
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
 
-  const generateImagePrompt = async (): Promise<string> => {
+  const generateImagePrompt = async (): Promise<boolean> => {
     if (!appState.isApiKeyValidated || !appState.selectedTopic) {
       toast({
         title: "필수 정보 확인",
         description: "API 키 검증과 주제 선택이 필요합니다.",
         variant: "destructive"
       });
-      return '';
+      return false;
     }
 
     setIsGeneratingPrompt(true);
@@ -49,7 +48,7 @@ export const useImagePromptGenerator = (
           title: "이미지 프롬프트 생성 완료", 
           description: "이미지 프롬프트가 성공적으로 생성되었습니다." 
         });
-        return imagePrompt;
+        return true;
       } else {
         throw new Error('유효한 프롬프트를 생성하지 못했습니다.');
       }
@@ -60,20 +59,20 @@ export const useImagePromptGenerator = (
         description: error instanceof Error ? error.message : "프롬프트 생성 중 오류가 발생했습니다.", 
         variant: "destructive" 
       });
-      return '';
+      return false;
     } finally {
       setIsGeneratingPrompt(false);
     }
   };
 
-  const generateImage = async (): Promise<string> => {
+  const generateImage = async (): Promise<boolean> => {
     if (!appState.imagePrompt || !appState.isHuggingfaceApiKeyValidated) {
       toast({
         title: "필수 정보 확인",
         description: "이미지 프롬프트와 HuggingFace API 키가 필요합니다.",
         variant: "destructive"
       });
-      return '';
+      return false;
     }
 
     setIsGeneratingPrompt(true);
@@ -91,7 +90,7 @@ export const useImagePromptGenerator = (
         title: "이미지 생성 완료", 
         description: "이미지가 성공적으로 생성되었습니다." 
       });
-      return 'generated-image-url';
+      return true;
     } catch (error) {
       console.error('이미지 생성 오류:', error);
       toast({ 
@@ -99,7 +98,7 @@ export const useImagePromptGenerator = (
         description: error instanceof Error ? error.message : "이미지 생성 중 오류가 발생했습니다.", 
         variant: "destructive" 
       });
-      return '';
+      return false;
     } finally {
       setIsGeneratingPrompt(false);
     }
