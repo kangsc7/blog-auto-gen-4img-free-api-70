@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { ProgressTracker } from '@/components/layout/ProgressTracker';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { RightContent } from '@/components/layout/RightContent';
 import { AppState } from '@/types';
@@ -45,15 +44,6 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
 }) => {
   return (
     <div className="container mx-auto">
-      <ProgressTracker
-        topics={appState.topics}
-        generatedContent={appState.generatedContent}
-        imagePrompt={appState.imagePrompt}
-        isGeneratingTopics={generationStatus.isGeneratingTopics}
-        isGeneratingContent={generationStatus.isGeneratingContent}
-        isGeneratingImage={generationStatus.isGeneratingImage || generationStatus.isDirectlyGenerating}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
         <div className="lg:col-span-4">
           <LeftSidebar

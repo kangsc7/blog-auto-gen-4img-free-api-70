@@ -79,7 +79,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                     await generationFunctions.generateDirectImage();
                     return '';
                   }}
-                  copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text, type)}
+                  copyToClipboard={(text: string, type?: string) => utilityFunctions.copyToClipboard(text, type)}
                   openWhisk={utilityFunctions.openWhisk}
               />
 
