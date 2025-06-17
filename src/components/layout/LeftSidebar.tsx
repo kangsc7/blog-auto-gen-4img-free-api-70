@@ -29,7 +29,7 @@ interface LeftSidebarProps {
         selectTopic: (topic: string) => void;
     };
     utilityFunctions: {
-        copyToClipboard: (text: string) => void;
+        copyToClipboard: (text: string, type?: string) => void;
         openWhisk: () => void;
         downloadHTML: () => void;
     };
@@ -71,9 +71,15 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   appState={appState}
                   isGeneratingImage={generationStatus.isGeneratingImage}
                   isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-                  createImagePrompt={(text: string) => generationFunctions.createImagePrompt()}
-                  generateDirectImage={() => generationFunctions.generateDirectImage()}
-                  copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text)}
+                  createImagePrompt={async (text: string) => {
+                    await generationFunctions.createImagePrompt();
+                    return true;
+                  }}
+                  generateDirectImage={async () => {
+                    await generationFunctions.generateDirectImage();
+                    return '';
+                  }}
+                  copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text, type)}
                   openWhisk={utilityFunctions.openWhisk}
               />
 

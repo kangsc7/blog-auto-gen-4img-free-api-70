@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -113,7 +114,7 @@ export const useRefactoredAppController = () => {
     generateTopics, 
     generateArticle: generateArticleForManual, 
     createImagePrompt: () => createImagePrompt(''), 
-    generateDirectImage 
+    generateDirectImage: () => generateDirectImage()
   };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
