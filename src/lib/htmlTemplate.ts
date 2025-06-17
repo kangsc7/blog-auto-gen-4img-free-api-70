@@ -103,7 +103,7 @@ export const getHtmlTemplate = (
 
   return `
     <div style="max-width: 800px !important; margin: 0 auto !important; padding: 20px !important; font-family: 'Malgun Gothic', sans-serif !important; line-height: 1.8 !important;">
-      <h1 style="color: ${colors.primary} !important; text-align: center !important; border-bottom: 3px solid ${colors.primary} !important; padding-bottom: 10px !important;">[TOPIC_TITLE]</h1>
+      <h1 style="color: ${colors.primary} !important; text-align: center !important; padding-bottom: 10px !important;">[TOPIC_TITLE]</h1>
       
       <div style="background: ${colors.highlight} !important; border: 2px solid ${colors.primary} !important; padding: 20px !important; border-radius: 10px !important; margin: 30px 0 !important;">
         <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">[INTRO_CONTENT]</p>
@@ -117,9 +117,9 @@ export const getHtmlTemplate = (
       `).join('')}
 
       <div style="background: #fff8e1 !important; border: 2px solid #ffb74d !important; padding: 20px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important;">
-        <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">
-          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link} !important; text-decoration: underline !important;">
-            ${referenceSentence || '더 많은 정보 확인하기'}
+        <p style="margin: 0 !important; font-size: 20px !important; font-weight: bold !important; line-height: 1.6 !important;">
+          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link} !important; text-decoration: underline !important; font-size: 20px !important; font-weight: bold !important;">
+            📝 ${referenceSentence || '워드프레스 꿀팁 더 보러가기'}
           </a>
         </p>
       </div>
@@ -186,7 +186,6 @@ export const createBlogTemplate = (
         h1 { 
             font-size: 2.2em !important; 
             text-align: center !important; 
-            border-bottom: 3px solid #3498db !important; 
             padding-bottom: 10px !important; 
         }
         h2 { 
