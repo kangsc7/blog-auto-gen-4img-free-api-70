@@ -21,14 +21,14 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
     appState,
 }) => {
     return (
-        <div className="max-w-7xl mx-auto my-6">
-            <div className="flex justify-between items-center gap-4 p-4 rounded-lg shadow bg-white">
+        <div className="max-w-4xl mx-auto my-4">
+            <div className="flex justify-between items-center gap-3 p-4 rounded-lg shadow bg-white">
                 <Button 
                     onClick={handleLatestIssueOneClick} 
                     disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
-                    className="px-8 py-16 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-32"
+                    className="px-6 py-12 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-24 min-w-[180px]"
                 >
-                    <Zap className="mr-2 h-8 w-8" />
+                    <Zap className="mr-2 h-6 w-6" />
                     <span className="text-center">
                         최신 이슈
                         <br />
@@ -36,7 +36,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                     </span>
                 </Button>
                 
-                <div className="flex-grow px-4">
+                <div className="flex-grow px-3">
                     <ProgressTracker
                         topics={appState.topics}
                         generatedContent={appState.generatedContent}
@@ -57,9 +57,9 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                 <Button 
                     onClick={handleEvergreenKeywordOneClick} 
                     disabled={isOneClickGenerating || !appState.isApiKeyValidated}
-                    className="px-8 py-16 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-32"
+                    className="px-6 py-12 text-lg font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-24 min-w-[180px]"
                 >
-                    <RefreshCw className="mr-2 h-8 w-8" />
+                    <RefreshCw className="mr-2 h-6 w-6" />
                     <span className="text-center">
                         평생 키워드
                         <br />

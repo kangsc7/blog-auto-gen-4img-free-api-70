@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { TopNavigation } from '@/components/layout/TopNavigation';
 import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
@@ -56,7 +58,7 @@ const Index = () => {
     console.log('인증 또는 접근 권한 확인 중...');
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>로딩 중...</p>
+        <p className="text-lg font-semibold text-gray-700">로딩 중...</p>
       </div>
     );
   }
@@ -97,11 +99,12 @@ const Index = () => {
 
     return (
       <div className="min-h-screen bg-gray-100">
+        <TopNavigation />
         <AppHeader
           currentUser={profile?.email || appState.currentUser}
           handleLogout={handleLogout}
         />
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-120px)] p-4">
           <Card className="w-full max-w-md text-center shadow-lg">
             <CardHeader>
               <div className="mx-auto bg-gray-100 rounded-full p-3 w-fit">
@@ -110,10 +113,10 @@ const Index = () => {
               <CardTitle className="mt-4 text-2xl font-bold">{title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="mb-6">
+              <CardDescription className="mb-6 text-base">
                 {description}
               </CardDescription>
-              <Button onClick={handleLogout} variant="outline">
+              <Button onClick={handleLogout} variant="outline" className="font-semibold">
                 로그아웃
               </Button>
             </CardContent>
@@ -126,7 +129,8 @@ const Index = () => {
   console.log('메인 화면 렌더링 시작');
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <TopNavigation />
       <AppHeader
         currentUser={profile?.email || appState.currentUser}
         handleLogout={handleLogout}
@@ -139,7 +143,7 @@ const Index = () => {
       />
 
       {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
-      <div className="container mx-auto mt-8 mb-4">
+      <div className="container mx-auto mt-6 mb-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             
@@ -150,7 +154,7 @@ const Index = () => {
                 className="inline-flex items-center gap-2 bg-blue-50 p-3 rounded-lg shadow-sm hover:bg-blue-100 transition-colors border border-blue-300"
               >
                 <Shield className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-blue-700">
+                <span className="font-bold text-blue-700 text-base">
                   {isAdmin ? '사용자 관리 페이지' : '사용자 현황 페이지'}
                 </span>
               </Link>
@@ -159,7 +163,7 @@ const Index = () => {
             {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
             <div className="text-center">
               <div className="mb-2">
-                <span className="text-sm font-medium text-gray-700">중복 주제 설정</span>
+                <span className="text-sm font-bold text-gray-800">중복 주제 설정</span>
               </div>
               <ToggleGroup
                 type="single"
@@ -175,20 +179,20 @@ const Index = () => {
               >
                 <ToggleGroupItem
                   value="forbid"
-                  className="px-4 py-2 text-sm font-medium data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-bold data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
                 >
                   <Ban className="h-4 w-4" />
                   중복 금지
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="allow"
-                  className="px-4 py-2 text-sm font-medium data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-bold data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
                 >
                   <Check className="h-4 w-4" />
                   중복 허용
                 </ToggleGroupItem>
               </ToggleGroup>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-1 font-semibold">
                 현재: {preventDuplicates ? '중복 금지' : '중복 허용'}
               </p>
             </div>
@@ -199,12 +203,12 @@ const Index = () => {
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-8 py-4"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-12 py-8 h-auto"
               >
-                <RefreshCw className="h-5 w-5 mr-2" />
-                <span className="font-semibold">초기화</span>
+                <RefreshCw className="h-8 w-8 mr-3" />
+                <span className="font-bold text-xl">초기화</span>
               </Button>
-              <p className="text-xs text-gray-500 mt-1">모든 데이터 초기화</p>
+              <p className="text-base text-gray-700 mt-2 font-bold">모든 데이터 초기화</p>
             </div>
           </div>
         </div>
