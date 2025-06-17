@@ -44,7 +44,10 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
     if (!generatedImage) return;
 
     const altText = appState.selectedTopic || appState.keyword || 'generated_image_from_prompt';
-    const imgTag = `<img src="${generatedImage}" alt="${altText}" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px;">`;
+    const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
+    
+    // 티스토리 대표 이미지 설정을 위한 메타데이터 포함
+    const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" title="${sanitizedAltText}" data-filename="${sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.png" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px; width: 100%;">`;
 
     try {
         const response = await fetch(generatedImage);
@@ -57,12 +60,20 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
         });
 
         await navigator.clipboard.write([clipboardItem]);
-        toast({ title: "복사 완료", description: "이미지 및 HTML 태그가 복사되었습니다. 블로그, 그림판 등에 붙여넣으세요." });
+        toast({ 
+          title: "이미지 복사 완료", 
+          description: "이미지와 HTML 태그가 복사되었습니다. 티스토리에 붙여넣기 후 '대표 이미지로 설정' 버튼을 클릭하세요.",
+          duration: 5000
+        });
     } catch (error) {
         console.error('Failed to copy image and HTML: ', error);
         try {
             await navigator.clipboard.writeText(imgTag);
-            toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. 그림판에 붙여넣으려면 이미지 위에서 우클릭 후 '이미지 복사'를 이용해주세요." });
+            toast({ 
+              title: "HTML 태그 복사 완료", 
+              description: "HTML 코드가 복사되었습니다. 티스토리 에디터에서 HTML 모드로 붙여넣으세요.",
+              duration: 5000
+            });
         } catch (copyError) {
             console.error('Failed to copy HTML as text: ', copyError);
             toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
@@ -147,8 +158,11 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                     onClick={handleCopyImageHtml}
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    블로그용 이미지 복사 (HTML)
+                    티스토리용 이미지 복사 (대표이미지 설정 가능)
                   </Button>
+                  <p className="text-xs text-gray-600 mt-1">
+                    💡 팁: 티스토리에 붙여넣기 후 이미지를 클릭하고 '대표 이미지로 설정' 버튼을 눌러주세요.
+                  </p>
                 </div>
               ) : null}
             </div>

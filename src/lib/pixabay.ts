@@ -129,13 +129,18 @@ export const integratePixabayImages = async (
                         
                         const img = doc.createElement('img');
                         img.src = imageUrl;
-                        img.alt = h2.textContent?.trim() || keyword;
+                        const altText = h2.textContent?.trim() || keyword;
+                        const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
+                        img.alt = sanitizedAltText;
+                        img.title = sanitizedAltText; // 티스토리 대표 이미지 설정을 위한 title 속성
+                        img.setAttribute('data-filename', sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_') + '.jpg');
                         img.style.maxWidth = '90%';
                         img.style.height = 'auto';
                         img.style.borderRadius = '8px';
                         img.style.display = 'block';
                         img.style.marginLeft = 'auto';
                         img.style.marginRight = 'auto';
+                        img.style.width = '100%'; // 티스토리 대표 이미지 인식을 위한 width 설정
                         
                         imageContainer.appendChild(img);
                         

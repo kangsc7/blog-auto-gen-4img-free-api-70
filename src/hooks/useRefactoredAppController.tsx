@@ -27,7 +27,6 @@ export const useRefactoredAppController = () => {
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState,
     saveAppState,
-    huggingFaceManager.huggingFaceApiKey,
     canUseFeatures
   );
   
