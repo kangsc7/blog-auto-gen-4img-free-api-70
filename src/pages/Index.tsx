@@ -143,18 +143,18 @@ const Index = () => {
       />
 
       {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
-      <div className="container mx-auto mt-6 mb-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="container mx-auto mt-4 mb-3">
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+          <div className="flex items-center justify-between flex-wrap gap-6">
             
             {/* 사용자 현황 링크 - 모든 로그인한 사용자에게 표시 */}
             <div className="flex-shrink-0">
               <Link
                 to="/admin/users"
-                className="inline-flex items-center gap-2 bg-blue-50 p-3 rounded-lg shadow-sm hover:bg-blue-100 transition-colors border border-blue-300"
+                className="inline-flex items-center gap-3 bg-blue-50 p-4 rounded-xl shadow-sm hover:bg-blue-100 transition-colors border border-blue-300 hover:shadow-md"
               >
-                <Shield className="h-5 w-5 text-blue-600" />
-                <span className="font-bold text-blue-700 text-base">
+                <Shield className="h-6 w-6 text-blue-600" />
+                <span className="font-bold text-blue-700 text-lg">
                   {isAdmin ? '사용자 관리 페이지' : '사용자 현황 페이지'}
                 </span>
               </Link>
@@ -162,8 +162,8 @@ const Index = () => {
             
             {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
             <div className="text-center">
-              <div className="mb-2">
-                <span className="text-sm font-bold text-gray-800">중복 주제 설정</span>
+              <div className="mb-3">
+                <span className="text-lg font-bold text-gray-800">중복 주제 설정</span>
               </div>
               <ToggleGroup
                 type="single"
@@ -179,20 +179,20 @@ const Index = () => {
               >
                 <ToggleGroupItem
                   value="forbid"
-                  className="px-4 py-2 text-sm font-bold data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
+                  className="px-5 py-3 text-sm font-bold data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2 transition-all"
                 >
                   <Ban className="h-4 w-4" />
                   중복 금지
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="allow"
-                  className="px-4 py-2 text-sm font-bold data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2"
+                  className="px-5 py-3 text-sm font-bold data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2 transition-all"
                 >
                   <Check className="h-4 w-4" />
                   중복 허용
                 </ToggleGroupItem>
               </ToggleGroup>
-              <p className="text-sm text-gray-600 mt-1 font-semibold">
+              <p className="text-sm text-gray-600 mt-2 font-semibold">
                 현재: {preventDuplicates ? '중복 금지' : '중복 허용'}
               </p>
             </div>
@@ -203,12 +203,12 @@ const Index = () => {
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-12 py-8 h-auto"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-16 py-12 h-auto shadow-lg hover:shadow-xl"
               >
-                <RefreshCw className="h-8 w-8 mr-3" />
-                <span className="font-bold text-xl">초기화</span>
+                <RefreshCw className="h-10 w-10 mr-4" />
+                <span className="font-bold text-2xl">초기화</span>
               </Button>
-              <p className="text-base text-gray-700 mt-2 font-bold">모든 데이터 초기화</p>
+              <p className="text-lg text-gray-800 mt-3 font-bold">모든 데이터 초기화</p>
             </div>
           </div>
         </div>

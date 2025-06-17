@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -25,6 +24,7 @@ export const useKeywordGenerator = (appState: AppState) => {
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
                         temperature: 1.2,
+                        maxOutputTokens: 50,
                     }
                 })
             });
@@ -55,78 +55,72 @@ export const useKeywordGenerator = (appState: AppState) => {
     };
 
     const generateLatestKeyword = async (): Promise<string | null> => {
-        toast({ title: "AI 최신 트렌드 분석 중...", description: "실시간 트렌드를 AI로 분석하여 키워드를 생성합니다." });
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        const currentDay = now.getDate();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
         
-        const currentYear = 2025;
-        const currentMonth = new Date().getMonth() + 1;
-        const currentDay = new Date().getDate();
+        // 정확한 현재 시간을 명시하여 최신성 강조
+        const exactTime = `${currentYear}년 ${currentMonth}월 ${currentDay}일 ${currentHour}시 ${currentMinute}분`;
         
-        // 1차: Gemini의 실시간 추론 능력 활용
-        const realtimePrompt = `현재 ${currentYear}년 ${currentMonth}월 ${currentDay}일 기준으로, 한국에서 지금 가장 화제가 되고 있는 이슈나 트렌드를 분석해서 블로그 키워드 1개만 생성해주세요. 
+        toast({ 
+            title: `🔴 실시간 분석 중... (${exactTime})`, 
+            description: "지금 이 순간의 최신 트렌드를 AI로 분석합니다." 
+        });
+        
+        // 강화된 실시간 트렌드 분석 프롬프트
+        const realtimePrompt = `🚨 **중요: 정확한 현재 시점 분석 요구사항** 🚨
 
-다음 조건을 만족해야 합니다:
-- 실제로 현재 시점에서 관심이 높은 주제
-- 블로그로 작성하기 적합한 주제
-- 일반인들이 검색할 만한 키워드
-- 15자 이내의 간결한 키워드
+**현재 정확한 시각: ${exactTime}**
 
-년도는 포함하지 말고, 다른 설명 없이 키워드만 텍스트로 제공해주세요.`;
+**필수 준수 사항:**
+1. 반드시 오늘 ${currentYear}-${currentMonth.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')} 날짜의 최신 이슈만 분석
+2. 24시간 이내(어제 ${currentDay-1}일 이후)에 발생한 실제 이슈만 고려
+3. 2023년, 2024년 이전 데이터는 절대 사용 금지
+4. 한국 시각 기준 최신 뉴스, 트렌드, 사회적 이슈 분석
 
-        console.log('1차 실시간 트렌드 생성 프롬프트:', realtimePrompt);
+**생성 기준:**
+- 현재 한국에서 화제가 되고 있는 실시간 이슈
+- 온라인 커뮤니티에서 논의되는 최신 주제
+- 정부 정책, 경제 동향, 사회 현상 중 최신 발생 사항
+- 연예, 스포츠, IT 분야의 오늘 발생한 이슈
+
+다음 중복 방지를 위한 랜덤 카테고리에서 선택:
+${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테크' : Math.random() < 0.6 ? '사회/문화' : Math.random() < 0.8 ? '기술/IT' : '생활/건강'}
+
+**결과물:** 15자 이내의 검색 가능한 한국어 키워드 1개만 제공 (년도 포함 금지)
+
+**예시 형태:** "○○○ 새로운 정책", "△△△ 논란", "□□□ 혜택 확대" 등`;
+
+        console.log('실시간 트렌드 분석 프롬프트:', realtimePrompt);
         
         let result = await callGeminiForKeyword(realtimePrompt);
         
-        // 1차 결과가 있으면 반환
         if (result) {
-            console.log('1차 실시간 트렌드 키워드 생성 성공:', result);
-            toast({ title: "실시간 트렌드 키워드 생성 완료", description: `"${result}" - AI 실시간 추론으로 생성` });
+            console.log(`실시간 키워드 생성 성공 (${exactTime}):`, result);
+            toast({ 
+                title: "🔥 실시간 트렌드 키워드 완성", 
+                description: `"${result}" - ${exactTime} 기준 최신 분석` 
+            });
             return result;
         }
 
-        // 2차: 백업 - 카테고리별 동적 생성
-        toast({ title: "백업 시스템 작동", description: "10개 카테고리에서 최신 트렌드 키워드를 동적 생성합니다." });
+        // 백업 시스템: 시간대별 맞춤 키워드 생성
+        const timeBasedPrompt = `현재 시각 ${currentHour}시를 고려하여, 
+        ${currentHour < 9 ? '아침 시간대' : currentHour < 18 ? '낮 시간대' : '저녁 시간대'}에 
+        한국인들이 관심 가질만한 ${exactTime} 기준 최신 키워드를 1개만 생성해주세요.
         
-        const categoryTrendPrompts = [
-            // 테크/IT 카테고리
-            `${currentYear}년 ${currentMonth}월 현재 한국의 IT/테크 분야에서 가장 주목받는 트렌드나 기술 키워드를 1개만 생성해주세요. 예: AI 서비스, 새로운 앱, 디지털 혁신 등`,
-            
-            // 라이프스타일 카테고리
-            `${currentYear}년 ${currentMonth}월 기준 한국인들 사이에서 인기 있는 라이프스타일 트렌드 키워드를 1개만 만들어주세요. 예: 건강 관리법, 취미 활동, 생활 패턴 등`,
-            
-            // 경제/재테크 카테고리
-            `현재 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 경제/재테크 관련 키워드를 1개만 생성해주세요. 예: 투자 트렌드, 금융 상품, 절약 방법 등`,
-            
-            // 교육/자기계발 카테고리
-            `${currentYear}년 ${currentMonth}월 현재 한국에서 인기 있는 교육이나 자기계발 관련 키워드를 1개만 만들어주세요. 예: 온라인 강의, 새로운 학습법, 자격증 등`,
-            
-            // 문화/엔터테인먼트 카테고리
-            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 문화/엔터테인먼트 키워드를 1개만 생성해주세요. 예: 드라마, 음악, 예능, 문화 현상 등`,
-            
-            // 건강/의료 카테고리
-            `현재 ${currentYear}년 ${currentMonth}월 기준 한국에서 관심이 높은 건강/의료 관련 키워드를 1개만 만들어주세요. 예: 새로운 건강법, 의료 서비스, 질병 예방 등`,
-            
-            // 부동산/주거 카테고리
-            `${currentYear}년 ${currentMonth}월 현재 한국 부동산/주거 분야에서 주목받는 키워드를 1개만 생성해주세요. 예: 주택 정책, 임대차 제도, 주거 트렌드 등`,
-            
-            // 환경/지속가능성 카테고리
-            `지금 ${currentYear}년 ${currentMonth}월에 한국에서 화제가 되는 환경이나 지속가능성 관련 키워드를 1개만 만들어주세요. 예: 친환경 제품, 재활용, 에너지 절약 등`,
-            
-            // 사회이슈 카테고리
-            `현재 ${currentYear}년 ${currentMonth}월 기준 한국 사회에서 관심이 높은 사회 이슈 키워드를 1개만 생성해주세요. 예: 사회 제도, 복지 정책, 사회 현상 등`,
-            
-            // 푸드/요리 카테고리
-            `${currentYear}년 ${currentMonth}월 현재 한국에서 인기 있는 음식/요리 트렌드 키워드를 1개만 만들어주세요. 예: 새로운 요리법, 인기 음식, 건강 식단 등`
-        ];
+        반드시 오늘 날짜 ${currentYear}-${currentMonth}-${currentDay}의 실제 이슈여야 하며,
+        과거 데이터는 절대 사용하지 마세요.`;
         
-        const randomPrompt = categoryTrendPrompts[Math.floor(Math.random() * categoryTrendPrompts.length)];
-        const finalPrompt = `${randomPrompt} 년도는 포함하지 말고, 다른 설명 없이 키워드만 텍스트로 제공해주세요.`;
-        
-        console.log('2차 카테고리별 트렌드 생성 프롬프트:', finalPrompt);
-        
-        result = await callGeminiForKeyword(finalPrompt);
+        result = await callGeminiForKeyword(timeBasedPrompt);
         if (result) {
-            console.log('2차 카테고리별 트렌드 키워드 생성 성공:', result);
-            toast({ title: "카테고리별 최신 키워드 생성 완료", description: `"${result}" - 10개 카테고리 중 동적 선택` });
+            toast({ 
+                title: "시간대별 최신 키워드 생성", 
+                description: `"${result}" - ${exactTime} 맞춤 분석` 
+            });
         }
         
         return result;

@@ -24,12 +24,12 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
 
   return (
     <div className="w-full mb-4">
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="w-full max-w-xl mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-5 border border-gray-100">
+        <div className="w-full max-w-lg mx-auto">
           <div className="relative">
-            <div className="absolute top-5 left-0 w-full h-1 bg-gray-200 rounded-full"></div>
+            <div className="absolute top-5 left-0 w-full h-2 bg-gray-200 rounded-full"></div>
             <div
-              className="absolute top-5 left-0 h-1 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500 ease-out"
+              className="absolute top-5 left-0 h-2 bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-700 ease-out"
               style={{ width: `${progressPercentage}%` }}
             ></div>
             <div className="flex justify-between items-start">
@@ -38,17 +38,17 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
                 const isCompleted = stepNumber < preciseActiveStep;
                 const isActive = stepNumber === preciseActiveStep;
                 return (
-                  <div key={label} className="relative text-center w-16">
+                  <div key={label} className="relative text-center" style={{ width: '65px' }}>
                     <div
-                      className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
+                      className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-500 z-10 relative ${
                         isActive
-                          ? 'bg-blue-500 text-white border-blue-500 scale-110'
+                          ? 'bg-blue-500 text-white border-blue-500 scale-110 shadow-lg'
                           : isCompleted
-                          ? 'bg-teal-400 text-white border-teal-400'
+                          ? 'bg-teal-400 text-white border-teal-400 shadow-md'
                           : 'bg-white text-gray-500 border-gray-300'
                       }`}
                     >
-                      {isCompleted ? <CheckCircle className="w-5 h-5" /> : stepNumber}
+                      {isCompleted ? <CheckCircle className="w-6 h-6" /> : stepNumber}
                     </div>
                     <p
                       className={`mt-2 text-xs font-semibold transition-colors duration-500 ${
@@ -63,7 +63,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
             </div>
           </div>
         </div>
-        <div className="text-right text-xs text-gray-600 mt-4">
+        <div className="text-right text-sm text-gray-700 mt-4 font-medium">
           생성된 주제 목록: {topics.length}개 생성됨
         </div>
       </div>
