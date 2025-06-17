@@ -23,7 +23,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 특히 실제 신청 과정에서 놓치기 쉬운 부분들까지 상세히 다뤄보겠습니다! 💡
 </p>
 
-<p style="height: 20px;">&nbsp;</p>
+<p style="height: 20px;">&nbsp;</p>;
 `;
 
 // 동적 섹션 생성 함수
@@ -98,6 +98,8 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 😊
 </p>
+<p style="height: 20px;">&nbsp;</p>
+<p style="height: 20px;">&nbsp;</p>
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
 <p style="height: 30px;">&nbsp;</p>
 `;
