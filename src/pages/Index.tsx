@@ -203,12 +203,12 @@ const Index = () => {
                 onClick={handleResetApp}
                 variant="outline"
                 size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-12 py-8 h-auto shadow-lg hover:shadow-xl"
+                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-8 py-6 h-auto shadow-lg hover:shadow-xl"
               >
-                <RefreshCw className="h-8 w-8 mr-3" />
-                <span className="font-bold text-2xl">초기화</span>
+                <RefreshCw className="h-6 w-6 mr-2" />
+                <span className="font-bold text-lg">초기화</span>
               </Button>
-              <p className="text-lg text-gray-800 mt-2 font-bold">모든 데이터 초기화</p>
+              <p className="text-sm text-gray-600 mt-2 font-semibold">모든 데이터 초기화</p>
             </div>
           </div>
         </div>
@@ -219,6 +219,7 @@ const Index = () => {
         handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
         isOneClickGenerating={isOneClickGenerating}
         handleStopOneClick={handleStopOneClick}
+        appState={appState}
       />
       
       <MainContentSection
