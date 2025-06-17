@@ -55,6 +55,27 @@ export const useKeywordGenerator = (appState: AppState) => {
         }
     };
 
+    const generateCurrentTrendKeywords = (): string[] => {
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1;
+        
+        // 현재 시점 기준 실제 진행 중인 이슈들
+        const currentIssues = [
+            '2025년 정부지원금',
+            '새해 취업지원제도', 
+            '연말정산 변경사항',
+            '1월 부동산 정책',
+            '새해 건강보험 혜택',
+            '2025년 청년정책',
+            '신년 경제정책',
+            '올해 교육지원 확대',
+            '새해 복지제도 변화',
+            '2025년 세제혜택'
+        ];
+        
+        return currentIssues.slice(0, 5);
+    };
+
     const fetchRealTimeNews = async (): Promise<string[]> => {
         try {
             // 네이버 뉴스 RSS API 사용 (실시간 뉴스)
@@ -104,39 +125,18 @@ export const useKeywordGenerator = (appState: AppState) => {
                 
                 if (isPastIssue) {
                     console.warn('과거 이슈 키워드 감지됨, 재생성:', keyword);
-                    return this.generateCurrentTrendKeywords();
+                    return generateCurrentTrendKeywords();
                 }
                 
                 console.log('실시간 뉴스 키워드 생성 성공:', keyword);
                 return [keyword];
             }
             
-            return this.generateCurrentTrendKeywords();
+            return generateCurrentTrendKeywords();
         } catch (error) {
             console.error('실시간 뉴스 조회 오류:', error);
-            return this.generateCurrentTrendKeywords();
+            return generateCurrentTrendKeywords();
         }
-    };
-
-    const generateCurrentTrendKeywords = (): string[] => {
-        const today = new Date();
-        const currentMonth = today.getMonth() + 1;
-        
-        // 현재 시점 기준 실제 진행 중인 이슈들
-        const currentIssues = [
-            '2025년 정부지원금',
-            '새해 취업지원제도', 
-            '연말정산 변경사항',
-            '1월 부동산 정책',
-            '새해 건강보험 혜택',
-            '2025년 청년정책',
-            '신년 경제정책',
-            '올해 교육지원 확대',
-            '새해 복지제도 변화',
-            '2025년 세제혜택'
-        ];
-        
-        return currentIssues.slice(0, 5);
     };
 
     const generateLatestKeyword = async (): Promise<string | null> => {
