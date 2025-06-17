@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -35,9 +36,6 @@ const generateNaturalContext = (naturalKeyword: string, originalKeyword: string)
     SECTION_CONTENT_3: `디지털플랫폼 활용`,
     SECTION_CONTENT_4: `이 지원금`,
     SECTION_CONTENT_5: `${naturalKeyword} 지원`,
-    SECTION_CONTENT_6: `이런 혜택`,
-    SECTION_CONTENT_7: `지원금`,
-    SECTION_CONTENT_8: `해당 혜택`,
     SUMMARY_TITLE: naturalKeyword,
     REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
     GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
@@ -61,12 +59,15 @@ export const getEnhancedArticlePrompt = async ({
   // 자연스러운 맥락적 표현들 생성
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
   
-  // 동적 소제목 생성
+  // 동적 소제목 생성 (5개로 축소)
   console.log('동적 소제목 생성 시작:', keyword, topic);
   const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
   console.log('생성된 동적 소제목:', dynamicHeadings);
   
-  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, dynamicHeadings);
+  // 5개 섹션만 사용하도록 조정
+  const selectedHeadings = dynamicHeadings.slice(0, 5);
+  
+  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, selectedHeadings);
   const currentYear = new Date().getFullYear();
 
   // 웹 크롤링으로 최신 정보 및 공식 링크 수집
@@ -83,24 +84,34 @@ export const getEnhancedArticlePrompt = async ({
         === 크롤링 정보 끝 ===
 
         === 동적 생성된 소제목 정보 ===
-        다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 소제목들입니다:
-        ${dynamicHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}`).join('\n')}
+        다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다:
+        ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}`).join('\n')}
         === 동적 소제목 정보 끝 ===
 
         위의 크롤링된 최신 정보와 동적 생성된 소제목을 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
         
-        **🚨 동적 생성된 소제목 활용 필수 🚨**
-        위에서 제공된 동적 소제목들은 해당 키워드에 대한 실제 사용자 궁금증을 반영합니다. 이 소제목들을 바탕으로 각 섹션의 내용을 작성해주세요.
+        **🚨 5개 H2 섹션으로 구성 - 깊이 있는 내용 작성 🚨**
+        기존 7개 섹션을 5개로 축소하여 각 섹션당 더 풍부하고 깊이 있는 내용을 작성합니다.
+        각 섹션은 해당 동적 소제목의 의도에 맞는 전문적이고 실용적인 내용으로 구성해주세요.
         
-        **🚨 7개 H2 섹션 모두 작성 필수 🚨**
-        HTML 템플릿에 있는 7개의 H2 섹션을 모두 풍부한 내용으로 작성해야 합니다.
-        각 섹션은 해당 동적 소제목의 의도에 맞는 내용으로 구성해주세요.
+        **🚨 각 섹션 최소 300자 이상 작성 필수 🚨**
+        각 H2 섹션의 본문 내용은 반드시 **300자에서 450자 사이**로 작성해야 합니다.
+        단순한 설명이 아닌, 구체적인 수치, 실제 사례, 단계별 방법, 전문가 팁을 포함한 고급 정보를 제공하세요.
         
         **절대로 섹션을 건너뛰거나 생략하지 마세요!**
         
-        1. **키워드 자연스러운 적용 (가장 중요)**: 
+        **🚨 고급 정보 제공 의무 🚨**
+        각 섹션에서는 다음을 반드시 포함해야 합니다:
+        - 구체적인 수치 데이터 (금액, 비율, 기간 등)
+        - 실제 적용 사례 또는 예시
+        - 단계별 실행 방법
+        - 전문가만 아는 숨겨진 팁
+        - 주의해야 할 함정이나 놓치기 쉬운 포인트
+        - 관련 법령이나 정책 변화 내용
+        
+        1. **키워드 자연스러운 적용**: 
         - 원본 키워드 "${keyword}"를 그대로 강조하여 사용하지 마세요
         - 대신 자연스러운 키워드 "${naturalKeyword}"나 관련 용어를 사용하세요
         - 각 섹션에서는 아래 맥락적 표현들을 활용하세요:
@@ -113,33 +124,33 @@ export const getEnhancedArticlePrompt = async ({
         - [SECTION_CONTENT_3] → "${contextualTerms.SECTION_CONTENT_3}"
         - [SECTION_CONTENT_4] → "${contextualTerms.SECTION_CONTENT_4}"
         - [SECTION_CONTENT_5] → "${contextualTerms.SECTION_CONTENT_5}"
-        - [SECTION_CONTENT_6] → "${contextualTerms.SECTION_CONTENT_6}"
-        - [SECTION_CONTENT_7] → "${contextualTerms.SECTION_CONTENT_7}"
-        - [SECTION_CONTENT_8] → "${contextualTerms.SECTION_CONTENT_8}"
         - [SUMMARY_TITLE] → "${contextualTerms.SUMMARY_TITLE}"
         - [REFERENCE_TEXT] → "${referenceSentence || contextualTerms.REFERENCE_TEXT}"
         - [GENERATED_TAGS] → "${contextualTerms.GENERATED_TAGS}"
 
         2. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요.
 
-        3. **공식 링크 필수 포함 및 하이퍼링크 적용 (매우 중요)**: 
-        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 2-3개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
+        3. **공식 링크 필수 포함 및 하이퍼링크 적용**: 
+        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 3-4개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
         
         **반드시 사용해야 할 올바른 링크 형식:**
         \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
 
-        4. **정보성 콘텐츠 중심**: 모든 소제목과 내용은 독자가 실제로 필요로 하는 구체적이고 실용적인 정보를 담아야 합니다.
+        4. **깊이 있는 전문 콘텐츠**: 
+        - "알아보겠어요", "확인해보세요" 같은 애매한 표현 금지
+        - 구체적인 수치, 실제 사례, 단계별 방법론 필수 포함
+        - 일반인이 모르는 전문가 수준의 팁과 노하우 제공
+        - 실무에서 바로 적용 가능한 구체적인 정보 제공
 
-        5. **자연스러운 키워드 강조**: 필요한 경우에만 "<strong>${naturalKeyword}</strong>" 형태로 1-2회 자연스럽게 강조하되, 억지로 반복하지 마세요.
+        5. **자연스러운 키워드 강조**: 필요한 경우에만 "<strong>${naturalKeyword}</strong>" 형태로 자연스럽게 강조하되, 억지로 반복하지 마세요.
 
         다음 지침에 따라 작성해주세요:
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식을 포함하지 마세요.
         - **크롤링 정보 우선 활용**: 위에서 제공된 최신 웹 정보를 글의 근거로 최우선 활용해주세요.
         - 대상 독자: 한국어 사용자
         - **시의성**: 크롤링된 최신 정보를 반영하여 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요.
-        - **섹션별 글자수**: HTML 템플릿의 각 H2 소제목 아래 본문 내용은 **150자에서 190자 사이**로 작성해주세요.
         - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요.
-        - 가독성: 각 단락은 최대 2-3개의 문장으로 구성해주세요.
+        - 가독성: 각 단락은 최대 2-3개의 문장으로 구성하되, 내용의 깊이를 위해 더 긴 설명이 필요하면 자연스럽게 확장하세요.
 
         사용할 변수:
         - Primary Color: ${colors.primary}
@@ -155,23 +166,25 @@ export const getEnhancedArticlePrompt = async ({
         - Original Keyword: ${keyword}
         - Natural Keyword: ${naturalKeyword}
 
-        아래는 반드시 따라야 할 HTML 템플릿입니다 (동적 소제목 포함).
+        아래는 반드시 따라야 할 HTML 템플릿입니다 (5개 동적 소제목 포함).
         
         --- HTML TEMPLATE START ---
 ${htmlTemplate}
 --- HTML TEMPLATE END ---
 
         ⚠️ 재확인 사항:
-        - **동적 생성된 소제목의 의도에 맞는 내용으로 각 섹션을 작성해야 합니다**
-        - **7개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
+        - **5개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
+        - **각 섹션은 최소 300자 이상의 깊이 있는 내용이어야 합니다**
+        - 동적 생성된 소제목의 의도에 맞는 전문적인 내용으로 각 섹션을 작성해야 합니다
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
         - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
         - 자연스러운 키워드 "${naturalKeyword}"나 맥락적 표현을 사용하세요
-        - 공식 링크가 최소 2-3개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
-        - 모든 내용이 실제 정보성 콘텐츠여야 합니다
+        - 공식 링크가 최소 3-4개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
+        - 모든 내용이 구체적이고 실용적인 고급 정보여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
+        - "알아보겠어요" 같은 애매한 표현 대신 구체적인 정보를 제공해야 합니다
       `;
 };
 
