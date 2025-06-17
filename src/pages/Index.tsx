@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -144,19 +143,17 @@ const Index = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             
-            {/* 관리자 링크 - 관리자에게만 표시 */}
+            {/* 사용자 현황 링크 - 모든 로그인한 사용자에게 표시 */}
             <div className="flex-shrink-0">
-              {isAdmin ? (
-                <Link
-                  to="/admin/users"
-                  className="inline-flex items-center gap-2 bg-red-50 p-3 rounded-lg shadow-sm hover:bg-red-100 transition-colors border border-red-300"
-                >
-                  <Shield className="h-5 w-5 text-red-600" />
-                  <span className="font-semibold text-red-700">사용자 관리 페이지</span>
-                </Link>
-              ) : (
-                <div className="w-48"></div>
-              )}
+              <Link
+                to="/admin/users"
+                className="inline-flex items-center gap-2 bg-blue-50 p-3 rounded-lg shadow-sm hover:bg-blue-100 transition-colors border border-blue-300"
+              >
+                <Shield className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold text-blue-700">
+                  {isAdmin ? '사용자 관리 페이지' : '사용자 현황 페이지'}
+                </span>
+              </Link>
             </div>
             
             {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
