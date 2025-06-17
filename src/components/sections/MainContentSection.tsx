@@ -27,7 +27,7 @@ interface MainContentSectionProps {
     selectTopic: (topic: string) => void;
   };
   utilityFunctions: {
-    copyToClipboard: (text: string) => void;
+    copyToClipboard: (text: string, type?: string) => void;
     openWhisk: () => void;
     downloadHTML: () => void;
   };
@@ -54,25 +54,29 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
         isGeneratingImage={generationStatus.isGeneratingImage || generationStatus.isDirectlyGenerating}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <LeftSidebar
-          appState={appState}
-          saveAppState={saveAppState}
-          generationStatus={generationStatus}
-          generationFunctions={generationFunctions}
-          topicControls={topicControls}
-          utilityFunctions={utilityFunctions}
-          preventDuplicates={preventDuplicates}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <div className="lg:col-span-4">
+          <LeftSidebar
+            appState={appState}
+            saveAppState={saveAppState}
+            generationStatus={generationStatus}
+            generationFunctions={generationFunctions}
+            topicControls={topicControls}
+            utilityFunctions={utilityFunctions}
+            preventDuplicates={preventDuplicates}
+          />
+        </div>
 
-        <RightContent
-          appState={appState}
-          saveAppState={saveAppState}
-          selectTopic={topicControls.selectTopic}
-          copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text)}
-          downloadHTML={utilityFunctions.downloadHTML}
-          isGeneratingContent={generationStatus.isGeneratingContent}
-        />
+        <div className="lg:col-span-8">
+          <RightContent
+            appState={appState}
+            saveAppState={saveAppState}
+            selectTopic={topicControls.selectTopic}
+            copyToClipboard={utilityFunctions.copyToClipboard}
+            downloadHTML={utilityFunctions.downloadHTML}
+            isGeneratingContent={generationStatus.isGeneratingContent}
+          />
+        </div>
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     preventDuplicates,
 }) => {
     return (
-        <div className="lg:col-span-4 space-y-6">
+        <div className="space-y-6">
             <TopicGenerator
                 appState={appState}
                 saveAppState={saveAppState}

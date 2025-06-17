@@ -28,18 +28,18 @@ export const TopicList: React.FC<TopicListProps> = ({ topics, selectedTopic, sel
             <p>키워드를 입력하고 주제를 생성해보세요!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="space-y-2">
             {topics.map((topic, index) => (
               <div
                 key={index}
                 onClick={() => selectTopic(topic)}
                 className={`p-3 border rounded cursor-pointer transition-colors ${
                   selectedTopic === topic 
-                    ? 'bg-blue-50 border-blue-300' 
-                    : 'hover:bg-gray-50'
+                    ? 'bg-blue-50 border-blue-300 border-2' 
+                    : 'hover:bg-gray-50 border-gray-200'
                 }`}
               >
-                <span className="text-sm">{topic}</span>
+                <span className="text-sm font-medium">{topic}</span>
               </div>
             ))}
           </div>

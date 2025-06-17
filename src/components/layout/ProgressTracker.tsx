@@ -91,7 +91,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
           </div>
         </div>
         <div className="text-right text-sm text-gray-700 mt-4 font-medium">
-          생성된 주제 목록: {topics.length}개 생성됨
+          생성된 주제 목록: {topics.length}개
         </div>
       </div>
     </div>

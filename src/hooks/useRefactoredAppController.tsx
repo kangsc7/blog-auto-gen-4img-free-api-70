@@ -113,8 +113,12 @@ export const useRefactoredAppController = () => {
   const generationFunctions = { 
     generateTopics, 
     generateArticle: generateArticleForManual, 
-    createImagePrompt: () => createImagePrompt(''), 
-    generateDirectImage: () => generateDirectImage()
+    createImagePrompt: async () => { 
+      await createImagePrompt('');
+    }, 
+    generateDirectImage: async () => { 
+      await generateDirectImage();
+    }
   };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
