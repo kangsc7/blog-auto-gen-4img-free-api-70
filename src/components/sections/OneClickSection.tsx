@@ -71,10 +71,14 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
         )}
         
         <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-          <strong>📝 원클릭 생성 과정:</strong><br>
-          1️⃣ AI가 트렌드/평생 키워드 자동 선정<br>
-          2️⃣ 키워드 기반 주제 5개 생성<br>
-          3️⃣ 첫 번째 주제로 블로그 글 작성<br>
+          <strong>📝 원클릭 생성 과정:</strong>
+          <br />
+          1️⃣ AI가 트렌드/평생 키워드 자동 선정
+          <br />
+          2️⃣ 키워드 기반 주제 5개 생성
+          <br />
+          3️⃣ 첫 번째 주제로 블로그 글 작성
+          <br />
           4️⃣ 이미지 프롬프트 생성 및 이미지 생성
         </div>
       </CardContent>
