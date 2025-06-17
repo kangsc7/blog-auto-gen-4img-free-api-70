@@ -33,14 +33,14 @@ export const RightContent: React.FC<RightContentProps> = ({
 
       <ArticlePreview
         generatedContent={appState.generatedContent}
-        downloadHTML={downloadHTML}
+        isGeneratingContent={isGeneratingContent}
+        selectedTopic={appState.selectedTopic}
       />
 
       <SeoAnalyzer
         generatedContent={appState.generatedContent}
         selectedTopic={appState.selectedTopic}
         keyword={appState.keyword}
-        saveAppState={saveAppState}
       />
     </div>
   );

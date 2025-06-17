@@ -102,7 +102,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
                 <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.05s]">코</span>
                 <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.1s]">월</span>
                 <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.15s]">드</span>
-              </span>가 글을 생성하고 있습니다...
+              </span>가 매력적인 블로그 글을 작성중입니다...
             </p>
             <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
           </div>

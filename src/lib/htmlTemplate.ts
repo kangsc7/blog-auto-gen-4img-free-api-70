@@ -1,4 +1,3 @@
-
 // 격려 섹션 생성
 const getEncouragementSection = (): string => {
   return `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin: 40px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
@@ -166,40 +165,182 @@ export const getHtmlTemplate = (
     { title: "신청 방법", emoji: "📝", content: "신청 절차를 알아보세요" },
     { title: "주의사항", emoji: "⚠️", content: "놓치면 안 되는 중요한 포인트" },
     { title: "활용 팁", emoji: "💡", content: "더 효과적으로 활용하는 방법" },
+    { title: "혜택 내용", emoji: "💰", content: "받을 수 있는 혜택들" },
+    { title: "용기와 응원", emoji: "🌟", content: "함께 성장해요" },
     { title: "자주 묻는 질문", emoji: "❓", content: "많이 궁금해하는 내용들" }
   ];
 
+  // 7개 섹션 확보
+  while (headings.length < 7) {
+    headings.push({ title: "추가 정보", emoji: "📌", content: "유용한 정보를 제공합니다" });
+  }
+
   let template = `
-    <div style="max-width: 800px !important; margin: 0 auto !important; padding: 20px !important; font-family: 'Malgun Gothic', sans-serif !important; line-height: 1.8 !important;">
-      <h1 style="color: ${adjustedColors.primary} !important; text-align: center !important; border-bottom: 3px solid ${adjustedColors.primary} !important; padding-bottom: 10px !important; margin-bottom: 30px !important;">[TOPIC_TITLE]</h1>
+    <div style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; font-size: 17px; box-sizing: border-box; padding: 0 8px; word-break: break-all; overflow-wrap: break-word;">
+      <h1 style="color: ${adjustedColors.primary}; text-align: center; border-bottom: 3px solid ${adjustedColors.primary}; padding-bottom: 10px; margin-bottom: 30px;">[TOPIC_TITLE]</h1>
       
-      <div style="background: ${adjustedColors.highlight} !important; border: 2px solid ${adjustedColors.highlightBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 30px 0 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;">
-        <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.8 !important; color: #1a202c !important;">[INTRO_CONTENT]</p>
+      <div style="background-color: ${adjustedColors.highlight}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
+        <strong>[INTRO_KEYWORD_CONTEXT]</strong> [INTRO_CONTENT]
       </div>
 
-      ${headings.map((heading, index) => `
-        <h2 style="color: ${adjustedColors.secondary} !important; border-left: 4px solid ${adjustedColors.secondary} !important; padding-left: 15px !important; margin-top: 40px !important; margin-bottom: 20px !important;">
-          ${heading.emoji} ${heading.title}
+      ${headings.slice(0, 5).map((heading, index) => `
+        <h2 style="font-size: 24px; color: ${adjustedColors.secondary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
+          <strong>${heading.title}</strong> ${heading.emoji}
         </h2>
-        <div style="margin-bottom: 30px !important; line-height: 1.8 !important;">[SECTION_CONTENT_${index + 1}]</div>
+        [IMAGE_PLACEHOLDER_${index + 1}]
+        <div style="margin-bottom: 30px; line-height: 1.8;">[SECTION_CONTENT_${index + 1}]</div>
       `).join('')}
 
-      <div style="background: ${adjustedColors.warnBg} !important; border: 2px solid ${adjustedColors.warnBorder} !important; padding: 25px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;">
-        <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.8 !important; color: #1a202c !important;">
-          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${adjustedColors.link} !important; text-decoration: underline !important;">
+      <style>
+      .single-summary-card-container {
+          font-family: 'Noto Sans KR', sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 25px 15px;
+          background-color: ${adjustedColors.highlight};
+          margin: 25px 0;
+      }
+      .single-summary-card {
+          width: 100%;
+          max-width: 700px;
+          background-color: #ffffff;
+          border-radius: 15px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+          padding: 30px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          border: 1px solid ${adjustedColors.highlightBorder};
+          box-sizing: border-box;
+      }
+      .single-summary-card .card-header {
+          display: flex;
+          align-items: center;
+          border-bottom: 2px solid ${adjustedColors.primary};
+          padding-bottom: 15px;
+          margin-bottom: 15px;
+      }
+      .single-summary-card .card-header-icon {
+          font-size: 38px;
+          color: ${adjustedColors.primary};
+          margin-right: 16px;
+      }
+      .single-summary-card .card-header h3 {
+          font-size: 28px;
+          color: ${adjustedColors.primary};
+          margin: 0;
+          line-height: 1.3;
+          font-weight: 700;
+      }
+      .single-summary-card .card-content {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          font-size: 18px;
+          line-height: 1.7;
+          color: #333;
+      }
+      .single-summary-card .card-content .section {
+          margin-bottom: 12px;
+          line-height: 1.7;
+      }
+      .single-summary-card .card-content .section:last-child {
+          margin-bottom: 0;
+      }
+      .single-summary-card .card-content strong {
+          color: ${adjustedColors.secondary};
+          font-weight: 600;
+      }
+      .single-summary-card .card-content .highlight {
+          background-color: ${adjustedColors.textHighlight};
+          padding: 3px 8px;
+          border-radius: 4px;
+          font-weight: bold;
+      }
+      .single-summary-card .card-footer {
+          font-size: 15px;
+          color: #777;
+          text-align: center;
+          padding-top: 15px;
+          border-top: 1px dashed ${adjustedColors.highlightBorder};
+          margin-top: auto;
+      }
+      @media (max-width: 768px) {
+          .single-summary-card-container {
+              padding: 20px 10px;
+          }
+          .single-summary-card {
+              padding: 22px;
+              border-radius: 10px;
+          }
+          .single-summary-card .card-header-icon {
+              font-size: 32px;
+              margin-right: 12px;
+          }
+          .single-summary-card .card-header h3 {
+              font-size: 24px;
+          }
+          .single-summary-card .card-content {
+              font-size: 16px;
+              line-height: 1.6;
+          }
+      }
+      </style>
+      
+      <div class="single-summary-card-container">
+          <div class="single-summary-card">
+              <div class="card-header">
+                  <span class="card-header-icon">💡</span>
+                  <h3>[SUMMARY_TITLE] 핵심 요약</h3>
+              </div>
+              <div class="card-content">
+                  <div class="section"><b>핵심 포인트 1:</b> <span class="highlight">[SUMMARY_POINT_1]</span></div>
+                  <div class="section"><b>핵심 포인트 2:</b> <span class="highlight">[SUMMARY_POINT_2]</span></div>
+                  <div class="section"><b>핵심 포인트 3:</b> <span class="highlight">[SUMMARY_POINT_3]</span></div>
+                  <div class="section"><b>활용 팁:</b> <span class="highlight">[SUMMARY_TIP]</span></div>
+              </div>
+              <div class="card-footer">이 정보가 도움이 되셨나요? 더 많은 유용한 콘텐츠로 찾아뵙겠습니다!</div>
+          </div>
+      </div>
+
+      <h2 style="font-size: 24px; color: ${adjustedColors.secondary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
+        <strong>${headings[5].title}</strong> ${headings[5].emoji}
+      </h2>
+      <div style="margin-bottom: 30px; line-height: 1.8;">[SECTION_CONTENT_6]</div>
+
+      <h2 style="font-size: 24px; color: ${adjustedColors.secondary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;">
+        <strong>${headings[6].title}</strong> ${headings[6].emoji}
+      </h2>
+      <div style="margin: 30px 0;">
+          <div style="margin-bottom: 22px;">
+              <div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [FAQ_QUESTION_1]</div>
+              <div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [FAQ_ANSWER_1]</div>
+          </div>
+          <div style="margin-bottom: 22px;">
+              <div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [FAQ_QUESTION_2]</div>
+              <div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [FAQ_ANSWER_2]</div>
+          </div>
+          <div style="margin-bottom: 22px;">
+              <div style="font-weight: bold; margin-bottom: 8px; font-size: 17px; line-height: 1.5;">Q: [FAQ_QUESTION_3]</div>
+              <div style="padding-left: 18px; font-size: 17px; line-height: 1.6;">A: [FAQ_ANSWER_3]</div>
+          </div>
+      </div>
+
+      <div style="background: ${adjustedColors.warnBg}; border: 2px solid ${adjustedColors.warnBorder}; padding: 25px; border-radius: 10px; margin: 40px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <p style="margin: 0; font-size: 16px; line-height: 1.8; color: #1a202c;">
+          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${adjustedColors.link}; text-decoration: underline;">
             ${referenceSentence || '더 많은 정보 확인하기'}
           </a>
         </p>
       </div>
 
-      <div style="margin: 40px 0 !important;">
-        <p style="font-size: 14px !important; color: #666 !important;">[GENERATED_TAGS]</p>
+      <div style="margin: 40px 0;">
+        <p style="font-size: 14px; color: #666;">[GENERATED_TAGS]</p>
       </div>
     </div>
   `;
-  
-  // 줄바꿈 처리
-  template = processLineBreaks(template);
   
   return template;
 };

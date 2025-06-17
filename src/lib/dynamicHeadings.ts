@@ -18,14 +18,9 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 1. 각 소제목은 해당 키워드에 대한 실제 사용자 궁금증을 반영해야 합니다
 2. 검색 의도를 고려한 실용적인 제목이어야 합니다
 3. 적절한 이모지 1개를 포함해야 합니다
-4. 다음 패턴 중 하나를 반드시 포함해야 합니다:
-   - "기본 정보와 개념 정리"
-   - "신청 방법 및 절차"  
-   - "자격 요건 및 대상"
-   - "지원 금액 및 혜택"
-   - "활용법과 주의사항"
-   - "실제 후기와 효과"
-   - "자주 묻는 질문"
+4. 1-5번째는 핵심 정보 섹션
+5. 6번째는 용기와 응원을 주는 섹션
+6. 7번째는 FAQ 섹션
 
 **출력 형식:**
 각 줄마다 다음 형식으로 출력해주세요:
@@ -81,8 +76,8 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
         { title: `${keyword} 자격 요건 확인`, emoji: '👥', content: '지원 대상과 자격을 확인합니다' },
         { title: `${keyword} 혜택 및 지원 내용`, emoji: '💰', content: '받을 수 있는 혜택을 알아봅니다' },
         { title: `${keyword} 활용 팁과 주의사항`, emoji: '⚠️', content: '효과적인 활용법을 제공합니다' },
-        { title: `${keyword} 실제 후기와 효과`, emoji: '📈', content: '실제 사용자 후기를 공유합니다' },
-        { title: `${keyword} 자주 묻는 질문`, emoji: '❓', content: '궁금한 점들을 해결합니다' }
+        { title: `함께 성장하고 도전해요`, emoji: '🌟', content: '용기와 응원의 메시지를 전합니다' },
+        { title: `자주 묻는 질문`, emoji: '❓', content: '궁금한 점들을 해결합니다' }
       ];
       
       const missingIndex = headings.length;
@@ -104,8 +99,8 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
       { title: `${keyword} 지원 대상 및 자격 요건`, emoji: '👥', content: '자격 요건을 확인합니다' },
       { title: `${keyword} 지원 금액 및 혜택 내용`, emoji: '💰', content: '혜택 내용을 설명합니다' },
       { title: `${keyword} 효과적인 활용법과 주의사항`, emoji: '⚠️', content: '활용 방법을 제공합니다' },
-      { title: `${keyword} 실제 혜택과 기대 효과`, emoji: '📈', content: '기대 효과를 분석합니다' },
-      { title: `${keyword} 자주 묻는 질문 FAQ`, emoji: '❓', content: '자주 묻는 질문에 답합니다' }
+      { title: `함께 성장하고 도전해요`, emoji: '🌟', content: '용기와 응원의 메시지를 전합니다' },
+      { title: `자주 묻는 질문 FAQ`, emoji: '❓', content: '자주 묻는 질문에 답합니다' }
     ];
   }
 };
