@@ -72,13 +72,36 @@ export const useArticleGenerator = (
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
+      // 토큰 한도를 늘리고 온도를 낮춰서 더 안정적인 출력 보장
       const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.7,
+          maxOutputTokens: 12000, // 토큰 한도 증가
+          temperature: 0.5, // 온도 낮춤으로 더 일관성 있는 출력
+          topK: 20,
+          topP: 0.8,
         },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_NONE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH", 
+            threshold: "BLOCK_NONE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_NONE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_NONE"
+          }
+        ]
       };
+
+      console.log('🚀 Gemini API 요청 시작 - 토큰 한도:', requestBody.generationConfig.maxOutputTokens);
 
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -93,14 +116,23 @@ export const useArticleGenerator = (
       
       const data = await response.json();
       
+      // 토큰 한도 관련 상태 체크 및 로깅 강화
       if (data.candidates?.[0]?.finishReason) {
         const finishReason = data.candidates[0].finishReason;
-        console.log('Gemini finish reason:', finishReason);
+        console.log('🎯 Gemini finish reason:', finishReason);
+        
         if (finishReason === 'MAX_TOKENS') {
+          console.error('❌ 토큰 한도 초과! 글이 잘렸을 가능성 높음');
           toast({
-            title: "콘텐츠 길이 초과",
-            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다. 웹 크롤링된 풍부한 정보로 인해 더 자세한 글이 생성되었습니다.",
-            variant: "default",
+            title: "⚠️ 콘텐츠 길이 조절 필요",
+            description: "AI가 생성할 수 있는 최대 글자 수를 초과했습니다. 태그가 누락될 수 있어요.",
+            variant: "destructive",
+          });
+        } else if (finishReason === 'STOP') {
+          console.log('✅ 정상적으로 글 생성 완료');
+          toast({
+            title: "✅ 글 생성 완료",
+            description: "태그까지 포함하여 완전한 글이 생성되었습니다.",
           });
         }
       }
@@ -110,6 +142,21 @@ export const useArticleGenerator = (
       }
       
       const rawContent = data.candidates[0].content.parts[0].text;
+      console.log('📝 생성된 콘텐츠 길이:', rawContent.length, '글자');
+      
+      // 태그 섹션이 포함되었는지 체크
+      const hasTagsSection = rawContent.includes('style="font-size: 14px; line-height: 1.4; color: #666; text-align: left;"');
+      console.log('🏷️ 태그 섹션 포함 여부:', hasTagsSection);
+      
+      if (!hasTagsSection) {
+        console.warn('⚠️ 태그 섹션이 누락되었습니다!');
+        toast({
+          title: "⚠️ 태그 누락 감지",
+          description: "글 생성 시 태그 부분이 누락되었습니다. 다시 생성을 시도해보세요.",
+          variant: "destructive",
+        });
+      }
+      
       const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
       let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
@@ -155,9 +202,17 @@ export const useArticleGenerator = (
       }
 
       saveAppState(stateToSave);
+      
+      const finalMessage = hasTagsSection 
+        ? "웹 크롤링 기반 블로그 글 생성 완료" 
+        : "블로그 글 생성 완료 (태그 부분 확인 필요)";
+      const finalDescription = hasTagsSection 
+        ? "최신 정보를 바탕으로 태그까지 포함된 완전한 글이 완성되었습니다." 
+        : "글이 생성되었지만 태그 부분이 누락되었을 수 있습니다.";
+        
       toast({ 
-        title: "웹 크롤링 기반 블로그 글 생성 완료", 
-        description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
+        title: finalMessage, 
+        description: finalDescription 
       });
       return finalHtml;
     } catch (error) {
