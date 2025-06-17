@@ -56,7 +56,7 @@ const insertAdsenseCode = (content: string, adsenseCode: string): string => {
     return content.replace(h2Regex, (match, offset) => {
       if (insertCount === middleIndex) {
         insertCount++;
-        return `<div style="text-align: center; margin: 30px 0;">
+        return `<div style="text-align: center !important; margin: 30px 0 !important;">
           ${adsenseCode}
         </div>
         ${match}`;
@@ -87,30 +87,30 @@ export const getHtmlTemplate = (
   ];
 
   return `
-    <div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Malgun Gothic', sans-serif; line-height: 1.8;">
-      <h1 style="color: ${colors.primary}; text-align: center; border-bottom: 3px solid ${colors.primary}; padding-bottom: 10px;">[TOPIC_TITLE]</h1>
+    <div style="max-width: 800px !important; margin: 0 auto !important; padding: 20px !important; font-family: 'Malgun Gothic', sans-serif !important; line-height: 1.8 !important;">
+      <h1 style="color: ${colors.primary} !important; text-align: center !important; border-bottom: 3px solid ${colors.primary} !important; padding-bottom: 10px !important;">[TOPIC_TITLE]</h1>
       
-      <div style="background: ${colors.highlight}; border: 2px solid ${colors.highlightBorder}; padding: 20px; border-radius: 10px; margin: 30px 0;">
-        <p style="margin: 0; font-size: 16px; line-height: 1.6;">[INTRO_CONTENT]</p>
+      <div style="background: ${colors.highlight} !important; border: 2px solid ${colors.highlightBorder} !important; padding: 20px !important; border-radius: 10px !important; margin: 30px 0 !important;">
+        <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">[INTRO_CONTENT]</p>
       </div>
 
       ${headings.map((heading, index) => `
-        <h2 style="color: ${colors.secondary}; border-left: 4px solid ${colors.secondary}; padding-left: 15px; margin-top: 40px;">
+        <h2 style="color: ${colors.secondary} !important; border-left: 4px solid ${colors.secondary} !important; padding-left: 15px !important; margin-top: 40px !important;">
           ${heading.emoji} ${heading.title}
         </h2>
         <div>[SECTION_CONTENT_${index + 1}]</div>
       `).join('')}
 
-      <div style="background: ${colors.warnBg}; border: 2px solid ${colors.warnBorder}; padding: 20px; border-radius: 10px; margin: 40px 0; text-align: center;">
-        <p style="margin: 0; font-size: 16px; line-height: 1.6;">
-          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">
+      <div style="background: ${colors.warnBg} !important; border: 2px solid ${colors.warnBorder} !important; padding: 20px !important; border-radius: 10px !important; margin: 40px 0 !important; text-align: center !important;">
+        <p style="margin: 0 !important; font-size: 16px !important; line-height: 1.6 !important;">
+          <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link} !important; text-decoration: underline !important;">
             ${referenceSentence || '더 많은 정보 확인하기'}
           </a>
         </p>
       </div>
 
-      <div style="margin: 40px 0;">
-        <p style="font-size: 14px; color: #666;">태그: [GENERATED_TAGS]</p>
+      <div style="margin: 40px 0 !important;">
+        <p style="font-size: 14px !important; color: #666 !important;">태그: [GENERATED_TAGS]</p>
       </div>
     </div>
   `;
@@ -153,31 +153,78 @@ export const createBlogTemplate = (
     ${metaDescription ? `<meta name="description" content="${metaDescription}">` : ''}
     <style>
         body { 
-            font-family: 'Malgun Gothic', sans-serif; 
-            line-height: 1.8; 
-            color: #333; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px;
-            background: #fff;
+            font-family: 'Malgun Gothic', sans-serif !important; 
+            line-height: 1.8 !important; 
+            color: #333 !important; 
+            max-width: 800px !important; 
+            margin: 0 auto !important; 
+            padding: 15px !important;
+            background: #fff !important;
         }
         h1, h2, h3, h4 { 
-            color: #2c3e50; 
-            margin-top: 2em; 
-            margin-bottom: 0.5em;
+            color: #2c3e50 !important; 
+            margin-top: 2em !important; 
+            margin-bottom: 0.5em !important;
         }
-        h1 { font-size: 2.2em; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        h2 { font-size: 1.6em; border-left: 4px solid #3498db; padding-left: 15px; }
-        h3 { font-size: 1.3em; color: #e74c3c; }
-        p { margin-bottom: 1.5em; }
-        img { max-width: 100%; height: auto; border-radius: 8px; margin: 20px 0; }
-        ul, ol { margin-bottom: 1.5em; padding-left: 30px; }
-        li { margin-bottom: 0.5em; }
-        .highlight { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        h1 { 
+            font-size: 2.2em !important; 
+            text-align: center !important; 
+            border-bottom: 3px solid #3498db !important; 
+            padding-bottom: 10px !important; 
+        }
+        h2 { 
+            font-size: 1.6em !important; 
+            border-left: 4px solid #3498db !important; 
+            padding-left: 15px !important; 
+        }
+        h3 { 
+            font-size: 1.3em !important; 
+            color: #e74c3c !important; 
+        }
+        p { 
+            margin-bottom: 1.5em !important; 
+            line-height: 1.7 !important;
+        }
+        img { 
+            max-width: 100% !important; 
+            height: auto !important; 
+            border-radius: 8px !important; 
+            margin: 20px 0 !important; 
+        }
+        ul, ol { 
+            margin-bottom: 1.5em !important; 
+            padding-left: 30px !important; 
+        }
+        li { 
+            margin-bottom: 0.5em !important; 
+        }
+        .highlight { 
+            background: #fff3cd !important; 
+            padding: 15px !important; 
+            border-radius: 5px !important; 
+            margin: 20px 0 !important; 
+        }
         @media (max-width: 768px) {
-            body { padding: 15px; }
-            h1 { font-size: 1.8em; }
-            h2 { font-size: 1.4em; }
+            body { 
+                padding: 10px !important; 
+                margin: 0 !important;
+            }
+            h1 { 
+                font-size: 1.8em !important; 
+            }
+            h2 { 
+                font-size: 1.4em !important; 
+            }
+            .adsbygoogle {
+                margin: 20px 0 !important;
+            }
+        }
+        
+        /* 애드센스 광고 스타일 강화 */
+        .adsbygoogle {
+            display: block !important;
+            margin: 30px 0 !important;
+            text-align: center !important;
         }
     </style>
 </head>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LeftSidebar } from '@/components/layout/LeftSidebar';
 import { RightContent } from '@/components/layout/RightContent';
@@ -66,12 +67,6 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
 
                 {/* 오른쪽 콘텐츠 */}
                 <div className="space-y-6">
-                    {/* 애드센스 관리자 추가 */}
-                    <AdsenseManager 
-                        appState={appState}
-                        saveAppState={saveAppState}
-                    />
-                    
                     <RightContent 
                         appState={appState}
                         saveAppState={saveAppState}
@@ -79,6 +74,12 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
                         copyToClipboard={utilityFunctions.copyToClipboard}
                         downloadHTML={utilityFunctions.downloadHTML}
                         isGeneratingContent={generationStatus.isGeneratingContent}
+                    />
+                    
+                    {/* 애드센스 관리자를 오른쪽 아래로 이동 */}
+                    <AdsenseManager 
+                        appState={appState}
+                        saveAppState={saveAppState}
                     />
                 </div>
             </div>
