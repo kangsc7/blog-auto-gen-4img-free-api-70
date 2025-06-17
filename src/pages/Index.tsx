@@ -67,7 +67,7 @@ const Index = () => {
       <div className="container mx-auto mt-20 mb-4">
         <div className="flex items-center justify-between">
           {/* 관리자 전용: 사용자 관리 페이지 링크 */}
-          {isAdmin && (
+          {isAdmin ? (
             <Link
               to="/admin/users"
               className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
@@ -75,10 +75,9 @@ const Index = () => {
               <Shield className="h-5 w-5 text-red-500" />
               <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
             </Link>
+          ) : (
+            <div></div>
           )}
-          
-          {/* 관리자가 아닌 경우 빈 div로 공간 확보 */}
-          {!isAdmin && <div></div>}
           
           {/* 모든 사용자: 중복 설정 및 초기화 컨트롤 */}
           <div className="flex items-start gap-8">
