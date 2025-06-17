@@ -72,14 +72,14 @@ export const useArticleGenerator = (
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
-      // 토큰 한도를 늘리고 온도를 낮춰서 더 안정적인 출력 보장
+      // 태그까지 안정적으로 생성되도록 토큰 한도 최적화
       const requestBody = {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: 12000, // 토큰 한도 증가
-          temperature: 0.5, // 온도 낮춤으로 더 일관성 있는 출력
-          topK: 20,
-          topP: 0.8,
+          maxOutputTokens: 8000, // 토큰 한도 조정 (태그 섹션 보장)
+          temperature: 0.3, // 온도 더 낮춤으로 일관성 향상
+          topK: 15,
+          topP: 0.7,
         },
         safetySettings: [
           {
@@ -124,16 +124,13 @@ export const useArticleGenerator = (
         if (finishReason === 'MAX_TOKENS') {
           console.error('❌ 토큰 한도 초과! 글이 잘렸을 가능성 높음');
           toast({
-            title: "⚠️ 콘텐츠 길이 조절 필요",
-            description: "AI가 생성할 수 있는 최대 글자 수를 초과했습니다. 태그가 누락될 수 있어요.",
+            title: "⚠️ 토큰 한도 초과",
+            description: "글이 너무 길어서 태그가 누락되었습니다. 다시 생성해주세요.",
             variant: "destructive",
           });
+          return null; // 토큰 한도 초과 시 재생성 요구
         } else if (finishReason === 'STOP') {
           console.log('✅ 정상적으로 글 생성 완료');
-          toast({
-            title: "✅ 글 생성 완료",
-            description: "태그까지 포함하여 완전한 글이 생성되었습니다.",
-          });
         }
       }
       
@@ -144,17 +141,21 @@ export const useArticleGenerator = (
       const rawContent = data.candidates[0].content.parts[0].text;
       console.log('📝 생성된 콘텐츠 길이:', rawContent.length, '글자');
       
-      // 태그 섹션이 포함되었는지 체크
+      // 태그 섹션이 포함되었는지 체크 (더 정확한 검증)
       const hasTagsSection = rawContent.includes('style="font-size: 14px; line-height: 1.4; color: #666; text-align: left;"');
-      console.log('🏷️ 태그 섹션 포함 여부:', hasTagsSection);
+      const hasGeneratedTagsPlaceholder = rawContent.includes('[GENERATED_TAGS]');
       
-      if (!hasTagsSection) {
-        console.warn('⚠️ 태그 섹션이 누락되었습니다!');
+      console.log('🏷️ 태그 섹션 포함 여부:', hasTagsSection);
+      console.log('🏷️ GENERATED_TAGS 플레이스홀더 여부:', hasGeneratedTagsPlaceholder);
+      
+      if (!hasTagsSection || hasGeneratedTagsPlaceholder) {
+        console.warn('⚠️ 태그 섹션이 누락되거나 플레이스홀더가 치환되지 않았습니다!');
         toast({
-          title: "⚠️ 태그 누락 감지",
-          description: "글 생성 시 태그 부분이 누락되었습니다. 다시 생성을 시도해보세요.",
+          title: "⚠️ 태그 생성 실패",
+          description: "태그 섹션이 누락되었습니다. 다시 생성을 시도해주세요.",
           variant: "destructive",
         });
+        return null; // 태그 누락 시 재생성 요구
       }
       
       const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
@@ -203,16 +204,9 @@ export const useArticleGenerator = (
 
       saveAppState(stateToSave);
       
-      const finalMessage = hasTagsSection 
-        ? "웹 크롤링 기반 블로그 글 생성 완료" 
-        : "블로그 글 생성 완료 (태그 부분 확인 필요)";
-      const finalDescription = hasTagsSection 
-        ? "최신 정보를 바탕으로 태그까지 포함된 완전한 글이 완성되었습니다." 
-        : "글이 생성되었지만 태그 부분이 누락되었을 수 있습니다.";
-        
       toast({ 
-        title: finalMessage, 
-        description: finalDescription 
+        title: "✅ 태그까지 완전한 글 생성 완료", 
+        description: "최신 정보를 바탕으로 태그까지 포함된 완전한 글이 완성되었습니다." 
       });
       return finalHtml;
     } catch (error) {

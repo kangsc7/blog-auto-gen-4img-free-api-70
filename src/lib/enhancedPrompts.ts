@@ -88,8 +88,8 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}
 🚨 핵심 규칙 🚨
 
 **절대적 글자수 제한 (토큰 초과 방지):**
-- 각 H2 섹션: 정확히 150-180자 (절대 초과 금지)
-- 전체 글: 최대 1000자 이내
+- 각 H2 섹션: 정확히 120-150자 (절대 초과 금지)
+- 전체 글: 최대 800자 이내
 - 태그 섹션까지 반드시 포함되도록 조절
 
 **6개 H2 섹션 구성:**
@@ -101,13 +101,17 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}
 - 5섹션: FAQ 카드 (질문 2개만)
 - 마지막: 태그 섹션 필수
 
+**태그 생성 규칙:**
+- [GENERATED_TAGS]를 반드시 "${contextualTerms.GENERATED_TAGS}"로 치환
+- 태그 섹션이 누락되면 안됨
+
 **키워드 사용:**
 - 원본 키워드 "${keyword}" 직접 사용 금지
 - 자연스러운 키워드 "${naturalKeyword}" 사용
 - 각 섹션당 1회만 자연스럽게 포함
 
 **링크 규칙:**
-- 공식 사이트 링크 3-4개만
+- 공식 사이트 링크 2-3개만
 - 하이퍼링크 형태: <a href="URL" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">사이트명</a>
 
 **맥락적 표현 사용:**
@@ -144,10 +148,11 @@ HTML 템플릿:
 ${htmlTemplate}
 
 ⚠️ 최종 체크:
-- 150-180자/섹션 엄수
+- 120-150자/섹션 엄수
 - 6개 H2 섹션 완성
 - 태그 섹션 필수 포함
-- 전체 1000자 이내
+- 전체 800자 이내
+- [GENERATED_TAGS] 반드시 실제 태그로 치환
 `;
 };
 
