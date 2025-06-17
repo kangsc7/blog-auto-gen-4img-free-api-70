@@ -9,9 +9,9 @@ interface AppUtilsProps {
 export const useAppUtils = ({ appState }: AppUtilsProps) => {
   const { toast } = useToast();
 
-  const copyToClipboard = (text: string, type: string) => {
+  const copyToClipboard = (text: string, type?: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      toast({ title: "복사 완료", description: `${type}이(가) 클립보드에 복사되었습니다.` });
+      toast({ title: "복사 완료", description: `${type || '텍스트'}이(가) 클립보드에 복사되었습니다.` });
     }).catch(() => {
       toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
     });

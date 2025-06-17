@@ -67,9 +67,11 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
 
         <RightContent
           appState={appState}
-          copyToClipboard={utilityFunctions.copyToClipboard}
-          openWhisk={utilityFunctions.openWhisk}
+          saveAppState={saveAppState}
+          selectTopic={topicControls.selectTopic}
+          copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text)}
           downloadHTML={utilityFunctions.downloadHTML}
+          isGeneratingContent={generationStatus.isGeneratingContent}
         />
       </div>
     </div>

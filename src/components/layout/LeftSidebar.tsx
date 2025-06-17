@@ -71,9 +71,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   appState={appState}
                   isGeneratingImage={generationStatus.isGeneratingImage}
                   isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-                  createImagePrompt={generationFunctions.createImagePrompt}
-                  generateDirectImage={generationFunctions.generateDirectImage}
-                  copyToClipboard={utilityFunctions.copyToClipboard}
+                  createImagePrompt={(text: string) => generationFunctions.createImagePrompt()}
+                  generateDirectImage={() => generationFunctions.generateDirectImage()}
+                  copyToClipboard={(text: string, type: string) => utilityFunctions.copyToClipboard(text)}
                   openWhisk={utilityFunctions.openWhisk}
               />
 
