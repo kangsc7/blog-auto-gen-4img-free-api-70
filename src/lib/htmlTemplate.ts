@@ -130,29 +130,55 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 `;
 
 const getTagsSection = (topic: string, keyword: string): string => {
-  // 주제에서 핵심 키워드만 추출 (긴 문장은 태그에서 제외)
+  // 주제에서 핵심 키워드 추출 - 더 유연한 로직으로 개선
   const extractKeywordsFromTopic = (topicText: string): string[] => {
-    // 주제가 너무 길면 (30자 이상) 태그에서 제외
-    if (topicText.length > 30) {
-      return [];
-    }
+    console.log('Original topic:', topicText);
     
-    // 불필요한 단어들 제거하여 핵심만 추출
-    const cleanedTopic = topicText
-      .replace(/활용법|방법|전략|가이드|완벽|최신|최대한|확실하게|업법|성공률|높이는/g, '')
-      .replace(/:/g, '')
+    // 불필요한 단어들 제거
+    const stopWords = [
+      '활용법', '방법', '전략', '가이드', '완벽', '최신', '최대한', '확실하게', 
+      '업법', '성공률', '높이는', '꿀팁', '노하우', '비법', '총정리', '정리',
+      '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택'
+    ];
+    
+    let cleanedTopic = topicText;
+    
+    // 불필요한 단어들 제거
+    stopWords.forEach(word => {
+      cleanedTopic = cleanedTopic.replace(new RegExp(word, 'g'), '');
+    });
+    
+    // 특수문자 제거 및 공백 정리
+    cleanedTopic = cleanedTopic
+      .replace(/[:]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     
-    // 정리된 주제가 20자 이하일 때만 포함
-    return cleanedTopic.length <= 20 && cleanedTopic.length > 0 ? [cleanedTopic] : [];
+    console.log('Cleaned topic:', cleanedTopic);
+    
+    // 50자 이하이고 의미있는 내용이면 포함
+    if (cleanedTopic.length <= 50 && cleanedTopic.length > 2) {
+      return [cleanedTopic];
+    }
+    
+    // 긴 주제의 경우 핵심 단어만 추출 시도
+    const words = cleanedTopic.split(' ').filter(word => word.length > 1);
+    const meaningfulWords = words.filter(word => 
+      !stopWords.includes(word) && 
+      word.length >= 2 && 
+      word.length <= 15
+    );
+    
+    console.log('Meaningful words:', meaningfulWords);
+    return meaningfulWords.slice(0, 2); // 최대 2개까지만
   };
 
   // 기본 태그들을 생성 (keyword는 항상 포함)
   const baseTags = [keyword];
   
-  // 주제에서 추출한 핵심 키워드 (조건부 포함)
+  // 주제에서 추출한 핵심 키워드
   const topicKeywords = extractKeywordsFromTopic(topic);
+  console.log('Extracted topic keywords:', topicKeywords);
   
   const additionalTags = [
     '신청방법',
@@ -164,8 +190,9 @@ const getTagsSection = (topic: string, keyword: string): string => {
     '생활정보'
   ];
   
-  // 중복 제거 후 태그 조합 (topic 전체는 제외하고 추출된 키워드만 포함)
+  // 중복 제거 후 태그 조합
   const allTags = [...new Set([...baseTags, ...topicKeywords, ...additionalTags])];
+  console.log('Final tags:', allTags);
   
   return `
 <div style="margin-top: 30px; padding: 15px 0;">

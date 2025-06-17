@@ -23,11 +23,10 @@ export const useRefactoredAppController = () => {
   const canUseFeatures = hasAccess || isAdmin;
   
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
-  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState, canUseFeatures);
+  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState,
-    saveAppState,
-    canUseFeatures
+    saveAppState
   );
   
   const {
