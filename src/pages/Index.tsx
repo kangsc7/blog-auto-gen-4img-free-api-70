@@ -66,21 +66,21 @@ const Index = () => {
 
       <div className="container mx-auto mt-20 mb-4">
         <div className="flex items-center justify-between">
-          {/* 관리자 전용: 사용자 관리 페이지 링크 */}
-          {isAdmin ? (
-            <Link
-              to="/admin/users"
-              className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
-            >
-              <Shield className="h-5 w-5 text-red-500" />
-              <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
-            </Link>
-          ) : (
-            <div></div>
-          )}
+          {/* 관리자에게만 보이는 사용자 관리 페이지 링크 */}
+          <div className="flex-shrink-0">
+            {isAdmin && (
+              <Link
+                to="/admin/users"
+                className="inline-flex items-center gap-2 bg-white p-3 rounded-lg shadow-md hover:bg-gray-50 transition-colors border-2 border-red-500"
+              >
+                <Shield className="h-5 w-5 text-red-500" />
+                <span className="font-semibold text-gray-800">사용자 관리 페이지</span>
+              </Link>
+            )}
+          </div>
           
           {/* 모든 사용자: 중복 설정 및 초기화 컨트롤 */}
-          <div className="flex items-start gap-8">
+          <div className="flex items-center gap-8 ml-auto">
             <div className="text-center">
               <ToggleGroup
                 type="single"
