@@ -126,13 +126,58 @@ export const getEnhancedArticlePrompt = async ({
         - 독자들이 "똑같은 내용의 반복"이라고 느끼지 않도록 다양한 표현을 사용하세요
         - 키워드 밀도는 자연스럽게 1.5-2% 수준으로 유지하되, 억지로 반복하지 마세요
 
-        **🚨 공식 사이트 자동 링크 연결 🚨**
-        다음 공식 사이트들은 언급 시 자동으로 하이퍼링크를 적용해주세요 (URL 주소 표기 금지):
+        **🚨 모든 공식 사이트 자동 링크 연결 + 주제별 관련 공인 사이트 추가 🚨**
+        
+        **정부 및 공공기관 자동 링크 (URL 주소 표기 금지):**
         - 홈택스 → <a href="https://www.hometax.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">홈택스</a>
         - 법제처 → <a href="https://www.law.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">법제처</a>
         - 국세청 → <a href="https://www.nts.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">국세청</a>
         - 보건복지부 → <a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>
         - 행정안전부 → <a href="https://www.mois.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">행정안전부</a>
+        - 기획재정부 → <a href="https://www.moef.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">기획재정부</a>
+        - 고용노동부 → <a href="https://www.moel.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">고용노동부</a>
+        - 중소벤처기업부 → <a href="https://www.mss.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">중소벤처기업부</a>
+        - 여성가족부 → <a href="https://www.mogef.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">여성가족부</a>
+        - 교육부 → <a href="https://www.moe.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">교육부</a>
+        - 국민연금공단 → <a href="https://www.nps.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">국민연금공단</a>
+        - 건강보험공단 → <a href="https://www.nhis.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">건강보험공단</a>
+        - 근로복지공단 → <a href="https://www.comwel.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">근로복지공단</a>
+        - 신용보증기금 → <a href="https://www.kodit.co.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">신용보증기금</a>
+        - 기술보증기금 → <a href="https://www.kibo.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">기술보증기금</a>
+        - 한국장학재단 → <a href="https://www.kosaf.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">한국장학재단</a>
+        - 소상공인시장진흥공단 → <a href="https://www.semas.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">소상공인시장진흥공단</a>
+        - 청년창업지원단 → <a href="https://www.k-startup.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">청년창업지원단</a>
+        
+        **주제별 관련 공인 사이트 추가 링크 (SEO 강화용):**
+        글의 주제와 관련된 다음과 같은 공인 사이트들도 자연스럽게 본문에 포함하여 SEO 점수를 높여주세요:
+        
+        **금융/경제 관련 주제시:**
+        - 한국은행 → <a href="https://www.bok.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">한국은행</a>
+        - 금융감독원 → <a href="https://www.fss.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">금융감독원</a>
+        - 예금보험공사 → <a href="https://www.kdic.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">예금보험공사</a>
+        
+        **건강/의료 관련 주제시:**
+        - 질병관리청 → <a href="https://www.kdca.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">질병관리청</a>
+        - 식품의약품안전처 → <a href="https://www.mfds.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">식품의약품안전처</a>
+        
+        **교육 관련 주제시:**
+        - 한국교육과정평가원 → <a href="https://www.kice.re.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">한국교육과정평가원</a>
+        - 한국직업능력개발원 → <a href="https://www.krivet.re.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">한국직업능력개발원</a>
+        
+        **창업/사업 관련 주제시:**
+        - 창업진흥원 → <a href="https://www.kised.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">창업진흥원</a>
+        - 중소기업진흥공단 → <a href="https://www.sbc.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">중소기업진흥공단</a>
+        
+        **노동/고용 관련 주제시:**
+        - 한국고용정보원 → <a href="https://www.keis.or.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">한국고용정보원</a>
+        - 워크넷 → <a href="https://www.work.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">워크넷</a>
+        
+        **🚨 SEO 최적화를 위한 외부 링크 규칙 🚨**
+        - 본문에 최소 5-7개의 권위 있는 외부 링크를 자연스럽게 포함해주세요
+        - 각 섹션마다 최소 1개 이상의 관련 공식 사이트 링크를 포함해주세요
+        - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
+        - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
+        - 주제와 직접 관련된 공인 사이트들을 우선적으로 선택해주세요
         
         **🚨 고급 정보 제공 의무 🚨**
         각 섹션에서는 다음을 반드시 포함해야 합니다:
@@ -164,7 +209,7 @@ export const getEnhancedArticlePrompt = async ({
         2. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요.
 
         3. **공식 링크 필수 포함 및 하이퍼링크 적용**: 
-        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 3-4개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
+        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 5-7개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
 
         4. **깊이 있는 전문 콘텐츠**: 
         - "알아보겠어요", "확인해보세요" 같은 애매한 표현 금지
@@ -209,18 +254,20 @@ ${htmlTemplate}
         - **3번째 섹션에는 주의사항 카드, 5번째 섹션에는 FAQ 카드가 반드시 포함되어야 합니다**
         - **6번째 섹션은 격려와 용기를 주는 내용으로 작성되어야 합니다**
         - **외부 링크 정보([REFERENCE_TEXT])가 6번째 섹션에 중앙 정렬된 박스로 표시되어야 합니다**
+        - **본문에 최소 5-7개의 권위 있는 공식 사이트 하이퍼링크가 포함되어야 합니다**
         - 동적 생성된 소제목의 의도에 맞는 전문적인 내용으로 각 섹션을 작성해야 합니다
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
         - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
         - 자연스러운 키워드 "${naturalKeyword}"나 맥락적 표현을 사용하세요
-        - 공식 링크가 최소 3-4개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
+        - 공식 링크가 최소 5-7개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
         - 모든 내용이 구체적이고 실용적인 고급 정보여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
         - "알아보겠어요" 같은 애매한 표현 대신 구체적인 정보를 제공해야 합니다
         - 각 섹션마다 동일한 키워드나 표현을 반복하지 말고 자연스러운 다양성을 유지해야 합니다
-        - 홈택스, 법제처 등 공식 사이트는 하이퍼링크로 연결하되 URL 주소는 표기하지 마세요
+        - 모든 공식 사이트는 하이퍼링크로 연결하되 URL 주소는 표기하지 마세요
+        - 주제와 관련된 공인 사이트들을 각 섹션에 자연스럽게 포함하여 SEO 점수를 높여야 합니다
       `;
 };
 
