@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -6,13 +7,23 @@ import { supabase } from '@/integrations/supabase/client';
 export const useImagePromptGenerator = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
-  huggingFaceApiKey?: string
+  huggingFaceApiKey?: string,
+  canUseFeatures: boolean = true
 ) => {
   const { toast } = useToast();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isDirectlyGenerating, setIsDirectlyGenerating] = useState(false);
 
   const createImagePrompt = async (inputText: string): Promise<boolean> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
     if (!inputText.trim()) {
       toast({ title: "입력 오류", description: "프롬프트를 생성할 텍스트를 입력해주세요.", variant: "destructive" });
       return false;
@@ -99,6 +110,15 @@ ${inputText}
   };
 
   const generateDirectImage = async (): Promise<string | null> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return null;
+    }
+
     if (!appState.imagePrompt) {
       toast({ title: "프롬프트 필요", description: "먼저 이미지 프롬프트를 생성해주세요.", variant: "destructive" });
       return null;

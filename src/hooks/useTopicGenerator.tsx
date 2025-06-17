@@ -25,13 +25,23 @@ const calculateSimilarity = (str1: string, str2: string): number => {
 export const useTopicGenerator = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
-  preventDuplicates: boolean
+  preventDuplicates: boolean,
+  canUseFeatures: boolean
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
   const [lastGenerationTime, setLastGenerationTime] = useState(0);
 
   const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return null;
+    }
+
     const rawKeyword = (keywordOverride || appState.keyword).trim();
     const cleanedKeyword = rawKeyword.replace(/\s+/g, ' ').trim();
     

@@ -13,7 +13,7 @@ interface GenerationStatus {
 
 interface GenerationFunctions {
     generateTopics: () => Promise<string[] | null>;
-    generateArticle: (topic?: string) => Promise<string | null>;
+    generateArticle: (topic?: string) => Promise<string>;
     createImagePrompt: (text: string) => Promise<boolean>;
     generateDirectImage: () => Promise<string | null>;
 }

@@ -71,14 +71,14 @@ export const useRefactoredAppController = () => {
     }
   }, [session?.user?.email, saveAppState]);
 
-  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }) => {
+  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string> => {
     if (!canUseFeatures) {
       toast({
         title: "접근 제한",
         description: "이 기능을 사용할 권한이 없습니다.",
         variant: "destructive"
       });
-      return Promise.resolve();
+      return Promise.resolve('');
     }
     
     return generateArticle({
@@ -103,7 +103,7 @@ export const useRefactoredAppController = () => {
 
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
 
-  const generateArticleForManual = (topic?: string) => {
+  const generateArticleForManual = (topic?: string): Promise<string> => {
     return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
