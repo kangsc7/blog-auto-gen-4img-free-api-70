@@ -98,7 +98,7 @@ export const AdsenseManager: React.FC<AdsenseManagerProps> = ({
         <CardTitle className="flex items-center justify-between text-purple-700">
           <span>중간 광고 삽입 설정</span>
           <Switch
-            checked={appState.isAdsenseEnabled}
+            checked={appState.isAdsenseEnabled || false}
             onCheckedChange={handleToggleAdsense}
           />
         </CardTitle>

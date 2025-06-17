@@ -26,16 +26,18 @@ const getClosingSection = (): string => {
   </div>`;
 };
 
-// 태그 섹션 생성
+// 태그 섹션 생성 - 7개로 제한하고 "태그:" 텍스트 제거
 const getTagsSection = (tags: string[]): string => {
   if (!tags || tags.length === 0) return '';
   
-  const tagElements = tags.map(tag => 
+  // 태그를 7개로 제한
+  const limitedTags = tags.slice(0, 7);
+  
+  const tagElements = limitedTags.map(tag => 
     `<span style="background: #e3f2fd; color: #1976d2; padding: 8px 16px; border-radius: 20px; margin: 5px; display: inline-block; font-size: 14px;">#${tag.trim()}</span>`
   ).join('');
   
   return `<div style="margin: 40px 0; padding: 25px; background: #fafafa; border-radius: 10px;">
-    <h4 style="color: #333; margin-bottom: 15px;">🏷️ 관련 태그</h4>
     <div>${tagElements}</div>
   </div>`;
 };
@@ -95,7 +97,7 @@ export const getHtmlTemplate = (
       </div>
 
       ${headings.map((heading, index) => `
-        <h2 style="color: ${colors.secondary} !important; border-left: 4px solid ${colors.secondary} !important; padding-left: 15px !important; margin-top: 40px !important;">
+        <h2 style="color: ${colors.primary} !important; border-left: 4px solid ${colors.primary} !important; padding-left: 15px !important; margin-top: 40px !important; font-size: 24px !important; font-weight: bold !important;">
           ${heading.emoji} ${heading.title}
         </h2>
         <div>[SECTION_CONTENT_${index + 1}]</div>
@@ -110,7 +112,7 @@ export const getHtmlTemplate = (
       </div>
 
       <div style="margin: 40px 0 !important;">
-        <p style="font-size: 14px !important; color: #666 !important;">태그: [GENERATED_TAGS]</p>
+        <p style="font-size: 14px !important; color: #666 !important;">[GENERATED_TAGS]</p>
       </div>
     </div>
   `;

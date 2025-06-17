@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
@@ -70,7 +71,7 @@ export const useKeywordGenerator = (appState: AppState) => {
             description: "지금 이 순간의 최신 트렌드를 AI로 분석합니다." 
         });
         
-        // 강화된 실시간 트렌드 분석 프롬프트
+        // 강화된 실시간 트렌드 분석 프롬프트 - 과거 키워드 필터링 추가
         const realtimePrompt = `🚨 **중요: 정확한 현재 시점 분석 요구사항** 🚨
 
 **현재 정확한 시각: ${exactTime}**
@@ -81,29 +82,45 @@ export const useKeywordGenerator = (appState: AppState) => {
 3. 2023년, 2024년 이전 데이터는 절대 사용 금지
 4. 한국 시각 기준 최신 뉴스, 트렌드, 사회적 이슈 분석
 
+**과거 키워드 필터링 (절대 사용 금지):**
+- 탄핵, 윤석열 탄핵, 이재명, 한동훈 등 정치인 관련
+- 코로나, 팬데믹 등 과거 이슈
+- 2024년 이전의 모든 정치적 사건
+
 **생성 기준:**
-- 현재 한국에서 화제가 되고 있는 실시간 이슈
+- 현재 한국에서 화제가 되고 있는 실시간 이슈 (정치 제외)
 - 온라인 커뮤니티에서 논의되는 최신 주제
-- 정부 정책, 경제 동향, 사회 현상 중 최신 발생 사항
-- 연예, 스포츠, IT 분야의 오늘 발생한 이슈
+- 경제 동향, 사회 현상, 기술 분야의 오늘 발생한 이슈
+- 연예, 스포츠, IT 분야의 최신 발생 사항
 
 다음 중복 방지를 위한 랜덤 카테고리에서 선택:
-${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테크' : Math.random() < 0.6 ? '사회/문화' : Math.random() < 0.8 ? '기술/IT' : '생활/건강'}
+${Math.random() < 0.2 ? '경제/재테크' : Math.random() < 0.4 ? '기술/IT' : Math.random() < 0.6 ? '사회/문화' : Math.random() < 0.8 ? '생활/건강' : '연예/스포츠'}
 
 **결과물:** 15자 이내의 검색 가능한 한국어 키워드 1개만 제공 (년도 포함 금지)
 
-**예시 형태:** "○○○ 새로운 정책", "△△△ 논란", "□□□ 혜택 확대" 등`;
+**예시 형태:** "○○○ 새로운 정책", "△△△ 혜택 확대", "□□□ 서비스 개선" 등`;
 
         console.log('실시간 트렌드 분석 프롬프트:', realtimePrompt);
         
         let result = await callGeminiForKeyword(realtimePrompt);
         
         if (result) {
-            console.log(`실시간 키워드 생성 성공 (${exactTime}):`, result);
-            toast({ 
-                title: "🔥 실시간 트렌드 키워드 완성", 
-                description: `"${result}" - ${exactTime} 기준 최신 분석` 
-            });
+            // 과거 키워드 필터링
+            const bannedKeywords = ['탄핵', '윤석열', '이재명', '한동훈', '코로나', '팬데믹'];
+            const hasBannedKeyword = bannedKeywords.some(banned => 
+                result!.toLowerCase().includes(banned.toLowerCase())
+            );
+            
+            if (hasBannedKeyword) {
+                console.log('과거 키워드 감지됨, 백업 키워드 생성');
+                result = await generateBackupKeyword();
+            } else {
+                console.log(`실시간 키워드 생성 성공 (${exactTime}):`, result);
+                toast({ 
+                    title: "🔥 실시간 트렌드 키워드 완성", 
+                    description: `"${result}" - ${exactTime} 기준 최신 분석` 
+                });
+            }
             return result;
         }
 
@@ -113,7 +130,8 @@ ${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테�
         한국인들이 관심 가질만한 ${exactTime} 기준 최신 키워드를 1개만 생성해주세요.
         
         반드시 오늘 날짜 ${currentYear}-${currentMonth}-${currentDay}의 실제 이슈여야 하며,
-        과거 데이터는 절대 사용하지 마세요.`;
+        과거 데이터는 절대 사용하지 마세요.
+        정치인 이름이나 탄핵 관련 키워드는 절대 사용하지 마세요.`;
         
         result = await callGeminiForKeyword(timeBasedPrompt);
         if (result) {
@@ -124,6 +142,28 @@ ${Math.random() < 0.2 ? '정치/정책' : Math.random() < 0.4 ? '경제/재테�
         }
         
         return result;
+    };
+
+    const generateBackupKeyword = async (): Promise<string | null> => {
+        const backupKeywords = [
+            '2025년 신용카드 혜택',
+            '새해 건강관리 방법',
+            '겨울철 에너지 절약',
+            '스마트폰 배터리 수명',
+            '홈트레이닝 추천',
+            '부동산 전망',
+            '투자 포트폴리오',
+            '온라인 쇼핑 혜택',
+            '건강보험 혜택 확대',
+            '전기차 충전소 확산'
+        ];
+        
+        const randomKeyword = backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
+        toast({ 
+            title: "백업 키워드 생성", 
+            description: `"${randomKeyword}" - 안전한 현재 진행형 이슈` 
+        });
+        return randomKeyword;
     };
 
     const generateEvergreenKeyword = async (): Promise<string | null> => {

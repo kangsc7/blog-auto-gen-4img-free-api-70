@@ -1,9 +1,7 @@
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { FileText } from 'lucide-react';
 
 interface ArticlePreviewProps {
   generatedContent: string;
@@ -16,108 +14,49 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   isGeneratingContent,
   selectedTopic,
 }) => {
-  const { toast } = useToast();
-  const editableDivRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (editableDivRef.current) {
-      editableDivRef.current.innerHTML = generatedContent;
-    }
-  }, [generatedContent]);
-
-  const handleCopyToClipboard = () => {
-    if (!editableDivRef.current?.innerHTML) {
-        toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
-        return;
-    }
-    const htmlToCopy = editableDivRef.current.innerHTML;
-    navigator.clipboard.writeText(htmlToCopy).then(() => {
-      toast({ title: "복사 완료", description: `수정된 HTML이 클립보드에 복사되었습니다.` });
-    }).catch(() => {
-      toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
-    });
-  };
-
-  const handleDownloadHTML = () => {
-    if (!editableDivRef.current?.innerHTML) {
-      toast({ title: "다운로드 오류", description: "다운로드할 콘텐츠가 없습니다.", variant: "destructive" });
-      return;
-    }
-    const htmlToDownload = editableDivRef.current.innerHTML;
-
-    const blob = new Blob([htmlToDownload], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const filename = selectedTopic ? selectedTopic.replace(/[^a-zA-Z0-9가-힣]/g, '_') : 'article';
-    a.download = `${filename}_edited.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
-  };
-
   return (
-    <Card id="article-preview" className="shadow-md">
+    <Card className="shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center text-green-700">
-            <Edit className="h-5 w-5 mr-2" />
-            블로그 글 미리보기 (수정 가능)
-          </span>
-          <div className="flex space-x-2">
-            {generatedContent && !isGeneratingContent && (
-              <>
-                <Button 
-                  onClick={handleCopyToClipboard}
-                  size="sm"
-                  variant="outline"
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                >
-                  <ClipboardCopy className="h-4 w-4 mr-1" />
-                  HTML 복사
-                </Button>
-                <Button 
-                  onClick={handleDownloadHTML}
-                  size="sm"
-                  variant="outline"
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  다운로드
-                </Button>
-              </>
-            )}
-          </div>
+        <CardTitle className="flex items-center text-green-700">
+          <FileText className="h-5 w-5 mr-2" />
+          블로그 글 미리보기
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isGeneratingContent ? (
-          <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
-            <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
-            <p className="font-semibold text-lg">
-              <span className="font-bold text-blue-600 animate-pulse inline-block transform transition-all duration-500 hover:scale-110">
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite]">파</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.05s]">코</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.1s]">월</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.15s]">드</span>
-              </span>가 글을 생성하고 있습니다...
-            </p>
-            <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
+          <div className="text-center py-8">
+            <div className="inline-flex items-center space-x-2">
+              <span className="font-bold text-blue-600 animate-wave">파코월드</span>
+              <span className="text-gray-600">가 매력적인 블로그 글을 작성중입니다...</span>
+            </div>
+            <div className="mt-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            </div>
+            <style jsx>{`
+              @keyframes wave {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+              }
+              .animate-wave {
+                animation: wave 1.5s ease-in-out infinite;
+                display: inline-block;
+              }
+            `}</style>
           </div>
         ) : generatedContent ? (
-          <div
-            ref={editableDivRef}
-            contentEditable={true}
+          <div 
+            className="prose prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: generatedContent }}
-            className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            suppressContentEditableWarning={true}
           />
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <Edit className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>주제를 선택하고 글을 생성해보세요!</p>
+            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>주제를 선택하고 글 생성 버튼을 클릭해주세요.</p>
+            {selectedTopic && (
+              <p className="mt-2 text-sm">
+                선택된 주제: <span className="font-semibold text-gray-700">{selectedTopic}</span>
+              </p>
+            )}
           </div>
         )}
       </CardContent>
