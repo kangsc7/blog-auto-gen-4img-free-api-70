@@ -1,7 +1,9 @@
+
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getHtmlTemplate } from '@/lib/htmlTemplate';
 import { generateDynamicHeadings } from '@/lib/dynamicHeadings';
+import { WebCrawlerService } from '@/lib/webCrawler';
 import { AppState } from '@/types';
 
 interface PixabayConfig {
@@ -32,6 +34,19 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
     try {
       setIsGeneratingContent(true);
       
+      console.log('글 생성 시작:', { finalTopic, finalKeyword });
+
+      // 웹 크롤링으로 최신 정보 수집 (실패해도 계속 진행)
+      let additionalInfo = '';
+      try {
+        console.log('웹 크롤링 시작...');
+        additionalInfo = await WebCrawlerService.crawlForKeyword(finalKeyword, appState.apiKey);
+        console.log('웹 크롤링 완료');
+      } catch (crawlError) {
+        console.error('웹 크롤링 실패, 기본 정보로 진행:', crawlError);
+        additionalInfo = `${finalKeyword}에 대한 기본 정보를 바탕으로 글을 작성합니다.`;
+      }
+      
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -41,16 +56,20 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           topic: finalTopic,
           keyword: finalKeyword,
           apiKey: appState.apiKey,
+          additionalInfo: additionalInfo, // 웹 크롤링 정보 추가
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API 요청 실패: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API 요청 실패:', response.status, errorText);
+        throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
 
       if (!data || !data.content) {
+        console.error('API 응답 데이터 오류:', data);
         throw new Error('API 응답에 content가 없습니다.');
       }
 
@@ -58,33 +77,48 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
 
       // Pixabay API 키가 유효하면 이미지 검색 및 추가
       if (pixabayConfig?.validated && pixabayConfig?.key) {
-        const pixabayResponse = await fetch('/api/get-image', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            topic: finalTopic,
-            apiKey: pixabayConfig.key,
-          }),
-        });
+        try {
+          console.log('Pixabay 이미지 검색 시작...');
+          const pixabayResponse = await fetch('/api/get-image', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              topic: finalTopic,
+              apiKey: pixabayConfig.key,
+            }),
+          });
 
-        if (pixabayResponse.ok) {
-          const pixabayData = await pixabayResponse.json();
-          if (pixabayData.imageUrl) {
-            generatedContent += `<img src="${pixabayData.imageUrl}" alt="${finalTopic}" style="margin: 20px 0; max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />`;
+          if (pixabayResponse.ok) {
+            const pixabayData = await pixabayResponse.json();
+            if (pixabayData.imageUrl) {
+              generatedContent += `<img src="${pixabayData.imageUrl}" alt="${finalTopic}" style="margin: 20px 0; max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />`;
+              console.log('Pixabay 이미지 추가 완료');
+            }
+          } else {
+            console.error('Pixabay API 요청 실패:', pixabayResponse.statusText);
           }
-        } else {
-          console.error('Pixabay API 요청 실패:', pixabayResponse.statusText);
+        } catch (pixabayError) {
+          console.error('Pixabay 이미지 처리 중 오류:', pixabayError);
+          // 이미지 실패해도 글 생성은 계속 진행
         }
       }
 
-      // 동적 소제목 생성 및 HTML 구조에 맞게 변환 - Fix: Correct parameter order
-      const dynamicHeadings = await generateDynamicHeadings(
-        finalKeyword, 
-        finalTopic, 
-        appState.huggingFaceApiKey || ''
-      );
+      // 동적 소제목 생성 및 HTML 구조에 맞게 변환
+      let dynamicHeadings = '';
+      try {
+        console.log('동적 소제목 생성 시작...');
+        dynamicHeadings = await generateDynamicHeadings(
+          finalKeyword, 
+          finalTopic, 
+          appState.huggingFaceApiKey || ''
+        );
+        console.log('동적 소제목 생성 완료');
+      } catch (headingError) {
+        console.error('동적 소제목 생성 실패:', headingError);
+        dynamicHeadings = `<h2>${finalTopic} 완전 가이드</h2><h2>${finalKeyword} 활용 방법</h2><h2>실제 적용 사례</h2>`;
+      }
 
       // 최종 HTML 생성 시 AdSense 설정 포함
       const finalHtml = getHtmlTemplate(
@@ -97,6 +131,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         appState.adSenseSettings // AdSense 설정 추가
       );
 
+      console.log('글 생성 완료');
       saveAppState({ generatedContent: finalHtml });
       return finalHtml;
 
@@ -104,7 +139,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       console.error('글 생성 중 오류 발생:', error);
       toast({
         title: "글 생성 오류",
-        description: error.message || "글을 생성하는 동안 오류가 발생했습니다.",
+        description: error.message || "글을 생성하는 동안 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive"
       });
       return '';
