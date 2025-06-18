@@ -15,7 +15,6 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager 올바른 단일 파라미터 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState,
@@ -28,7 +27,6 @@ export const useRefactoredAppController = () => {
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
-  // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
   const topicControls = useTopicControls(appState, saveAppState);
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
@@ -52,18 +50,35 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 추가
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
 
-  // 주제 선택 시 확인 다이얼로그 표시
+  // 주제 선택 시 즉시 글 생성 시작 (확인 다이얼로그 제거)
   const handleTopicSelect = (topic: string) => {
-    console.log('주제 선택됨:', topic);
-    setPendingTopic(topic);
-    setShowTopicConfirmDialog(true);
+    console.log('주제 선택 및 즉시 글 생성 시작:', topic);
+    
+    if (!topic) {
+      console.error('선택된 주제가 없습니다');
+      return;
+    }
+    
+    try {
+      // 1. 주제 선택 (appState 업데이트)
+      topicControls.selectTopic(topic);
+      
+      // 2. 즉시 글 생성 시작
+      console.log('자동 글 생성 시작:', { topic, keyword: appState.keyword });
+      generateArticle({ topic, keyword: appState.keyword });
+      
+      // 3. 주제 선택 다이얼로그 닫기
+      setShowTopicSelectionDialog(false);
+      
+    } catch (error) {
+      console.error('주제 선택 및 글 생성 중 오류:', error);
+    }
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 (레거시 - 사용되지 않음)
   const handleTopicConfirm = () => {
     console.log('주제 확인 및 선택:', pendingTopic);
     
@@ -73,25 +88,16 @@ export const useRefactoredAppController = () => {
     }
     
     try {
-      // 1. 먼저 주제를 선택 (appState 업데이트)
-      console.log('topicControls.selectTopic 호출:', pendingTopic);
       topicControls.selectTopic(pendingTopic);
-      
-      // 2. 다이얼로그 닫기
       setShowTopicConfirmDialog(false);
-      
-      // 3. 즉시 글 생성 시작
-      console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
       generateArticle({ topic: pendingTopic, keyword: appState.keyword });
-      
-      // 4. 상태 초기화
       setPendingTopic('');
     } catch (error) {
       console.error('주제 확인 처리 중 오류:', error);
     }
   };
 
-  // 주제 확인 다이얼로그 취소
+  // 주제 확인 다이얼로그 취소 (레거시 - 사용되지 않음)
   const handleTopicCancel = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
@@ -103,7 +109,6 @@ export const useRefactoredAppController = () => {
     copyToClipboard(markdown, "마크다운");
   };
 
-  // 통합된 중단 기능 - 원클릭과 일반 글 생성 모두 중단
   const handleUnifiedStop = () => {
     console.log('통합 중단 버튼 클릭 - 상태:', { 
       isOneClickGenerating, 
@@ -160,12 +165,12 @@ export const useRefactoredAppController = () => {
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick: handleUnifiedStop, // 통합된 중단 기능 사용
+    handleStopOneClick: handleUnifiedStop,
     generationStatus,
     generationFunctions,
     topicControls: {
       ...topicControls,
-      selectTopic: handleTopicSelect, // 주제 선택 시 확인 다이얼로그 표시
+      selectTopic: handleTopicSelect, // 즉시 글 생성 시작하는 로직
     },
     utilityFunctions,
     handleTopicConfirm,
