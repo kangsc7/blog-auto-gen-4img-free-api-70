@@ -14,9 +14,9 @@ interface GenerationStatus {
 }
 
 interface GenerationFunctions {
-    generateTopics: () => Promise<string[] | null>;
-    generateArticle: (topic?: string) => Promise<string | null>;
-    createImagePrompt: (text: string) => Promise<boolean>;
+    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
+    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
+    createImagePrompt: (inputText: string) => Promise<boolean>;
     generateDirectImage: () => Promise<string | null>;
 }
 

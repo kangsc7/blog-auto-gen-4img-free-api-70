@@ -14,10 +14,10 @@ interface MainContentSectionProps {
     isDirectlyGenerating: boolean;
   };
   generationFunctions: {
-    generateTopics: () => void;
-    generateArticle: () => Promise<string>;
-    createImagePrompt: () => void;
-    generateDirectImage: () => void;
+    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
+    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
+    createImagePrompt: (inputText: string) => Promise<boolean>;
+    generateDirectImage: () => Promise<string | null>;
   };
   topicControls: {
     manualTopic: string;
@@ -53,6 +53,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
           generationStatus={generationStatus}
           generationFunctions={generationFunctions}
           topicControls={topicControls}
+          utilityFunctions={utilityFunctions}
           preventDuplicates={preventDuplicates}
         />
         <RightContent

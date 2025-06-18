@@ -30,8 +30,10 @@ export const useRefactoredAppController = () => {
   );
 
   // generateArticleForManual을 먼저 정의
-  const generateArticleForManual = (topic?: string): Promise<string> => {
-    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
+  const generateArticleForManual = (options?: { topic?: string; keyword?: string }): Promise<string | null> => {
+    const topic = options?.topic || appState.selectedTopic;
+    const keyword = options?.keyword || appState.keyword;
+    return generateArticleWithPixabay({ topic, keyword });
   };
   
   const {
@@ -43,8 +45,7 @@ export const useRefactoredAppController = () => {
     appState, 
     saveAppState, 
     preventDuplicates: appState.preventDuplicates,
-    canUseFeatures,
-    generateArticle: generateArticleForManual
+    canUseFeatures
   });
 
   const {
@@ -80,14 +81,14 @@ export const useRefactoredAppController = () => {
     }
   }, [session?.user?.email, saveAppState]);
 
-  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string> => {
+  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string | null> => {
     if (!canUseFeatures) {
       toast({
         title: "접근 제한",
         description: "이 기능을 사용할 권한이 없습니다.",
         variant: "destructive"
       });
-      return Promise.resolve('');
+      return Promise.resolve(null);
     }
     
     return generateArticle({
@@ -111,7 +112,7 @@ export const useRefactoredAppController = () => {
     }
     
     try {
-      await generateArticleForManual(topic);
+      await generateArticleForManual({ topic });
     } catch (error) {
       console.error('글 생성 실패:', error);
       toast({
