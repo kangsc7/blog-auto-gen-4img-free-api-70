@@ -44,7 +44,9 @@ const STORAGE_KEYS = {
   SELECTED_TOPIC: 'blog_selected_topic',
   TOPICS: 'blog_topics',
   KEYWORD: 'blog_keyword',
-  COLOR_THEME: 'blog_color_theme'
+  COLOR_THEME: 'blog_color_theme',
+  VISUAL_SUMMARY_ENABLED: 'blog_visual_summary_enabled',
+  SECTION_WORD_LIMIT: 'blog_section_word_limit'
 };
 
 export const useAppStateManager = () => {
@@ -54,7 +56,7 @@ export const useAppStateManager = () => {
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
 
-  // localStorage에서 블로그 관련 데이터 로드 - 참조 링크와 문장 영구 보존
+  // localStorage에서 블로그 관련 데이터 로드 - 고급 설정 포함
   const loadBlogDataFromStorage = useCallback(() => {
     try {
       const editorContent = localStorage.getItem(STORAGE_KEYS.EDITOR_CONTENT);
@@ -66,12 +68,18 @@ export const useAppStateManager = () => {
       const referenceLink = localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '';
       const referenceSentence = localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '';
       
-      console.log('앱 상태 관리자 - 블로그 데이터 로드 (영구 보존):', {
+      // 고급 설정도 보존
+      const visualSummaryEnabled = localStorage.getItem(STORAGE_KEYS.VISUAL_SUMMARY_ENABLED) === 'true';
+      const sectionWordLimit = localStorage.getItem(STORAGE_KEYS.SECTION_WORD_LIMIT) || '200-270';
+      
+      console.log('앱 상태 관리자 - 블로그 데이터 로드 (고급 설정 포함):', {
         hasEditorContent: !!editorContent,
         hasGeneratedContent: !!generatedContent,
         finalContentLength: finalContent.length,
         referenceLink,
-        referenceSentence: referenceSentence.substring(0, 50) + '...'
+        referenceSentence: referenceSentence.substring(0, 50) + '...',
+        visualSummaryEnabled,
+        sectionWordLimit
       });
 
       return {
@@ -81,7 +89,10 @@ export const useAppStateManager = () => {
         selectedTopic: localStorage.getItem(STORAGE_KEYS.SELECTED_TOPIC) || '',
         topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
         keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
-        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || ''
+        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || '',
+        // 고급 설정 복원
+        visualSummaryEnabled,
+        sectionWordLimit
       };
     } catch (error) {
       console.error('블로그 데이터 로드 실패:', error);
@@ -89,7 +100,7 @@ export const useAppStateManager = () => {
     }
   }, []);
 
-  // localStorage에 블로그 관련 데이터 저장 - 참조 링크와 문장 영구 보존
+  // localStorage에 블로그 관련 데이터 저장 - 고급 설정 포함
   const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
     try {
       if (data.generatedContent !== undefined) {
@@ -116,6 +127,14 @@ export const useAppStateManager = () => {
       }
       if (data.colorTheme !== undefined) {
         localStorage.setItem(STORAGE_KEYS.COLOR_THEME, data.colorTheme);
+      }
+      
+      // 고급 설정 저장
+      if ((data as any).visualSummaryEnabled !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.VISUAL_SUMMARY_ENABLED, String((data as any).visualSummaryEnabled));
+      }
+      if ((data as any).sectionWordLimit !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.SECTION_WORD_LIMIT, (data as any).sectionWordLimit);
       }
     } catch (error) {
       console.error('블로그 데이터 저장 실패:', error);
@@ -148,20 +167,35 @@ export const useAppStateManager = () => {
     return finalState;
   }, []);
 
-  // 앱 상태 초기화 - 한 번만 실행되도록 보장하되 API 키와 블로그 데이터는 보존
+  // 앱 상태 초기화 - 고급 설정 포함하여 즉시 로드
   useEffect(() => {
     if (!hasInitialized.current && !initializationLock.current) {
-      console.log('🚀 useAppStateManager 초기화 시작 (API 키 및 블로그 데이터 영구 보존)');
+      console.log('🚀 useAppStateManager 즉시 초기화 시작 (고급 설정 포함)');
       initializationLock.current = true;
       
-      const storedApiKeys = loadApiKeysFromStorage();
+      // 동기적으로 모든 데이터 로드
+      const storedApiKeys = {
+        apiKey: getApiKeyFromStorage('GEMINI') || DEFAULT_API_KEYS.GEMINI,
+        pixabayApiKey: getApiKeyFromStorage('PIXABAY') || DEFAULT_API_KEYS.PIXABAY,
+        huggingFaceApiKey: getApiKeyFromStorage('HUGGING_FACE') || DEFAULT_API_KEYS.HUGGING_FACE,
+        isApiKeyValidated: getValidationStatusFromStorage('GEMINI') ?? true,
+        isPixabayApiKeyValidated: getValidationStatusFromStorage('PIXABAY') ?? true,
+        isHuggingFaceApiKeyValidated: getValidationStatusFromStorage('HUGGING_FACE') ?? true,
+      };
+      
       const storedBlogData = loadBlogDataFromStorage();
       
       hasInitialized.current = true;
       
+      // 즉시 상태 설정 - 배치 업데이트로 성능 개선
       setAppState(prev => {
-        const newState = { ...prev, ...storedApiKeys, ...storedBlogData };
-        console.log('✅ 앱 상태 초기화 완료 (API 키 및 블로그 데이터 영구 보존):', newState);
+        const newState = { 
+          ...prev, 
+          ...storedApiKeys, 
+          ...storedBlogData,
+          preventDuplicates: true // 기본값 유지
+        };
+        console.log('✅ 앱 상태 즉시 초기화 완료 (고급 설정 포함)');
         return newState;
       });
       
@@ -183,7 +217,7 @@ export const useAppStateManager = () => {
   }, [preventDuplicates]);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
-    console.log('💾 앱 상태 업데이트 요청 (API 키 및 블로그 데이터 영구 보존):', newState);
+    console.log('💾 앱 상태 업데이트 요청 (고급 설정 포함):', newState);
     
     // API 키 관련 상태가 변경되면 localStorage에도 즉시 저장하여 영구 보존
     if (newState.apiKey !== undefined) {
@@ -210,7 +244,7 @@ export const useAppStateManager = () => {
 
     setAppState(prev => {
       const updatedState = { ...prev, ...newState };
-      console.log('✅ 앱 상태 업데이트 완료 (API 키 및 블로그 데이터 영구 보존)');
+      console.log('✅ 앱 상태 업데이트 완료 (고급 설정 포함)');
       return updatedState;
     });
   }, [saveBlogDataToStorage]);
@@ -247,20 +281,21 @@ export const useAppStateManager = () => {
   }, [saveAppState, toast]);
 
   const resetApp = useCallback(() => {
-    console.log('🔄 앱 전체 초기화 (API 키와 참조 데이터는 보존, 블로그 데이터는 삭제)');
+    console.log('🔄 앱 즉시 초기화 (API 키와 참조 데이터는 보존, 블로그 데이터는 즉시 삭제)');
     
-    // API 키는 보존하고 다른 데이터만 초기화
+    // API 키는 보존하고 다른 데이터만 즉시 초기화
     const preservedKeys = preserveApiKeysOnReset();
     
-    // 블로그 관련 localStorage 데이터 삭제 (참조 데이터 제외)
+    // 블로그 관련 localStorage 데이터 즉시 삭제 (참조 데이터 제외)
     localStorage.removeItem(STORAGE_KEYS.GENERATED_CONTENT);
     localStorage.removeItem(STORAGE_KEYS.EDITOR_CONTENT);
     localStorage.removeItem(STORAGE_KEYS.SELECTED_TOPIC);
     localStorage.removeItem(STORAGE_KEYS.TOPICS);
     localStorage.removeItem(STORAGE_KEYS.KEYWORD);
     localStorage.removeItem(STORAGE_KEYS.COLOR_THEME);
-    // 참조 링크와 문장은 초기화하지 않음 (영구 보존)
+    // 참조 링크와 문장, 고급 설정은 초기화하지 않음 (영구 보존)
     
+    // 즉시 상태 초기화
     setAppState({
       ...defaultState,
       // API 키와 검증 상태는 보존
@@ -270,13 +305,14 @@ export const useAppStateManager = () => {
       isApiKeyValidated: preservedKeys.geminiValidated ?? true,
       isPixabayApiKeyValidated: preservedKeys.pixabayValidated ?? true,
       isHuggingFaceApiKeyValidated: preservedKeys.huggingFaceValidated ?? true,
-      // 참조 링크와 문장도 보존
+      // 참조 링크와 문장, 고급 설정도 보존
       referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
       referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
+      colorTheme: '', // 컬러 테마는 초기화
     });
     
     setPreventDuplicates(true);
-    toast({ title: "초기화 완료", description: "블로그 데이터가 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
+    toast({ title: "즉시 초기화 완료", description: "블로그 데이터가 즉시 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
   }, [toast]);
 
   return {

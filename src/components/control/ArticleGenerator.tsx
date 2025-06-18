@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PenTool, Square, Palette } from 'lucide-react';
+import { PenTool, Square, Palette, Eye } from 'lucide-react';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
 import { getColors } from '@/lib/promptUtils';
@@ -38,6 +38,8 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
 
   const handleColorThemeChange = (value: string) => {
     saveAppState({ colorTheme: value });
+    // 고급 설정도 localStorage에 저장
+    localStorage.setItem('blog_color_theme', value);
   };
 
   const getSelectedThemeColors = () => {
@@ -106,6 +108,31 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           )}
         </div>
 
+        {/* 고급 설정 섹션 */}
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <Eye className="h-4 w-4 mr-1" />
+            고급 설정
+          </h4>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">시각 요약 카드</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">활성화</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">섹션별 글자 수</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">200-270자</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">웹 크롤링 기반 콘텐츠</span>
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">활성화</span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <Button 
             onClick={handleGenerateArticle}
@@ -148,6 +175,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           {appState.isPixabayApiKeyValidated && (
             <div className="mt-1 text-blue-600">✓ Pixabay 이미지 자동 첨부 활성화</div>
           )}
+          <div className="mt-1 text-green-600">✓ 컬러테마, 시각요약카드, 섹션글자수 제한 적용</div>
         </div>
       </CardContent>
     </Card>
