@@ -25,16 +25,12 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const handleConfirm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleConfirm = () => {
     console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
     onConfirm();
   };
 
-  const handleCancel = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCancel = () => {
     console.log('TopicConfirmDialog handleCancel 호출됨');
     onCancel();
   };

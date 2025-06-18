@@ -11,7 +11,8 @@ interface UseAllApiKeysManagerProps {
   saveAppState: (newState: Partial<AppState>) => void;
 }
 
-export const useAllApiKeysManager = ({ appState, saveAppState }: UseAllApiKeysManagerProps) => {
+export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
+  const { appState, saveAppState } = props;
   const hasInitialized = useRef(false);
   const syncLock = useRef(false);
   

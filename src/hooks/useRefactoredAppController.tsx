@@ -15,7 +15,7 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager 올바른 파라미터 전달
+  // useAllApiKeysManager 올바른 단일 파라미터 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState,
@@ -28,6 +28,7 @@ export const useRefactoredAppController = () => {
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
+  // topicControls에 saveAppState 올바르게 전달
   const topicControls = useTopicControls(appState, saveAppState);
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
@@ -62,7 +63,7 @@ export const useRefactoredAppController = () => {
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 파라미터 제거
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
   const handleTopicConfirm = () => {
     console.log('주제 확인 및 선택:', pendingTopic);
     
@@ -71,7 +72,7 @@ export const useRefactoredAppController = () => {
       return;
     }
     
-    // 1. 먼저 주제를 선택 (appState 업데이트)
+    // 1. 먼저 주제를 선택 (appState 업데이트) - 올바른 selectTopic 함수 사용
     if (topicControls && typeof topicControls.selectTopic === 'function') {
       topicControls.selectTopic(pendingTopic);
     } else {
