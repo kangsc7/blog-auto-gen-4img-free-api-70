@@ -13,6 +13,7 @@ export const useArticleGenerator = (
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
   const cancelArticleGeneration = useRef(false);
+  const currentController = useRef<AbortController | null>(null);
 
   const generateArticle = async (
     options?: {
@@ -43,6 +44,9 @@ export const useArticleGenerator = (
 
     setIsGeneratingContent(true);
     cancelArticleGeneration.current = false;
+    
+    // AbortController 생성
+    currentController.current = new AbortController();
     
     // 글 생성 시작할 때 기존 콘텐츠와 이미지 프롬프트만 초기화
     saveAppState({ imagePrompt: '' });
@@ -95,6 +99,7 @@ export const useArticleGenerator = (
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: currentController.current.signal, // AbortController 신호 추가
       });
 
       if (cancelArticleGeneration.current) {
@@ -190,7 +195,15 @@ export const useArticleGenerator = (
     } catch (error) {
       console.error('글 생성 오류:', error);
       
-      const errorMessage = error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다.";
+      let errorMessage = "블로그 글 생성 중 오류가 발생했습니다.";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "사용자에 의해 중단되었습니다.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
       
       if (errorMessage === "사용자에 의해 중단되었습니다.") {
         toast({ 
@@ -209,15 +222,22 @@ export const useArticleGenerator = (
     } finally {
       setIsGeneratingContent(false);
       cancelArticleGeneration.current = false;
+      currentController.current = null;
     }
   };
 
-  // 글 생성 중단 함수
+  // 글 생성 중단 함수 (즉시 중단 기능 강화)
   const stopArticleGeneration = () => {
     cancelArticleGeneration.current = true;
+    
+    // 진행 중인 fetch 요청 중단
+    if (currentController.current) {
+      currentController.current.abort();
+    }
+    
     toast({
-      title: "글 생성 중단 요청",
-      description: "현재 진행 중인 글 생성을 중단하고 있습니다...",
+      title: "글 생성 즉시 중단",
+      description: "현재 진행 중인 글 생성을 즉시 중단했습니다.",
       variant: "default"
     });
   };

@@ -207,11 +207,11 @@ export const useOneClick = (
 
       console.log(`최신 트렌드 키워드 생성 시작 - 중복 방지 설정:`, preventDuplicates);
 
-      // 1단계: 키워드 생성
+      // 1단계: 키워드 생성 (재시도 로직 강화)
       toast({ title: `1단계: 최신 트렌드 키워드 생성`, description: `다양한 소스에서 최신 트렌드 키워드를 생성합니다...` });
       
       let keywordAttempts = 0;
-      const maxKeywordAttempts = 5;
+      const maxKeywordAttempts = 8; // 재시도 횟수 증가
       
       while (keywordAttempts < maxKeywordAttempts && !keyword) {
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -233,17 +233,27 @@ export const useOneClick = (
           
           keywordAttempts++;
           if (!keyword && keywordAttempts < maxKeywordAttempts) {
-            await sleep(1000);
+            await sleep(1500); // 대기 시간 증가
           }
         } catch (error) {
           console.error(`키워드 생성 시도 ${keywordAttempts + 1} 실패:`, error);
           keywordAttempts++;
-          await sleep(1000);
+          await sleep(1500);
         }
       }
 
+      // 백업 키워드 로직 강화
       if (!keyword) {
-        const backupKeywords = ['2025년 생활 트렌드', '디지털 생활 팁', '건강한 라이프스타일'];
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        const backupKeywords = [
+          `${currentYear}년 ${currentMonth}월 생활 트렌드`,
+          `${currentYear}년 디지털 생활 팁`,
+          `${currentYear}년 건강한 라이프스타일`,
+          `${currentMonth}월 실용 정보`,
+          `최신 생활 개선 방법`,
+          `현재 주목받는 생활 정보`
+        ];
         keyword = backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
         toast({ 
           title: "백업 키워드 사용", 
@@ -263,27 +273,60 @@ export const useOneClick = (
       await sleep(1500);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // 2단계: 주제 생성
+      // 2단계: 주제 생성 (재시도 로직 강화)
       toast({ title: "2단계: AI 주제 생성", description: "선택된 키워드로 다양한 블로그 주제를 생성합니다..." });
       
-      const topics = await generateTopics(keyword);
-      console.log(`생성된 주제들:`, topics);
+      let topics: string[] | null = null;
+      let topicAttempts = 0;
+      const maxTopicAttempts = 5; // 재시도 횟수 증가
       
+      while (topicAttempts < maxTopicAttempts && (!topics || topics.length === 0)) {
+        if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
+        
+        try {
+          console.log(`주제 생성 시도 ${topicAttempts + 1} - 키워드:`, keyword);
+          
+          // 중복 방지 설정을 일시적으로 비활성화하여 주제 생성 시도
+          if (topicAttempts >= 2 && preventDuplicates) {
+            console.log('주제 생성 실패로 인해 일시적으로 중복 검사 완화');
+            // 임시로 preventDuplicates를 false로 설정하여 주제 생성
+            saveAppState({ preventDuplicates: false });
+            topics = await generateTopics(keyword);
+            saveAppState({ preventDuplicates: true }); // 다시 복원
+          } else {
+            topics = await generateTopics(keyword);
+          }
+          
+          console.log(`생성된 주제들 (시도 ${topicAttempts + 1}):`, topics);
+          
+          if (!topics || topics.length === 0) {
+            toast({ 
+              title: "주제 생성 재시도", 
+              description: `주제 생성을 다시 시도합니다... (${topicAttempts + 1}/${maxTopicAttempts})` 
+            });
+          }
+          
+          topicAttempts++;
+          if ((!topics || topics.length === 0) && topicAttempts < maxTopicAttempts) {
+            await sleep(2000);
+          }
+        } catch (error) {
+          console.error(`주제 생성 시도 ${topicAttempts + 1} 실패:`, error);
+          topicAttempts++;
+          await sleep(2000);
+        }
+      }
+
       if (!topics || topics.length === 0) {
-        throw new Error("주제 생성에 실패했습니다.");
+        throw new Error(`${maxTopicAttempts}번 시도했지만 주제 생성에 실패했습니다. 다른 키워드로 시도하거나 잠시 후 다시 시도해주세요.`);
       }
 
       // 주제 생성 완료 후 팝업 표시
       setShowTopicSelectionDialog(true);
       
-      // 7초 후 자동으로 팝업 숨김
-      setTimeout(() => {
-        setShowTopicSelectionDialog(false);
-      }, 7000);
-
       toast({ 
         title: "주제 생성 완료!", 
-        description: "생성된 주제 목록에서 원하는 주제를 선택해주세요."
+        description: `${topics.length}개의 주제가 생성되었습니다. 원하는 주제를 선택해주세요.`
       });
 
     } catch (error) {
@@ -296,6 +339,7 @@ export const useOneClick = (
           variant: "default",
         });
       } else {
+        console.error('최신 이슈 생성 상세 오류:', error);
         toast({
           title: "최신 이슈 생성 실패",
           description: errorMessage,

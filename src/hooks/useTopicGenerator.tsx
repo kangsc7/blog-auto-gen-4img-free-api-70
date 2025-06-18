@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -51,11 +52,11 @@ export const useTopicGenerator = (
       return null;
     }
 
-    // 3초 딜레이 체크
+    // 3초 딜레이 체크 (완화)
     const currentTime = Date.now();
     const timeSinceLastGeneration = currentTime - lastGenerationTime;
-    if (timeSinceLastGeneration < 3000 && lastGenerationTime > 0) {
-      const remainingTime = Math.ceil((3000 - timeSinceLastGeneration) / 1000);
+    if (timeSinceLastGeneration < 2000 && lastGenerationTime > 0) {
+      const remainingTime = Math.ceil((2000 - timeSinceLastGeneration) / 1000);
       toast({
         title: "잠시만 기다려주세요",
         description: `${remainingTime}초 후에 다시 시도할 수 있습니다.`,
@@ -73,32 +74,55 @@ export const useTopicGenerator = (
       
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
+      // API 요청 타임아웃 설정
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: enhancedPrompt }] }],
           generationConfig: {
-            temperature: 0.1,
+            temperature: 0.2, // 온도 조정으로 안정성 향상
             maxOutputTokens: 2048,
+            topP: 0.8,
+            topK: 40,
           }
         })
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error?.message || `HTTP ${response.status}: API 요청 실패`;
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
+      
+      // API 응답 검증 강화
+      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.error('Gemini API 응답 오류:', data);
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
       }
       
       const generatedText = data.candidates[0].content.parts[0].text;
-      const newTopics = generatedText.split('\n')
+      console.log('Gemini API 원본 응답:', generatedText);
+      
+      // 텍스트 파싱 개선
+      const lines = generatedText.split('\n').filter(line => line.trim().length > 0);
+      const newTopics = lines
         .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
-        .filter(topic => topic.length > 10);
+        .filter(topic => topic.length > 5 && topic.length < 200)
+        .slice(0, count); // 요청한 개수만큼만 선택
+
+      if (newTopics.length === 0) {
+        console.error('파싱된 주제가 없음. 원본 텍스트:', generatedText);
+        throw new Error('생성된 텍스트에서 유효한 주제를 추출할 수 없습니다. 다시 시도해주세요.');
+      }
 
       let finalTopics = newTopics;
 
@@ -116,6 +140,7 @@ export const useTopicGenerator = (
 
         const removedCount = newTopics.length - finalTopics.length;
         if (removedCount > 0) {
+          console.log(`중복 제거: ${removedCount}개 주제 제거됨`);
           toast({
             title: "중복 주제 제거",
             description: `70% 이상 유사한 ${removedCount}개 주제가 제거되었습니다.`,
@@ -124,20 +149,24 @@ export const useTopicGenerator = (
         }
       }
 
+      // 주제가 전혀 없는 경우 처리
       if (finalTopics.length === 0) {
-        throw new Error(`생성된 모든 주제가 기존 주제와 70% 이상 유사합니다. 다른 키워드로 시도해주세요.`);
+        if (preventDuplicates) {
+          // 중복 방지 모드에서 모든 주제가 중복인 경우, 일부 주제를 허용
+          finalTopics = newTopics.slice(0, Math.min(3, newTopics.length));
+          toast({
+            title: "중복 주제 일부 허용",
+            description: `모든 주제가 중복되어 ${finalTopics.length}개 주제를 허용했습니다.`,
+            variant: "default"
+          });
+        } else {
+          throw new Error('생성된 주제가 없습니다. 다른 키워드로 시도해주세요.');
+        }
       }
 
       // 상태 업데이트 - 중복 허용/금지에 관계없이 추가
-      if (preventDuplicates) {
-        // 중복 금지: 기존 주제에 새로운 주제 추가
-        const combinedTopics = [...appState.topics, ...finalTopics];
-        saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
-      } else {
-        // 중복 허용: 모든 제한 없이 추가
-        const combinedTopics = [...appState.topics, ...finalTopics];
-        saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
-      }
+      const combinedTopics = [...appState.topics, ...finalTopics];
+      saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
       
       toast({ 
         title: "AI 기반 주제 생성 완료", 
@@ -146,10 +175,24 @@ export const useTopicGenerator = (
       
       return finalTopics;
     } catch (error) {
-      console.error('주제 생성 오류:', error);
+      console.error('주제 생성 상세 오류:', error);
+      let errorMessage = "주제 생성 중 오류가 발생했습니다.";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "요청 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.";
+        } else if (error.message.includes('API key')) {
+          errorMessage = "API 키에 문제가 있습니다. API 키를 다시 확인해주세요.";
+        } else if (error.message.includes('quota') || error.message.includes('limit')) {
+          errorMessage = "API 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({ 
         title: "주제 생성 실패", 
-        description: error instanceof Error ? error.message : "주제 생성 중 오류가 발생했습니다.", 
+        description: errorMessage, 
         variant: "destructive" 
       });
       return null;
