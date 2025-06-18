@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TopicList } from '@/components/display/TopicList';
-import { ArticlePreview } from '@/components/display/ArticlePreview';
+import { SimpleArticleEditor } from '@/components/display/SimpleArticleEditor';
 import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
 import { ContentActions } from '@/components/control/ContentActions';
 import { AppState } from '@/types';
@@ -38,7 +38,7 @@ export const RightContent: React.FC<RightContentProps> = ({
                 onTopicConfirm={onTopicConfirm}
             />
 
-            <ArticlePreview
+            <SimpleArticleEditor
                 generatedContent={appState.generatedContent}
                 isGeneratingContent={isGeneratingContent}
                 selectedTopic={appState.selectedTopic}

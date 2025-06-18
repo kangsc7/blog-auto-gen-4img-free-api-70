@@ -5,15 +5,55 @@ import { Button } from '@/components/ui/button';
 import { ImageUp, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const STORAGE_KEY = 'imagePaster_state';
+
+interface ImagePasterState {
+  convertedImage: string | null;
+  imageBlob: string | null; // base64로 저장
+}
+
 export const ImagePaster = () => {
     const [convertedImage, setConvertedImage] = useState<string | null>(null);
     const [imageBlob, setImageBlob] = useState<Blob | null>(null);
     const { toast } = useToast();
 
+    // 초기화 시 localStorage에서 상태 복원
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const state: ImagePasterState = JSON.parse(saved);
+                setConvertedImage(state.convertedImage);
+                
+                // base64를 다시 Blob으로 변환
+                if (state.imageBlob) {
+                    fetch(state.imageBlob)
+                        .then(res => res.blob())
+                        .then(blob => setImageBlob(blob))
+                        .catch(console.error);
+                }
+            }
+        } catch (error) {
+            console.error('이미지 상태 복원 실패:', error);
+        }
+    }, []);
+
+    // 상태 변경 시 localStorage에 저장
+    useEffect(() => {
+        if (convertedImage) {
+            const state: ImagePasterState = {
+                convertedImage,
+                imageBlob: convertedImage // dataURL 자체를 저장
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+    }, [convertedImage]);
+
     useEffect(() => {
         const handleAppReset = () => {
             setConvertedImage(null);
             setImageBlob(null);
+            localStorage.removeItem(STORAGE_KEY);
         };
         window.addEventListener('app-reset', handleAppReset);
         return () => {
@@ -41,7 +81,6 @@ export const ImagePaster = () => {
                     }
                     ctx.drawImage(img, 0, 0);
                     
-                    // 고품질 JPEG로 변환
                     canvas.toBlob((blob) => {
                         if (!blob) {
                             return reject(new Error('Canvas toBlob failed'));
@@ -65,7 +104,6 @@ export const ImagePaster = () => {
             return;
         }
 
-        // 먼저 이미지 파일을 찾아보기
         let imageFile: File | null = null;
         for (const item of Array.from(items)) {
             if (item.type.startsWith('image/')) {
@@ -101,7 +139,6 @@ export const ImagePaster = () => {
         }
 
         try {
-            // 그림판과 동일한 방식: 순수 이미지 바이너리만 클립보드에 복사
             const clipboardItem = new ClipboardItem({
                 [imageBlob.type]: imageBlob
             });
@@ -116,19 +153,15 @@ export const ImagePaster = () => {
         } catch (error) {
             console.error('그림판 방식 복사 실패:', error);
             
-            // 대안 방법: execCommand 사용 (구형 브라우저 지원)
             try {
-                // 임시 img 요소 생성
                 const img = new Image();
                 img.src = convertedImage!;
                 
-                // 임시 div에 이미지 추가
                 const tempDiv = document.createElement('div');
                 tempDiv.contentEditable = 'true';
                 tempDiv.appendChild(img);
                 document.body.appendChild(tempDiv);
                 
-                // 이미지 선택 및 복사
                 const range = document.createRange();
                 range.selectNode(img);
                 const selection = window.getSelection();
@@ -147,14 +180,12 @@ export const ImagePaster = () => {
                     }
                 }
                 
-                // 정리
                 document.body.removeChild(tempDiv);
                 selection?.removeAllRanges();
                 
             } catch (fallbackError) {
                 console.error('대안 복사 방법도 실패:', fallbackError);
                 
-                // 최종 대안: 사용자에게 직접 복사 방법 안내
                 toast({ 
                     title: "수동 복사 필요", 
                     description: "아래 이미지를 우클릭하여 '이미지 복사'를 선택한 후 블로그에 붙여넣으세요.", 
@@ -162,6 +193,13 @@ export const ImagePaster = () => {
                 });
             }
         }
+    };
+
+    const handleClear = () => {
+        setConvertedImage(null);
+        setImageBlob(null);
+        localStorage.removeItem(STORAGE_KEY);
+        toast({ title: "초기화 완료", description: "이미지가 초기화되었습니다." });
     };
 
     return (
@@ -184,7 +222,6 @@ export const ImagePaster = () => {
                             alt="Pasted and converted" 
                             className="max-w-full max-h-[200px] rounded"
                             onContextMenu={(e) => {
-                                // 우클릭 메뉴 허용 (이미지 복사 옵션 제공)
                                 e.stopPropagation();
                             }}
                         />
@@ -217,10 +254,7 @@ export const ImagePaster = () => {
                             <p>복사가 안 될 경우 위 이미지를 우클릭 → '이미지 복사'를 선택하세요.</p>
                         </div>
                         <Button 
-                            onClick={() => {
-                                setConvertedImage(null);
-                                setImageBlob(null);
-                            }}
+                            onClick={handleClear}
                             variant="outline"
                             className="w-full"
                         >
