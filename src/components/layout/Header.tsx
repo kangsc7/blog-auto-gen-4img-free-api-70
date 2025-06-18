@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
             {session && (
               <>
                 {/* 중복 방지/허용 토글 버튼 - 크고 눈에 잘 띄는 버튼 */}
@@ -67,7 +67,11 @@ export const Header: React.FC<HeaderProps> = ({
                   <Button
                     onClick={onPreventDuplicatesToggle}
                     variant={preventDuplicates ? "default" : "outline"}
-                    className={`px-8 py-6 text-xl font-bold ${preventDuplicates ? "bg-emerald-600 hover:bg-emerald-700" : "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white"} min-w-[140px] h-16`}
+                    className={`px-8 py-6 text-xl font-bold transition-all duration-300 ${
+                      preventDuplicates 
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg" 
+                        : "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white shadow-lg"
+                    } min-w-[140px] h-16`}
                   >
                     {preventDuplicates ? "중복금지" : "중복허용"}
                   </Button>
@@ -78,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Button
                     onClick={onResetApp}
                     variant="outline"
-                    className="px-8 py-6 text-xl font-bold border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white min-w-[140px] h-16"
+                    className="px-8 py-6 text-xl font-bold border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white min-w-[140px] h-16 shadow-lg transition-all duration-300"
                   >
                     <RefreshCw className="h-6 w-6 mr-2" />
                     <span>초기화</span>
@@ -86,19 +90,21 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
 
                 {/* 사용자 관리 버튼 */}
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/admin/users" className="flex items-center space-x-1">
-                    <Users className="h-4 w-4" />
-                    <span>사용자 관리</span>
-                  </Link>
-                </Button>
+                {isAdmin && (
+                  <Button asChild variant="outline" size="sm" className="shadow-md">
+                    <Link to="/admin/users" className="flex items-center space-x-1">
+                      <Users className="h-4 w-4" />
+                      <span>사용자 관리</span>
+                    </Link>
+                  </Button>
+                )}
 
                 {/* 로그아웃 버튼 */}
                 <Button
                   onClick={handleLogout}
                   variant="outline"
                   size="sm"
-                  className="flex items-center space-x-1"
+                  className="flex items-center space-x-1 shadow-md"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>로그아웃</span>
