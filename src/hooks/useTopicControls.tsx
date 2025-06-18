@@ -46,13 +46,12 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
       return;
     }
 
-    const trimmedTopic = manualTopic.trim();
-    if (!trimmedTopic) return;
+    if (!manualTopic.trim()) return;
 
     // 중복 금지 설정이 활성화된 경우에만 유사도 검사
     if (preventDuplicates && appState.topics.length > 0) {
       const isDuplicate = appState.topics.some(existingTopic => {
-        const similarity = calculateSimilarity(trimmedTopic, existingTopic);
+        const similarity = calculateSimilarity(manualTopic.trim(), existingTopic);
         return similarity >= 70;
       });
 
@@ -66,19 +65,13 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
       }
     }
 
-    const updatedTopics = [...appState.topics, trimmedTopic];
-    
-    // 주제를 추가하고 동시에 선택된 주제로 설정
-    saveAppState({ 
-      topics: updatedTopics,
-      selectedTopic: trimmedTopic 
-    });
-    
+    const updatedTopics = [...appState.topics, manualTopic.trim()];
+    saveAppState({ topics: updatedTopics });
     setManualTopic('');
     
     toast({
-      title: "주제 추가 및 선택 완료",
-      description: "수동 주제가 추가되고 자동으로 선택되었습니다."
+      title: "주제 추가 완료",
+      description: "수동 주제가 성공적으로 추가되었습니다."
     });
   };
 
