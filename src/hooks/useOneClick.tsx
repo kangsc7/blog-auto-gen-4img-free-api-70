@@ -30,6 +30,8 @@ export const useOneClick = (
   // 원클릭 생성 함수 - 이벤트 핸들러
   const handleOneClickStart = async (mode: 'latest' | 'evergreen') => {
     try {
+      console.log(`🚀 ${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 원클릭 생성 시작`);
+      
       if (!appState.isApiKeyValidated) {
         toast({
           title: "API 키 검증 필요",
@@ -67,6 +69,7 @@ export const useOneClick = (
         keyword = '재테크, 투자, 상품권';
       }
 
+      console.log('키워드 설정:', keyword);
       saveAppState({ keyword });
 
       toast({
@@ -78,6 +81,7 @@ export const useOneClick = (
       const topics = await generateTopics();
       
       if (!topics || topics.length === 0) {
+        console.error('주제 생성 실패');
         setIsOneClickGenerating(false);
         setOneClickMode(null);
         toast({
@@ -88,21 +92,53 @@ export const useOneClick = (
         return;
       }
 
-      // 2. 주제 선택 다이얼로그 표시
-      setShowTopicSelectionDialog(true);
+      console.log('생성된 주제들:', topics);
+
+      // 2. 첫 번째 주제 자동 선택하여 글 생성
+      const selectedTopic = topics[0];
+      console.log('자동 선택된 주제:', selectedTopic);
+      
+      // 주제 선택
+      selectTopic(selectedTopic);
+      
+      toast({
+        title: "글 생성 시작",
+        description: `"${selectedTopic}" 주제로 블로그 글을 생성하고 있습니다...`,
+      });
+      
+      // 3. 컨텐츠 생성
+      const result = await generateArticle({ topic: selectedTopic, keyword });
+      
+      if (result) {
+        // 4. 완료 메시지
+        toast({
+          title: "원클릭 생성 완료",
+          description: `"${selectedTopic}" 주제로 글이 성공적으로 생성되었습니다.`,
+        });
+        console.log('✅ 원클릭 생성 완료');
+      } else {
+        console.error('글 생성 실패');
+        toast({
+          title: "글 생성 실패",
+          description: "선택한 주제로 글을 생성하지 못했습니다.",
+          variant: "destructive",
+        });
+      }
+      
     } catch (error) {
       console.error("원클릭 생성 오류:", error);
-      setIsOneClickGenerating(false);
-      setOneClickMode(null);
       toast({
         title: "원클릭 생성 실패",
         description: "생성 과정에서 오류가 발생했습니다.",
         variant: "destructive",
       });
+    } finally {
+      setIsOneClickGenerating(false);
+      setOneClickMode(null);
     }
   };
 
-  // 주제가 선택되었을 때 처리 함수
+  // 주제가 선택되었을 때 처리 함수 (다이얼로그용)
   const handleTopicSelect = async (topic: string) => {
     try {
       // 다이얼로그 닫기
@@ -150,6 +186,8 @@ export const useOneClick = (
 
   // 최신 이슈 원클릭 생성 함수
   const handleLatestIssueOneClick = async () => {
+    console.log('최신 이슈 원클릭 버튼 클릭 - 접근 권한:', hasAccess);
+    
     if (!hasAccess) {
       toast({
         title: "접근 제한",
@@ -168,12 +206,13 @@ export const useOneClick = (
       return;
     }
     
-    console.log('최신 이슈 원클릭 생성 시작');
-    handleOneClickStart('latest');
+    await handleOneClickStart('latest');
   };
 
   // 평생 키워드 원클릭 생성 함수
   const handleEvergreenKeywordOneClick = async () => {
+    console.log('평생 키워드 원클릭 버튼 클릭 - 접근 권한:', hasAccess);
+    
     if (!hasAccess) {
       toast({
         title: "접근 제한", 
@@ -192,8 +231,7 @@ export const useOneClick = (
       return;
     }
     
-    console.log('평생 키워드 원클릭 생성 시작');
-    handleOneClickStart('evergreen');
+    await handleOneClickStart('evergreen');
   };
 
   return {

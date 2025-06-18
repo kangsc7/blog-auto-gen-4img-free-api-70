@@ -127,8 +127,26 @@ export const useRefactoredAppController = () => {
 
   const handlePreventDuplicatesToggle = () => {
     const newValue = !preventDuplicates;
+    console.log('중복금지 설정 변경:', { 이전값: preventDuplicates, 새값: newValue });
     setPreventDuplicates(newValue);
     saveAppState({ preventDuplicates: newValue });
+  };
+
+  // 초기화 함수에 편집기 콘텐츠 삭제 기능 추가
+  const handleResetAppWithEditor = () => {
+    console.log('🔄 앱 및 편집기 전체 초기화');
+    
+    // localStorage에서 편집기 관련 데이터도 삭제
+    try {
+      localStorage.removeItem('blog_editor_content');
+      localStorage.removeItem('blog_generated_content');
+      console.log('✅ 편집기 콘텐츠 localStorage 삭제 완료');
+    } catch (error) {
+      console.error('편집기 콘텐츠 삭제 실패:', error);
+    }
+    
+    // 기본 앱 초기화 실행
+    handleResetApp();
   };
 
   const generationStatus = {
@@ -169,7 +187,7 @@ export const useRefactoredAppController = () => {
     preventDuplicates,
     setPreventDuplicates,
     handlePreventDuplicatesToggle,
-    handleResetApp,
+    handleResetApp: handleResetAppWithEditor, // 개선된 초기화 함수 사용
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
