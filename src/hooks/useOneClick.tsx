@@ -28,15 +28,119 @@ export const useOneClick = (
     toast({ title: '원클릭 생성 중단', description: '원클릭 생성이 중단되었습니다.' });
   };
 
-  // 원클릭 생성 함수 - 이벤트 핸들러
+  // 향상된 평생 키워드 카테고리 DB (100개 카테고리)
+  const evergreenCategories = [
+    // 재테크 관련 (15개)
+    '주식투자 기초', '부동산 투자', '적금 이자율', '연금저축', '펀드 투자', 
+    '보험 선택', '세금 절약', '대출 관리', '신용점수', '가계부 작성',
+    '투자 포트폴리오', '배당주 투자', '청약 당첨', 'ISA 계좌', '절약 노하우',
+    
+    // 건강 관리 (15개)
+    '다이어트 방법', '홈트레이닝', '건강한 식단', '수면의 질', '스트레스 관리',
+    '금연 성공법', '당뇨 관리', '혈압 관리', '관절 건강', '눈 건강',
+    '면역력 강화', '갱년기 건강', '청소년 건강', '노인 건강', '정신건강',
+    
+    // 생활 정보 (15개)
+    '전기요금 절약', '가스비 절약', '수도요금 절약', '인터넷 요금', '휴대폰 요금',
+    '청소 노하우', '세탁 방법', '정리정돈', '에어컨 관리', '난방비 절약',
+    '대중교통 할인', '렌탈 vs 구매', '중고거래', '생활용품 관리', '안전 관리',
+    
+    // 요리 레시피 (15개)
+    '간단한 요리', '밑반찬 만들기', '도시락 메뉴', '아이 간식', '건강 요리',
+    '다이어트 요리', '단백질 요리', '채소 요리', '국물 요리', '홈베이킹',
+    '김치 담그기', '계란 요리', '면 요리', '찜 요리', '볶음 요리',
+    
+    // 육아 정보 (10개)
+    '신생아 돌보기', '이유식 만들기', '아이 놀이법', '훈육 방법', '아이 건강관리',
+    '예방접종', '독서 습관', '창의력 발달', '학습 습관', '사회성 발달',
+    
+    // 자기계발 (10개)
+    '독서 습관', '시간관리', '목표 달성', '집중력 향상', '기억력 개선',
+    '창의력 기르기', '스트레스 해소', '자신감 키우기', '소통 능력', '리더십',
+    
+    // 인간관계 (10개)
+    '대화 기술', '경청 방법', '갈등 해결', '인맥 관리', '가족 소통',
+    '부부 관계', '직장 인간관계', '친구 사귀기', '예의와 매너', '감정 조절',
+    
+    // 취미생활 (10개)
+    '홈 가드닝', '사진 촬영', '그림 그리기', '음악 감상', '여행 계획',
+    '캠핑 준비', '등산 장비', '요가 기초', '명상 방법', '수공예'
+  ];
+
+  // 개선된 평생 키워드 생성 함수
+  const generateEvergreenKeyword = async (apiKey: string): Promise<string> => {
+    try {
+      // 랜덤으로 3개 카테고리 선택
+      const shuffledCategories = evergreenCategories.sort(() => 0.5 - Math.random());
+      const selectedCategories = shuffledCategories.slice(0, 3);
+      
+      console.log('선택된 평생 키워드 카테고리:', selectedCategories);
+
+      const prompt = `다음 카테고리들 중에서 평생 도움이 되는 실용적인 키워드를 1개만 생성해주세요:
+
+카테고리: ${selectedCategories.join(', ')}
+
+**키워드 생성 규칙:**
+- 15자 이내의 간결한 표현
+- 시간이 지나도 변하지 않는 가치 있는 정보
+- 실제 검색하고 싶은 구체적 내용
+- 실행 가능한 실용적 주제
+
+**절대 금지:**
+- 모든 연도 숫자 금지 (2023, 2024, 2025 등)
+- "년" 단어 완전 금지
+- 시간 관련 표현 금지 (올해, 내년, 작년 등)
+
+다른 설명 없이 키워드만 제공해주세요.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 1.2,
+            maxOutputTokens: 100,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API 요청 실패: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const keyword = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      
+      if (!keyword) {
+        throw new Error('유효한 키워드를 받지 못했습니다');
+      }
+
+      console.log('생성된 평생 키워드:', keyword);
+      return keyword;
+    } catch (error) {
+      console.error('평생 키워드 생성 오류:', error);
+      // 백업 키워드 반환
+      const backupKeywords = ['생활 절약 팁', '건강한 식단', '홈트레이닝', '재테크 기초', '요리 레시피'];
+      return backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
+    }
+  };
+
+  // 원클릭 생성 함수 - 완전히 개선된 버전
   const handleOneClickStart = async (mode: 'latest' | 'evergreen') => {
     try {
       console.log(`🚀 ${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 원클릭 생성 시작`);
+      console.log('현재 앱 상태:', { 
+        isApiKeyValidated: appState.isApiKeyValidated, 
+        apiKey: !!appState.apiKey,
+        preventDuplicates 
+      });
       
+      // API 키 검증
       if (!appState.isApiKeyValidated || !appState.apiKey) {
         toast({
           title: "API 키 검증 필요",
-          description: "API 키를 설정하고 검증한 후 다시 시도해주세요.",
+          description: "Gemini API 키를 설정하고 검증한 후 다시 시도해주세요.",
           variant: "destructive",
         });
         return;
@@ -48,78 +152,70 @@ export const useOneClick = (
       let keyword: string;
       
       if (mode === 'latest') {
-        // 실시간 이슈 크롤링 수행
+        // 최신 이슈 처리
         toast({
           title: "실시간 이슈 크롤링 중",
           description: "현재 시간대의 최신 이슈를 수집하고 있습니다...",
         });
 
         try {
+          console.log('실시간 트렌드 크롤링 시작...');
           const latestTrends = await RealTimeTrendCrawler.getLatestTrends(appState.apiKey);
-          if (latestTrends.length > 0) {
-            keyword = `최신 이슈, 뉴스, 트렌드, 실시간 이슈: ${latestTrends.slice(0, 5).join(', ')}`;
-            console.log('크롤링된 최신 이슈:', latestTrends);
+          
+          if (latestTrends && latestTrends.length > 0) {
+            keyword = `최신 이슈, 뉴스, 트렌드, 실시간 화제: ${latestTrends.slice(0, 5).join(', ')}`;
+            console.log('크롤링된 최신 이슈:', latestTrends.slice(0, 5));
           } else {
-            keyword = '최신 이슈, 뉴스, 트렌드';
+            console.warn('크롤링된 트렌드가 없어 기본 키워드 사용');
+            keyword = '최신 이슈, 뉴스, 트렌드, 실시간 화제';
           }
         } catch (error) {
           console.error('실시간 크롤링 오류:', error);
-          keyword = '최신 이슈, 뉴스, 트렌드';
+          keyword = '최신 이슈, 뉴스, 트렌드, 실시간 화제';
         }
       } else {
-        // 평생 키워드 - 개선된 키워드 생성
+        // 평생 키워드 처리
+        toast({
+          title: "평생 키워드 생성 중",
+          description: "카테고리별 평생 키워드를 생성하고 있습니다...",
+        });
+
         try {
           console.log('평생 키워드 생성 시작...');
-          const evergreenKeyword = await ExpandedEvergreenService.generateDynamicEvergreenKeyword(
-            appState.apiKey,
-            appState.topics || []
-          );
-          
-          if (evergreenKeyword) {
-            keyword = evergreenKeyword;
-            console.log('생성된 평생 키워드:', keyword);
-          } else {
-            // 백업 키워드
-            keyword = ExpandedEvergreenService.getRandomFromDatabase(appState.topics || []);
-            console.log('백업 평생 키워드 사용:', keyword);
-          }
+          keyword = await generateEvergreenKeyword(appState.apiKey);
+          console.log('최종 선택된 평생 키워드:', keyword);
         } catch (error) {
           console.error('평생 키워드 생성 오류:', error);
-          keyword = '재테크, 투자, 상품권';
+          keyword = '생활 절약 팁';
         }
       }
 
-      console.log('키워드 설정:', keyword);
+      console.log('설정된 키워드:', keyword);
       
-      // 키워드를 먼저 저장
+      // 키워드를 앱 상태에 저장
       saveAppState({ keyword });
-
+      
       toast({
-        title: `${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 글 생성 시작`,
-        description: "주제를 생성하는 중입니다...",
+        title: `${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 주제 생성 시작`,
+        description: `"${keyword}" 키워드로 주제를 생성하는 중입니다...`,
       });
 
-      // 잠시 대기 후 주제 생성 (키워드 저장이 완료되도록)
+      // 키워드 저장 완료를 위한 대기
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 1. 주제 생성
+      console.log('주제 생성 함수 호출 시작...');
+      
+      // 주제 생성
       const topics = await generateTopics();
       
       if (!topics || topics.length === 0) {
-        console.error('주제 생성 실패');
-        setIsOneClickGenerating(false);
-        setOneClickMode(null);
-        toast({
-          title: "주제 생성 실패",
-          description: "주제를 생성하지 못했습니다. 다시 시도해주세요.",
-          variant: "destructive",
-        });
-        return;
+        console.error('주제 생성 실패 - 반환된 주제가 없음');
+        throw new Error('주제를 생성하지 못했습니다');
       }
 
       console.log('생성된 주제들:', topics);
 
-      // 2. 첫 번째 주제 자동 선택하여 글 생성
+      // 첫 번째 주제 자동 선택
       const selectedTopic = topics[0];
       console.log('자동 선택된 주제:', selectedTopic);
       
@@ -127,37 +223,33 @@ export const useOneClick = (
       selectTopic(selectedTopic);
       
       toast({
-        title: "글 생성 시작",
+        title: "블로그 글 생성 시작",
         description: `"${selectedTopic}" 주제로 블로그 글을 생성하고 있습니다...`,
       });
       
-      // 잠시 대기 후 글 생성
+      // 주제 선택 완료를 위한 대기
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // 3. 컨텐츠 생성
+      console.log('글 생성 시작:', { topic: selectedTopic, keyword });
+      
+      // 컨텐츠 생성
       const result = await generateArticle({ topic: selectedTopic, keyword });
       
       if (result) {
-        // 4. 완료 메시지
         toast({
-          title: "원클릭 생성 완료",
-          description: `"${selectedTopic}" 주제로 글이 성공적으로 생성되었습니다.`,
+          title: "원클릭 생성 완료! 🎉",
+          description: `"${selectedTopic}" 주제로 블로그 글이 성공적으로 생성되었습니다.`,
         });
         console.log('✅ 원클릭 생성 완료');
       } else {
-        console.error('글 생성 실패');
-        toast({
-          title: "글 생성 실패",
-          description: "선택한 주제로 글을 생성하지 못했습니다.",
-          variant: "destructive",
-        });
+        throw new Error('글 생성에 실패했습니다');
       }
       
     } catch (error) {
       console.error("원클릭 생성 오류:", error);
       toast({
         title: "원클릭 생성 실패",
-        description: "생성 과정에서 오류가 발생했습니다.",
+        description: `생성 과정에서 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
         variant: "destructive",
       });
     } finally {
@@ -169,10 +261,7 @@ export const useOneClick = (
   // 주제가 선택되었을 때 처리 함수 (다이얼로그용)
   const handleTopicSelect = async (topic: string) => {
     try {
-      // 다이얼로그 닫기
       setShowTopicSelectionDialog(false);
-      
-      // 1. 주제 선택
       selectTopic(topic);
       
       toast({
@@ -180,10 +269,8 @@ export const useOneClick = (
         description: `"${topic}" 주제로 블로그 글을 생성하고 있습니다...`,
       });
       
-      // 2. 컨텐츠 생성
       await generateArticle({ topic, keyword: appState.keyword });
       
-      // 3. 완료 메시지
       toast({
         title: "원클릭 생성 완료",
         description: `"${topic}" 주제로 글이 생성되었습니다.`,

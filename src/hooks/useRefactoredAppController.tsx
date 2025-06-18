@@ -132,38 +132,71 @@ export const useRefactoredAppController = () => {
     saveAppState({ preventDuplicates: newValue });
   };
 
-  // 초기화 함수에 편집기 콘텐츠 삭제 기능 추가 - 완전 삭제 보장
+  // 편집기 내용 강제 초기화 함수 개선 - DOM 조작 추가
   const handleResetAppWithEditor = () => {
-    console.log('🔄 앱 및 편집기 전체 초기화 - 완전 삭제');
+    console.log('🔄 앱 및 편집기 전체 초기화 시작');
     
-    // localStorage에서 편집기 관련 데이터 완전 삭제
+    // 1. localStorage 완전 삭제
     try {
       localStorage.removeItem('blog_editor_content');
       localStorage.removeItem('blog_generated_content');
-      console.log('✅ 편집기 콘텐츠 localStorage 완전 삭제 완료');
+      localStorage.removeItem('blog_editor_draft');
+      console.log('✅ localStorage 편집기 데이터 완전 삭제');
     } catch (error) {
-      console.error('편집기 콘텐츠 삭제 실패:', error);
+      console.error('localStorage 삭제 실패:', error);
     }
     
-    // 앱 상태에서 콘텐츠 완전 제거
+    // 2. 앱 상태 완전 초기화
     saveAppState({ 
       generatedContent: '',
       selectedTopic: '',
       topics: [],
-      keyword: ''
+      keyword: '',
+      imagePrompt: '',
+      referenceLink: '',
+      referenceSentence: ''
     });
     
-    // 기본 앱 초기화 실행
+    // 3. 편집기 DOM 강제 초기화 (여러 선택자로 시도)
+    const clearEditorContent = () => {
+      const editorSelectors = [
+        '[contenteditable="true"]',
+        '.blog-editor',
+        '.editor-content',
+        '[data-editor="true"]',
+        '.ql-editor',
+        '.prose'
+      ];
+      
+      editorSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+          if (element instanceof HTMLElement) {
+            element.innerHTML = '';
+            element.textContent = '';
+            console.log(`✅ 편집기 요소 초기화: ${selector}`);
+          }
+        });
+      });
+    };
+    
+    // 4. 즉시 실행 및 지연 실행으로 확실히 초기화
+    clearEditorContent();
+    
+    setTimeout(() => {
+      clearEditorContent();
+      console.log('✅ 지연 편집기 초기화 완료');
+    }, 100);
+    
+    setTimeout(() => {
+      clearEditorContent();
+      console.log('✅ 최종 편집기 초기화 완료');
+    }, 500);
+    
+    // 5. 기본 앱 초기화 실행
     handleResetApp();
     
-    // DOM에서도 편집기 내용 강제 삭제
-    setTimeout(() => {
-      const editorElement = document.querySelector('[contenteditable="true"]') as HTMLElement;
-      if (editorElement) {
-        editorElement.innerHTML = '';
-        console.log('✅ 편집기 DOM 내용 강제 삭제 완료');
-      }
-    }, 100);
+    console.log('🎉 전체 초기화 완료');
   };
 
   const generationStatus = {
@@ -204,7 +237,7 @@ export const useRefactoredAppController = () => {
     preventDuplicates,
     setPreventDuplicates,
     handlePreventDuplicatesToggle,
-    handleResetApp: handleResetAppWithEditor, // 개선된 초기화 함수 사용
+    handleResetApp: handleResetAppWithEditor,
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
