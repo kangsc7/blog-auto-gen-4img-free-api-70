@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { Profile } from '@/types';
 import { RealTimeTrendCrawler } from '@/lib/realTimeTrendCrawler';
+import { ExpandedEvergreenService } from '@/lib/expandedEvergreenKeywords';
 
 export const useOneClick = (
   appState: AppState,
@@ -32,7 +33,7 @@ export const useOneClick = (
     try {
       console.log(`🚀 ${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 원클릭 생성 시작`);
       
-      if (!appState.isApiKeyValidated) {
+      if (!appState.isApiKeyValidated || !appState.apiKey) {
         toast({
           title: "API 키 검증 필요",
           description: "API 키를 설정하고 검증한 후 다시 시도해주세요.",
@@ -54,7 +55,7 @@ export const useOneClick = (
         });
 
         try {
-          const latestTrends = await RealTimeTrendCrawler.getLatestTrends(appState.apiKey!);
+          const latestTrends = await RealTimeTrendCrawler.getLatestTrends(appState.apiKey);
           if (latestTrends.length > 0) {
             keyword = `최신 이슈, 뉴스, 트렌드, 실시간 이슈: ${latestTrends.slice(0, 5).join(', ')}`;
             console.log('크롤링된 최신 이슈:', latestTrends);
@@ -66,16 +67,40 @@ export const useOneClick = (
           keyword = '최신 이슈, 뉴스, 트렌드';
         }
       } else {
-        keyword = '재테크, 투자, 상품권';
+        // 평생 키워드 - 개선된 키워드 생성
+        try {
+          console.log('평생 키워드 생성 시작...');
+          const evergreenKeyword = await ExpandedEvergreenService.generateDynamicEvergreenKeyword(
+            appState.apiKey,
+            appState.topics || []
+          );
+          
+          if (evergreenKeyword) {
+            keyword = evergreenKeyword;
+            console.log('생성된 평생 키워드:', keyword);
+          } else {
+            // 백업 키워드
+            keyword = ExpandedEvergreenService.getRandomFromDatabase(appState.topics || []);
+            console.log('백업 평생 키워드 사용:', keyword);
+          }
+        } catch (error) {
+          console.error('평생 키워드 생성 오류:', error);
+          keyword = '재테크, 투자, 상품권';
+        }
       }
 
       console.log('키워드 설정:', keyword);
+      
+      // 키워드를 먼저 저장
       saveAppState({ keyword });
 
       toast({
         title: `${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 글 생성 시작`,
         description: "주제를 생성하는 중입니다...",
       });
+
+      // 잠시 대기 후 주제 생성 (키워드 저장이 완료되도록)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // 1. 주제 생성
       const topics = await generateTopics();
@@ -105,6 +130,9 @@ export const useOneClick = (
         title: "글 생성 시작",
         description: `"${selectedTopic}" 주제로 블로그 글을 생성하고 있습니다...`,
       });
+      
+      // 잠시 대기 후 글 생성
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // 3. 컨텐츠 생성
       const result = await generateArticle({ topic: selectedTopic, keyword });

@@ -132,21 +132,38 @@ export const useRefactoredAppController = () => {
     saveAppState({ preventDuplicates: newValue });
   };
 
-  // 초기화 함수에 편집기 콘텐츠 삭제 기능 추가
+  // 초기화 함수에 편집기 콘텐츠 삭제 기능 추가 - 완전 삭제 보장
   const handleResetAppWithEditor = () => {
-    console.log('🔄 앱 및 편집기 전체 초기화');
+    console.log('🔄 앱 및 편집기 전체 초기화 - 완전 삭제');
     
-    // localStorage에서 편집기 관련 데이터도 삭제
+    // localStorage에서 편집기 관련 데이터 완전 삭제
     try {
       localStorage.removeItem('blog_editor_content');
       localStorage.removeItem('blog_generated_content');
-      console.log('✅ 편집기 콘텐츠 localStorage 삭제 완료');
+      console.log('✅ 편집기 콘텐츠 localStorage 완전 삭제 완료');
     } catch (error) {
       console.error('편집기 콘텐츠 삭제 실패:', error);
     }
     
+    // 앱 상태에서 콘텐츠 완전 제거
+    saveAppState({ 
+      generatedContent: '',
+      selectedTopic: '',
+      topics: [],
+      keyword: ''
+    });
+    
     // 기본 앱 초기화 실행
     handleResetApp();
+    
+    // DOM에서도 편집기 내용 강제 삭제
+    setTimeout(() => {
+      const editorElement = document.querySelector('[contenteditable="true"]') as HTMLElement;
+      if (editorElement) {
+        editorElement.innerHTML = '';
+        console.log('✅ 편집기 DOM 내용 강제 삭제 완료');
+      }
+    }, 100);
   };
 
   const generationStatus = {
