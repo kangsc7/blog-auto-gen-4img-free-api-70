@@ -28,7 +28,7 @@ export const useRefactoredAppController = () => {
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
-  // topicControls에 saveAppState 올바르게 전달
+  // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
   const topicControls = useTopicControls(appState, saveAppState);
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
@@ -72,23 +72,23 @@ export const useRefactoredAppController = () => {
       return;
     }
     
-    // 1. 먼저 주제를 선택 (appState 업데이트) - 올바른 selectTopic 함수 사용
-    if (topicControls && typeof topicControls.selectTopic === 'function') {
+    try {
+      // 1. 먼저 주제를 선택 (appState 업데이트)
+      console.log('topicControls.selectTopic 호출:', pendingTopic);
       topicControls.selectTopic(pendingTopic);
-    } else {
-      console.error('topicControls.selectTopic이 함수가 아닙니다');
-      return;
+      
+      // 2. 다이얼로그 닫기
+      setShowTopicConfirmDialog(false);
+      
+      // 3. 즉시 글 생성 시작
+      console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
+      generateArticle({ topic: pendingTopic, keyword: appState.keyword });
+      
+      // 4. 상태 초기화
+      setPendingTopic('');
+    } catch (error) {
+      console.error('주제 확인 처리 중 오류:', error);
     }
-    
-    // 2. 다이얼로그 닫기
-    setShowTopicConfirmDialog(false);
-    
-    // 3. 즉시 글 생성 시작
-    console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
-    generateArticle({ topic: pendingTopic, keyword: appState.keyword });
-    
-    // 4. 상태 초기화
-    setPendingTopic('');
   };
 
   // 주제 확인 다이얼로그 취소

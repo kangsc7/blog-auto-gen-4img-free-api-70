@@ -38,14 +38,7 @@ const extractKeywordFromTopic = (topic: string): string => {
   return cleaned;
 };
 
-interface UseTopicControlsProps {
-  appState: AppState;
-  saveAppState: (newState: Partial<AppState>) => void;
-  preventDuplicates: boolean;
-  canUseFeatures: boolean;
-}
-
-export const useTopicControls = ({ appState, saveAppState, preventDuplicates, canUseFeatures }: UseTopicControlsProps) => {
+export const useTopicControls = (appState: AppState, saveAppState: (newState: Partial<AppState>) => void) => {
   const { toast } = useToast();
   const [manualTopic, setManualTopic] = useState('');
 
@@ -55,15 +48,6 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
   };
 
   const handleManualTopicAdd = () => {
-    if (!canUseFeatures) {
-      toast({
-        title: "접근 제한",
-        description: "이 기능을 사용할 권한이 없습니다.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!manualTopic.trim()) {
       toast({
         title: "입력 오류",
@@ -76,7 +60,7 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
     const trimmedTopic = manualTopic.trim();
 
     // 중복 금지 설정이 활성화된 경우에만 유사도 검사
-    if (preventDuplicates && appState.topics.length > 0) {
+    if (appState.preventDuplicates && appState.topics.length > 0) {
       const isDuplicate = appState.topics.some(existingTopic => {
         const similarity = calculateSimilarity(trimmedTopic, existingTopic);
         return similarity >= 70;

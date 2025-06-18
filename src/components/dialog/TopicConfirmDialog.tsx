@@ -27,16 +27,30 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 }) => {
   const handleConfirm = () => {
     console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
-    onConfirm();
+    try {
+      onConfirm();
+    } catch (error) {
+      console.error('TopicConfirmDialog onConfirm 실행 중 오류:', error);
+    }
   };
 
   const handleCancel = () => {
     console.log('TopicConfirmDialog handleCancel 호출됨');
-    onCancel();
+    try {
+      onCancel();
+    } catch (error) {
+      console.error('TopicConfirmDialog onCancel 실행 중 오류:', error);
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      handleCancel();
+    }
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader className="text-center">
           <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
