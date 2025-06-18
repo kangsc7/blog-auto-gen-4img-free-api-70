@@ -87,11 +87,11 @@ export const useAuth = () => {
 
   const handleSignUp = async (signUpData: { email: string; password: string }) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
         options: {
-          emailRedirectTo: 'https://blog-ai-wizard-forge.lovable.app/',
+          emailRedirectTo: window.location.origin,
         },
       });
 
@@ -99,7 +99,24 @@ export const useAuth = () => {
         toast({ title: "회원가입 실패", description: error.message, variant: "destructive" });
         return false;
       }
-      toast({ title: "회원가입 성공", description: "인증 메일을 확인해주세요." });
+
+      // 회원가입 성공 시 즉시 승인된 상태로 프로필 생성
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            status: 'approved',
+            approved_at: new Date().toISOString(),
+          });
+
+        if (profileError) {
+          console.error('프로필 생성 오류:', profileError);
+        }
+      }
+
+      toast({ title: "회원가입 성공", description: "이메일 인증을 완료하고 로그인해주세요." });
       return true;
     } catch (error: any) {
       console.error('회원가입 오류:', error);

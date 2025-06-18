@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
 
     setLoading(true);
     if (isSignUp) {
-      await handleSignUp({ email, password });
+      const success = await handleSignUp({ email, password });
+      if (success) {
+        // 회원가입 성공 시 자동으로 로그인 창으로 전환
+        setIsSignUp(false);
+        setEmail('');
+        setPassword('');
+      }
     } else {
       await handleLogin({ email, password });
     }
