@@ -59,7 +59,7 @@ export const useRefactoredAppController = () => {
   } = useOneClick(
     appState,
     saveAppState,
-    generateTopics,
+    generateTopics, // 수정: 함수 자체를 전달
     topicControls.selectTopic,
     generateArticle,
     profile,
@@ -132,7 +132,7 @@ export const useRefactoredAppController = () => {
     saveAppState({ preventDuplicates: newValue });
   };
 
-  // 편집기 내용 강제 초기화 함수 개선 - DOM 조작 추가
+  // 편집기 내용 강제 초기화 함수 개선 - DOM 조작 및 이벤트 기반 초기화
   const handleResetAppWithEditor = () => {
     console.log('🔄 앱 및 편집기 전체 초기화 시작');
     
@@ -157,7 +157,7 @@ export const useRefactoredAppController = () => {
       referenceSentence: ''
     });
     
-    // 3. 편집기 DOM 강제 초기화 (여러 선택자로 시도)
+    // 3. 편집기 DOM 강제 초기화 (더 포괄적인 선택자와 이벤트 기반)
     const clearEditorContent = () => {
       const editorSelectors = [
         '[contenteditable="true"]',
@@ -165,22 +165,56 @@ export const useRefactoredAppController = () => {
         '.editor-content',
         '[data-editor="true"]',
         '.ql-editor',
-        '.prose'
+        '.prose',
+        '.ProseMirror',
+        '[role="textbox"]',
+        '.rich-text-editor',
+        '.markdown-editor'
       ];
       
       editorSelectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
           if (element instanceof HTMLElement) {
+            // 다양한 방법으로 초기화
             element.innerHTML = '';
             element.textContent = '';
+            element.innerText = '';
+            
+            // 입력 이벤트 트리거하여 React 상태 동기화
+            const inputEvent = new Event('input', { bubbles: true });
+            element.dispatchEvent(inputEvent);
+            
+            // change 이벤트도 트리거
+            const changeEvent = new Event('change', { bubbles: true });
+            element.dispatchEvent(changeEvent);
+            
             console.log(`✅ 편집기 요소 초기화: ${selector}`);
           }
         });
       });
+      
+      // iframe 내 편집기도 초기화
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (iframeDoc) {
+            const iframeEditors = iframeDoc.querySelectorAll('[contenteditable="true"], .editor-content');
+            iframeEditors.forEach(editor => {
+              if (editor instanceof HTMLElement) {
+                editor.innerHTML = '';
+                editor.textContent = '';
+              }
+            });
+          }
+        } catch (error) {
+          console.log('iframe 편집기 접근 불가:', error);
+        }
+      });
     };
     
-    // 4. 즉시 실행 및 지연 실행으로 확실히 초기화
+    // 4. 다단계 초기화 실행
     clearEditorContent();
     
     setTimeout(() => {
@@ -208,7 +242,7 @@ export const useRefactoredAppController = () => {
   };
 
   const generationFunctions = {
-    generateTopics: () => generateTopics(),
+    generateTopics,
     generateArticle,
     createImagePrompt: generateImagePrompt,
     generateDirectImage,
