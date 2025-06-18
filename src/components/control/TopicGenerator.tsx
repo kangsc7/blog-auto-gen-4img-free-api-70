@@ -71,15 +71,28 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
         </div>
 
-        {/* 주제 생성 규칙 안내 */}
-        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
-          <p className="font-semibold">🔔 주제 생성 규칙</p>
+        {/* 주제 생성 규칙 안내 - 강화된 버전 */}
+        <div className="text-xs text-red-600 bg-red-50 p-3 rounded border border-red-200">
+          <p className="font-bold">🚫 주제 생성 절대 금지 규칙</p>
           <ul className="list-disc pl-4 mt-1 space-y-1">
-            <li>연도 표기(2023년, 2024년 등) 없이 생성됩니다</li>
-            <li>해당 연도 하반기 등의 시기 표현도 포함되지 않습니다</li>
-            <li>시간에 구애받지 않는 주제로 생성됩니다</li>
+            <li><strong>모든 연도 숫자 절대 금지</strong> (2023, 2024, 2025, 2026 등)</li>
+            <li><strong>"년" 단어 완전 금지</strong> (올해, 내년, 작년, 해당년도 등)</li>
+            <li><strong>시기 표현 금지</strong> (상반기, 하반기, 분기 등)</li>
+            <li>시간에 구애받지 않는 영구적 주제로만 생성</li>
           </ul>
         </div>
+
+        {/* 실시간 이슈 크롤링 안내 */}
+        {keyword.includes('최신 이슈') || keyword.includes('뉴스') || keyword.includes('트렌드') ? (
+          <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
+            <p className="font-bold">🔴 실시간 이슈 크롤링 활성</p>
+            <ul className="list-disc pl-4 mt-1 space-y-1">
+              <li>현재 시간대의 실시간 트렌드를 자동 크롤링합니다</li>
+              <li>연도 표기 없이 현재 핫한 이슈들을 반영합니다</li>
+              <li>네이버 트렌드와 구글 트렌드 데이터를 활용합니다</li>
+            </ul>
+          </div>
+        ) : null}
 
         <Button 
           onClick={() => generateTopicsFromKeyword()}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,10 +48,10 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
     }
   };
 
-  const canGenerate = 
-    appState.isApiKeyValidated && 
-    appState.isPixabayKeyValidated && 
-    appState.isHuggingFaceKeyValidated;
+  // API 키 검증 상태 확인 (Gemini는 필수, 나머지는 선택사항)
+  const canGenerate = appState.isApiKeyValidated; // Gemini API 키만 필수
+  const hasPixabay = appState.isPixabayKeyValidated;
+  const hasHuggingFace = appState.isHuggingFaceKeyValidated;
 
   return (
     <Card className="shadow-md">
@@ -60,7 +61,26 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
           2. 블로그 글 생성
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* API 키 상태 표시 */}
+        <div className="text-xs bg-gray-50 p-3 rounded border">
+          <p className="font-semibold mb-2">🔑 API 키 상태:</p>
+          <div className="grid grid-cols-1 gap-1">
+            <div className={`flex items-center ${appState.isApiKeyValidated ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="mr-2">{appState.isApiKeyValidated ? '✅' : '❌'}</span>
+              <span>Gemini API (필수)</span>
+            </div>
+            <div className={`flex items-center ${hasPixabay ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="mr-2">{hasPixabay ? '✅' : '⚪'}</span>
+              <span>Pixabay API (이미지 자동 수집용)</span>
+            </div>
+            <div className={`flex items-center ${hasHuggingFace ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="mr-2">{hasHuggingFace ? '✅' : '⚪'}</span>
+              <span>HuggingFace API (이미지 생성용)</span>
+            </div>
+          </div>
+        </div>
+
         <Button
           onClick={() => handleTopicSelect(appState.selectedTopic)}
           disabled={!appState.selectedTopic || isGeneratingContent || !canGenerate}
@@ -83,9 +103,16 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             appState.selectedTopic ? `"${appState.selectedTopic}" 주제로 글 생성하기` : '주제를 먼저 선택해주세요'
           )}
         </Button>
+        
         {!canGenerate && (
           <p className="text-xs text-red-500 mt-2">
-            API 키를 모두 설정하고 검증해야 글을 생성할 수 있습니다.
+            Gemini API 키를 설정하고 검증해야 글을 생성할 수 있습니다.
+          </p>
+        )}
+        
+        {canGenerate && (!hasPixabay || !hasHuggingFace) && (
+          <p className="text-xs text-amber-600 mt-2">
+            추가 기능 사용 가능: {!hasPixabay ? 'Pixabay API (이미지 자동 수집)' : ''} {!hasHuggingFace ? 'HuggingFace API (이미지 생성)' : ''}
           </p>
         )}
       </CardContent>

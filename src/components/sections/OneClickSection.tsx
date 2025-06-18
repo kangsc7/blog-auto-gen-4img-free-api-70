@@ -33,41 +33,9 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
 
     return (
         <div className="max-w-7xl mx-auto my-4 px-4">
-            {/* 왼쪽에 중복금지/초기화 버튼, 오른쪽에 원클릭 생성 섹션 */}
+            {/* 왼쪽에 원클릭 생성 섹션, 오른쪽에 중복허용/초기화 버튼들 */}
             <div className="flex justify-between items-start mb-4 gap-6">
-                {/* 왼쪽: 중복금지/초기화 버튼들 */}
-                <div className="flex flex-col gap-4">
-                    {onPreventDuplicatesToggle && (
-                        <Button
-                            onClick={onPreventDuplicatesToggle}
-                            variant={preventDuplicates ? "default" : "outline"}
-                            className={`px-8 py-14 text-xl font-bold transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl ${
-                                preventDuplicates 
-                                    ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
-                                    : "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white"
-                            }`}
-                        >
-                            <span className="text-center leading-tight">
-                                {preventDuplicates ? "중복금지" : "중복허용"}
-                            </span>
-                        </Button>
-                    )}
-
-                    {onResetApp && (
-                        <Button
-                            onClick={onResetApp}
-                            variant="outline"
-                            className="px-8 py-14 text-xl font-bold border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white h-28 min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                            <RefreshCw className="mr-3 h-7 w-7" />
-                            <span className="text-center leading-tight">
-                                초기화
-                            </span>
-                        </Button>
-                    )}
-                </div>
-
-                {/* 오른쪽: 원클릭 생성 박스 */}
+                {/* 왼쪽: 원클릭 생성 박스 */}
                 <div className="flex items-center gap-4 p-6 rounded-xl shadow-lg bg-white border border-gray-200 max-w-4xl">
                     <Button 
                         onClick={handleLatestIssueOneClick} 
@@ -112,6 +80,38 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                             원클릭 생성
                         </span>
                     </Button>
+                </div>
+
+                {/* 오른쪽: 중복허용/초기화 버튼들 - 가로 배치 */}
+                <div className="flex gap-4">
+                    {onPreventDuplicatesToggle && (
+                        <Button
+                            onClick={onPreventDuplicatesToggle}
+                            variant={preventDuplicates ? "default" : "outline"}
+                            className={`px-8 py-14 text-xl font-bold transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl ${
+                                preventDuplicates 
+                                    ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
+                                    : "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white"
+                            }`}
+                        >
+                            <span className="text-center leading-tight">
+                                {preventDuplicates ? "중복금지" : "중복허용"}
+                            </span>
+                        </Button>
+                    )}
+
+                    {onResetApp && (
+                        <Button
+                            onClick={onResetApp}
+                            variant="outline"
+                            className="px-8 py-14 text-xl font-bold border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white h-28 min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                            <RefreshCw className="mr-3 h-7 w-7" />
+                            <span className="text-center leading-tight">
+                                초기화
+                            </span>
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

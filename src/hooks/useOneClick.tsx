@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { Profile } from '@/types';
+import { RealTimeTrendCrawler } from '@/lib/realTimeTrendCrawler';
 
 export const useOneClick = (
   appState: AppState,
@@ -41,9 +42,30 @@ export const useOneClick = (
       setIsOneClickGenerating(true);
       setOneClickMode(mode);
 
-      const keyword = mode === 'latest' 
-        ? '최신 이슈, 뉴스, 트렌드' 
-        : '재테크, 투자, 상품권';
+      let keyword: string;
+      
+      if (mode === 'latest') {
+        // 실시간 이슈 크롤링 수행
+        toast({
+          title: "실시간 이슈 크롤링 중",
+          description: "현재 시간대의 최신 이슈를 수집하고 있습니다...",
+        });
+
+        try {
+          const latestTrends = await RealTimeTrendCrawler.getLatestTrends(appState.apiKey!);
+          if (latestTrends.length > 0) {
+            keyword = `최신 이슈, 뉴스, 트렌드, 실시간 이슈: ${latestTrends.slice(0, 5).join(', ')}`;
+            console.log('크롤링된 최신 이슈:', latestTrends);
+          } else {
+            keyword = '최신 이슈, 뉴스, 트렌드';
+          }
+        } catch (error) {
+          console.error('실시간 크롤링 오류:', error);
+          keyword = '최신 이슈, 뉴스, 트렌드';
+        }
+      } else {
+        keyword = '재테크, 투자, 상품권';
+      }
 
       saveAppState({ keyword });
 
@@ -83,8 +105,16 @@ export const useOneClick = (
   // 주제가 선택되었을 때 처리 함수
   const handleTopicSelect = async (topic: string) => {
     try {
+      // 다이얼로그 닫기
+      setShowTopicSelectionDialog(false);
+      
       // 1. 주제 선택
       selectTopic(topic);
+      
+      toast({
+        title: "글 생성 시작",
+        description: `"${topic}" 주제로 블로그 글을 생성하고 있습니다...`,
+      });
       
       // 2. 컨텐츠 생성
       await generateArticle({ topic, keyword: appState.keyword });
@@ -138,6 +168,7 @@ export const useOneClick = (
       return;
     }
     
+    console.log('최신 이슈 원클릭 생성 시작');
     handleOneClickStart('latest');
   };
 
@@ -161,6 +192,7 @@ export const useOneClick = (
       return;
     }
     
+    console.log('평생 키워드 원클릭 생성 시작');
     handleOneClickStart('evergreen');
   };
 
