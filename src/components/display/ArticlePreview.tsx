@@ -9,21 +9,30 @@ interface ArticlePreviewProps {
   generatedContent: string;
   isGeneratingContent: boolean;
   selectedTopic: string;
+  onContentChange: (content: string) => void;
 }
 
 export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   generatedContent,
   isGeneratingContent,
   selectedTopic,
+  onContentChange,
 }) => {
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (editableDivRef.current) {
+    if (editableDivRef.current && editableDivRef.current.innerHTML !== generatedContent) {
       editableDivRef.current.innerHTML = generatedContent;
     }
   }, [generatedContent]);
+
+  const handleContentEdit = () => {
+    if (editableDivRef.current) {
+      const updatedContent = editableDivRef.current.innerHTML;
+      onContentChange(updatedContent);
+    }
+  };
 
   const handleCopyToClipboard = () => {
     if (!editableDivRef.current?.innerHTML) {
@@ -113,6 +122,8 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             dangerouslySetInnerHTML={{ __html: generatedContent }}
             className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
+            onInput={handleContentEdit}
+            onBlur={handleContentEdit}
           />
         ) : (
           <div className="text-center py-8 text-gray-500">

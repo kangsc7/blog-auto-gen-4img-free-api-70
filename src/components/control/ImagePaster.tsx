@@ -38,7 +38,7 @@ export const ImagePaster = () => {
                         return reject(new Error('Could not get canvas context'));
                     }
                     ctx.drawImage(img, 0, 0);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95); // High quality JPEG
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     resolve(dataUrl);
                 };
                 img.onerror = (error) => reject(error);
@@ -56,6 +56,7 @@ export const ImagePaster = () => {
             return;
         }
 
+        // 먼저 이미지 파일을 찾아보기
         let imageFile: File | null = null;
         for (const item of Array.from(items)) {
             if (item.type.startsWith('image/')) {
@@ -75,7 +76,28 @@ export const ImagePaster = () => {
                 toast({ title: "변환 실패", description: "이미지를 변환하는 중 오류가 발생했습니다.", variant: "destructive" });
             }
         } else {
-            toast({ title: "붙여넣기 오류", description: "클립보드에서 이미지를 찾을 수 없습니다. 이미지 파일을 복사했는지 확인해주세요.", variant: "destructive" });
+            // 이미지가 없으면 텍스트 확인 (Whisk에서 복사한 텍스트 무시)
+            let hasText = false;
+            for (const item of Array.from(items)) {
+                if (item.type === 'text/plain') {
+                    hasText = true;
+                    break;
+                }
+            }
+            
+            if (hasText) {
+                toast({ 
+                    title: "이미지만 붙여넣기 가능", 
+                    description: "Whisk에서 이미지를 우클릭 → '이미지 복사'를 선택한 후 붙여넣어 주세요.", 
+                    variant: "destructive" 
+                });
+            } else {
+                toast({ 
+                    title: "붙여넣기 오류", 
+                    description: "클립보드에서 이미지를 찾을 수 없습니다. 이미지 파일을 복사했는지 확인해주세요.", 
+                    variant: "destructive" 
+                });
+            }
         }
     }, [toast]);
 
@@ -127,7 +149,7 @@ export const ImagePaster = () => {
                         <div className="text-gray-500">
                             <ImageUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
                             <p className="font-semibold">이곳에 이미지를 붙여넣으세요 (Ctrl+V)</p>
-                            <p className="text-sm">Whisk에서 복사한 이미지가 JPG로 변환됩니다.</p>
+                            <p className="text-sm">Whisk에서 이미지를 우클릭 → '이미지 복사' 후 붙여넣으세요.</p>
                         </div>
                     )}
                 </div>

@@ -40,6 +40,7 @@ const Index = () => {
     generationFunctions,
     topicControls,
     utilityFunctions,
+    handleTopicConfirm,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
@@ -230,6 +231,7 @@ const Index = () => {
         topicControls={topicControls}
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
+        handleTopicConfirm={handleTopicConfirm}
       />
       
       <ScrollToTopButton />

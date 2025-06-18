@@ -13,6 +13,7 @@ interface RightContentProps {
     copyToClipboard: (text: string, type: string) => void;
     downloadHTML: () => void;
     isGeneratingContent: boolean;
+    onTopicConfirm?: (topic: string) => void;
 }
 
 export const RightContent: React.FC<RightContentProps> = ({
@@ -22,19 +23,26 @@ export const RightContent: React.FC<RightContentProps> = ({
     copyToClipboard,
     downloadHTML,
     isGeneratingContent,
+    onTopicConfirm,
 }) => {
+    const handleContentChange = (content: string) => {
+        saveAppState({ generatedContent: content });
+    };
+
     return (
         <div className="lg:col-span-8 space-y-6">
             <TopicList
                 topics={appState.topics}
                 selectedTopic={appState.selectedTopic}
                 selectTopic={selectTopic}
+                onTopicConfirm={onTopicConfirm}
             />
 
             <ArticlePreview
                 generatedContent={appState.generatedContent}
                 isGeneratingContent={isGeneratingContent}
                 selectedTopic={appState.selectedTopic}
+                onContentChange={handleContentChange}
             />
 
             {appState.generatedContent && (

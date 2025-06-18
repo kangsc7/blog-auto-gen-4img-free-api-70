@@ -28,6 +28,11 @@ export const useRefactoredAppController = () => {
     appState,
     saveAppState
   );
+
+  // generateArticleForManual을 먼저 정의
+  const generateArticleForManual = (topic?: string): Promise<string> => {
+    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
+  };
   
   const {
     manualTopic,
@@ -38,7 +43,8 @@ export const useRefactoredAppController = () => {
     appState, 
     saveAppState, 
     preventDuplicates: appState.preventDuplicates,
-    canUseFeatures 
+    canUseFeatures,
+    generateArticle: generateArticleForManual
   });
 
   const {
@@ -92,6 +98,29 @@ export const useRefactoredAppController = () => {
       },
     });
   };
+
+  // 주제 확인 후 글 생성 함수
+  const handleTopicConfirm = async (topic: string) => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await generateArticleForManual(topic);
+    } catch (error) {
+      console.error('글 생성 실패:', error);
+      toast({
+        title: "글 생성 실패",
+        description: "글 생성 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  };
   
   const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
     appState,
@@ -105,11 +134,6 @@ export const useRefactoredAppController = () => {
   );
 
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
-
-  const generateArticleForManual = (topic?: string): Promise<string> => {
-    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
-  };
-
   const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
   const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
@@ -140,5 +164,6 @@ export const useRefactoredAppController = () => {
     topicControls,
     utilityFunctions,
     canUseFeatures,
+    handleTopicConfirm,
   };
 };
