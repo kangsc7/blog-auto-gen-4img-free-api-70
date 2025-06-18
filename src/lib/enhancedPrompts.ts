@@ -1,6 +1,26 @@
 
-import { crawlWebInfo } from './webCrawler';
+import { WebCrawlerService } from './webCrawler';
 import { generateMetaDescription } from './pixabay';
+
+export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
+  return `당신은 한국어 SEO 블로그 주제 생성 전문가입니다. "${keyword}" 키워드와 관련된 창의적이고 SEO에 최적화된 블로그 주제를 ${count}개 생성해주세요.
+
+**생성 요구사항:**
+1. 각 주제는 SEO 친화적이고 검색 가능성이 높아야 합니다
+2. "${keyword}" 키워드가 자연스럽게 포함되어야 합니다
+3. 다양한 관점과 각도에서 접근해주세요
+4. 실용적이고 유용한 정보를 제공할 수 있는 주제여야 합니다
+5. 각 주제는 1줄로 작성해주세요
+
+**주제 형식:**
+- 실용적인 가이드: "초보자를 위한 ${keyword} 완벽 가이드"
+- 비교/분석: "${keyword} vs 대안: 어떤 것을 선택해야 할까?"
+- 팁/노하우: "${keyword} 전문가가 알려주는 숨겨진 팁"
+- 트렌드: "2025년 ${keyword} 최신 트렌드"
+- 문제해결: "${keyword} 관련 흔한 실수와 해결방법"
+
+지금 바로 ${count}개의 주제를 생성해주세요. 각 주제는 새로운 줄에 작성해주세요.`;
+};
 
 export const getEnhancedArticlePrompt = async (params: {
   topic: string;
@@ -13,9 +33,9 @@ export const getEnhancedArticlePrompt = async (params: {
   const { topic, keyword, selectedColorTheme, referenceLink, referenceSentence, apiKey } = params;
   
   // 웹 크롤링으로 최신 정보 수집
-  const webInfo = await crawlWebInfo(keyword, apiKey);
-  const webInfoText = webInfo.length > 0 
-    ? `\n\n**최신 웹 정보:**\n${webInfo.join('\n')}`
+  const webInfo = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
+  const webInfoText = webInfo 
+    ? `\n\n**최신 웹 정보:**\n${webInfo}`
     : '';
 
   const externalLinkSection = referenceLink && referenceSentence 
