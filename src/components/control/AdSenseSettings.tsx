@@ -30,12 +30,13 @@ export const AdSenseSettings: React.FC<AdSenseSettingsProps> = ({ onSettingsChan
     adCount: 1
   });
 
-  // localStorage에서 설정 로드
+  // localStorage에서 설정 로드 (컴포넌트 마운트 시)
   useEffect(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEY);
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
+        console.log('AdSense 설정 로드됨:', parsed);
         setSettings(parsed);
         onSettingsChange(parsed);
       } catch (error) {
@@ -44,7 +45,22 @@ export const AdSenseSettings: React.FC<AdSenseSettingsProps> = ({ onSettingsChan
     }
   }, [onSettingsChange]);
 
-  // 설정 저장
+  // 설정이 변경될 때마다 즉시 localStorage에 저장
+  const updateSettings = (updates: Partial<AdSenseSettings>) => {
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    
+    // 즉시 localStorage에 저장
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+      console.log('AdSense 설정 자동 저장됨:', newSettings);
+      onSettingsChange(newSettings);
+    } catch (error) {
+      console.error('AdSense 설정 자동 저장 실패:', error);
+    }
+  };
+
+  // 설정 저장 (사용자가 명시적으로 저장 버튼을 클릭할 때)
   const handleSave = () => {
     if (settings.enabled && (!settings.adClient || !settings.adSlot)) {
       toast({
@@ -55,12 +71,22 @@ export const AdSenseSettings: React.FC<AdSenseSettingsProps> = ({ onSettingsChan
       return;
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    onSettingsChange(settings);
-    toast({
-      title: "설정 저장 완료",
-      description: "AdSense 광고 설정이 저장되었습니다."
-    });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      onSettingsChange(settings);
+      toast({
+        title: "설정 저장 완료",
+        description: "AdSense 광고 설정이 저장되었습니다."
+      });
+      console.log('AdSense 설정 수동 저장 완료:', settings);
+    } catch (error) {
+      console.error('AdSense 설정 저장 실패:', error);
+      toast({
+        title: "저장 실패",
+        description: "설정 저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
   };
 
   // 설정 삭제
@@ -71,18 +97,24 @@ export const AdSenseSettings: React.FC<AdSenseSettingsProps> = ({ onSettingsChan
       adSlot: '',
       adCount: 1
     };
-    setSettings(defaultSettings);
-    localStorage.removeItem(STORAGE_KEY);
-    onSettingsChange(defaultSettings);
-    toast({
-      title: "설정 삭제 완료",
-      description: "AdSense 광고 설정이 삭제되었습니다."
-    });
-  };
-
-  const updateSettings = (updates: Partial<AdSenseSettings>) => {
-    const newSettings = { ...settings, ...updates };
-    setSettings(newSettings);
+    
+    try {
+      setSettings(defaultSettings);
+      localStorage.removeItem(STORAGE_KEY);
+      onSettingsChange(defaultSettings);
+      toast({
+        title: "설정 삭제 완료",
+        description: "AdSense 광고 설정이 삭제되었습니다."
+      });
+      console.log('AdSense 설정 삭제 완료');
+    } catch (error) {
+      console.error('AdSense 설정 삭제 실패:', error);
+      toast({
+        title: "삭제 실패",
+        description: "설정 삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
