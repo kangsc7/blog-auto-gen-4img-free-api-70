@@ -88,19 +88,19 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   return (
     <div className="w-full bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
       <div className="p-4 space-y-4">
-        {/* API 키 설정 - 원래 크기로 복원 */}
-        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickApiKeys}>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-gray-800">
+        {/* API 키 설정 - 축소된 크기 */}
+        <Card className="shadow-sm cursor-pointer" onDoubleClick={handleDoubleClickApiKeys}>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-gray-800 text-sm">
               <span className="flex items-center">
-                <Settings className="h-5 w-5 mr-2" />
+                <Settings className="h-4 w-4 mr-2" />
                 API 키 설정
               </span>
-              {showApiKeys ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {showApiKeys ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </CardTitle>
           </CardHeader>
           {showApiKeys && (
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-0">
               {geminiManager && (
                 <GeminiApiKeyManager
                   geminiApiKey={geminiManager.geminiApiKey}
@@ -137,25 +137,25 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </CardContent>
           )}
           {!showApiKeys && (
-            <CardContent className="text-xs text-gray-600">
+            <CardContent className="text-xs text-gray-600 pt-0 pb-3">
               <p>더블클릭으로 API 키 설정을 열거나 닫을 수 있습니다.</p>
             </CardContent>
           )}
         </Card>
 
-        {/* 컬러 테마 선택 */}
-        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickColorTheme}>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-purple-700">
+        {/* 컬러 테마 선택 - 축소된 크기 */}
+        <Card className="shadow-sm cursor-pointer" onDoubleClick={handleDoubleClickColorTheme}>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-purple-700 text-sm">
               <span className="flex items-center">
-                <Settings className="h-5 w-5 mr-2" />
-                블로그 컬러 테마
+                <Settings className="h-4 w-4 mr-2" />
+                블로그 컬러 테마 (자동 적용)
               </span>
-              {showColorTheme ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {showColorTheme ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </CardTitle>
           </CardHeader>
           {showColorTheme && (
-            <CardContent>
+            <CardContent className="pt-0">
               <Select 
                 value={appState.colorTheme || ''} 
                 onValueChange={(value) => saveAppState({ colorTheme: value })}
@@ -184,12 +184,13 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               >
                 랜덤 테마 선택
               </Button>
-              <p className="text-xs text-gray-500 mt-2">선택한 테마가 블로그 글에 적용됩니다</p>
+              <p className="text-xs text-gray-500 mt-2">글 생성 시 자동으로 랜덤 테마가 적용됩니다</p>
             </CardContent>
           )}
           {!showColorTheme && (
-            <CardContent className="text-xs text-gray-600">
+            <CardContent className="text-xs text-gray-600 pt-0 pb-3">
               <p>더블클릭으로 컬러 테마 설정을 열거나 닫을 수 있습니다.</p>
+              <p className="text-green-600 mt-1">🎨 글 생성 시 자동으로 랜덤 테마 적용</p>
             </CardContent>
           )}
         </Card>
@@ -227,19 +228,19 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           openWhisk={openWhisk}
         />
 
-        {/* 외부 링크 설정 */}
-        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickExternalReference}>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-purple-700">
+        {/* 외부 링크 설정 - 축소된 크기 */}
+        <Card className="shadow-sm cursor-pointer" onDoubleClick={handleDoubleClickExternalReference}>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-purple-700 text-sm">
               <span className="flex items-center">
-                <ExternalLink className="h-5 w-5 mr-2" />
+                <ExternalLink className="h-4 w-4 mr-2" />
                 외부 링크 설정
               </span>
-              {showExternalReference ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {showExternalReference ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </CardTitle>
           </CardHeader>
           {showExternalReference && (
-            <CardContent>
+            <CardContent className="pt-0">
               <ExternalReferenceInput
                 appState={appState}
                 saveAppState={saveAppState}
@@ -248,7 +249,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </CardContent>
           )}
           {!showExternalReference && (
-            <CardContent className="text-xs text-gray-600">
+            <CardContent className="text-xs text-gray-600 pt-0 pb-3">
               <p>더블클릭으로 외부 링크 설정을 열거나 닫을 수 있습니다.</p>
               {(appState.referenceLink || appState.referenceSentence) && (
                 <p className="text-green-600 mt-1">✅ 외부 링크 설정 완료</p>

@@ -26,6 +26,13 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
 }) => {
   console.log('GeminiApiKeyManager 렌더링:', { geminiApiKey, isGeminiApiKeyValidated });
 
+  // API 키를 마스킹하여 표시하는 함수
+  const getMaskedApiKey = (key: string) => {
+    if (!key) return '';
+    if (key.length <= 8) return key;
+    return key.substring(0, 4) + '*'.repeat(key.length - 8) + key.substring(key.length - 4);
+  };
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -42,12 +49,13 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
               type="text"
               inputMode="text"
               placeholder="API 키를 입력해주세요"
-              value={geminiApiKey || ''}
+              value={isGeminiApiKeyValidated ? getMaskedApiKey(geminiApiKey) : geminiApiKey || ''}
               onChange={(e) => {
                 setGeminiApiKey(e.target.value);
                 setIsGeminiApiKeyValidated(false);
               }}
               className="flex-1"
+              readOnly={isGeminiApiKeyValidated}
             />
             <Button 
               onClick={() => validateGeminiApiKey(geminiApiKey)} 

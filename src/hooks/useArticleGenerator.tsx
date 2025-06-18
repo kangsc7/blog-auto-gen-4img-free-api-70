@@ -63,8 +63,9 @@ export const useArticleGenerator = (
         description: "키워드 관련 최신 정보를 크롤링하고 있습니다." 
       });
 
+      // 랜덤 컬러 테마 자동 선택
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
-      const selectedColorTheme = appState.colorTheme || randomTheme.value;
+      const selectedColorTheme = randomTheme.value;
       
       // 개선된 프롬프트 사용 (웹 크롤링 포함)
       const prompt = await getEnhancedArticlePrompt({
@@ -211,7 +212,7 @@ export const useArticleGenerator = (
       saveAppState(stateToSave);
       toast({ 
         title: "웹 크롤링 기반 블로그 글 생성 완료", 
-        description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
+        description: `"${selectedColorTheme}" 테마가 자동 적용되어 풍부한 내용의 글이 완성되었습니다.` 
       });
       return finalHtml;
     } catch (error) {
