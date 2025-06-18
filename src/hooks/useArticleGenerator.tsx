@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getHtmlTemplate } from '@/lib/htmlTemplate';
@@ -80,11 +79,11 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         }
       }
 
-      // 동적 소제목 생성 및 HTML 구조에 맞게 변환 - Fix: Pass the API key as string, not boolean
+      // 동적 소제목 생성 및 HTML 구조에 맞게 변환 - Fix: Correct parameter order
       const dynamicHeadings = await generateDynamicHeadings(
+        finalKeyword, 
         finalTopic, 
-        appState.huggingFaceApiKey || '', 
-        appState.isHuggingFaceApiKeyValidated
+        appState.huggingFaceApiKey || ''
       );
 
       // 최종 HTML 생성 시 AdSense 설정 포함
