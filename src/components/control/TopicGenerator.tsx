@@ -27,6 +27,10 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
 }) => {
+  // Safely access keyword with fallback
+  const keyword = appState.keyword || '';
+  const topicCount = appState.topicCount || 5;
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -40,19 +44,19 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           <label className="block text-sm font-semibold text-gray-700 mb-2">핵심 키워드</label>
           <Input
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
-            value={appState.keyword}
+            value={keyword}
             onChange={(e) => saveAppState({ keyword: e.target.value })}
           />
           <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
         </div>
         
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">생성할 주제 수: {appState.topicCount}개</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">생성할 주제 수: {topicCount}개</label>
           <input
             type="range"
             min="1"
             max="20"
-            value={appState.topicCount}
+            value={topicCount}
             onChange={(e) => saveAppState({ topicCount: parseInt(e.target.value) })}
             className="w-full"
           />
@@ -69,7 +73,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
 
         <Button 
           onClick={() => generateTopicsFromKeyword()}
-          disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
+          disabled={!keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
           className={`w-full transition-all duration-300 ${
             isGeneratingTopics 
               ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 

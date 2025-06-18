@@ -70,6 +70,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             handleManualTopicAdd={handleManualTopicAdd}
             preventDuplicates={preventDuplicates}
             selectTopic={selectTopic}
+            copyToClipboard={copyToClipboard}
             deleteReferenceData={deleteReferenceData}
           />
         </div>

@@ -28,6 +28,7 @@ interface LeftSidebarProps {
   handleManualTopicAdd: () => void;
   preventDuplicates: boolean;
   selectTopic: (topic: string) => void;
+  copyToClipboard: (text: string, type: string) => void;
   deleteReferenceData?: () => void;
 }
 
@@ -48,6 +49,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
   selectTopic,
+  copyToClipboard,
   deleteReferenceData,
 }) => {
   const [showApiKeys, setShowApiKeys] = useState(false);
@@ -145,6 +147,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           createImagePrompt={createImagePrompt}
           isDirectlyGenerating={isDirectlyGenerating}
           generateDirectImage={generateDirectImage}
+          copyToClipboard={copyToClipboard}
+          openWhisk={() => {}}
         />
 
         {/* 외부 링크 설정 */}

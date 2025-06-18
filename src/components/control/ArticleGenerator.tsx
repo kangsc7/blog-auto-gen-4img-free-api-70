@@ -1,8 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PenTool, Square } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 import { AppState } from '@/types';
 
 interface ArticleGeneratorProps {
@@ -11,7 +10,7 @@ interface ArticleGeneratorProps {
   selectTopic: (topic: string) => void;
   isGeneratingContent: boolean;
   generateArticleContent: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
-  stopArticleGeneration?: () => void;
+  stopArticleGeneration: () => void;
 }
 
 export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
@@ -22,80 +21,73 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
   generateArticleContent,
   stopArticleGeneration,
 }) => {
-  const handleGenerateArticle = () => {
-    if (!appState.selectedTopic) return;
-    generateArticleContent({ topic: appState.selectedTopic, keyword: appState.keyword });
-  };
+  const [generatingForTopic, setGeneratingForTopic] = useState<string>('');
 
-  const handleStopGeneration = () => {
-    if (stopArticleGeneration) {
+  const handleTopicSelect = (topic: string) => {
+    console.log('ArticleGenerator - 주제 선택:', topic);
+    selectTopic(topic);
+    
+    if (generatingForTopic === topic) {
+      console.log('동일한 주제로 이미 생성 중입니다.');
+      return;
+    }
+
+    // 이미 생성 중인 경우 중단
+    if (isGeneratingContent) {
+      console.log('기존 생성 작업 중단 후 새로운 주제로 시작');
       stopArticleGeneration();
+      
+      setTimeout(() => {
+        setGeneratingForTopic(topic);
+        generateArticleContent({ topic });
+      }, 500);
+    } else {
+      setGeneratingForTopic(topic);
+      generateArticleContent({ topic });
     }
   };
+
+  const canGenerate = 
+    appState.isApiKeyValidated && 
+    appState.isPixabayKeyValidated && 
+    appState.isHuggingFaceKeyValidated;
 
   return (
     <Card className="shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center text-orange-700">
-          <PenTool className="h-5 w-5 mr-2" />
+        <CardTitle className="flex items-center text-purple-700">
+          <Lightbulb className="h-5 w-5 mr-2" />
           2. 블로그 글 생성
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">선택된 주제</label>
-          <div className="p-3 bg-gray-50 rounded border min-h-[50px] flex items-center">
-            {appState.selectedTopic ? (
-              <span className="text-gray-900">{appState.selectedTopic}</span>
-            ) : (
-              <span className="text-gray-500">먼저 주제를 선택해주세요</span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleGenerateArticle}
-            disabled={!appState.selectedTopic || isGeneratingContent || !appState.isApiKeyValidated}
-            className={`flex-1 transition-all duration-300 ${
-              isGeneratingContent 
-                ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            {isGeneratingContent ? (
-              <span className="flex items-center">
-                글 생성 중
-                <span className="ml-1 animate-pulse">
-                  <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
-                  <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
-                  <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
-                </span>
+      <CardContent>
+        <Button
+          onClick={() => handleTopicSelect(appState.selectedTopic)}
+          disabled={!appState.selectedTopic || isGeneratingContent || !canGenerate}
+          className={`w-full transition-all duration-300 ${
+            isGeneratingContent
+              ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700'
+          }`}
+        >
+          {isGeneratingContent ? (
+            <span className="flex items-center">
+              글 생성 중
+              <span className="ml-1 animate-pulse">
+                <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
+                <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
+                <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
               </span>
-            ) : (
-              '블로그 글 생성하기'
-            )}
-          </Button>
-
-          {isGeneratingContent && stopArticleGeneration && (
-            <Button
-              onClick={handleStopGeneration}
-              variant="destructive"
-              size="sm"
-              className="bg-red-500 hover:bg-red-600 text-white px-3"
-            >
-              <Square className="h-4 w-4 mr-1" />
-              중단
-            </Button>
+            </span>
+          ) : (
+            appState.selectedTopic ? `"${appState.selectedTopic}" 주제로 글 생성하기` : '주제를 먼저 선택해주세요'
           )}
-        </div>
-
-        <div className="text-xs text-gray-500 text-center">
-          선택한 주제를 바탕으로 SEO 최적화된 블로그 글을 생성합니다
-          {appState.isPixabayApiKeyValidated && (
-            <div className="mt-1 text-blue-600">✓ Pixabay 이미지 자동 첨부 활성화</div>
-          )}
-        </div>
+        </Button>
+        {!canGenerate && (
+          <p className="text-xs text-red-500 mt-2">
+            API 키를 모두 설정하고 검증해야 글을 생성할 수 있습니다.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
