@@ -22,37 +22,46 @@ export const useGoogleTrends = () => {
       ).filter(Boolean) || [];
 
       if (trendingTerms.length === 0) {
-        // API 실패 시 백업 키워드 목록
+        // API 실패 시 2025년 중심의 최신 이슈 백업 키워드 목록
         return [
           '2025년 정부지원금',
-          '기초연금 인상',
-          '청년도약계좌',
-          '국민취업지원제도',
-          '에너지바우처',
-          '근로장려금',
-          '자녀장려금',
-          '신혼부부 대출',
-          '청년 월세지원',
-          '임신출산진료비'
+          '2025년 기초연금 인상',
+          '2025년 청년도약계좌',
+          '2025년 국민취업지원제도',
+          '2025년 에너지바우처',
+          '2025년 근로장려금',
+          '2025년 자녀장려금',
+          '2025년 신혼부부 대출',
+          '2025년 청년 월세지원',
+          '2025년 임신출산진료비'
         ];
       }
 
-      return trendingTerms.slice(0, 10);
+      // 2023년, 2024년이 포함된 키워드 필터링하고 2025년으로 변환
+      const filtered2025Keywords = trendingTerms.map((keyword: string) => {
+        // 2023년, 2024년을 2025년으로 변경
+        return keyword.replace(/2023년|2024년/g, '2025년');
+      }).filter((keyword: string) => {
+        // 여전히 2023, 2024가 남아있다면 제외
+        return !keyword.includes('2023') && !keyword.includes('2024');
+      });
+
+      return filtered2025Keywords.slice(0, 10);
     } catch (error) {
       console.error('Google Trends API 오류:', error);
       
-      // 네트워크 오류 시 한국 맞춤 백업 키워드
+      // 네트워크 오류 시 2025년 중심의 한국 맞춤 백업 키워드
       return [
         '2025년 새해 정책',
-        '경제적 지원제도',
-        '청년 혜택 프로그램',
-        '건강보험 혜택',
-        '부동산 정책 변화',
-        '교육비 지원',
-        '창업 지원금',
-        '취업 지원 서비스',
-        '노인복지 확대',
-        '디지털 전환 지원'
+        '2025년 경제적 지원제도',
+        '2025년 청년 혜택 프로그램',
+        '2025년 건강보험 혜택',
+        '2025년 부동산 정책 변화',
+        '2025년 교육비 지원',
+        '2025년 창업 지원금',
+        '2025년 취업 지원 서비스',
+        '2025년 노인복지 확대',
+        '2025년 디지털 전환 지원'
       ];
     }
   };
@@ -66,7 +75,14 @@ export const useGoogleTrends = () => {
       }
 
       const data = await response.json();
-      const relatedQueries = data.related_queries?.rising?.map((item: any) => item.query) || [];
+      let relatedQueries = data.related_queries?.rising?.map((item: any) => item.query) || [];
+      
+      // 관련 키워드에서도 2023년, 2024년 필터링
+      relatedQueries = relatedQueries.map((keyword: string) => {
+        return keyword.replace(/2023년|2024년/g, '2025년');
+      }).filter((keyword: string) => {
+        return !keyword.includes('2023') && !keyword.includes('2024');
+      });
       
       return relatedQueries.slice(0, 5);
     } catch (error) {

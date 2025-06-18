@@ -39,8 +39,8 @@ const defaultState: AppState = {
 const STORAGE_KEYS = {
   GENERATED_CONTENT: 'blog_generated_content',
   EDITOR_CONTENT: 'blog_editor_content',
-  REFERENCE_LINK: 'blog_reference_link',
-  REFERENCE_SENTENCE: 'blog_reference_sentence',
+  REFERENCE_LINK: 'blog_reference_link_permanent',
+  REFERENCE_SENTENCE: 'blog_reference_sentence_permanent',
   SELECTED_TOPIC: 'blog_selected_topic',
   TOPICS: 'blog_topics',
   KEYWORD: 'blog_keyword',
@@ -54,7 +54,7 @@ export const useAppStateManager = () => {
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
 
-  // localStorage에서 블로그 관련 데이터 로드 - 참조 링크와 문장 포함
+  // localStorage에서 블로그 관련 데이터 로드 - 참조 링크와 문장 영구 보존
   const loadBlogDataFromStorage = useCallback(() => {
     try {
       const editorContent = localStorage.getItem(STORAGE_KEYS.EDITOR_CONTENT);
@@ -62,10 +62,11 @@ export const useAppStateManager = () => {
       
       const finalContent = editorContent || generatedContent || '';
       
+      // 참조 링크와 문장은 영구 보존 키로 저장
       const referenceLink = localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '';
       const referenceSentence = localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '';
       
-      console.log('앱 상태 관리자 - 블로그 데이터 로드:', {
+      console.log('앱 상태 관리자 - 블로그 데이터 로드 (영구 보존):', {
         hasEditorContent: !!editorContent,
         hasGeneratedContent: !!generatedContent,
         finalContentLength: finalContent.length,
@@ -88,7 +89,7 @@ export const useAppStateManager = () => {
     }
   }, []);
 
-  // localStorage에 블로그 관련 데이터 저장 - 참조 링크와 문장 포함
+  // localStorage에 블로그 관련 데이터 저장 - 참조 링크와 문장 영구 보존
   const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
     try {
       if (data.generatedContent !== undefined) {
@@ -98,11 +99,11 @@ export const useAppStateManager = () => {
       }
       if (data.referenceLink !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
-        console.log('앱 상태 관리자 - 참조 링크 저장:', data.referenceLink);
+        console.log('앱 상태 관리자 - 참조 링크 영구 저장:', data.referenceLink);
       }
       if (data.referenceSentence !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_SENTENCE, data.referenceSentence);
-        console.log('앱 상태 관리자 - 참조 문장 저장:', data.referenceSentence.substring(0, 50) + '...');
+        console.log('앱 상태 관리자 - 참조 문장 영구 저장:', data.referenceSentence.substring(0, 50) + '...');
       }
       if (data.selectedTopic !== undefined) {
         localStorage.setItem(STORAGE_KEYS.SELECTED_TOPIC, data.selectedTopic);
@@ -140,7 +141,7 @@ export const useAppStateManager = () => {
 
     console.log('✅ 최종 로드된 API 키 상태 (영구 보존):', {
       gemini: { hasKey: !!finalState.apiKey, validated: finalState.isApiKeyValidated },
-      pixabay: { hasKey: !!finalState.pixabayApiKey, validated: finalState.isPixabayApiKeyValidated },
+      pixaby: { hasKey: !!finalState.pixabayApiKey, validated: finalState.isPixabayApiKeyValidated },
       huggingface: { hasKey: !!finalState.huggingFaceApiKey, validated: finalState.isHuggingFaceApiKeyValidated }
     });
 
@@ -150,7 +151,7 @@ export const useAppStateManager = () => {
   // 앱 상태 초기화 - 한 번만 실행되도록 보장하되 API 키와 블로그 데이터는 보존
   useEffect(() => {
     if (!hasInitialized.current && !initializationLock.current) {
-      console.log('🚀 useAppStateManager 초기화 시작 (API 키 및 블로그 데이터 보존)');
+      console.log('🚀 useAppStateManager 초기화 시작 (API 키 및 블로그 데이터 영구 보존)');
       initializationLock.current = true;
       
       const storedApiKeys = loadApiKeysFromStorage();
@@ -160,7 +161,7 @@ export const useAppStateManager = () => {
       
       setAppState(prev => {
         const newState = { ...prev, ...storedApiKeys, ...storedBlogData };
-        console.log('✅ 앱 상태 초기화 완료 (API 키 및 블로그 데이터 보존):', newState);
+        console.log('✅ 앱 상태 초기화 완료 (API 키 및 블로그 데이터 영구 보존):', newState);
         return newState;
       });
       
@@ -233,16 +234,32 @@ export const useAppStateManager = () => {
     toast({ title: "기본값으로 복원", description: `${keyType} API 키가 기본값으로 복원되었습니다.` });
   }, [saveAppState, toast]);
 
+  // 참조 링크와 문장을 영구적으로 삭제하는 함수 추가
+  const deleteReferenceData = useCallback(() => {
+    console.log('🗑️ 참조 링크와 문장을 영구 삭제');
+    localStorage.removeItem(STORAGE_KEYS.REFERENCE_LINK);
+    localStorage.removeItem(STORAGE_KEYS.REFERENCE_SENTENCE);
+    saveAppState({ 
+      referenceLink: '', 
+      referenceSentence: '' 
+    });
+    toast({ title: "삭제 완료", description: "참조 링크와 문장이 영구 삭제되었습니다." });
+  }, [saveAppState, toast]);
+
   const resetApp = useCallback(() => {
-    console.log('🔄 앱 전체 초기화 (API 키는 보존, 블로그 데이터는 삭제)');
+    console.log('🔄 앱 전체 초기화 (API 키와 참조 데이터는 보존, 블로그 데이터는 삭제)');
     
     // API 키는 보존하고 다른 데이터만 초기화
     const preservedKeys = preserveApiKeysOnReset();
     
-    // 블로그 관련 localStorage 데이터 삭제
-    Object.values(STORAGE_KEYS).forEach(key => {
-      localStorage.removeItem(key);
-    });
+    // 블로그 관련 localStorage 데이터 삭제 (참조 데이터 제외)
+    localStorage.removeItem(STORAGE_KEYS.GENERATED_CONTENT);
+    localStorage.removeItem(STORAGE_KEYS.EDITOR_CONTENT);
+    localStorage.removeItem(STORAGE_KEYS.SELECTED_TOPIC);
+    localStorage.removeItem(STORAGE_KEYS.TOPICS);
+    localStorage.removeItem(STORAGE_KEYS.KEYWORD);
+    localStorage.removeItem(STORAGE_KEYS.COLOR_THEME);
+    // 참조 링크와 문장은 초기화하지 않음 (영구 보존)
     
     setAppState({
       ...defaultState,
@@ -253,16 +270,20 @@ export const useAppStateManager = () => {
       isApiKeyValidated: preservedKeys.geminiValidated ?? true,
       isPixabayApiKeyValidated: preservedKeys.pixabayValidated ?? true,
       isHuggingFaceApiKeyValidated: preservedKeys.huggingFaceValidated ?? true,
+      // 참조 링크와 문장도 보존
+      referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
+      referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
     });
     
     setPreventDuplicates(true);
-    toast({ title: "초기화 완료", description: "블로그 데이터가 초기화되었습니다. (API 키는 보존됨)" });
+    toast({ title: "초기화 완료", description: "블로그 데이터가 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
   }, [toast]);
 
   return {
     appState,
     saveAppState,
     deleteApiKeyFromStorage,
+    deleteReferenceData,
     resetApp,
     preventDuplicates,
     setPreventDuplicates,

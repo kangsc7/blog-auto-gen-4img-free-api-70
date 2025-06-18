@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -58,10 +59,10 @@ export const getEnhancedArticlePrompt = async ({
   // 자연스러운 맥락적 표현들 생성
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
   
-  // 동적 소제목 생성 (5개로 축소)
-  console.log('동적 소제목 생성 시작:', keyword, topic);
+  // 동적 소제목 생성 (5개로 축소) - 40자 제한 적용
+  console.log('동적 소제목 생성 시작 (40자 제한):', keyword, topic);
   const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
-  console.log('생성된 동적 소제목:', dynamicHeadings);
+  console.log('생성된 동적 소제목 (40자 제한):', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
   
   // 5개 섹션만 사용하도록 조정
   const selectedHeadings = dynamicHeadings.slice(0, 5);
@@ -82,9 +83,9 @@ export const getEnhancedArticlePrompt = async ({
         ${crawledInfo}
         === 크롤링 정보 끝 ===
 
-        === 동적 생성된 소제목 정보 ===
-        다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다:
-        ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} - ${h.content}`).join('\n')}
+        === 동적 생성된 소제목 정보 (40자 제한 적용) ===
+        다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다 (각 40자 이내):
+        ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.length}자) - ${h.content}`).join('\n')}
         === 동적 소제목 정보 끝 ===
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
@@ -133,11 +134,17 @@ export const getEnhancedArticlePrompt = async ({
         - 이 섹션에서는 주제와 관련된 격려의 메시지를 담아주세요
         - 주제에 맞는 성공 사례나 긍정적인 전망을 언급해주세요
 
-        위의 크롤링된 최신 정보와 동적 생성된 소제목을 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
-
-        **🚨 모든 공식 사이트 자동 링크 연결 🚨**
+        **🚨 공식 사이트 자동 링크 연결 - 복구됨 🚨**
         본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
-        모든 링크는 완전한 a 태그 형식으로 작성하고, URL 주소는 표기하지 마세요.
+        **반드시 다음 형식으로 작성하세요:**
+        - 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
+        - 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
+        - 보건복지부: <a href="https://www.mohw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>
+        - 고용노동부: <a href="https://www.moel.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">고용노동부</a>
+        - 국세청: <a href="https://www.nts.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">국세청</a>
+        **절대 사용 금지**: "정부24(https://www.gov.kr)" 형식이나 단순 URL만 쓰는 것은 절대 금지
+
+        위의 크롤링된 최신 정보와 동적 생성된 소제목을 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
 
         **🚨 고급 정보 제공 의무 🚨**
         각 섹션에서는 다음을 반드시 포함해야 합니다:
@@ -185,6 +192,8 @@ ${htmlTemplate}
         - **주제와 관련된 구체적이고 실용적인 고급 정보여야 합니다**
         - **크롤링된 정보를 최대한 활용해야 합니다**
         - **⚠️ FAQ는 5번째 섹션에만 추가하고, 다른 섹션에서는 절대 중복 생성하지 마세요**
+        - **🚨 소제목은 40자 이내로 제한되었습니다**
+        - **🚨 공식 링크는 반드시 하이퍼링크 형태로 포함해야 합니다**
       `;
 };
 
@@ -197,40 +206,45 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
   const extractedYear = yearMatch ? yearMatch[1] : null;
   
   if (hasYearInKeyword && extractedYear) {
-    // 년도가 포함된 키워드인 경우
+    // 년도가 포함된 키워드인 경우 - 2025년만 허용
+    const finalYear = extractedYear === '2023' || extractedYear === '2024' ? '2025' : extractedYear;
+    
     return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
 
 **🚨 년도가 포함된 키워드 - 특별 지침 🚨**:
 
-키워드에 "${extractedYear}년"이 포함되어 있으므로, 모든 제목은 반드시 "${extractedYear}년"으로 시작해야 합니다.
+키워드에 "${extractedYear}년"이 포함되어 있지만, 최신 이슈를 위해 "${finalYear}년"으로 업데이트하여 생성합니다.
 
 **절대적 형식 규칙**:
-1. **첫 번째 단어**: "${extractedYear}년" (반드시 4자리숫자 + 년)
+1. **첫 번째 단어**: "${finalYear}년" (반드시 4자리숫자 + 년)
 2. **두 번째 단어부터**: 핵심 키워드와 설명
+3. **🚨 2023년, 2024년은 절대 사용 금지 - 모두 2025년으로 변경 🚨**
 
 **올바른 예시**:
-✅ "${extractedYear}년 디지털플랫폼 지원금 신청방법"
-✅ "${extractedYear}년 국민디지털지원금 자격조건"
-✅ "${extractedYear}년 정부지원금 혜택내용"
+✅ "${finalYear}년 디지털플랫폼 지원금 신청방법"
+✅ "${finalYear}년 국민디지털지원금 자격조건"
+✅ "${finalYear}년 정부지원금 혜택내용"
 
 **절대 금지**:
-❌ "년 �지털플랫폼..." (숫자 없는 년)
-❌ "디지털플랫폼 ${extractedYear}년..." (년도가 뒤에 위치)
-❌ "${extractedYear} �지털플랫폼..." (년 없이 숫자만)
+❌ "2023년 디지털플랫폼..." (2023년 사용 금지)
+❌ "2024년 디지털플랫폼..." (2024년 사용 금지)
+❌ "년 디지털플랫폼..." (숫자 없는 년)
+❌ "디지털플랫폼 ${finalYear}년..." (년도가 뒤에 위치)
 
 **필수 생성 패턴** (이 중에서만 선택):
-- "${extractedYear}년 [핵심키워드] 신청방법"
-- "${extractedYear}년 [핵심키워드] 자격조건"
-- "${extractedYear}년 [핵심키워드] 지원대상"
-- "${extractedYear}년 [핵심키워드] 혜택내용"
-- "${extractedYear}년 [핵심키워드] 최신정보"
-- "${extractedYear}년 [핵심키워드] 완벽가이드"
+- "${finalYear}년 [핵심키워드] 신청방법"
+- "${finalYear}년 [핵심키워드] 자격조건"
+- "${finalYear}년 [핵심키워드] 지원대상"
+- "${finalYear}년 [핵심키워드] 혜택내용"
+- "${finalYear}년 [핵심키워드] 최신정보"
+- "${finalYear}년 [핵심키워드] 완벽가이드"
 
 **최종 검증**:
 각 제목 생성 후 반드시 확인:
-1. "${extractedYear}년"으로 시작하는가?
-2. 핵심 키워드가 포함되었는가?
-3. 의미있는 설명이 추가되었는가?
+1. "${finalYear}년"으로 시작하는가?
+2. 2023년, 2024년이 포함되지 않았는가?
+3. 핵심 키워드가 포함되었는가?
+4. 의미있는 설명이 추가되었는가?
 
 지금 즉시 위 규칙을 엄격히 따라 ${count}개의 제목을 생성해주세요.`;
   } else {
@@ -246,6 +260,7 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 2. **실용성**: 독자에게 도움이 되는 실용적인 정보 제목
 3. **SEO 최적화**: 검색에 최적화된 구체적인 제목
 4. **다양성**: 다양한 관점에서 접근한 제목들
+5. **최신성**: 필요시 2025년을 자연스럽게 포함
 
 **추천 제목 패턴**:
 - "[키워드] 완벽 가이드"
@@ -255,11 +270,12 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 - "[키워드] 장단점 비교"
 - "[키워드] 효과적인 활용법"
 - "[키워드] 주의사항과 해결책"
+- "2025년 [키워드] 최신 동향"
 
 **제목 예시** (${keyword} 기준):
 - "${keyword} 초보자도 쉽게 시작하는 방법"
 - "${keyword} 효과적인 활용을 위한 완벽 가이드"
-- "${keyword} 성공을 위한 필수 노하우"
+- "2025년 ${keyword} 성공을 위한 필수 노하우"
 
 **최종 출력 규칙**:
 - 번호나 불릿 포인트 없이 제목만 출력
