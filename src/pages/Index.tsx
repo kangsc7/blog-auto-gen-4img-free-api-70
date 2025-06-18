@@ -241,21 +241,23 @@ const Index = () => {
         generationStatus={generationStatus}
         generationFunctions={generationFunctions}
         topicControls={topicControls}
-        utilityFunctions={{
-          copyToClipboard: utilityFunctions.copyToClipboard,
-          downloadHTML: utilityFunctions.downloadHTML,
-          openWhisk: utilityFunctions.openWhisk,
-        }}
+        utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
-        handleTopicConfirm={(topic: string) => handleTopicConfirm(topic)}
+        handleTopicConfirm={handleTopicConfirm}
       />
 
       {/* 주제 확인 다이얼로그 - 실제 작동하는 확인 다이얼로그 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
-        onConfirm={() => handleTopicConfirm(pendingTopic)}
-        onCancel={handleTopicCancel}
+        onConfirm={() => {
+          console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
+          handleTopicConfirm(pendingTopic);
+        }}
+        onCancel={() => {
+          console.log('TopicConfirmDialog onCancel 호출됨');
+          handleTopicCancel();
+        }}
       />
 
       {/* 주제 선택 알림 팝업 */}

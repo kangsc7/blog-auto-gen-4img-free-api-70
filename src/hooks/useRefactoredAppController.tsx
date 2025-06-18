@@ -14,7 +14,13 @@ import { useUserAccess } from '@/hooks/useUserAccess';
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
+  
+  // useAllApiKeysManager는 하나의 객체만 받습니다
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
+    appState,
+    saveAppState,
+  });
+  
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
 
@@ -51,6 +57,7 @@ export const useRefactoredAppController = () => {
 
   // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelect = (topic: string) => {
+    console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
   };
@@ -58,11 +65,15 @@ export const useRefactoredAppController = () => {
   // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
   const handleTopicConfirm = (topic: string) => {
     console.log('주제 확인 및 선택:', topic);
+    
+    // 1. 먼저 주제를 선택 (appState 업데이트)
     topicControls.selectTopic(topic);
+    
+    // 2. 다이얼로그 닫기
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
     
-    // 1초 후 글 생성 시작
+    // 3. 1초 후 글 생성 시작
     setTimeout(() => {
       console.log('자동 글 생성 시작:', { topic, keyword: appState.keyword });
       generateArticle({ topic, keyword: appState.keyword });
@@ -71,6 +82,7 @@ export const useRefactoredAppController = () => {
 
   // 주제 확인 다이얼로그 취소
   const handleTopicCancel = () => {
+    console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
   };
