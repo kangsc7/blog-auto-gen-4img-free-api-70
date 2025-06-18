@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Lightbulb, Palette } from 'lucide-react';
 import { AppState } from '@/types';
+import { colorThemes } from '@/data/constants';
 
 interface ArticleGeneratorProps {
   appState: AppState;
@@ -48,6 +50,12 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
     }
   };
 
+  // 랜덤 컬러 테마 선택 함수
+  const selectRandomColorTheme = () => {
+    const randomIndex = Math.floor(Math.random() * colorThemes.length);
+    saveAppState({ colorTheme: colorThemes[randomIndex].value });
+  };
+
   // API 키 검증 상태 확인 (Gemini는 필수, 나머지는 선택사항)
   const canGenerate = appState.isApiKeyValidated; // Gemini API 키만 필수
   const hasPixabay = appState.isPixabayKeyValidated;
@@ -62,6 +70,54 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* 컬러 테마 선택 섹션 */}
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <Palette className="h-4 w-4 mr-2 text-purple-600" />
+            <label className="text-sm font-medium text-gray-700">블로그 컬러 테마</label>
+          </div>
+          <Select 
+            value={appState.colorTheme || ''} 
+            onValueChange={(value) => saveAppState({ colorTheme: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="컬러 테마 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {colorThemes.map((theme) => (
+                <SelectItem key={theme.value} value={theme.value}>
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-4 h-4 rounded-full border" 
+                      style={{ backgroundColor: theme.primaryColor }}
+                    />
+                    <span>{theme.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={selectRandomColorTheme} 
+              variant="outline" 
+              size="sm"
+              className="flex-1"
+            >
+              랜덤 테마
+            </Button>
+            {appState.colorTheme && (
+              <div className="flex items-center space-x-2 text-xs text-green-600">
+                <div 
+                  className="w-3 h-3 rounded-full border" 
+                  style={{ backgroundColor: colorThemes.find(t => t.value === appState.colorTheme)?.primaryColor }}
+                />
+                <span>선택됨</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* API 키 상태 표시 */}
         <div className="text-xs bg-gray-50 p-3 rounded border">
           <p className="font-semibold mb-2">🔑 API 키 상태:</p>
@@ -113,6 +169,12 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
         {canGenerate && (!hasPixabay || !hasHuggingFace) && (
           <p className="text-xs text-amber-600 mt-2">
             추가 기능 사용 가능: {!hasPixabay ? 'Pixabay API (이미지 자동 수집)' : ''} {!hasHuggingFace ? 'HuggingFace API (이미지 생성)' : ''}
+          </p>
+        )}
+
+        {!appState.colorTheme && (
+          <p className="text-xs text-blue-600 mt-2">
+            💡 컬러 테마를 선택하지 않으면 랜덤 테마가 자동 적용됩니다.
           </p>
         )}
       </CardContent>

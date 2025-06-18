@@ -63,11 +63,18 @@ export const useArticleGenerator = (
         description: "키워드 관련 최신 정보를 크롤링하고 있습니다." 
       });
 
-      // 랜덤 컬러 테마 자동 선택
-      const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
-      const selectedColorTheme = randomTheme.value;
+      // 컬러 테마 선택 (사용자 선택 우선, 없으면 랜덤)
+      let selectedColorTheme = appState.colorTheme;
+      if (!selectedColorTheme) {
+        const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
+        selectedColorTheme = randomTheme.value;
+        saveAppState({ colorTheme: selectedColorTheme });
+        console.log('랜덤 컬러 테마 자동 선택:', selectedColorTheme);
+      } else {
+        console.log('사용자 선택 컬러 테마 사용:', selectedColorTheme);
+      }
       
-      // 개선된 프롬프트 사용 (웹 크롤링 포함)
+      // 개선된 프롬프트 사용 (웹 크롤링 + 시각요약 카드 + 글자수 제한 포함)
       const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
         keyword: coreKeyword,
@@ -210,9 +217,11 @@ export const useArticleGenerator = (
       }
 
       saveAppState(stateToSave);
+      
+      const selectedThemeName = colorThemes.find(t => t.value === selectedColorTheme)?.label || selectedColorTheme;
       toast({ 
         title: "웹 크롤링 기반 블로그 글 생성 완료", 
-        description: `"${selectedColorTheme}" 테마가 자동 적용되어 풍부한 내용의 글이 완성되었습니다.` 
+        description: `"${selectedThemeName}" 테마가 적용되어 시각요약 카드와 함께 풍부한 내용의 글이 완성되었습니다.` 
       });
       return finalHtml;
     } catch (error) {
