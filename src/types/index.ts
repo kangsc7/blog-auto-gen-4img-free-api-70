@@ -1,36 +1,31 @@
+
 export interface User {
   id: string;
   password: string;
 }
 
 export interface AppState {
-  keyword: string;
-  topics: string[];
-  selectedTopic: string;
-  topicCount: number;
-  generatedContent: string;
-  isApiKeyValidated: boolean;
+  isLoggedIn: boolean;
+  currentUser: string;
   apiKey: string;
+  isApiKeyValidated: boolean;
   pixabayApiKey: string;
   isPixabayApiKeyValidated: boolean;
   huggingFaceApiKey: string;
   isHuggingFaceApiKeyValidated: boolean;
-  imagePrompt: string;
-  generatedImageUrl: string;
-  isLoggedIn: boolean;
-  currentUser: string;
+  keyword: string;
+  topicCount: number;
+  topics: string[];
+  selectedTopic: string;
   colorTheme: string;
   referenceLink: string;
   referenceSentence: string;
+  generatedContent: string;
   imageStyle: string;
+  imagePrompt: string;
+  generatedImageUrl: string;
   preventDuplicates: boolean;
   saveReferenceTrigger?: boolean;
-  adSenseSettings?: {
-    enabled: boolean;
-    adClient: string;
-    adSlot: string;
-    adCount: number;
-  };
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';

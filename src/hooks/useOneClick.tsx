@@ -10,25 +10,6 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 type GenerateTopicsFunc = (keyword: string) => Promise<string[] | null>;
 type GenerateArticleFunc = (options?: { topic?: string; keyword?: string; }) => Promise<string | null>;
 
-// 에러 타입 정의
-type OneClickError = 
-  | 'ACCESS_DENIED'
-  | 'NO_PROFILE'
-  | 'API_KEY_MISSING'
-  | 'KEYWORD_GENERATION_FAILED'
-  | 'KEYWORD_DUPLICATE_EXHAUSTED'
-  | 'TOPIC_GENERATION_FAILED'
-  | 'TOPIC_DUPLICATE_EXHAUSTED'
-  | 'ARTICLE_GENERATION_FAILED'
-  | 'DATABASE_ERROR'
-  | 'USER_CANCELLED';
-
-interface OneClickDetailedError {
-  type: OneClickError;
-  message: string;
-  details?: string;
-}
-
 export const useOneClick = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
@@ -43,70 +24,6 @@ export const useOneClick = (
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
   const cancelGeneration = useRef(false);
   const { generateLatestKeyword, generateEvergreenKeyword } = useKeywordGenerator(appState);
-
-  const createOneClickError = (type: OneClickError, message: string, details?: string): OneClickDetailedError => {
-    return { type, message, details };
-  };
-
-  const getOneClickErrorMessage = (error: OneClickDetailedError): { title: string; description: string } => {
-    switch (error.type) {
-      case 'ACCESS_DENIED':
-        return {
-          title: '🚫 접근 제한',
-          description: '이 기능을 사용할 권한이 없습니다. 관리자에게 문의하세요.'
-        };
-      case 'NO_PROFILE':
-        return {
-          title: '👤 프로필 오류',
-          description: '사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.'
-        };
-      case 'API_KEY_MISSING':
-        return {
-          title: '🔑 API 키 필요',
-          description: 'API 키를 입력하고 검증해주세요.'
-        };
-      case 'KEYWORD_GENERATION_FAILED':
-        return {
-          title: '🔍 키워드 생성 실패',
-          description: '키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'
-        };
-      case 'KEYWORD_DUPLICATE_EXHAUSTED':
-        return {
-          title: '🔄 키워드 중복 초과',
-          description: '사용 가능한 새 키워드가 없습니다. 중복 허용 모드로 변경하거나 잠시 후 시도해주세요.'
-        };
-      case 'TOPIC_GENERATION_FAILED':
-        return {
-          title: '📝 주제 생성 실패',
-          description: '주제 생성에 실패했습니다. 키워드를 변경하거나 잠시 후 다시 시도해주세요.'
-        };
-      case 'TOPIC_DUPLICATE_EXHAUSTED':
-        return {
-          title: '🔄 주제 중복으로 중단',
-          description: '생성된 모든 주제가 이미 사용되었습니다. 중복 허용 모드로 변경하거나 다른 키워드를 시도해주세요.'
-        };
-      case 'ARTICLE_GENERATION_FAILED':
-        return {
-          title: '📄 글 생성 실패',
-          description: '블로그 글 생성에 실패했습니다. API 상태를 확인하고 다시 시도해주세요.'
-        };
-      case 'DATABASE_ERROR':
-        return {
-          title: '💾 데이터베이스 오류',
-          description: '데이터베이스 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.'
-        };
-      case 'USER_CANCELLED':
-        return {
-          title: '⏹️ 사용자 중단',
-          description: '사용자 요청에 따라 생성을 중단했습니다.'
-        };
-      default:
-        return {
-          title: '❓ 알 수 없는 오류',
-          description: '예상치 못한 오류가 발생했습니다. 다시 시도해주세요.'
-        };
-    }
-  };
 
   const getUserUsedKeywords = async (userId: string): Promise<string[]> => {
     if (!preventDuplicates) {
@@ -126,15 +43,48 @@ export const useOneClick = (
 
       if (error) {
         console.error('사용한 키워드 조회 오류:', error);
-        throw createOneClickError('DATABASE_ERROR', '키워드 조회 실패', error.message);
+        return [];
       }
 
       return usedKeywordsData?.map((item: any) => item.keywords?.keyword_text).filter(Boolean) || [];
-    } catch (error: any) {
+    } catch (error) {
       console.error('키워드 조회 중 오류:', error);
-      if (error.type) throw error;
-      throw createOneClickError('DATABASE_ERROR', '키워드 데이터 조회 실패', error.message);
+      return [];
     }
+  };
+
+  const isKeywordUsed = async (keyword: string, userId: string): Promise<boolean> => {
+    if (!preventDuplicates) {
+      console.log('중복 허용 모드: 키워드 중복 체크 건너뛰기');
+      return false;
+    }
+
+    const { data: keywordData, error: keywordError } = await supabase
+        .from('keywords')
+        .select('id')
+        .eq('keyword_text', keyword)
+        .maybeSingle();
+    
+    if (keywordError) {
+        console.error("Error checking for existing keyword:", keywordError);
+        return false;
+    }
+
+    if (!keywordData) return false;
+
+    const { data: usageData, error: usageError } = await supabase
+        .from('user_used_keywords')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('keyword_id', keywordData.id)
+        .maybeSingle();
+
+    if (usageError) {
+        console.error("Error checking keyword usage:", usageError);
+        return false;
+    }
+
+    return !!usageData;
   };
 
   const isTopicUsed = async (topic: string, userId: string): Promise<boolean> => {
@@ -189,9 +139,7 @@ export const useOneClick = (
           .eq('keyword_text', keyword)
           .maybeSingle();
 
-      if (findError) {
-        throw createOneClickError('DATABASE_ERROR', '키워드 조회 실패', findError.message);
-      }
+      if (findError) throw new Error(`키워드 조회 오류: ${findError.message}`);
 
       let keywordId;
       if (keywordData) {
@@ -203,9 +151,7 @@ export const useOneClick = (
               .select('id')
               .single();
           
-          if (insertKeywordError) {
-            throw createOneClickError('DATABASE_ERROR', '새 키워드 저장 실패', insertKeywordError.message);
-          }
+          if (insertKeywordError) throw new Error(`새로운 키워드 저장 오류: ${insertKeywordError.message}`);
           keywordId = newKeywordData.id;
       }
       
@@ -216,49 +162,34 @@ export const useOneClick = (
           .eq('keyword_id', keywordId)
           .maybeSingle();
           
-      if (checkUsageError) {
-        throw createOneClickError('DATABASE_ERROR', '키워드 사용 이력 확인 실패', checkUsageError.message);
-      }
+      if (checkUsageError) throw new Error(`키워드 사용 이력 확인 오류: ${checkUsageError.message}`);
 
       if (!existingUsage) {
           const { error: insertUsageError } = await supabase
               .from('user_used_keywords')
               .insert({ user_id: userId, keyword_id: keywordId });
           
-          if (insertUsageError) {
-            throw createOneClickError('DATABASE_ERROR', '키워드 사용 이력 저장 실패', insertUsageError.message);
-          }
+          if (insertUsageError) throw new Error(`키워드 사용 이력 저장 오류: ${insertUsageError.message}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('키워드 사용 기록 중 오류:', error);
-      if (error.type) throw error;
-      throw createOneClickError('DATABASE_ERROR', '키워드 기록 처리 실패', error.message);
     }
   };
 
   const runOneClickFlow = async (keywordSource: 'latest' | 'evergreen') => {
     if (!canUseFeatures) {
-      const error = createOneClickError('ACCESS_DENIED', '접근 권한 없음');
-      const errorMsg = getOneClickErrorMessage(error);
       toast({
-        title: errorMsg.title,
-        description: errorMsg.description,
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
         variant: "destructive"
       });
       return;
     }
 
     if (isOneClickGenerating) return;
-    
     if (!profile) {
-      const error = createOneClickError('NO_PROFILE', '프로필 정보 없음');
-      const errorMsg = getOneClickErrorMessage(error);
-      toast({
-        title: errorMsg.title,
-        description: errorMsg.description,
-        variant: "destructive"
-      });
-      return;
+        toast({ title: "오류", description: "사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.", variant: "destructive" });
+        return;
     }
 
     setIsOneClickGenerating(true);
@@ -266,12 +197,10 @@ export const useOneClick = (
     const userId = profile.id;
 
     try {
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
-      
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!appState.isApiKeyValidated) {
-        throw createOneClickError('API_KEY_MISSING', 'API 키 검증 필요');
+        toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
+        return;
       }
       
       let keyword: string | null = null;
@@ -283,17 +212,13 @@ export const useOneClick = (
       const usedKeywords = await getUserUsedKeywords(userId);
       console.log(`${keywordType} 키워드 생성 - 사용된 키워드:`, usedKeywords);
 
-      // 키워드 생성 시도
       if (keywordSource === 'latest') {
         toast({ title: `1단계: 실시간 ${keywordType} 키워드 생성`, description: `Google Trends 데이터를 분석합니다...` });
         let attempt = 0;
-        const maxAttempts = preventDuplicates ? 3 : 1;
+        const maxAttempts = preventDuplicates ? 3 : 1; // 중복 허용일 때는 1번만 시도
         
         while(attempt < maxAttempts && !keyword) {
-            if (cancelGeneration.current) {
-              throw createOneClickError('USER_CANCELLED', '사용자 중단');
-            }
-            
+            if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateLatestKeyword();
             if (generatedKeyword) {
                 const used = preventDuplicates ? usedKeywords.includes(generatedKeyword) : false;
@@ -311,24 +236,22 @@ export const useOneClick = (
         }
         
         if (!keyword) {
+          // 중복 허용일 때는 실패해도 기본 키워드 사용하지 않고 재시도
           if (!preventDuplicates) {
             const retryKeyword = await generateLatestKeyword();
             keyword = retryKeyword || '2025년 생활 꿀팁';
           } else {
-            throw createOneClickError('KEYWORD_DUPLICATE_EXHAUSTED', '트렌드 키워드 중복 초과');
+            throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
           }
         }
       
       } else {
         toast({ title: `1단계: 검증된 ${keywordType} 키워드 선택`, description: `데이터베이스에서 최적 키워드를 선택합니다...` });
         let attempt = 0;
-        const maxAttempts = preventDuplicates ? 3 : 1;
+        const maxAttempts = preventDuplicates ? 3 : 1; // 중복 허용일 때는 1번만 시도
         
         while(attempt < maxAttempts && !keyword) {
-            if (cancelGeneration.current) {
-              throw createOneClickError('USER_CANCELLED', '사용자 중단');
-            }
-            
+            if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
             const generatedKeyword = await generateEvergreenKeyword();
             if (generatedKeyword) {
                 const used = preventDuplicates ? usedKeywords.includes(generatedKeyword) : false;
@@ -347,19 +270,14 @@ export const useOneClick = (
 
         if (!keyword && preventDuplicates) {
             toast({ title: "AI 키워드 중복/실패", description: "데이터베이스에서 직접 선택합니다." });
-            if (cancelGeneration.current) {
-              throw createOneClickError('USER_CANCELLED', '사용자 중단');
-            }
+            if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
             const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
                 .from('user_used_keywords')
                 .select('keyword_id')
                 .eq('user_id', userId);
 
-            if (usedKeywordsError) {
-              throw createOneClickError('DATABASE_ERROR', '사용 키워드 조회 실패', usedKeywordsError.message);
-            }
-            
+            if (usedKeywordsError) throw new Error(`사용한 키워드 목록 조회 오류: ${usedKeywordsError.message}`);
             const usedKeywordIds = usedKeywordsData.map(row => row.keyword_id);
 
             let keywordQuery = supabase
@@ -372,9 +290,7 @@ export const useOneClick = (
             }
 
             let { data: availableKeywords, error: keywordsError } = await keywordQuery;
-            if (keywordsError) {
-              throw createOneClickError('DATABASE_ERROR', 'DB 키워드 조회 실패', keywordsError.message);
-            }
+            if (keywordsError) throw new Error(`DB 키워드 조회 오류: ${keywordsError.message}`);
             
             if (!availableKeywords || availableKeywords.length === 0) {
                  toast({ title: "키워드 목록 초기화", description: `모든 '평생' 키워드를 사용했습니다. 목록을 초기화합니다.` });
@@ -383,9 +299,7 @@ export const useOneClick = (
                     .select('id')
                     .eq('type', 'evergreen');
 
-                if (allKeywordsError) {
-                  throw createOneClickError('DATABASE_ERROR', '키워드 목록 초기화 실패', allKeywordsError.message);
-                }
+                if (allKeywordsError) throw new Error(`키워드 목록 초기화 실패: ${allKeywordsError.message}`);
                 
                 if (allKeywordsOfType.length > 0) {
                     const keywordIdsToDelete = allKeywordsOfType.map(k => k.id);
@@ -394,36 +308,31 @@ export const useOneClick = (
                         .delete()
                         .eq('user_id', userId)
                         .in('keyword_id', keywordIdsToDelete);
-                    if (deleteError) {
-                      throw createOneClickError('DATABASE_ERROR', '키워드 이력 초기화 실패', deleteError.message);
-                    }
+                    if (deleteError) throw new Error(`키워드 사용 이력 초기화 실패: ${deleteError.message}`);
                 }
                 const { data: refetchedKeywords, error: refetchedError } = await supabase.from('keywords').select('keyword_text, id').eq('type', 'evergreen');
-                if (refetchedError) {
-                  throw createOneClickError('DATABASE_ERROR', '초기화 후 키워드 조회 실패', refetchedError.message);
-                }
+                if (refetchedError) throw new Error(`초기화 후 키워드 조회 오류: ${refetchedError.message}`);
                 availableKeywords = refetchedKeywords;
             }
 
             if (!availableKeywords || availableKeywords.length === 0) {
-              throw createOneClickError('KEYWORD_DUPLICATE_EXHAUSTED', '사용 가능한 평생 키워드 없음');
+              throw new Error("데이터베이스에 사용 가능한 평생 키워드가 없습니다.");
             }
             
             const selectedKeyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
             keyword = selectedKeyword.keyword_text;
         } else if (!keyword) {
+          // 중복 허용일 때는 간단히 재시도하거나 기본값 사용
           const retryKeyword = await generateEvergreenKeyword();
           keyword = retryKeyword || '생활 절약 꿀팁';
         }
       }
 
       if (!keyword) {
-        throw createOneClickError('KEYWORD_GENERATION_FAILED', `${keywordType} 키워드 생성 실패`);
+          throw new Error(`${keywordType} 키워드를 생성하거나 선택하는데 실패했습니다.`);
       }
       
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       
       await recordKeywordUsage(keyword, userId, keywordSource);
 
@@ -431,28 +340,21 @@ export const useOneClick = (
       saveAppState({ keyword });
       toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
       
-      await sleep(1500);
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
+      await sleep(1500); // 키워드 설정 후 잠시 대기
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
       console.log('주제 생성 호출 - 키워드:', keyword);
       const newTopics = await generateTopics(keyword);
       console.log('생성된 주제들:', newTopics);
-      
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
-      
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!newTopics || newTopics.length === 0) {
-        throw createOneClickError('TOPIC_GENERATION_FAILED', '주제 생성 실패');
+        throw new Error("주제 생성에 실패하여 중단합니다.");
       }
 
+      // 주제 생성 후 UI 업데이트를 위한 추가 대기
       await sleep(2000);
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       let selectedTopic: string | null = null;
       if (preventDuplicates) {
@@ -465,7 +367,8 @@ export const useOneClick = (
         }
         
         if (availableTopics.length === 0) {
-          throw createOneClickError('TOPIC_DUPLICATE_EXHAUSTED', '모든 주제 중복');
+          toast({ title: "주제 중복 경고", description: "생성된 모든 주제가 이미 사용되었습니다. 첫 번째 주제를 선택합니다." });
+          selectedTopic = newTopics[0];
         } else {
           selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
         }
@@ -481,46 +384,35 @@ export const useOneClick = (
         await recordTopicUsage(selectedTopic, userId);
       }
 
+      // 주제 선택 후 UI 업데이트를 위한 추가 대기
       await sleep(2000);
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
       const articleGenerated = await generateArticle({ topic: selectedTopic, keyword });
-      
-      if (cancelGeneration.current) {
-        throw createOneClickError('USER_CANCELLED', '사용자 중단');
-      }
-      
+      if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
       if (!articleGenerated) {
-        throw createOneClickError('ARTICLE_GENERATION_FAILED', '글 생성 실패');
+        throw new Error("글 생성에 실패하여 중단합니다.");
       }
 
-      toast({ 
-        title: "✅ 원클릭 생성 완료!", 
-        description: `${keywordType} 키워드 기반 모든 과정이 성공적으로 완료되었습니다.` 
-      });
+      toast({ title: "원클릭 생성 완료!", description: `${keywordType} 키워드 기반 모든 과정이 성공적으로 완료되었습니다.` });
 
-    } catch (error: any) {
-      console.error('원클릭 생성 오류:', error);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "자동 생성 중 알 수 없는 오류가 발생했습니다.";
       
-      let errorMsg;
-      if (error.type && error.message) {
-        errorMsg = getOneClickErrorMessage(error as OneClickDetailedError);
-        if (error.details) {
-          console.error('오류 상세:', error.details);
-        }
+      if (errorMessage === "사용자에 의해 중단되었습니다.") {
+        toast({
+          title: "원클릭 생성 중단됨",
+          description: "사용자 요청에 따라 생성을 중단했습니다.",
+          variant: "default",
+        });
       } else {
-        const unknownError = createOneClickError('DATABASE_ERROR', '예상치 못한 오류', error.message);
-        errorMsg = getOneClickErrorMessage(unknownError);
+        toast({
+          title: "원클릭 생성 오류",
+          description: errorMessage,
+          variant: "destructive"
+        });
       }
-      
-      toast({
-        title: errorMsg.title,
-        description: errorMsg.description,
-        variant: error.type === 'USER_CANCELLED' ? "default" : "destructive"
-      });
     } finally {
       setIsOneClickGenerating(false);
     }
