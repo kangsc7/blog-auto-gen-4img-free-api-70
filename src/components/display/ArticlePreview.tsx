@@ -21,22 +21,26 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromProps = useRef(false);
+  const isComposing = useRef(false); // 한글 입력 중인지 추적
+  const lastKnownCursorPosition = useRef(0);
 
   // 커서 위치를 텍스트 오프셋으로 저장/복원하는 더 안정적인 방법
   const getCursorPosition = (): number => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) return 0;
+    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) return lastKnownCursorPosition.current;
     
     const range = selection.getRangeAt(0);
     const preCaretRange = range.cloneRange();
     preCaretRange.selectNodeContents(editableDivRef.current);
     preCaretRange.setEnd(range.endContainer, range.endOffset);
     
-    return preCaretRange.toString().length;
+    const position = preCaretRange.toString().length;
+    lastKnownCursorPosition.current = position;
+    return position;
   };
 
   const setCursorPosition = (position: number) => {
-    if (!editableDivRef.current) return;
+    if (!editableDivRef.current || isComposing.current) return; // 한글 입력 중에는 커서 이동 금지
     
     const selection = window.getSelection();
     if (!selection) return;
@@ -59,6 +63,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
         
         selection.removeAllRanges();
         selection.addRange(range);
+        lastKnownCursorPosition.current = position;
         return;
       }
       currentPosition += textLength;
@@ -70,10 +75,15 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     range.collapse(false);
     selection.removeAllRanges();
     selection.addRange(range);
+    lastKnownCursorPosition.current = editableDivRef.current.textContent?.length || 0;
   };
 
   useEffect(() => {
-    if (editableDivRef.current && editableDivRef.current.innerHTML !== generatedContent) {
+    // 한글 입력 중이거나 외부 업데이트 중에는 DOM 업데이트 금지
+    if (editableDivRef.current && 
+        editableDivRef.current.innerHTML !== generatedContent && 
+        !isComposing.current) {
+      
       // 현재 커서 위치 저장
       const cursorPosition = getCursorPosition();
       
@@ -92,13 +102,42 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   }, [generatedContent]);
 
   const handleContentEdit = () => {
-    if (editableDivRef.current && !isUpdatingFromProps.current) {
+    if (editableDivRef.current && !isUpdatingFromProps.current && !isComposing.current) {
       const updatedContent = editableDivRef.current.innerHTML;
       onContentChange(updatedContent);
     }
   };
 
+  // 한글 입력 시작 처리
+  const handleCompositionStart = () => {
+    console.log('한글 입력 시작');
+    isComposing.current = true;
+  };
+
+  // 한글 입력 중 처리
+  const handleCompositionUpdate = () => {
+    // 입력 중에는 아무것도 하지 않음
+  };
+
+  // 한글 입력 완료 처리
+  const handleCompositionEnd = () => {
+    console.log('한글 입력 완료');
+    isComposing.current = false;
+    
+    // 한글 입력이 완료된 후에 상태 업데이트
+    setTimeout(() => {
+      if (!isUpdatingFromProps.current) {
+        handleContentEdit();
+      }
+    }, 10);
+  };
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
+    // 한글 입력 중에는 특별한 키 처리를 하지 않음
+    if (isComposing.current) {
+      return;
+    }
+
     if (event.key === 'Enter') {
       // 엔터 키는 기본 동작을 허용하되, 상태 업데이트만 지연
       event.stopPropagation(); // 이벤트 버블링 방지
@@ -118,10 +157,17 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   };
 
   const handleInput = (event: React.FormEvent) => {
-    // input 이벤트에서는 즉시 처리
-    if (!isUpdatingFromProps.current) {
+    // 한글 입력 중에는 즉시 처리하지 않음
+    if (!isUpdatingFromProps.current && !isComposing.current) {
+      // 커서 위치 업데이트
+      getCursorPosition();
       handleContentEdit();
     }
+  };
+
+  const handleBeforeInput = (event: React.FormEvent) => {
+    // 현재 커서 위치를 저장
+    getCursorPosition();
   };
 
   const handleCopyToClipboard = () => {
@@ -211,6 +257,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             contentEditable={true}
             className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
+            onCompositionStart={handleCompositionStart}
+            onCompositionUpdate={handleCompositionUpdate}
+            onCompositionEnd={handleCompositionEnd}
+            onBeforeInput={handleBeforeInput}
             onInput={handleInput}
             onBlur={handleContentEdit}
             onKeyDown={handleKeyDown}
