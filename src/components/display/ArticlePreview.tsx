@@ -21,9 +21,41 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
 
+  // 커서 위치 저장 및 복원을 위한 함수들
+  const saveCursorPosition = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      return selection.getRangeAt(0);
+    }
+    return null;
+  };
+
+  const restoreCursorPosition = (range: Range) => {
+    const selection = window.getSelection();
+    if (selection && range) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
+
   useEffect(() => {
     if (editableDivRef.current && editableDivRef.current.innerHTML !== generatedContent) {
+      // 커서 위치 저장
+      const savedRange = saveCursorPosition();
+      
+      // 내용 업데이트
       editableDivRef.current.innerHTML = generatedContent;
+      
+      // 커서 위치 복원 (약간의 지연을 두고)
+      if (savedRange) {
+        setTimeout(() => {
+          try {
+            restoreCursorPosition(savedRange);
+          } catch (error) {
+            console.log('커서 위치 복원 실패:', error);
+          }
+        }, 0);
+      }
     }
   }, [generatedContent]);
 
@@ -31,6 +63,16 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     if (editableDivRef.current) {
       const updatedContent = editableDivRef.current.innerHTML;
       onContentChange(updatedContent);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // 엔터 키 처리를 개선
+    if (event.key === 'Enter') {
+      // 기본 동작을 막지 않고, 단순히 상태 업데이트만 지연
+      setTimeout(() => {
+        handleContentEdit();
+      }, 0);
     }
   };
 
@@ -119,11 +161,12 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
           <div
             ref={editableDivRef}
             contentEditable={true}
-            dangerouslySetInnerHTML={{ __html: generatedContent }}
             className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
             onInput={handleContentEdit}
             onBlur={handleContentEdit}
+            onKeyDown={handleKeyDown}
+            dangerouslySetInnerHTML={{ __html: generatedContent }}
           />
         ) : (
           <div className="text-center py-8 text-gray-500">
