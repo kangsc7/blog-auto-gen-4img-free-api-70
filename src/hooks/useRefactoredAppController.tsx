@@ -45,13 +45,34 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
+  // 주제 확인 다이얼로그 상태 추가
+  const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
+  const [pendingTopic, setPendingTopic] = useState<string>('');
+
+  // 주제 선택 시 확인 다이얼로그 표시
+  const handleTopicSelect = (topic: string) => {
+    setPendingTopic(topic);
+    setShowTopicConfirmDialog(true);
+  };
+
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
   const handleTopicConfirm = (topic: string) => {
+    console.log('주제 확인 및 선택:', topic);
     topicControls.selectTopic(topic);
-    setShowTopicSelectionDialog(false);
+    setShowTopicConfirmDialog(false);
+    setPendingTopic('');
     
+    // 1초 후 글 생성 시작
     setTimeout(() => {
+      console.log('자동 글 생성 시작:', { topic, keyword: appState.keyword });
       generateArticle({ topic, keyword: appState.keyword });
     }, 1000);
+  };
+
+  // 주제 확인 다이얼로그 취소
+  const handleTopicCancel = () => {
+    setShowTopicConfirmDialog(false);
+    setPendingTopic('');
   };
 
   const convertToMarkdown = () => {
@@ -103,13 +124,20 @@ export const useRefactoredAppController = () => {
     handleStopOneClick,
     generationStatus,
     generationFunctions,
-    topicControls,
+    topicControls: {
+      ...topicControls,
+      selectTopic: handleTopicSelect, // 주제 선택 시 확인 다이얼로그 표시
+    },
     utilityFunctions,
     handleTopicConfirm,
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
+    showTopicConfirmDialog,
+    setShowTopicConfirmDialog,
+    pendingTopic,
+    handleTopicCancel,
     convertToMarkdown,
   };
 };

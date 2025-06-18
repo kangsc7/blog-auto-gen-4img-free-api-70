@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -11,6 +10,7 @@ import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
 import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
+import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -47,6 +47,9 @@ const Index = () => {
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
+    showTopicConfirmDialog,
+    pendingTopic,
+    handleTopicCancel,
     convertToMarkdown,
   } = useRefactoredAppController();
 
@@ -59,7 +62,9 @@ const Index = () => {
     preventDuplicates,
     profile: !!profile,
     authLoading,
-    isCheckingAccess
+    isCheckingAccess,
+    showTopicConfirmDialog,
+    pendingTopic
   });
 
   if (authLoading || isCheckingAccess) {
@@ -242,7 +247,15 @@ const Index = () => {
           openWhisk: utilityFunctions.openWhisk,
         }}
         preventDuplicates={preventDuplicates}
-        handleTopicConfirm={handleTopicConfirm}
+        handleTopicConfirm={(topic: string) => handleTopicConfirm(topic)}
+      />
+
+      {/* 주제 확인 다이얼로그 - 실제 작동하는 확인 다이얼로그 */}
+      <TopicConfirmDialog
+        isOpen={showTopicConfirmDialog}
+        topic={pendingTopic}
+        onConfirm={() => handleTopicConfirm(pendingTopic)}
+        onCancel={handleTopicCancel}
       />
 
       {/* 주제 선택 알림 팝업 */}

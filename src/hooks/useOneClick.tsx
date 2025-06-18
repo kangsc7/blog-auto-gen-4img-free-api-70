@@ -523,8 +523,11 @@ export const useOneClick = (
         await sleep(2000);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-        // 3단계: 주제 선택
+        // 3단계: 주제 자동 선택 (중요한 개선사항!)
         let selectedTopic: string | null = null;
+        
+        console.log('평생키워드 원클릭: 주제 자동 선택 로직 시작');
+        toast({ title: "3단계: 최적 주제 자동 선택", description: "생성된 주제 중 가장 적합한 주제를 자동으로 선택합니다..." });
         
         if (preventDuplicates) {
           const availableTopics = [];
@@ -536,22 +539,28 @@ export const useOneClick = (
           }
           
           if (availableTopics.length === 0) {
+            console.log('모든 주제가 중복됨 - 첫 번째 주제 강제 선택');
             toast({ 
               title: "주제 중복 감지", 
-              description: "생성된 모든 주제가 이미 사용되었습니다. 가장 적합한 주제를 선택합니다." 
+              description: "생성된 모든 주제가 이미 사용되었지만 첫 번째 주제로 진행합니다." 
             });
             selectedTopic = topics[0];
           } else {
             selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
+            console.log('중복되지 않은 주제 자동 선택:', selectedTopic);
           }
         } else {
           selectedTopic = topics[Math.floor(Math.random() * topics.length)];
+          console.log('랜덤 주제 자동 선택:', selectedTopic);
         }
 
-        console.log('최종 선택된 주제:', selectedTopic);
-        toast({ title: "3단계: 주제 선택 완료", description: `"${selectedTopic}"을(를) 선택했습니다.` });
-        selectTopic(selectedTopic);
-
+        console.log('평생키워드 원클릭: 최종 선택된 주제:', selectedTopic);
+        toast({ title: "주제 자동 선택 완료", description: `"${selectedTopic}"을(를) 자동으로 선택했습니다.` });
+        
+        // 주제를 appState에 저장하고 UI에 반영
+        saveAppState({ selectedTopic });
+        
+        // 주제 사용 기록
         if (preventDuplicates) {
           await recordTopicUsage(selectedTopic, userId);
         }
@@ -559,8 +568,8 @@ export const useOneClick = (
         await sleep(2000);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-        // 4단계: 글 생성
-        toast({ title: "4단계: AI 글 생성", description: "선택된 주제로 고품질 블로그 글을 생성합니다..." });
+        // 4단계: 글 생성 (주제가 확실히 선택된 상태에서 진행)
+        toast({ title: "4단계: AI 블로그 글 생성", description: "자동 선택된 주제로 고품질 블로그 글을 생성합니다..." });
         
         let articleGenerated = false;
         let articleAttempts = 0;
@@ -570,13 +579,18 @@ export const useOneClick = (
           if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
           
           try {
-            console.log(`글 생성 시도 ${articleAttempts + 1} - 주제:`, selectedTopic);
+            console.log(`글 생성 시도 ${articleAttempts + 1} - 주제:`, selectedTopic, '키워드:', keyword);
             const result = await generateArticle({ topic: selectedTopic, keyword });
             
             if (result) {
               articleGenerated = true;
-              console.log(`글 생성 성공 (시도 ${articleAttempts + 1})`);
+              console.log(`평생키워드 원클릭: 글 생성 성공 (시도 ${articleAttempts + 1})`);
+              toast({ 
+                title: "블로그 글 생성 완료!", 
+                description: `"${selectedTopic}" 주제의 고품질 블로그 글이 완성되었습니다.` 
+              });
             } else {
+              console.log(`글 생성 실패 (시도 ${articleAttempts + 1}) - 재시도 중...`);
               toast({ 
                 title: "글 생성 재시도", 
                 description: `글 생성을 다시 시도합니다... (${articleAttempts + 1}/${maxArticleAttempts})` 
@@ -622,6 +636,7 @@ export const useOneClick = (
         // 재시도 로직
         if (retryCount < maxRetries) {
           retryCount++;
+          console.log(`평생키워드 원클릭 재시도 ${retryCount}/${maxRetries} - 오류:`, errorMessage);
           toast({
             title: `자동 재시도 중 (${retryCount}/${maxRetries})`,
             description: `생성에 실패했습니다. 자동으로 다시 시도합니다...`,
@@ -631,6 +646,7 @@ export const useOneClick = (
           return await attemptGeneration();
         }
 
+        console.error('평생키워드 원클릭 최종 실패:', error);
         toast({
           title: "원클릭 생성 최종 실패",
           description: `${maxRetries}번 시도했지만 실패했습니다: ${errorMessage}`,
