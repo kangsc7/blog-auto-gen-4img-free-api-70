@@ -1,121 +1,183 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, Settings, ExternalLink } from 'lucide-react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette } from 'lucide-react';
-import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
+import { AppState } from '@/types';
 
 interface LeftSidebarProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
-  generationStatus: {
-    isGeneratingTopics: boolean;
-    isGeneratingContent: boolean;
-    isGeneratingImage: boolean;
-    isDirectlyGenerating: boolean;
-  };
-  generationFunctions: {
-    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
-    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
-    createImagePrompt: (inputText: string) => Promise<boolean>;
-    generateDirectImage: () => Promise<string | null>;
-    stopArticleGeneration: () => void;
-  };
-  topicControls: {
-    manualTopic: string;
-    setManualTopic: React.Dispatch<React.SetStateAction<string>>;
-    handleManualTopicAdd: () => void;
-    selectTopic: (topic: string) => void;
-  };
-  utilityFunctions: {
-    copyToClipboard: (text: string, type: string) => void;
-    openWhisk: () => void;
-    downloadHTML: () => void;
-  };
+  isGeneratingTopics: boolean;
+  generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
+  isGeneratingContent: boolean;
+  generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
+  stopArticleGeneration: () => void;
+  isGeneratingImage: boolean;
+  createImagePrompt: (inputText: string) => Promise<boolean>;
+  isDirectlyGenerating: boolean;
+  generateDirectImage: () => Promise<boolean>;
+  manualTopic: string;
+  setManualTopic: React.Dispatch<React.SetStateAction<string>>;
+  handleManualTopicAdd: () => void;
   preventDuplicates: boolean;
+  selectTopic: (topic: string) => void;
+  deleteReferenceData?: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   appState,
   saveAppState,
-  generationStatus,
-  generationFunctions,
-  topicControls,
-  utilityFunctions,
+  isGeneratingTopics,
+  generateTopics,
+  isGeneratingContent,
+  generateArticle,
+  stopArticleGeneration,
+  isGeneratingImage,
+  createImagePrompt,
+  isDirectlyGenerating,
+  generateDirectImage,
+  manualTopic,
+  setManualTopic,
+  handleManualTopicAdd,
   preventDuplicates,
+  selectTopic,
+  deleteReferenceData,
 }) => {
-  const handleColorThemeChange = (value: string) => {
-    saveAppState({ colorTheme: value });
+  const [showApiKeys, setShowApiKeys] = useState(false);
+  const [showExternalReference, setShowExternalReference] = useState(false);
+
+  const handleDoubleClickApiKeys = () => {
+    setShowApiKeys(!showApiKeys);
+  };
+
+  const handleDoubleClickExternalReference = () => {
+    setShowExternalReference(!showExternalReference);
   };
 
   return (
-    <div className="space-y-6">
-      <TopicGenerator
-        keyword={appState.keyword}
-        setKeyword={(keyword) => saveAppState({ keyword })}
-        topics={appState.topics}
-        isGeneratingTopics={generationStatus.isGeneratingTopics}
-        generateTopics={generationFunctions.generateTopics}
-        manualTopic={topicControls.manualTopic}
-        setManualTopic={topicControls.setManualTopic}
-        handleManualTopicAdd={topicControls.handleManualTopicAdd}
-        preventDuplicates={preventDuplicates}
-      />
+    <div className="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
+      <div className="p-4 space-y-4">
+        {/* API 키 설정 */}
+        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickApiKeys}>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-gray-800">
+              <span className="flex items-center">
+                <Settings className="h-5 w-5 mr-2" />
+                API 키 설정
+              </span>
+              {showApiKeys ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </CardTitle>
+          </CardHeader>
+          {showApiKeys && (
+            <CardContent className="text-xs text-gray-600">
+              <p>더블클릭으로 API 키 설정을 열거나 닫을 수 있습니다.</p>
+            </CardContent>
+          )}
+        </Card>
 
-      {/* 컬러테마 선택 섹션 */}
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center text-purple-700">
-            <Palette className="h-5 w-5 mr-2" />
-            블로그 컬러테마 선택
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={appState.colorTheme || 'classic-blue'} onValueChange={handleColorThemeChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="컬러테마를 선택하세요" />
-            </SelectTrigger>
-            <SelectContent>
-              {colorThemes.map((theme) => (
-                <SelectItem key={theme.value} value={theme.value}>
-                  {theme.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-gray-500 mt-2">
-            선택한 테마가 생성되는 블로그 글의 색상에 적용됩니다
-          </p>
-        </CardContent>
-      </Card>
+        {/* 컬러 테마 선택 */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center text-purple-700">
+              <Settings className="h-5 w-5 mr-2" />
+              블로그 컬러 테마
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select 
+              value={appState.colorTheme || ''} 
+              onValueChange={(value) => saveAppState({ colorTheme: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="컬러 테마 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {colorThemes.map((theme) => (
+                  <SelectItem key={theme.value} value={theme.value}>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-4 h-4 rounded-full border" 
+                        style={{ backgroundColor: theme.preview }}
+                      />
+                      <span>{theme.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 mt-2">선택한 테마가 블로그 글에 적용됩니다</p>
+          </CardContent>
+        </Card>
 
-      <ArticleGenerator
-        selectedTopic={appState.selectedTopic}
-        isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticle={generationFunctions.generateArticle}
-        stopArticleGeneration={generationFunctions.stopArticleGeneration}
-        keyword={appState.keyword}
-      />
+        {/* 주제 생성 */}
+        <TopicGenerator
+          appState={appState}
+          saveAppState={saveAppState}
+          isGeneratingTopics={isGeneratingTopics}
+          generateTopicsFromKeyword={generateTopics}
+          manualTopic={manualTopic}
+          setManualTopic={setManualTopic}
+          handleManualTopicAdd={handleManualTopicAdd}
+          preventDuplicates={preventDuplicates}
+        />
 
-      <ExternalReferenceInput
-        appState={appState}
-        saveAppState={saveAppState}
-      />
+        {/* 블로그 글 생성 */}
+        <ArticleGenerator
+          appState={appState}
+          saveAppState={saveAppState}
+          selectTopic={selectTopic}
+          isGeneratingContent={isGeneratingContent}
+          generateArticleContent={generateArticle}
+          stopArticleGeneration={stopArticleGeneration}
+        />
 
-      <ImageCreation
-        imagePrompt={appState.imagePrompt}
-        setImagePrompt={(prompt) => saveAppState({ imagePrompt: prompt })}
-        isGeneratingImage={generationStatus.isGeneratingImage}
-        createImagePrompt={generationFunctions.createImagePrompt}
-        generatedContent={appState.generatedContent}
-        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-        generateDirectImage={generationFunctions.generateDirectImage}
-      />
+        {/* 이미지 프롬프트 및 생성 */}
+        <ImageCreation
+          appState={appState}
+          saveAppState={saveAppState}
+          isGeneratingImage={isGeneratingImage}
+          createImagePrompt={createImagePrompt}
+          isDirectlyGenerating={isDirectlyGenerating}
+          generateDirectImage={generateDirectImage}
+        />
+
+        {/* 외부 링크 설정 */}
+        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickExternalReference}>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-purple-700">
+              <span className="flex items-center">
+                <ExternalLink className="h-5 w-5 mr-2" />
+                외부 링크 설정
+              </span>
+              {showExternalReference ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </CardTitle>
+          </CardHeader>
+          {showExternalReference && (
+            <CardContent>
+              <ExternalReferenceInput
+                appState={appState}
+                saveAppState={saveAppState}
+                deleteReferenceData={deleteReferenceData}
+              />
+            </CardContent>
+          )}
+          {!showExternalReference && (
+            <CardContent className="text-xs text-gray-600">
+              <p>더블클릭으로 외부 링크 설정을 열거나 닫을 수 있습니다.</p>
+              {(appState.referenceLink || appState.referenceSentence) && (
+                <p className="text-green-600 mt-1">✅ 외부 링크 설정 완료</p>
+              )}
+            </CardContent>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };
