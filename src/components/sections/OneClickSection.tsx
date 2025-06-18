@@ -46,7 +46,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                          <Button 
                             variant="destructive" 
                             onClick={handleStopOneClick}
-                            className="w-full mt-3 py-3 text-lg font-semibold"
+                            className="w-full mt-3 py-3 text-lg font-semibold bg-red-500 hover:bg-red-600"
                         >
                             <StopCircle className="mr-2 h-5 w-5" />
                             즉시 중단

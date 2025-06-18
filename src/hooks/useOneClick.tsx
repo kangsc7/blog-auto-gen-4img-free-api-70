@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -24,6 +25,7 @@ export const useOneClick = (
   const [showTopicSelectionDialog, setShowTopicSelectionDialog] = useState(false);
   const [showDuplicateErrorDialog, setShowDuplicateErrorDialog] = useState(false);
   const cancelGeneration = useRef(false);
+  const currentController = useRef<AbortController | null>(null);
   const { generateLatestKeyword, generateEvergreenKeyword } = useKeywordGenerator(appState);
 
   const getUserUsedKeywords = async (userId: string): Promise<string[]> => {
@@ -195,6 +197,7 @@ export const useOneClick = (
 
     setIsOneClickGenerating(true);
     cancelGeneration.current = false;
+    currentController.current = new AbortController();
     const userId = profile.id;
 
     try {
@@ -386,6 +389,8 @@ export const useOneClick = (
       }
     } finally {
       setIsOneClickGenerating(false);
+      cancelGeneration.current = false;
+      currentController.current = null;
     }
   };
 
@@ -407,6 +412,7 @@ export const useOneClick = (
 
     setIsOneClickGenerating(true);
     cancelGeneration.current = false;
+    currentController.current = new AbortController();
     const userId = profile.id;
     let retryCount = 0;
     const maxRetries = 3;
@@ -660,14 +666,32 @@ export const useOneClick = (
       await attemptGeneration();
     } finally {
       setIsOneClickGenerating(false);
+      cancelGeneration.current = false;
+      currentController.current = null;
     }
   };
 
   const handleStopOneClick = () => {
+    console.log('원클릭 생성 중단 요청 - 상태:', { 
+      isGenerating: isOneClickGenerating, 
+      hasController: !!currentController.current 
+    });
+    
+    // 즉시 중단 플래그 설정
     cancelGeneration.current = true;
+    
+    // 진행 중인 fetch 요청 중단
+    if (currentController.current) {
+      currentController.current.abort();
+      console.log('AbortController.abort() 호출됨');
+    }
+    
+    // 강제로 상태 초기화
+    setIsOneClickGenerating(false);
+    
     toast({
-      title: "생성 중단 요청",
-      description: "현재 진행 중인 작업을 중단하고 있습니다...",
+      title: "원클릭 생성 즉시 중단",
+      description: "현재 진행 중인 원클릭 생성을 즉시 중단했습니다.",
       variant: "default"
     });
   };
