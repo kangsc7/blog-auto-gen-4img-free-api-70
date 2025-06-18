@@ -27,10 +27,6 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
 }) => {
-  // Safely access keyword with fallback to empty string
-  const keyword = appState?.keyword || '';
-  const topicCount = appState?.topicCount || 5;
-
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -44,19 +40,19 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           <label className="block text-sm font-semibold text-gray-700 mb-2">핵심 키워드</label>
           <Input
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
-            value={keyword}
+            value={appState.keyword}
             onChange={(e) => saveAppState({ keyword: e.target.value })}
           />
           <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
         </div>
         
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">생성할 주제 수: {topicCount}개</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">생성할 주제 수: {appState.topicCount}개</label>
           <input
             type="range"
             min="1"
             max="20"
-            value={topicCount}
+            value={appState.topicCount}
             onChange={(e) => saveAppState({ topicCount: parseInt(e.target.value) })}
             className="w-full"
           />
@@ -71,31 +67,9 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
         </div>
 
-        {/* 주제 생성 규칙 안내 - 수정된 버전 */}
-        <div className="text-xs text-red-600 bg-red-50 p-3 rounded border border-red-200">
-          <p className="font-bold">🚫 주제 생성 절대 금지 규칙</p>
-          <ul className="list-disc pl-4 mt-1 space-y-1">
-            <li><strong>모든 연도 숫자 절대 금지</strong> (2023, 2024, 2025, 2026 등)</li>
-            <li><strong>"년" 단어 완전 금지</strong> (올해, 내년, 작년, 해당년도 등)</li>
-            <li>시간에 구애받지 않는 영구적 주제로만 생성</li>
-          </ul>
-        </div>
-
-        {/* 실시간 이슈 크롤링 안내 */}
-        {keyword.includes('최신 이슈') || keyword.includes('뉴스') || keyword.includes('트렌드') ? (
-          <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
-            <p className="font-bold">🔴 실시간 이슈 크롤링 활성</p>
-            <ul className="list-disc pl-4 mt-1 space-y-1">
-              <li>현재 시간대의 실시간 트렌드를 자동 크롤링합니다</li>
-              <li>연도 표기 없이 현재 핫한 이슈들을 반영합니다</li>
-              <li>네이버 트렌드와 구글 트렌드 데이터를 활용합니다</li>
-            </ul>
-          </div>
-        ) : null}
-
         <Button 
           onClick={() => generateTopicsFromKeyword()}
-          disabled={!keyword?.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
+          disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
           className={`w-full transition-all duration-300 ${
             isGeneratingTopics 
               ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
@@ -127,7 +101,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
             />
             <Button 
               onClick={handleManualTopicAdd}
-              disabled={!manualTopic?.trim()}
+              disabled={!manualTopic.trim()}
               variant="outline"
               className="text-blue-600 border-blue-600 hover:bg-blue-50"
             >

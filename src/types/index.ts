@@ -1,22 +1,31 @@
 
+export interface User {
+  id: string;
+  password: string;
+}
+
 export interface AppState {
+  isLoggedIn: boolean;
+  currentUser: string;
   apiKey: string;
-  pixabayApiKey: string;
-  huggingFaceApiKey: string;
   isApiKeyValidated: boolean;
-  isPixabayKeyValidated: boolean;
-  isHuggingFaceKeyValidated: boolean;
+  pixabayApiKey: string;
+  isPixabayApiKeyValidated: boolean;
+  huggingFaceApiKey: string;
+  isHuggingFaceApiKeyValidated: boolean;
   keyword: string;
+  topicCount: number;
   topics: string[];
   selectedTopic: string;
-  topicCount: number;
-  generatedContent: string;
-  imagePrompt: string;
+  colorTheme: string;
   referenceLink: string;
   referenceSentence: string;
-  colorTheme: string;
+  generatedContent: string;
+  imageStyle: string;
+  imagePrompt: string;
+  generatedImageUrl: string;
   preventDuplicates: boolean;
-  currentUser: string;
+  saveReferenceTrigger?: boolean;
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';

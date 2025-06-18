@@ -17,7 +17,7 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 **생성 규칙:**
 1. 각 소제목은 해당 키워드에 대한 실제 사용자 궁금증을 반영해야 합니다
 2. 검색 의도를 고려한 실용적인 제목이어야 합니다
-3. 적절한 이모지 1개를 포함해야 합니다 (💡🔍📝💰⚠️📈🔄 중에서 선택하되, 각각 다른 이모지 사용)
+3. 적절한 이모지 1개를 포함해야 합니다
 4. **🚨 소제목 길이는 공백 포함 40자 이내로 작성해주세요 🚨**
 5. 다음 패턴 중 하나를 반드시 포함해야 합니다:
    - "기본 정보와 개념 정리"
@@ -32,7 +32,6 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 - "FAQ", "질문", "Q&A" 등의 단어가 포함된 제목은 만들지 마세요
 - 5번째 섹션에서 별도로 FAQ가 추가되므로 중복을 피해야 합니다
 - 소제목이 40자를 초과하면 안 됩니다
-- **동일한 이모지를 중복 사용하지 마세요! 각 소제목마다 서로 다른 이모지를 사용해야 합니다**
 
 **출력 형식:**
 각 줄마다 다음 형식으로 출력해주세요:
@@ -42,7 +41,7 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 ${keyword} 기본 정보와 신청 자격|💡|${keyword}의 기본 개념과 누가 신청할 수 있는지 알아보세요
 ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요 서류를 상세히 안내합니다
 
-지금 즉시 7개의 소제목을 생성해주세요 (FAQ 관련 제목 절대 금지, 40자 이내 필수, 이모지 중복 금지):
+지금 즉시 7개의 소제목을 생성해주세요 (FAQ 관련 제목 절대 금지, 40자 이내 필수):
 `;
 
   try {
@@ -83,38 +82,23 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
              titleLength <= 40; // 40자 이내 제한
     });
     
-    const headings: DynamicHeading[] = [];
-    const usedEmojis = new Set<string>();
-    const availableEmojis = ['💡', '🔍', '📝', '💰', '⚠️', '📈', '🔄', '👥', '📋', '🎯'];
-    
-    filteredLines.slice(0, 7).forEach(line => {
+    const headings: DynamicHeading[] = filteredLines.slice(0, 7).map(line => {
       const parts = line.split('|');
       let title = parts[0]?.trim() || `${keyword} 관련 정보`;
-      let emoji = parts[1]?.trim() || '💡';
       
       // 제목이 40자를 초과하면 자르기
       if (title.length > 40) {
         title = title.substring(0, 37) + '...';
       }
       
-      // 중복된 이모지인 경우 사용하지 않은 이모지로 교체
-      if (usedEmojis.has(emoji)) {
-        const unusedEmoji = availableEmojis.find(e => !usedEmojis.has(e));
-        if (unusedEmoji) {
-          emoji = unusedEmoji;
-        }
-      }
-      
-      usedEmojis.add(emoji);
-      
-      headings.push({
+      return {
         title,
-        emoji,
+        emoji: parts[1]?.trim() || '💡',
         content: parts[2]?.trim() || '관련 정보를 제공합니다'
-      });
+      };
     });
 
-    // 7개가 안 되면 기본 소제목으로 채우기 (FAQ 제외, 40자 이내, 이모지 중복 방지)
+    // 7개가 안 되면 기본 소제목으로 채우기 (FAQ 제외, 40자 이내)
     const defaultHeadings = [
       { title: `${keyword} 기본 정보 완벽 정리`, emoji: '💡', content: '기본 개념과 핵심 정보를 정리합니다' },
       { title: `${keyword} 신청 방법 가이드`, emoji: '📝', content: '신청 절차와 방법을 안내합니다' },
@@ -129,39 +113,25 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
       const missingIndex = headings.length;
       if (missingIndex < defaultHeadings.length) {
         let defaultTitle = defaultHeadings[missingIndex].title;
-        let defaultEmoji = defaultHeadings[missingIndex].emoji;
-        
         // 기본 제목도 40자 제한 적용
         if (defaultTitle.length > 40) {
           defaultTitle = defaultTitle.substring(0, 37) + '...';
         }
-        
-        // 중복된 이모지 체크
-        if (usedEmojis.has(defaultEmoji)) {
-          const unusedEmoji = availableEmojis.find(e => !usedEmojis.has(e));
-          if (unusedEmoji) {
-            defaultEmoji = unusedEmoji;
-          }
-        }
-        
-        usedEmojis.add(defaultEmoji);
-        
         headings.push({
           ...defaultHeadings[missingIndex],
-          title: defaultTitle,
-          emoji: defaultEmoji
+          title: defaultTitle
         });
       } else {
         break;
       }
     }
 
-    console.log('✅ 동적 소제목 생성 완료 (40자 제한, 이모지 중복 방지):', headings.map(h => `${h.title} ${h.emoji} (${h.title.length}자)`));
+    console.log('✅ 동적 소제목 생성 완료 (40자 제한 적용):', headings.map(h => `${h.title} (${h.title.length}자)`));
     return headings;
   } catch (error) {
     console.error('동적 소제목 생성 오류:', error);
     
-    // 오류 시 기본 소제목 반환 (FAQ 제외, 40자 이내, 이모지 중복 방지)
+    // 오류 시 기본 소제목 반환 (FAQ 제외, 40자 이내)
     const fallbackHeadings = [
       { title: `${keyword} 핵심 정보와 기본 내용`, emoji: '💡', content: '기본 정보를 정리합니다' },
       { title: `${keyword} 신청 방법 단계별 가이드`, emoji: '📝', content: '신청 절차를 안내합니다' },
@@ -175,7 +145,7 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
       title: heading.title.length > 40 ? heading.title.substring(0, 37) + '...' : heading.title
     }));
 
-    console.log('⚠️ 기본 소제목 사용 (40자 제한, 이모지 중복 방지):', fallbackHeadings.map(h => `${h.title} ${h.emoji} (${h.title.length}자)`));
+    console.log('⚠️ 기본 소제목 사용 (40자 제한 적용):', fallbackHeadings.map(h => `${h.title} (${h.title.length}자)`));
     return fallbackHeadings;
   }
 };

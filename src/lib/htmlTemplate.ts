@@ -1,9 +1,6 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
-  .wrapper-div { 
-    padding: 0 8px !important; 
-  }
+  .wrapper-div { padding: 0 15px; }
   /* 모바일에서 이미지 더 크게 표시 */
   img { 
     max-width: 100% !important; 
@@ -12,70 +9,12 @@ const getCssStyles = (colors: any): string => `
   }
 }
 @media (max-width: 480px) {
-  /* 작은 모바일에서도 충분한 크기 보장 및 여백 최소화 */
-  .wrapper-div { 
-    padding: 0 4px !important; 
-  }
+  /* 작은 모바일에서도 충분한 크기 보장 */
   img { 
     min-height: 200px !important; 
   }
 }
-.single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:2px solid ${colors.primary};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
-
-/* 고품질 비교표 디자인 */
-.premium-comparison-table-container {
-  margin: 30px 0;
-  font-family: 'Noto Sans KR', sans-serif;
-  overflow-x: auto;
-}
-.premium-comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-  margin: 0 auto;
-  background: white;
-}
-.premium-comparison-table thead th {
-  background: ${colors.primary};
-  color: white;
-  padding: 15px 12px;
-  text-align: center;
-  font-weight: 600;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  border: none;
-}
-.premium-comparison-table tbody td {
-  padding: 14px 12px;
-  text-align: center;
-  border-bottom: 1px solid #e9ecef;
-  font-size: 15px;
-  vertical-align: middle;
-}
-.premium-comparison-table tbody tr:nth-child(even) {
-  background: ${colors.highlight};
-}
-.premium-comparison-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.premium-comparison-table .highlight-cell {
-  background: ${colors.textHighlight};
-  font-weight: 600;
-  color: ${colors.primary};
-}
-.premium-comparison-table-caption {
-  text-align: center;
-  font-size: 14px;
-  color: #666;
-  margin-top: 8px;
-}
-@media (max-width: 768px) {
-  .premium-comparison-table {
-    min-width: 600px; /* 모바일에서 스크롤 가능하도록 */
-  }
-}
+.single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
 `;
 
 const getHeaderSection = (topic: string): string => `
@@ -83,7 +22,7 @@ const getHeaderSection = (topic: string): string => `
 `;
 
 const getIntroSection = (colors: any, naturalKeyword: string): string => `
-<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7; border: 2px solid ${colors.primary};">
+<div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
 <b>📢 중요한 소식!</b> [INTRO_KEYWORD_CONTEXT]에 대해 궁금하셨나요? 이 글을 끝까지 읽으시면 정확한 정보와 함께 실질적인 도움을 받으실 수 있을 거예요!
 </div>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
@@ -100,7 +39,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (200-270자 제한 적용)
+// 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
 const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
@@ -111,73 +50,68 @@ const getDynamicSection = (colors: any, heading: { title: string; emoji: string;
 ${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다.
 </p>
 <p style="height: 20px;">&nbsp;</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요. 실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊
+</p>
+<p style="height: 20px;">&nbsp;</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
+</p>
 ${sectionNumber === 2 ? `
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
 <table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
-<thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:${colors.secondary};font-weight:bold;color:${colors.primary};">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:${colors.secondary};font-weight:bold;color:${colors.primary};">신청 방법</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:${colors.secondary};font-weight:bold;color:${colors.primary};">필요 서류</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:${colors.secondary};font-weight:bold;color:${colors.primary};">소요 기간</th></tr></thead>
+<thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">신청 방법</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">필요 서류</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">소요 기간</th></tr></thead>
 <tbody>
 <tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">자격 요건 확인 후 거주지 주민센터 방문 또는 온라인 신청 사이트 접속</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신분증, 가족관계증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">즉시</td></tr>
-<tr style="background-color: ${colors.highlight};"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신청서 작성 및 소득·재산 관련 서류 제출</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">소득증명서, 재산세 납세증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1-2일</td></tr>
+<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신청서 작성 및 소득·재산 관련 서류 제출</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">소득증명서, 재산세 납세증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1-2일</td></tr>
 <tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">접수 완료 후 심사 진행 (약 2주 소요)</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">통장 사본</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">14일</td></tr>
-<tr style="background-color: ${colors.highlight};"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">-</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3-5일</td></tr>
+<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">-</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3-5일</td></tr>
 </tbody></table></div>
 ` : ''}
 ${sectionNumber === 3 ? `
-<div class="premium-comparison-table-container">
-<table class="premium-comparison-table">
-<thead>
-  <tr>
-    <th>구분</th>
-    <th>선정 기준</th>
-    <th>지원 금액</th>
-    <th>신청 방법</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="highlight-cell">생계급여</td>
-    <td>중위소득 30% 이하</td>
-    <td>월 58만원~108만원<br>(가구원 수 따라 상이)</td>
-    <td>주민센터 방문 또는<br>복지로 온라인 신청</td>
-  </tr>
-  <tr>
-    <td>주거급여</td>
-    <td>중위소득 46% 이하</td>
-    <td>임차료 지원<br>(지역별 차등)</td>
-    <td>주민센터 또는<br>LH 마이홈</td>
-  </tr>
-  <tr>
-    <td class="highlight-cell">교육급여</td>
-    <td>중위소득 50% 이하</td>
-    <td>학용품비, 입학금,<br>수업료 지원</td>
-    <td>학교 또는<br>교육청 신청</td>
-  </tr>
-  <tr>
-    <td>의료급여</td>
-    <td>중위소득 40% 이하</td>
-    <td>의료비 본인부담금<br>경감 혜택</td>
-    <td>주민센터 방문<br>상담 필수</td>
-  </tr>
-</tbody>
-</table>
-<div class="premium-comparison-table-caption">※ 각 지원금은 정책 변경에 따라 달라질 수 있으니 관계 기관에 문의하세요</div>
+<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
+    <strong style="color: ${colors.warnBorder};">⚠️ 전문가 팁 - 꼭 확인하세요!</strong><br>
+    <ul style="margin: 10px 0; padding-left: 20px;">
+        <li style="margin-bottom: 8px;">신청 기간을 놓치면 그 해 지원이 불가능해요 - 보통 11월부터 다음해 10월까지</li>
+        <li style="margin-bottom: 8px;">가구원 수에 따라 지원 금액이 달라지니 정확한 가구원 신고가 중요해요</li>
+        <li style="margin-bottom: 8px;">바우처 카드는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
+        <li style="margin-bottom: 8px;">소득·재산 기준이 매년 조금씩 변동될 수 있으니 신청 전 최신 정보를 확인하세요</li>
+        <li>복수 지원금 동시 신청 시 중복 제한이 있을 수 있으니 사전 문의가 필수입니다</li>
+    </ul>
 </div>
 ` : ''}
 ${sectionNumber === 5 ? `
-<h3 style="font-size: 20px; color: ${colors.primary}; margin: 25px 0 15px; font-weight: bold;" data-ke-size="size20">❓ 자주 묻는 질문 (FAQ)</h3>
-<div style="background-color: ${colors.secondary}; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid ${colors.primary};">
-<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong style="color: ${colors.primary};">Q: 신청 후 언제부터 사용 가능한가요?</strong><br>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 신청 후 언제부터 사용 가능한가요?</strong><br>
 A: 승인 후 약 1-2주 내에 카드가 발급되며, 발급 즉시 사용 가능합니다. 카드 활성화는 자동으로 처리되니 별도 절차는 불필요해요.</p>
-<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong style="color: ${colors.primary};">Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
+<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
 A: 세대주 또는 배우자만 신청 가능하며, 위임장과 함께 인감증명서가 있으면 대리 신청도 가능합니다. 단, 대리인은 성인이어야 해요.</p>
-<p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong style="color: ${colors.primary};">Q: 이사를 가면 어떻게 되나요?</strong><br>
+<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
 A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능하며, 카드 재발급 없이 기존 카드로 이용할 수 있어요.</p>
+<p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
+A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
 </div>
 ` : ''}
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 시각요약 카드 섹션
+// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
+const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
+</p>
+<p style="height: 20px;">&nbsp;</p>
+<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
+여러분도 충분히 할 수 있어요! 많은 분들이 이미 성공적으로 혜택을 받고 계시니까 포기하지 마시고 도전해보세요. 💪 작은 한 걸음이 큰 변화를 만들어낼 거예요.
+</p>
+<p style="height: 20px;">&nbsp;</p>
+<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
+<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
+</p>
+<p style="height: 20px;">&nbsp;</p>
+`;
+
 const getSummaryCardSection = (naturalKeyword: string): string => `
 <div class="single-summary-card-container">
 <div class="single-summary-card">
@@ -192,23 +126,6 @@ const getSummaryCardSection = (naturalKeyword: string): string => `
 <div class="card-footer">성공적인 신청을 위한 필수 체크리스트!</div>
 </div>
 </div>
-`;
-
-// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
-const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-여러분도 충분히 할 수 있어요! 많은 분들이 이미 성공적으로 혜택을 받고 계시니까 포기하지 마시고 도전해보세요. 💪 작은 한 걸음이 큰 변화를 만들어낼 거예요.
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center; border: 2px solid ${colors.primary};" data-ke-size="size16">
-<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
-</p>
-<p style="height: 20px;">&nbsp;</p>
 `;
 
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
@@ -234,8 +151,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
     const stopWords = [
       '활용법', '방법', '전략', '가이드', '완벽', '최신', '최대한', '확실하게', 
       '업법', '성공률', '높이는', '꿀팁', '노하우', '비법', '총정리', '정리',
-      '2023년', '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택',
-      '웹사이트', '한국', '금융감독원', '금감원', '한국은행', '한은'
+      '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택'
     ];
     
     let cleanedTopic = topicText;
@@ -282,6 +198,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
     '지원대상', 
     '혜택',
     '정부지원',
+    '2025년',
     '교육과정',
     '생활정보'
   ];
@@ -297,7 +214,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
 <p style="height: 20px;">&nbsp;</p>`;
 };
 
-// 동적 HTML 템플릿 생성 함수 수정 - 시각요약 카드 포함
+// 동적 HTML 템플릿 생성 함수 수정 - refLink와 referenceSentence를 격려 섹션에 전달
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
@@ -325,12 +242,9 @@ export const getHtmlTemplate = (
     htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
   }
 
-  // 6번째 섹션 (격려 섹션) 추가
+  // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달
   htmlParts.push(getEncouragementSection(colors, keyword, refLink, referenceSentence));
-  
-  // 시각요약 카드 섹션 추가
   htmlParts.push(getSummaryCardSection(keyword));
-  
   htmlParts.push(getClosingSection(colors, refLink, referenceSentence));
   htmlParts.push(getTagsSection(topic, keyword));
 

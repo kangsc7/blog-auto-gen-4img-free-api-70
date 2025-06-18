@@ -2,180 +2,174 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useImagePromptGenerator = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
-  huggingFaceApiKey: string,
-  hasAccess: boolean
+  huggingFaceApiKey?: string,
+  canUseFeatures: boolean = true
 ) => {
   const { toast } = useToast();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isDirectlyGenerating, setIsDirectlyGenerating] = useState(false);
-  
-  // 이미지 프롬프트 생성 함수 (한글 -> 영어 프롬프트로 변환)
-  const createImagePrompt = async (inputText: string): Promise<boolean> => {
-    if (!inputText.trim()) {
-      toast({ 
-        title: "입력 텍스트 없음", 
-        description: "이미지 프롬프트를 생성하려면 텍스트를 입력해주세요.",
-        variant: "destructive" 
-      });
-      return false;
-    }
-    
-    if (!appState.isApiKeyValidated) {
-      toast({ 
-        title: "API 키 검증 필요", 
-        description: "먼저 API 키를 입력하고 검증해주세요.", 
-        variant: "destructive" 
-      });
-      return false;
-    }
-    
-    setIsGeneratingImage(true);
-    
-    try {
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
-      
-      const prompt = `
-당신은 텍스트를 받아 고품질의 이미지 생성 프롬프트로 변환하는 AI입니다.
-다음 한글 텍스트를 받아 Stable Diffusion과 같은 이미지 생성 AI가 아름답고 상세한 이미지를 생성할 수 있는 영어 프롬프트로 변환해주세요.
-영어로만 출력하고, 설명이나 주석은 달지 마세요. 오직 영어 프롬프트만 출력하세요.
-프롬프트는 다음 형식을 따라야 합니다:
-- 이미지 스타일, 분위기, 미학적 특징을 포함합니다. (예: photorealistic, cinematic, studio lighting, 8k, detailed)
-- 구체적인 장면 설명을 포함합니다.
-- 색상, 구도, 시점 등의 세부 사항을 포함합니다.
 
-다음 텍스트를 영어 프롬프트로 변환해주세요:
-"${inputText}"
+  const createImagePrompt = async (inputText: string): Promise<boolean> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (!inputText.trim()) {
+      toast({ title: "입력 오류", description: "프롬프트를 생성할 텍스트를 입력해주세요.", variant: "destructive" });
+      return false;
+    }
+    if (!appState.isApiKeyValidated) {
+      toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
+      return false;
+    }
+
+    setIsGeneratingImage(true);
+    saveAppState({ imagePrompt: '' }); // Clear previous prompt
+    try {
+      const masterPrompt = `
+You are an expert AI image prompt engineer. Your task is to transform a Korean text input into a single, high-quality image prompt in English. Follow these instructions meticulously:
+
+**Input Korean Text:**
+---
+${inputText}
+---
+
+**Core Instructions:**
+
+1.  **Primary Goal:** Analyze the core meaning, keywords, and mood of the input text. Synthesize this into a single, compelling visual scene. The output must be a ready-to-use prompt for an AI image generator.
+
+2.  **Content Generation:**
+    *   Extract the core visual message, key symbols, and dominant emotions from the text.
+    *   Focus on actions, atmosphere, and symbolic representation rather than literal translation.
+    *   The overall mood must be **bright, warm, and positive**. Use elements like warm sunlight, soft colors, and vibrant, happy expressions.
+
+3.  **Prompt Structure and Formatting (Strict):**
+    *   The entire output must be a **single sentence in English**.
+    *   Follow this structure: [Main scene/subject description], [background description], [emotion and lighting style], [style and quality keywords].
+    *   **Do NOT** include a period (.) at the end.
+    *   **Do NOT** include any explanations, numbers, or list formatting. Output only the prompt itself.
+
+4.  **Visual & Style Keywords (Mandatory):**
+    *   **Main Subject:** The prompt must feature a clear, central subject that is sophisticated and detailed.
+    *   **Background:** The background should be complementary, supporting the main subject without causing distraction. Use techniques like soft focus (bokeh) or contrast to emphasize the subject.
+    *   **Mandatory Keywords:** The prompt **must end with** the following phrase: "4k photorealistic style, high detail, realistic, natural lighting, cinematic".
+
+5.  **Content Policy & Safety (Crucial):**
+    *   **People:** If any person appears, they **MUST** be described as **Korean**. (e.g., "A Korean woman smiling", "A group of Korean friends").
+    *   **No Real People:** Avoid names or direct likenesses of famous individuals (celebrities, politicians). Use general descriptions (e.g., "a visionary tech leader").
+    *   **Safety Compliance:** Ensure the prompt is safe and complies with policies of Google ImageFX and OpenAI. It must not contain:
+        *   Explicit violence, gore, or sexual content.
+        *   Sensitive political or religious themes.
+        *   Content that could be interpreted as misinformation or conspiracy.
+
+**Example Transformation:**
+*   **Input:** "햇살 좋은 카페에서 노트북으로 글을 쓰는 프리랜서의 여유로운 오후"
+*   **Output:** A Korean woman writing on a laptop in a sunlit modern cafe, with the bustling city street blurred through the window, an atmosphere of warm inspiration, soft golden lighting, 4k photorealistic style, high detail, realistic, natural lighting, cinematic
 `;
-      
+
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
+
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            topP: 0.8,
-            topK: 40,
-            maxOutputTokens: 2048,
-          },
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: masterPrompt }] }] })
       });
-      
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API 오류: ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
       }
       
       const data = await response.json();
-      
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
         throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
       }
       
       const generatedPrompt = data.candidates[0].content.parts[0].text.trim();
+      
       saveAppState({ imagePrompt: generatedPrompt });
-      
-      toast({ 
-        title: "이미지 프롬프트 생성 완료", 
-        description: "프롬프트가 성공적으로 생성되었습니다.",
-      });
-      
+      toast({ title: "이미지 프롬프트 생성 완료", description: "ImageFX에서 사용할 수 있는 프롬프트가 생성되었습니다." });
       return true;
     } catch (error) {
-      console.error("이미지 프롬프트 생성 오류:", error);
-      toast({
-        title: "프롬프트 생성 실패",
-        description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
-        variant: "destructive",
-      });
+      console.error('이미지 프롬프트 생성 오류:', error);
+      toast({ title: "프롬프트 생성 실패", description: error instanceof Error ? error.message : "이미지 프롬프트 생성 중 오류가 발생했습니다.", variant: "destructive" });
       return false;
     } finally {
       setIsGeneratingImage(false);
     }
   };
-  
-  const generateDirectImage = async (): Promise<string> => {
-    if (!appState.imagePrompt) {
-      toast({ 
-        title: "프롬프트 없음", 
-        description: "먼저 이미지 프롬프트를 생성해주세요.", 
-        variant: "destructive" 
-      });
-      return '';
-    }
-    
-    if (!appState.isHuggingFaceKeyValidated) {
-      toast({ 
-        title: "Hugging Face API 키 검증 필요", 
-        description: "이미지를 생성하려면 Hugging Face API 키를 입력하고 검증해주세요.", 
-        variant: "destructive" 
-      });
-      return '';
-    }
-    
-    if (!hasAccess) {
-      toast({ 
-        title: "접근 제한", 
-        description: "이 기능을 사용할 권한이 없습니다.", 
-        variant: "destructive" 
-      });
-      return '';
-    }
-    
-    setIsDirectlyGenerating(true);
-    
-    try {
-      const response = await fetch('/api/generate-image-hf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: appState.imagePrompt,
-          apiKey: huggingFaceApiKey,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || '이미지 생성에 실패했습니다.');
-      }
-      
-      const data = await response.json();
-      
-      if (!data.image) {
-        throw new Error('이미지 데이터를 받지 못했습니다.');
-      }
-      
-      toast({ 
-        title: "이미지 생성 완료", 
-        description: "이미지가 성공적으로 생성되었습니다.",
-      });
-      
-      return data.image;
-    } catch (error) {
-      console.error("이미지 생성 오류:", error);
+
+  const generateDirectImage = async (): Promise<string | null> => {
+    if (!canUseFeatures) {
       toast({
-        title: "이미지 생성 실패",
-        description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
-        variant: "destructive",
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
       });
-      return '';
+      return null;
+    }
+
+    if (!appState.imagePrompt) {
+      toast({ title: "프롬프트 필요", description: "먼저 이미지 프롬프트를 생성해주세요.", variant: "destructive" });
+      return null;
+    }
+
+    setIsDirectlyGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-image-hf', {
+        body: { 
+          prompt: appState.imagePrompt,
+          apiKey: huggingFaceApiKey || undefined,
+        },
+      });
+
+      if (error) {
+        throw error; // Re-throw the error to be handled by the catch block
+      }
+      
+      const { image } = data;
+      if (!image) {
+        throw new Error('API로부터 유효한 이미지를 받지 못했습니다.');
+      }
+
+      toast({ title: "이미지 생성 완료", description: "프롬프트 기반 이미지가 생성되었습니다." });
+      return image;
+
+    } catch (error: any) {
+      console.error('직접 이미지 생성 오류:', error);
+      let errorMessage = "이미지 생성 중 오류가 발생했습니다.";
+      if (error.context && typeof error.context.json === 'function') {
+        try {
+          const functionError = await error.context.json();
+          if (functionError.error && functionError.details) {
+            errorMessage = `${functionError.error}: ${functionError.details}`;
+          } else if (functionError.details) {
+            errorMessage = functionError.details;
+          } else {
+            errorMessage = functionError.error || errorMessage;
+          }
+        } catch (e) {
+            errorMessage = error.message || "이미지 생성 중 오류가 발생했습니다.";
+        }
+      } else if(error.message) {
+        errorMessage = error.message;
+      }
+      toast({ title: "이미지 생성 실패", description: errorMessage, variant: "destructive" });
+      return null;
     } finally {
       setIsDirectlyGenerating(false);
     }
   };
-  
-  return {
-    isGeneratingImage,
-    createImagePrompt,
-    isDirectlyGenerating,
-    generateDirectImage,
-  };
+
+  return { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage };
 };

@@ -12,34 +12,27 @@ interface MainContentSectionProps {
     isGeneratingContent: boolean;
     isGeneratingImage: boolean;
     isDirectlyGenerating: boolean;
-    isOneClickGenerating: boolean;
   };
   generationFunctions: {
-    generateTopics: () => Promise<string[] | null>;
+    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
     generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
     createImagePrompt: (inputText: string) => Promise<boolean>;
-    generateDirectImage: () => Promise<string>;
+    generateDirectImage: () => Promise<string | null>;
     stopArticleGeneration: () => void;
   };
   topicControls: {
     manualTopic: string;
     setManualTopic: React.Dispatch<React.SetStateAction<string>>;
-    selectTopic: (topic: string) => void;
     handleManualTopicAdd: () => void;
+    selectTopic: (topic: string) => void;
   };
   utilityFunctions: {
     copyToClipboard: (text: string, type: string) => void;
-    downloadHTML: () => void;
     openWhisk: () => void;
-    openImageClipboard?: () => void;
-    hasImages?: boolean;
+    downloadHTML: () => void;
   };
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
-  deleteReferenceData?: () => void;
-  geminiManager?: any;
-  pixabayManager?: any;
-  huggingFaceManager?: any;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
@@ -51,38 +44,19 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   utilityFunctions,
   preventDuplicates,
   handleTopicConfirm,
-  deleteReferenceData,
-  geminiManager,
-  pixabayManager,
-  huggingFaceManager,
 }) => {
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-6 max-w-full">
+    <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4">
           <LeftSidebar
             appState={appState}
             saveAppState={saveAppState}
-            isGeneratingTopics={generationStatus.isGeneratingTopics}
-            generateTopics={generationFunctions.generateTopics}
-            isGeneratingContent={generationStatus.isGeneratingContent}
-            generateArticle={generationFunctions.generateArticle}
-            stopArticleGeneration={generationFunctions.stopArticleGeneration}
-            isGeneratingImage={generationStatus.isGeneratingImage}
-            createImagePrompt={generationFunctions.createImagePrompt}
-            isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-            generateDirectImage={generationFunctions.generateDirectImage}
-            manualTopic={topicControls.manualTopic}
-            setManualTopic={topicControls.setManualTopic}
-            handleManualTopicAdd={topicControls.handleManualTopicAdd}
+            generationStatus={generationStatus}
+            generationFunctions={generationFunctions}
+            topicControls={topicControls}
+            utilityFunctions={utilityFunctions}
             preventDuplicates={preventDuplicates}
-            selectTopic={topicControls.selectTopic}
-            copyToClipboard={utilityFunctions.copyToClipboard}
-            deleteReferenceData={deleteReferenceData}
-            openWhisk={utilityFunctions.openWhisk}
-            geminiManager={geminiManager}
-            pixabayManager={pixabayManager}
-            huggingFaceManager={huggingFaceManager}
           />
         </div>
         <div className="lg:col-span-8">
@@ -94,8 +68,6 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             downloadHTML={utilityFunctions.downloadHTML}
             isGeneratingContent={generationStatus.isGeneratingContent}
             onTopicConfirm={handleTopicConfirm}
-            onOpenImageClipboard={utilityFunctions.openImageClipboard}
-            hasImages={utilityFunctions.hasImages}
           />
         </div>
       </div>

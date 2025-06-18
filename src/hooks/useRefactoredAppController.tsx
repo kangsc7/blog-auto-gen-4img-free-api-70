@@ -10,46 +10,26 @@ import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
 import { useOneClick } from '@/hooks/useOneClick';
 import { useUserAccess } from '@/hooks/useUserAccess';
-import { usePixabayClipboard } from '@/hooks/usePixabayClipboard';
-import { useDuplicatePrevention } from '@/hooks/useDuplicatePrevention';
 
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
+  // useAllApiKeysManager 올바른 단일 파라미터 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
-    saveAppState
+    saveAppState,
   });
   
+  const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
 
-  // 중복 방지 시스템 사용
-  const { 
-    preventDuplicates, 
-    handlePreventDuplicatesToggle,
-    isDuplicateTopic,
-    clearDuplicateTopics 
-  } = useDuplicatePrevention();
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
+  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
+  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator({ appState, saveAppState });
-  
-  const pixabayClipboard = usePixabayClipboard();
-
-  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(
-    appState, 
-    saveAppState,
-    pixabayClipboard.addImageForClipboard
-  );
-  
-  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
-    appState, 
-    saveAppState,
-    huggingFaceManager?.huggingFaceApiKey || '',
-    hasAccess || isAdmin
-  );
-
-  const topicControls = useTopicControls({ appState, saveAppState, isDuplicateTopic, preventDuplicates });
+  // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
+  const topicControls = useTopicControls(appState, saveAppState);
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
   const {
@@ -60,10 +40,7 @@ export const useRefactoredAppController = () => {
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog,
-    handleTopicSelect,
-    handleTopicSelectionCancel,
-    oneClickMode
+    setShowDuplicateErrorDialog
   } = useOneClick(
     appState,
     saveAppState,
@@ -72,19 +49,21 @@ export const useRefactoredAppController = () => {
     generateArticle,
     profile,
     preventDuplicates,
-    hasAccess || isAdmin,
-    isDuplicateTopic
+    hasAccess || isAdmin
   );
 
+  // 주제 확인 다이얼로그 상태 추가
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
 
-  const handleTopicSelectWithConfirm = (topic: string) => {
+  // 주제 선택 시 확인 다이얼로그 표시
+  const handleTopicSelect = (topic: string) => {
     console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
   };
 
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
   const handleTopicConfirm = () => {
     console.log('주제 확인 및 선택:', pendingTopic);
     
@@ -94,20 +73,25 @@ export const useRefactoredAppController = () => {
     }
     
     try {
+      // 1. 먼저 주제를 선택 (appState 업데이트)
       console.log('topicControls.selectTopic 호출:', pendingTopic);
       topicControls.selectTopic(pendingTopic);
       
+      // 2. 다이얼로그 닫기
       setShowTopicConfirmDialog(false);
       
+      // 3. 즉시 글 생성 시작
       console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
       generateArticle({ topic: pendingTopic, keyword: appState.keyword });
       
+      // 4. 상태 초기화
       setPendingTopic('');
     } catch (error) {
       console.error('주제 확인 처리 중 오류:', error);
     }
   };
 
+  // 주제 확인 다이얼로그 취소
   const handleTopicCancel = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
@@ -119,6 +103,7 @@ export const useRefactoredAppController = () => {
     copyToClipboard(markdown, "마크다운");
   };
 
+  // 통합된 중단 기능 - 원클릭과 일반 글 생성 모두 중단
   const handleUnifiedStop = () => {
     console.log('통합 중단 버튼 클릭 - 상태:', { 
       isOneClickGenerating, 
@@ -134,112 +119,6 @@ export const useRefactoredAppController = () => {
     }
   };
 
-  // 편집기 내용 강제 초기화 함수 개선 - DOM 조작 및 이벤트 기반 초기화
-  const handleResetAppWithEditor = () => {
-    console.log('🔄 앱 및 편집기 전체 초기화 시작');
-    
-    // 1. localStorage 완전 삭제
-    try {
-      localStorage.removeItem('blog_editor_content');
-      localStorage.removeItem('blog_generated_content');
-      localStorage.removeItem('blog_editor_draft');
-      console.log('✅ localStorage 편집기 데이터 완전 삭제');
-    } catch (error) {
-      console.error('localStorage 삭제 실패:', error);
-    }
-    
-    // 2. 중복 방지 데이터 삭제 (중복 허용으로 전환시)
-    if (preventDuplicates) {
-      clearDuplicateTopics();
-    }
-    
-    // 3. 앱 상태 완전 초기화
-    saveAppState({ 
-      generatedContent: '',
-      selectedTopic: '',
-      topics: [],
-      keyword: '',
-      imagePrompt: '',
-      referenceLink: '',
-      referenceSentence: ''
-    });
-    
-    // 4. 편집기 DOM 강제 초기화 (더 포괄적인 선택자와 이벤트 기반)
-    const clearEditorContent = () => {
-      const editorSelectors = [
-        '[contenteditable="true"]',
-        '.blog-editor',
-        '.editor-content',
-        '[data-editor="true"]',
-        '.ql-editor',
-        '.prose',
-        '.ProseMirror',
-        '[role="textbox"]',
-        '.rich-text-editor',
-        '.markdown-editor'
-      ];
-      
-      editorSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(element => {
-          if (element instanceof HTMLElement) {
-            // 다양한 방법으로 초기화
-            element.innerHTML = '';
-            element.textContent = '';
-            element.innerText = '';
-            
-            // 입력 이벤트 트리거하여 React 상태 동기화
-            const inputEvent = new Event('input', { bubbles: true });
-            element.dispatchEvent(inputEvent);
-            
-            // change 이벤트도 트리거
-            const changeEvent = new Event('change', { bubbles: true });
-            element.dispatchEvent(changeEvent);
-            
-            console.log(`✅ 편집기 요소 초기화: ${selector}`);
-          }
-        });
-      });
-      
-      // iframe 내 편집기도 초기화
-      const iframes = document.querySelectorAll('iframe');
-      iframes.forEach(iframe => {
-        try {
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (iframeDoc) {
-            const iframeEditors = iframeDoc.querySelectorAll('[contenteditable="true"], .editor-content');
-            iframeEditors.forEach(editor => {
-              if (editor instanceof HTMLElement) {
-                editor.innerHTML = '';
-                editor.textContent = '';
-              }
-            });
-          }
-        } catch (error) {
-          console.log('iframe 편집기 접근 불가:', error);
-        }
-      });
-    };
-    
-    // 5. 다단계 초기화 실행
-    clearEditorContent();
-    
-    setTimeout(() => {
-      clearEditorContent();
-      console.log('✅ 지연 편집기 초기화 완료');
-    }, 100);
-    
-    setTimeout(() => {
-      clearEditorContent();
-      console.log('✅ 최종 편집기 초기화 완료');
-    }, 500);
-    
-    // 6. 기본 앱 초기화 실행
-    handleResetApp();
-    
-    console.log('🎉 전체 초기화 완료');
-  };
-
   const generationStatus = {
     isGeneratingTopics,
     isGeneratingContent,
@@ -249,7 +128,7 @@ export const useRefactoredAppController = () => {
   };
 
   const generationFunctions = {
-    generateTopics,
+    generateTopics: () => generateTopics(),
     generateArticle,
     createImagePrompt: generateImagePrompt,
     generateDirectImage,
@@ -276,28 +155,28 @@ export const useRefactoredAppController = () => {
     pixabayManager,
     huggingFaceManager,
     preventDuplicates,
-    handlePreventDuplicatesToggle,
-    handleResetApp: handleResetAppWithEditor,
+    setPreventDuplicates,
+    handleResetApp,
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick: handleUnifiedStop,
+    handleStopOneClick: handleUnifiedStop, // 통합된 중단 기능 사용
     generationStatus,
     generationFunctions,
-    topicControls,
+    topicControls: {
+      ...topicControls,
+      selectTopic: handleTopicSelect, // 주제 선택 시 확인 다이얼로그 표시
+    },
     utilityFunctions,
+    handleTopicConfirm,
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
-    oneClickMode,
-    pixabayClipboard,
     showTopicConfirmDialog,
     setShowTopicConfirmDialog,
     pendingTopic,
-    handleTopicConfirm,
     handleTopicCancel,
-    handleTopicSelect,
-    handleTopicSelectionCancel,
+    convertToMarkdown,
   };
 };

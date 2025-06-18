@@ -1,3 +1,4 @@
+
 const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<string | null> => {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
     const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${text}"`;
@@ -93,10 +94,9 @@ export const generateMetaDescription = async (htmlContent: string, geminiApiKey:
 export const integratePixabayImages = async (
     htmlContent: string, 
     pixabayApiKey: string, 
-    geminiApiKey: string,
-    onImageFound?: (url: string, description: string, position: number) => void
+    geminiApiKey: string
 ): Promise<{ finalHtml: string; imageCount: number }> => {
-    console.log('🚀 Pixabay 이미지 통합 시작 (자동 클립보드 방식)');
+    console.log('🚀 Pixabay 이미지 통합 시작');
     console.log('📄 HTML 콘텐츠 길이:', htmlContent.length);
     
     const parser = new DOMParser();
@@ -105,8 +105,8 @@ export const integratePixabayImages = async (
     console.log('📋 발견된 H2 태그 수:', h2s.length);
     
     let imageCount = 0;
-    const MAX_IMAGES = 5;
-    const usedImageUrls = new Set<string>();
+    const MAX_IMAGES = 5; // 4장에서 5장으로 증가
+    const usedImageUrls = new Set<string>(); // 중복 이미지 추적을 위한 Set
 
     if (h2s.length > 0) {
         const numImagesToInsert = Math.min(MAX_IMAGES, h2s.length);
@@ -142,6 +142,7 @@ export const integratePixabayImages = async (
                         continue;
                     }
 
+                    // 10페이지까지 검색하여 더 많은 이미지 수집
                     const allImages = await collectImagesFromMultiplePages(keyword, pixabayApiKey, 10);
                     
                     if (allImages.length === 0) {
@@ -149,47 +150,47 @@ export const integratePixabayImages = async (
                         continue;
                     }
                     
+                    // 사용하지 않은 이미지만 필터링
                     const availableImages = allImages.filter(hit => !usedImageUrls.has(hit.webformatURL));
                     console.log('🎲 사용 가능한 이미지 수:', availableImages.length, '/ 전체:', allImages.length);
 
                     if (availableImages.length > 0) {
+                        // 랜덤하게 이미지 선택하여 중복 방지
                         const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
                         const imageUrl = randomImage.webformatURL;
-                        usedImageUrls.add(imageUrl);
+                        usedImageUrls.add(imageUrl); // 사용된 이미지 URL 추가
                         console.log('✅ 선택된 이미지:', imageUrl);
 
-                        // 섹션 요약 및 ALT 텍스트 생성
-                        const sectionSummary = textToSummarize.substring(0, 100).replace(/[<>]/g, '').trim();
-                        const altText = sectionSummary || h2.textContent?.trim() || keyword;
-                        
-                        // 이미지 정보를 자동으로 클립보드 시스템에 전달
-                        if (onImageFound) {
-                            onImageFound(imageUrl, altText, imageCount + 1);
-                        }
-
-                        // 블로그에 640x480 이미지 태그 직접 삽입
                         const imageContainer = doc.createElement('div');
                         imageContainer.style.textAlign = 'center';
                         imageContainer.style.margin = '2em 0';
-                        imageContainer.style.padding = '1em';
-                        imageContainer.style.borderRadius = '8px';
                         
-                        const imgElement = doc.createElement('img');
-                        imgElement.src = imageUrl;
-                        imgElement.alt = altText;
-                        imgElement.title = altText;
-                        imgElement.style.width = '640px';
-                        imgElement.style.height = '480px';
-                        imgElement.style.objectFit = 'cover';
-                        imgElement.style.borderRadius = '8px';
-                        imgElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                        imgElement.setAttribute('data-description', altText);
-                        imgElement.setAttribute('data-position', (imageCount + 1).toString());
+                        const img = doc.createElement('img');
+                        img.src = imageUrl;
+                        const altText = h2.textContent?.trim() || keyword;
+                        const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
+                        img.alt = sanitizedAltText;
+                        img.title = sanitizedAltText; // 티스토리 대표 이미지 설정을 위한 title 속성
+                        img.setAttribute('data-filename', sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_') + '.jpg');
                         
-                        imageContainer.appendChild(imgElement);
+                        // 모바일에서 더 크게 보이도록 스타일 개선
+                        img.style.maxWidth = '100%'; // 90%에서 100%로 변경
+                        img.style.height = 'auto';
+                        img.style.borderRadius = '8px';
+                        img.style.display = 'block';
+                        img.style.marginLeft = 'auto';
+                        img.style.marginRight = 'auto';
+                        img.style.width = '100%'; // 티스토리 대표 이미지 인식을 위한 width 설정
+                        
+                        // 모바일에서 더 큰 최소 높이 설정 (해상도 유지)
+                        img.style.minHeight = '200px'; // 모바일에서 최소 높이 보장
+                        img.style.objectFit = 'cover'; // 비율 유지하면서 영역 채우기
+                        
+                        imageContainer.appendChild(img);
+                        
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;
-                        console.log(`🖼️ 이미지 ${imageCount} 자동 삽입 완료 (640x480)`);
+                        console.log(`🖼️ 이미지 ${imageCount} 삽입 완료`);
                     } else {
                         console.log('⚠️ 사용 가능한 이미지 없음 (모두 중복)');
                     }
@@ -204,6 +205,6 @@ export const integratePixabayImages = async (
         console.log('❌ H2 태그를 찾을 수 없음');
     }
     
-    console.log(`🏁 자동 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 삽입`);
+    console.log(`🏁 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가`);
     return { finalHtml: doc.body.innerHTML, imageCount };
 };

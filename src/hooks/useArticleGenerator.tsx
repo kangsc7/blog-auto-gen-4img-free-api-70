@@ -8,8 +8,7 @@ import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
 
 export const useArticleGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void,
-  onImageFound?: (url: string, description: string, position: number) => void
+  saveAppState: (newState: Partial<AppState>) => void
 ) => {
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
@@ -63,18 +62,10 @@ export const useArticleGenerator = (
         description: "키워드 관련 최신 정보를 크롤링하고 있습니다." 
       });
 
-      // 컬러 테마 선택 (사용자 선택 우선, 없으면 랜덤)
-      let selectedColorTheme = appState.colorTheme;
-      if (!selectedColorTheme) {
-        const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
-        selectedColorTheme = randomTheme.value;
-        saveAppState({ colorTheme: selectedColorTheme });
-        console.log('랜덤 컬러 테마 자동 선택:', selectedColorTheme);
-      } else {
-        console.log('사용자 선택 컬러 테마 사용:', selectedColorTheme);
-      }
+      const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
+      const selectedColorTheme = appState.colorTheme || randomTheme.value;
       
-      // 개선된 프롬프트 사용 (웹 크롤링 + 시각요약 카드 + 글자수 제한 포함)
+      // 개선된 프롬프트 사용 (웹 크롤링 포함)
       const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
         keyword: coreKeyword,
@@ -108,7 +99,7 @@ export const useArticleGenerator = (
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
-        signal: currentController.current.signal,
+        signal: currentController.current.signal, // AbortController 신호 추가
       });
 
       if (cancelArticleGeneration.current) {
@@ -149,7 +140,7 @@ export const useArticleGenerator = (
 
       // Pixabay API 키와 검증 상태를 appState에서 직접 가져오기
       const pixabayApiKey = appState.pixabayApiKey;
-      const isPixabayValidated = appState.isPixabayKeyValidated;
+      const isPixabayValidated = appState.isPixabayApiKeyValidated;
       
       console.log('Pixabay 설정 확인:', { 
         hasKey: !!pixabayApiKey, 
@@ -158,38 +149,34 @@ export const useArticleGenerator = (
       });
 
       if (pixabayApiKey && isPixabayValidated) {
-        toast({ title: "3단계: 이미지 수집 중...", description: "클립보드 복사용 이미지를 준비하고 있습니다." });
+        toast({ title: "3단계: 이미지 추가 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         
         try {
-          const { finalHtml: htmlWithPlaceholders, imageCount } = await integratePixabayImages(
+          const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
             htmlContent,
             pixabayApiKey,
-            appState.apiKey!,
-            onImageFound
+            appState.apiKey!
           );
 
           if (cancelArticleGeneration.current) {
             throw new Error("사용자에 의해 중단되었습니다.");
           }
 
-          finalHtml = htmlWithPlaceholders;
+          finalHtml = htmlWithImages;
           
           if (imageCount > 0) {
-            toast({ 
-              title: "이미지 준비 완료", 
-              description: `${imageCount}개의 이미지가 클립보드 복사용으로 준비되었습니다. 우측 상단의 "이미지 클립보드" 버튼을 클릭하세요.`,
-              duration: 6000
-            });
+            pixabayImagesAdded = true;
+            toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
           } else {
-            toast({ title: "이미지 준비 실패", description: `이미지를 준비하지 못했습니다. Pixabay API 키를 확인해주세요.`, variant: "default" });
+            toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
           }
         } catch (imageError) {
-          console.error('Pixabay 이미지 준비 오류:', imageError);
-          toast({ title: "이미지 준비 오류", description: "이미지 준비 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", variant: "default" });
+          console.error('Pixabay 이미지 통합 오류:', imageError);
+          toast({ title: "이미지 추가 오류", description: "이미지 추가 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", variant: "default" });
         }
       } else {
-        console.log('Pixabay 설정 누락 - 이미지 준비 건너뛰기');
-        toast({ title: "이미지 준비 건너뛰기", description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", variant: "default" });
+        console.log('Pixabay 설정 누락 - 이미지 추가 건너뛰기');
+        toast({ title: "이미지 추가 건너뛰기", description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", variant: "default" });
       }
 
       try {
@@ -217,11 +204,9 @@ export const useArticleGenerator = (
       }
 
       saveAppState(stateToSave);
-      
-      const selectedThemeName = colorThemes.find(t => t.value === selectedColorTheme)?.label || selectedColorTheme;
       toast({ 
         title: "웹 크롤링 기반 블로그 글 생성 완료", 
-        description: `"${selectedThemeName}" 테마가 적용되어 시각요약 카드와 함께 풍부한 내용의 글이 완성되었습니다.` 
+        description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
       });
       return finalHtml;
     } catch (error) {
