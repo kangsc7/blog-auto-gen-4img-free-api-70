@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Image } from 'lucide-react';
 
 interface ProgressTrackerProps {
   topics: string[];
@@ -21,6 +21,20 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
   }
 
   const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
+
+  // 아이콘 결정 함수
+  const getStepIcon = (stepNumber: number, isCompleted: boolean, isActive: boolean) => {
+    if (stepNumber === 3 || stepNumber === 4) {
+      // 이미지 생성과 최종 완성 모두 Image 아이콘 사용
+      return <Image className="w-6 h-6" />;
+    }
+    
+    if (isCompleted) {
+      return <CheckCircle className="w-6 h-6" />;
+    }
+    
+    return stepNumber;
+  };
 
   return (
     <div className="w-full mb-4">
@@ -48,7 +62,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
                           : 'bg-white text-gray-500 border-gray-300'
                       }`}
                     >
-                      {isCompleted ? <CheckCircle className="w-6 h-6" /> : stepNumber}
+                      {getStepIcon(stepNumber, isCompleted, isActive)}
                     </div>
                     <p
                       className={`mt-2 text-xs font-semibold transition-colors duration-500 ${
@@ -62,9 +76,6 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
               })}
             </div>
           </div>
-        </div>
-        <div className="text-right text-sm text-gray-700 mt-4 font-medium">
-          생성된 주제 목록: {topics.length}개 생성됨
         </div>
       </div>
     </div>

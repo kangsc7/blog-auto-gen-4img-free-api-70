@@ -22,12 +22,28 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentContent, setCurrentContent] = useState('');
 
+  // localStorage에서 블로그 글 복원
+  useEffect(() => {
+    const savedContent = localStorage.getItem('blog_editor_content');
+    if (savedContent && !generatedContent) {
+      setCurrentContent(savedContent);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = savedContent;
+      }
+      onContentChange(savedContent);
+    }
+  }, []);
+
   // 컨텐츠가 변경될 때만 에디터 업데이트
   useEffect(() => {
     if (generatedContent !== currentContent && !isGeneratingContent) {
       setCurrentContent(generatedContent);
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
+      }
+      // localStorage에 저장
+      if (generatedContent) {
+        localStorage.setItem('blog_editor_content', generatedContent);
       }
     }
   }, [generatedContent, isGeneratingContent, currentContent]);
@@ -38,6 +54,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       const newContent = editorRef.current.innerHTML;
       setCurrentContent(newContent);
       onContentChange(newContent);
+      // localStorage에 저장
+      localStorage.setItem('blog_editor_content', newContent);
     }
   };
 
@@ -119,7 +137,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
             <p className="font-semibold text-lg">
-              <span className="font-bold text-blue-600 animate-pulse">파코월드</span>가 글을 생성하고 있습니다...
+              <span className="font-bold text-blue-600 animate-pulse">
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite] transform-origin-[70%_70%]">파</span>
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.1s] transform-origin-[70%_70%]">코</span>
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.2s] transform-origin-[70%_70%]">월</span>
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.3s] transform-origin-[70%_70%]">드</span>
+              </span>가 글을 생성하고 있습니다...
             </p>
             <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
           </div>
