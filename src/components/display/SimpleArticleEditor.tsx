@@ -22,149 +22,128 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentContent, setCurrentContent] = useState('');
   const [isUserEditing, setIsUserEditing] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const [lastSavedContent, setLastSavedContent] = useState('');
 
-  // 커서 위치 저장/복원 함수
-  const saveCursorPosition = () => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0 && editorRef.current?.contains(selection.anchorNode)) {
-      const range = selection.getRangeAt(0);
-      const preCaretRange = range.cloneRange();
-      preCaretRange.selectNodeContents(editorRef.current);
-      preCaretRange.setEnd(range.endContainer, range.endOffset);
-      return preCaretRange.toString().length;
+  // localStorage 키
+  const STORAGE_KEY = 'blog_editor_content';
+
+  // 안전한 localStorage 저장
+  const saveContentToStorage = (content: string) => {
+    try {
+      if (content && content !== lastSavedContent) {
+        localStorage.setItem(STORAGE_KEY, content);
+        setLastSavedContent(content);
+        console.log('SimpleArticleEditor - 콘텐츠 저장됨:', content.length, '글자');
+      }
+    } catch (error) {
+      console.error('localStorage 저장 실패:', error);
     }
-    return 0;
   };
 
-  const restoreCursorPosition = (position: number) => {
-    if (!editorRef.current) return;
-    
-    const selection = window.getSelection();
-    if (!selection) return;
+  // localStorage에서 콘텐츠 복원
+  const loadContentFromStorage = () => {
+    try {
+      const savedContent = localStorage.getItem(STORAGE_KEY);
+      console.log('SimpleArticleEditor - 저장된 콘텐츠 로드:', {
+        hasSavedContent: !!savedContent,
+        length: savedContent?.length || 0
+      });
+      return savedContent || '';
+    } catch (error) {
+      console.error('localStorage 로드 실패:', error);
+      return '';
+    }
+  };
 
-    const createRange = (node: Node, position: number): { node: Node; offset: number } => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const textLength = node.textContent?.length || 0;
-        return position <= textLength 
-          ? { node, offset: position }
-          : { node, offset: textLength };
-      }
-
-      let currentPosition = 0;
-      for (let i = 0; i < node.childNodes.length; i++) {
-        const child = node.childNodes[i];
-        const childLength = child.textContent?.length || 0;
-        
-        if (currentPosition + childLength >= position) {
-          return createRange(child, position - currentPosition);
+  // 컴포넌트 초기화 - 한 번만 실행
+  useEffect(() => {
+    if (!hasInitialized) {
+      console.log('SimpleArticleEditor - 초기화 시작');
+      const savedContent = loadContentFromStorage();
+      
+      if (savedContent) {
+        setCurrentContent(savedContent);
+        setLastSavedContent(savedContent);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = savedContent;
         }
-        currentPosition += childLength;
+        onContentChange(savedContent);
+        console.log('SimpleArticleEditor - 저장된 콘텐츠 복원 완료');
       }
       
-      return { node, offset: node.childNodes.length };
-    };
-
-    try {
-      const { node, offset } = createRange(editorRef.current, position);
-      const range = document.createRange();
-      range.setStart(node, offset);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    } catch (error) {
-      console.log('커서 위치 복원 중 오류 (무시 가능):', error);
+      setHasInitialized(true);
     }
-  };
+  }, [hasInitialized, onContentChange]);
 
-  // 컴포넌트 초기화 시 localStorage에서 복원
+  // 새로운 생성 콘텐츠 처리 - 사용자가 편집 중이 아니고 기존 콘텐츠와 다를 때만
   useEffect(() => {
-    const savedContent = localStorage.getItem('blog_editor_content');
-    console.log('SimpleArticleEditor - 초기화, 저장된 콘텐츠 복원:', { 
-      hasSavedContent: !!savedContent,
-      savedContentLength: savedContent?.length || 0 
-    });
-    
-    if (savedContent && !currentContent) {
-      setCurrentContent(savedContent);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = savedContent;
-      }
-      onContentChange(savedContent);
-    }
-  }, [onContentChange, currentContent]);
-
-  // generatedContent 변경 시 에디터 업데이트 - 사용자가 편집 중이 아닐 때만
-  useEffect(() => {
-    if (generatedContent && generatedContent !== currentContent && !isUserEditing) {
-      console.log('SimpleArticleEditor - 새로운 생성 콘텐츠 업데이트:', {
-        generatedContentLength: generatedContent.length,
-        currentContentLength: currentContent.length,
-        isUserEditing
+    if (hasInitialized && 
+        generatedContent && 
+        generatedContent !== currentContent && 
+        !isUserEditing && 
+        !isGeneratingContent) {
+      
+      console.log('SimpleArticleEditor - 새로운 생성 콘텐츠 적용:', {
+        generatedLength: generatedContent.length,
+        currentLength: currentContent.length,
+        isUserEditing,
+        isGeneratingContent
       });
       
       setCurrentContent(generatedContent);
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
       }
-      
-      // localStorage에 즉시 저장
-      localStorage.setItem('blog_editor_content', generatedContent);
+      saveContentToStorage(generatedContent);
       onContentChange(generatedContent);
     }
-  }, [generatedContent, currentContent, onContentChange, isUserEditing]);
+  }, [generatedContent, currentContent, isUserEditing, isGeneratingContent, hasInitialized, onContentChange]);
 
-  // 탭 변경/새로고침 감지 시 자동 저장
+  // 페이지 언로드 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (currentContent) {
-        localStorage.setItem('blog_editor_content', currentContent);
-        console.log('SimpleArticleEditor - 페이지 종료 전 콘텐츠 저장');
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden && currentContent) {
-        localStorage.setItem('blog_editor_content', currentContent);
-        console.log('SimpleArticleEditor - 탭 변경 시 콘텐츠 저장');
+        saveContentToStorage(currentContent);
+        console.log('SimpleArticleEditor - 페이지 종료 전 저장');
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [currentContent]);
 
-  // 사용자가 직접 편집할 때
+  // 사용자 편집 처리
   const handleInput = () => {
-    if (editorRef.current) {
+    if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
       setCurrentContent(newContent);
       onContentChange(newContent);
-      // localStorage에 즉시 저장
-      localStorage.setItem('blog_editor_content', newContent);
-      console.log('SimpleArticleEditor - 사용자 편집 시 콘텐츠 저장');
+      saveContentToStorage(newContent);
+      console.log('SimpleArticleEditor - 사용자 편집 저장');
     }
   };
 
-  // 편집 시작/종료 감지
+  // 편집 상태 관리
   const handleFocus = () => {
+    console.log('SimpleArticleEditor - 편집 시작');
     setIsUserEditing(true);
   };
 
   const handleBlur = () => {
-    // 약간의 지연을 두고 편집 상태 해제 (다른 요소로 포커스가 이동할 수 있음)
+    console.log('SimpleArticleEditor - 편집 종료');
+    // 약간의 지연을 두고 편집 상태 해제
     setTimeout(() => {
       setIsUserEditing(false);
-    }, 100);
+    }, 200);
   };
 
-  // 키보드 이벤트 - 기본 동작만 허용
+  // 키보드 이벤트
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    // 기본 키보드 동작을 방해하지 않음
+    // 기본 동작 허용
   };
 
   // 클립보드에 복사
@@ -267,7 +246,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
-                <p className="text-xs text-green-600 mt-1">✅ 자동 저장: 탭 전환/새로고침 시에도 안전하게 보존됩니다</p>
+                <p className="text-xs text-green-600 mt-1">✅ 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
               </div>
               <div
                 ref={editorRef}
