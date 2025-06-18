@@ -33,7 +33,6 @@ export const RightContent: React.FC<RightContentProps> = ({
         topics={appState.topics}
         selectedTopic={appState.selectedTopic}
         selectTopic={selectTopic}
-        copyToClipboard={copyToClipboard}
         onTopicConfirm={onTopicConfirm}
       />
       

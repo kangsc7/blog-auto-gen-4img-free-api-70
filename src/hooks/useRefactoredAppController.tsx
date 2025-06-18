@@ -1,10 +1,14 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useGeminiManager } from '@/hooks/useGeminiManager';
 import { usePixabayManager } from '@/hooks/usePixabayManager';
 import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
+import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
+import { useArticleGenerator } from '@/hooks/useArticleGenerator';
+import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
 import { useOneClick } from '@/hooks/useOneClick';
@@ -24,12 +28,22 @@ export const useRefactoredAppController = () => {
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
 
-  const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
-  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
+  const { isGeneratingTopics, generateTopics } = useTopicGenerator({ appState, saveAppState });
+  
+  // 새로운 클립보드 훅 추가
+  const pixabayClipboard = usePixabayClipboard();
+
+  // articleGenerator에 이미지 콜백 추가
+  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(
+    appState, 
+    saveAppState,
+    pixabayClipboard.addImageForClipboard
+  );
+  
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
   // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
-  const topicControls = useTopicControls(appState, saveAppState);
+  const topicControls = useTopicControls({ appState, saveAppState });
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
   const {
@@ -143,16 +157,6 @@ export const useRefactoredAppController = () => {
     downloadHTML,
     openWhisk,
   };
-
-  // 새로운 클립보드 훅 추가
-  const pixabayClipboard = usePixabayClipboard();
-
-  // 기존 articleGenerator에 이미지 콜백 추가
-  const articleGenerator = useArticleGenerator(
-    appState, 
-    saveAppState,
-    pixabayClipboard.addImageForClipboard
-  );
 
   return {
     appState,

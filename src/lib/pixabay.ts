@@ -1,4 +1,3 @@
-
 const getSummaryKeywords = async (text: string, geminiApiKey: string): Promise<string | null> => {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
     const summaryPrompt = `다음 텍스트를 Pixabay 이미지 검색에 적합한 2-3개의 한국어 키워드로 요약해 주세요. 쉼표로 구분된 키워드만 제공하고 다른 설명은 하지 마세요. 텍스트: "${text}"`;
@@ -97,7 +96,7 @@ export const integratePixabayImages = async (
     geminiApiKey: string,
     onImageFound?: (url: string, description: string, position: number) => void
 ): Promise<{ finalHtml: string; imageCount: number }> => {
-    console.log('🚀 Pixabay 이미지 통합 시작 (클립보드 방식)');
+    console.log('🚀 Pixabay 이미지 통합 시작 (자동 클립보드 방식)');
     console.log('📄 HTML 콘텐츠 길이:', htmlContent.length);
     
     const parser = new DOMParser();
@@ -159,34 +158,38 @@ export const integratePixabayImages = async (
                         usedImageUrls.add(imageUrl);
                         console.log('✅ 선택된 이미지:', imageUrl);
 
-                        // 이미지 정보를 클립보드 시스템에 전달
+                        // 섹션 요약 및 ALT 텍스트 생성
                         const sectionSummary = textToSummarize.substring(0, 100).replace(/[<>]/g, '').trim();
-                        const description = sectionSummary || h2.textContent?.trim() || keyword;
+                        const altText = sectionSummary || h2.textContent?.trim() || keyword;
                         
+                        // 이미지 정보를 자동으로 클립보드 시스템에 전달
                         if (onImageFound) {
-                            onImageFound(imageUrl, description, imageCount + 1);
+                            onImageFound(imageUrl, altText, imageCount + 1);
                         }
 
-                        // 클립보드 복사용 플레이스홀더 삽입
+                        // 블로그에 640x480 이미지 태그 직접 삽입
                         const imageContainer = doc.createElement('div');
                         imageContainer.style.textAlign = 'center';
                         imageContainer.style.margin = '2em 0';
                         imageContainer.style.padding = '1em';
-                        imageContainer.style.border = '2px dashed #3b82f6';
                         imageContainer.style.borderRadius = '8px';
-                        imageContainer.style.backgroundColor = '#eff6ff';
                         
-                        const placeholder = doc.createElement('div');
-                        placeholder.innerHTML = `
-                            <p style="color: #3b82f6; font-weight: bold; margin: 0;">📷 이미지 삽입 위치 ${imageCount + 1}</p>
-                            <p style="color: #6b7280; font-size: 0.9em; margin: 0.5em 0 0 0;">${description}</p>
-                            <p style="color: #9ca3af; font-size: 0.8em; margin: 0.5em 0 0 0;">※ 클립보드에서 이미지를 복사하여 이 위치에 붙여넣으세요</p>
-                        `;
+                        const imgElement = doc.createElement('img');
+                        imgElement.src = imageUrl;
+                        imgElement.alt = altText;
+                        imgElement.title = altText;
+                        imgElement.style.width = '640px';
+                        imgElement.style.height = '480px';
+                        imgElement.style.objectFit = 'cover';
+                        imgElement.style.borderRadius = '8px';
+                        imgElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                        imgElement.setAttribute('data-description', altText);
+                        imgElement.setAttribute('data-position', (imageCount + 1).toString());
                         
-                        imageContainer.appendChild(placeholder);
+                        imageContainer.appendChild(imgElement);
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;
-                        console.log(`🖼️ 클립보드 플레이스홀더 ${imageCount} 삽입 완료`);
+                        console.log(`🖼️ 이미지 ${imageCount} 자동 삽입 완료 (640x480)`);
                     } else {
                         console.log('⚠️ 사용 가능한 이미지 없음 (모두 중복)');
                     }
@@ -201,6 +204,6 @@ export const integratePixabayImages = async (
         console.log('❌ H2 태그를 찾을 수 없음');
     }
     
-    console.log(`🏁 클립보드 방식 Pixabay 이미지 통합 완료: ${imageCount}개 플레이스홀더 추가`);
+    console.log(`🏁 자동 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 삽입`);
     return { finalHtml: doc.body.innerHTML, imageCount };
 };
