@@ -13,7 +13,8 @@ export const useOneClick = (
   generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>,
   profile: Profile | null,
   preventDuplicates: boolean,
-  hasAccess: boolean
+  hasAccess: boolean,
+  isDuplicateTopic?: (topic: string) => boolean
 ) => {
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);

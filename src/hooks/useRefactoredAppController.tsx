@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -10,6 +11,7 @@ import { useAppUtils } from '@/hooks/useAppUtils';
 import { useOneClick } from '@/hooks/useOneClick';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { usePixabayClipboard } from '@/hooks/usePixabayClipboard';
+import { useDuplicatePrevention } from '@/hooks/useDuplicatePrevention';
 
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
@@ -20,8 +22,15 @@ export const useRefactoredAppController = () => {
     saveAppState
   });
   
-  const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
+
+  // 중복 방지 시스템 사용
+  const { 
+    preventDuplicates, 
+    handlePreventDuplicatesToggle,
+    isDuplicateTopic,
+    clearDuplicateTopics 
+  } = useDuplicatePrevention();
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator({ appState, saveAppState });
   
@@ -40,7 +49,7 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  const topicControls = useTopicControls({ appState, saveAppState });
+  const topicControls = useTopicControls({ appState, saveAppState, isDuplicateTopic, preventDuplicates });
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
   const {
@@ -63,7 +72,8 @@ export const useRefactoredAppController = () => {
     generateArticle,
     profile,
     preventDuplicates,
-    hasAccess || isAdmin
+    hasAccess || isAdmin,
+    isDuplicateTopic
   );
 
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
@@ -124,13 +134,6 @@ export const useRefactoredAppController = () => {
     }
   };
 
-  const handlePreventDuplicatesToggle = () => {
-    const newValue = !preventDuplicates;
-    console.log('중복금지 설정 변경:', { 이전값: preventDuplicates, 새값: newValue });
-    setPreventDuplicates(newValue);
-    saveAppState({ preventDuplicates: newValue });
-  };
-
   // 편집기 내용 강제 초기화 함수 개선 - DOM 조작 및 이벤트 기반 초기화
   const handleResetAppWithEditor = () => {
     console.log('🔄 앱 및 편집기 전체 초기화 시작');
@@ -145,7 +148,12 @@ export const useRefactoredAppController = () => {
       console.error('localStorage 삭제 실패:', error);
     }
     
-    // 2. 앱 상태 완전 초기화
+    // 2. 중복 방지 데이터 삭제 (중복 허용으로 전환시)
+    if (preventDuplicates) {
+      clearDuplicateTopics();
+    }
+    
+    // 3. 앱 상태 완전 초기화
     saveAppState({ 
       generatedContent: '',
       selectedTopic: '',
@@ -156,7 +164,7 @@ export const useRefactoredAppController = () => {
       referenceSentence: ''
     });
     
-    // 3. 편집기 DOM 강제 초기화 (더 포괄적인 선택자와 이벤트 기반)
+    // 4. 편집기 DOM 강제 초기화 (더 포괄적인 선택자와 이벤트 기반)
     const clearEditorContent = () => {
       const editorSelectors = [
         '[contenteditable="true"]',
@@ -213,7 +221,7 @@ export const useRefactoredAppController = () => {
       });
     };
     
-    // 4. 다단계 초기화 실행
+    // 5. 다단계 초기화 실행
     clearEditorContent();
     
     setTimeout(() => {
@@ -226,7 +234,7 @@ export const useRefactoredAppController = () => {
       console.log('✅ 최종 편집기 초기화 완료');
     }, 500);
     
-    // 5. 기본 앱 초기화 실행
+    // 6. 기본 앱 초기화 실행
     handleResetApp();
     
     console.log('🎉 전체 초기화 완료');
@@ -268,7 +276,6 @@ export const useRefactoredAppController = () => {
     pixabayManager,
     huggingFaceManager,
     preventDuplicates,
-    setPreventDuplicates,
     handlePreventDuplicatesToggle,
     handleResetApp: handleResetAppWithEditor,
     isOneClickGenerating,
@@ -285,5 +292,12 @@ export const useRefactoredAppController = () => {
     setShowDuplicateErrorDialog,
     oneClickMode,
     pixabayClipboard,
+    showTopicConfirmDialog,
+    setShowTopicConfirmDialog,
+    pendingTopic,
+    handleTopicConfirm,
+    handleTopicCancel,
+    handleTopicSelect,
+    handleTopicSelectionCancel,
   };
 };

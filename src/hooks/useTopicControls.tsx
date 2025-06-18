@@ -3,24 +3,6 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
-// 간단한 유사도 검사 함수 (70% 기준)
-const calculateSimilarity = (str1: string, str2: string): number => {
-  const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
-  const s1 = normalize(str1);
-  const s2 = normalize(str2);
-  
-  if (s1 === s2) return 100;
-  
-  const maxLength = Math.max(s1.length, s2.length);
-  let matches = 0;
-  
-  for (let i = 0; i < Math.min(s1.length, s2.length); i++) {
-    if (s1[i] === s2[i]) matches++;
-  }
-  
-  return (matches / maxLength) * 100;
-};
-
 // 주제에서 핵심 키워드를 추출하는 함수 (개선된 버전)
 const extractKeywordFromTopic = (topic: string): string => {
   // 년도는 보존하고, 불필요한 단어들만 제거
@@ -38,7 +20,19 @@ const extractKeywordFromTopic = (topic: string): string => {
   return cleaned;
 };
 
-export const useTopicControls = (appState: AppState, saveAppState: (newState: Partial<AppState>) => void) => {
+interface UseTopicControlsProps {
+  appState: AppState;
+  saveAppState: (newState: Partial<AppState>) => void;
+  isDuplicateTopic?: (topic: string) => boolean;
+  preventDuplicates?: boolean;
+}
+
+export const useTopicControls = ({ 
+  appState, 
+  saveAppState, 
+  isDuplicateTopic,
+  preventDuplicates 
+}: UseTopicControlsProps) => {
   const { toast } = useToast();
   const [manualTopic, setManualTopic] = useState('');
 
@@ -59,21 +53,14 @@ export const useTopicControls = (appState: AppState, saveAppState: (newState: Pa
 
     const trimmedTopic = manualTopic.trim();
 
-    // 중복 금지 설정이 활성화된 경우에만 유사도 검사
-    if (appState.preventDuplicates && appState.topics.length > 0) {
-      const isDuplicate = appState.topics.some(existingTopic => {
-        const similarity = calculateSimilarity(trimmedTopic, existingTopic);
-        return similarity >= 70;
+    // 중복 금지 설정이 활성화된 경우에만 중복 검사
+    if (preventDuplicates && isDuplicateTopic && isDuplicateTopic(trimmedTopic)) {
+      toast({
+        title: "중복 주제 감지",
+        description: "70% 이상 유사한 주제가 이미 존재합니다.",
+        variant: "destructive"
       });
-
-      if (isDuplicate) {
-        toast({
-          title: "중복 주제 감지",
-          description: "70% 이상 유사한 주제가 이미 존재합니다.",
-          variant: "destructive"
-        });
-        return;
-      }
+      return;
     }
 
     // 수동 입력된 주제에서 핵심 키워드 추출
