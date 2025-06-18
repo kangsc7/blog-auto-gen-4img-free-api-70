@@ -38,7 +38,7 @@ const defaultState: AppState = {
 // localStorage 키 상수들
 const STORAGE_KEYS = {
   GENERATED_CONTENT: 'blog_generated_content',
-  EDITOR_CONTENT: 'blog_editor_content', // 에디터 전용 키 추가
+  EDITOR_CONTENT: 'blog_editor_content',
   REFERENCE_LINK: 'blog_reference_link',
   REFERENCE_SENTENCE: 'blog_reference_sentence',
   SELECTED_TOPIC: 'blog_selected_topic',
@@ -54,25 +54,29 @@ export const useAppStateManager = () => {
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
 
-  // localStorage에서 블로그 관련 데이터 로드 - 에디터 콘텐츠 우선순위 적용
+  // localStorage에서 블로그 관련 데이터 로드 - 참조 링크와 문장 포함
   const loadBlogDataFromStorage = useCallback(() => {
     try {
       const editorContent = localStorage.getItem(STORAGE_KEYS.EDITOR_CONTENT);
       const generatedContent = localStorage.getItem(STORAGE_KEYS.GENERATED_CONTENT);
       
-      // 에디터 콘텐츠가 있으면 우선 사용, 없으면 생성된 콘텐츠 사용
       const finalContent = editorContent || generatedContent || '';
+      
+      const referenceLink = localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '';
+      const referenceSentence = localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '';
       
       console.log('앱 상태 관리자 - 블로그 데이터 로드:', {
         hasEditorContent: !!editorContent,
         hasGeneratedContent: !!generatedContent,
-        finalContentLength: finalContent.length
+        finalContentLength: finalContent.length,
+        referenceLink,
+        referenceSentence: referenceSentence.substring(0, 50) + '...'
       });
 
       return {
         generatedContent: finalContent,
-        referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
-        referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
+        referenceLink,
+        referenceSentence,
         selectedTopic: localStorage.getItem(STORAGE_KEYS.SELECTED_TOPIC) || '',
         topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
         keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
@@ -84,20 +88,21 @@ export const useAppStateManager = () => {
     }
   }, []);
 
-  // localStorage에 블로그 관련 데이터 저장 - 에디터와 생성 콘텐츠 동기화
+  // localStorage에 블로그 관련 데이터 저장 - 참조 링크와 문장 포함
   const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
     try {
       if (data.generatedContent !== undefined) {
         localStorage.setItem(STORAGE_KEYS.GENERATED_CONTENT, data.generatedContent);
-        // 에디터 콘텐츠와도 동기화
         localStorage.setItem(STORAGE_KEYS.EDITOR_CONTENT, data.generatedContent);
         console.log('앱 상태 관리자 - 콘텐츠 저장 및 동기화:', data.generatedContent.length);
       }
       if (data.referenceLink !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
+        console.log('앱 상태 관리자 - 참조 링크 저장:', data.referenceLink);
       }
       if (data.referenceSentence !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_SENTENCE, data.referenceSentence);
+        console.log('앱 상태 관리자 - 참조 문장 저장:', data.referenceSentence.substring(0, 50) + '...');
       }
       if (data.selectedTopic !== undefined) {
         localStorage.setItem(STORAGE_KEYS.SELECTED_TOPIC, data.selectedTopic);

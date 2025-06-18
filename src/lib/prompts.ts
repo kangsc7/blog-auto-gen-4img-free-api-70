@@ -19,7 +19,8 @@ export const getArticlePrompt = ({
 }: ArticlePromptParams): string => {
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
-  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, referenceSentence);
+  const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
+  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText);
   const currentYear = new Date().getFullYear();
 
   return `
@@ -58,7 +59,11 @@ export const getArticlePrompt = ({
         - 올바른 형식: \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
         - 절대 사용 금지: "보건복지부(https://www.mw.go.kr/)" 형식이나 단순 URL만 쓰는 것은 절대 금지
         
-        - **참조 링크 텍스트 (매우 중요)**: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트는 "${referenceSentence || '더 많은 정보 확인하기'}"로 설정되어 있습니다. 이 텍스트를 그대로 사용해주세요.
+        - **참조 링크 텍스트 (매우 중요)**: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트는 "${refText}"로 설정되어 있습니다. 이 텍스트를 그대로 사용해주세요.
+        
+        ${referenceLink ? `- **외부 참조 링크 활용**: 제공된 참조 링크 "${referenceLink}"의 내용을 분석하여 글에 자연스럽게 반영해주세요.` : ''}
+        ${referenceSentence ? `- **참조 문장 활용**: 제공된 참조 문장 "${referenceSentence}"을 글의 맥락에 맞게 자연스럽게 포함하거나 연관된 내용을 작성해주세요.` : ''}
+        
         - **가장 중요한 최종 규칙**: 위에서 **(매우 중요)** 또는 **(가장 중요한 규칙)**이라고 표시된 **콘텐츠 분량**과 **키워드 밀도** 지침은 이 작업에서 가장 중요합니다. 어떤 경우에도 이 두 가지 규칙을 어겨서는 안 됩니다.
 
         사용할 변수:
@@ -71,7 +76,7 @@ export const getArticlePrompt = ({
         - Warn Border Color: ${colors.warnBorder}
         - Link Color: ${colors.link}
         - Reference Link: ${refLink}
-        - Reference Sentence: ${referenceSentence || '더 많은 정보 확인하기'}
+        - Reference Text: ${refText}
         - Topic: ${topic}
         - Main Keyword: ${keyword}
 
