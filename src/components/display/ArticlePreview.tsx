@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
@@ -19,222 +20,239 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
 }) => {
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
-  const isUpdatingFromProps = useRef(false);
-  const isComposing = useRef(false);
-  const lastKnownCursorPosition = useRef(0);
-  const skipNextCursorRestore = useRef(false);
-  const isInternalUpdate = useRef(false);
+  
+  // 상태 관리를 더 명확하게 분리
+  const [isInternalUpdate, setIsInternalUpdate] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
+  const [lastSavedRange, setLastSavedRange] = useState<Range | null>(null);
+  const [suppressNextUpdate, setSuppressNextUpdate] = useState(false);
+  
+  // 디바운싱을 위한 타이머
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const restoreTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 더 정확한 커서 위치 계산
-  const getCursorPosition = (): number => {
+  // Range 기반 커서 위치 저장 - 더 정확하고 안정적
+  const saveSelection = (): Range | null => {
+    if (!editableDivRef.current) return null;
+    
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) {
-      return lastKnownCursorPosition.current;
-    }
+    if (!selection || selection.rangeCount === 0) return null;
     
     try {
-      const range = selection.getRangeAt(0);
-      const preCaretRange = range.cloneRange();
-      preCaretRange.selectNodeContents(editableDivRef.current);
-      preCaretRange.setEnd(range.endContainer, range.endOffset);
-      
-      const position = preCaretRange.toString().length;
-      lastKnownCursorPosition.current = position;
-      return position;
+      const range = selection.getRangeAt(0).cloneRange();
+      setLastSavedRange(range.cloneRange());
+      return range;
     } catch (error) {
-      console.warn('커서 위치 계산 중 오류:', error);
-      return lastKnownCursorPosition.current;
+      console.warn('Selection save failed:', error);
+      return null;
     }
   };
 
-  // 더 안정적인 커서 위치 복원
-  const setCursorPosition = (position: number) => {
-    if (!editableDivRef.current || isComposing.current || skipNextCursorRestore.current) {
-      skipNextCursorRestore.current = false;
+  // Range 기반 커서 위치 복원 - 훨씬 더 안정적
+  const restoreSelection = (range: Range | null) => {
+    if (!range || !editableDivRef.current || isComposing || suppressNextUpdate) {
       return;
     }
-    
-    const selection = window.getSelection();
-    if (!selection) return;
 
     try {
-      let currentPosition = 0;
-      const walker = document.createTreeWalker(
-        editableDivRef.current,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
+      const selection = window.getSelection();
+      if (!selection) return;
 
-      let node;
-      while (node = walker.nextNode()) {
-        const textLength = node.textContent?.length || 0;
-        if (currentPosition + textLength >= position) {
-          const range = document.createRange();
-          const offsetInNode = Math.min(position - currentPosition, textLength);
-          range.setStart(node, offsetInNode);
-          range.setEnd(node, offsetInNode);
-          
-          selection.removeAllRanges();
-          selection.addRange(range);
-          lastKnownCursorPosition.current = position;
-          return;
-        }
-        currentPosition += textLength;
+      // DOM이 변경되었는지 확인
+      if (!document.contains(range.startContainer) || !document.contains(range.endContainer)) {
+        // 가장 가까운 유효한 위치로 복원
+        const newRange = document.createRange();
+        newRange.selectNodeContents(editableDivRef.current);
+        newRange.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        return;
       }
 
-      // 위치를 찾지 못한 경우 마지막으로 이동
-      const range = document.createRange();
-      range.selectNodeContents(editableDivRef.current);
-      range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
-      lastKnownCursorPosition.current = editableDivRef.current.textContent?.length || 0;
     } catch (error) {
-      console.warn('커서 위치 복원 중 오류:', error);
+      console.warn('Selection restore failed:', error);
+      // 폴백: 마지막 위치로 이동
+      try {
+        const selection = window.getSelection();
+        if (selection && editableDivRef.current) {
+          const range = document.createRange();
+          range.selectNodeContents(editableDivRef.current);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } catch (fallbackError) {
+        console.warn('Fallback selection failed:', fallbackError);
+      }
     }
   };
 
-  useEffect(() => {
-    if (editableDivRef.current && 
-        editableDivRef.current.innerHTML !== generatedContent && 
-        !isComposing.current &&
-        !isInternalUpdate.current) {
-      
-      const cursorPosition = getCursorPosition();
-      isUpdatingFromProps.current = true;
-      
-      editableDivRef.current.innerHTML = generatedContent;
-      
-      // DOM 업데이트 후 커서 복원
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setCursorPosition(cursorPosition);
-          isUpdatingFromProps.current = false;
-        });
-      });
+  // 컨텐츠 업데이트를 위한 디바운싱 함수
+  const debouncedContentUpdate = (content: string) => {
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
     }
+    
+    updateTimerRef.current = setTimeout(() => {
+      if (!isComposing && !isInternalUpdate) {
+        onContentChange(content);
+      }
+    }, 100);
+  };
+
+  // 외부에서 들어온 컨텐츠 업데이트 처리
+  useEffect(() => {
+    if (!editableDivRef.current || isInternalUpdate || isComposing || suppressNextUpdate) {
+      return;
+    }
+
+    const currentContent = editableDivRef.current.innerHTML;
+    if (currentContent === generatedContent) {
+      return;
+    }
+
+    // 현재 선택 영역 저장
+    const savedRange = saveSelection();
+    
+    setIsInternalUpdate(true);
+    setSuppressNextUpdate(true);
+    
+    // DOM 업데이트
+    editableDivRef.current.innerHTML = generatedContent;
+    
+    // 선택 영역 복원을 다음 프레임으로 지연
+    if (restoreTimerRef.current) {
+      clearTimeout(restoreTimerRef.current);
+    }
+    
+    restoreTimerRef.current = setTimeout(() => {
+      restoreSelection(savedRange);
+      setIsInternalUpdate(false);
+      setSuppressNextUpdate(false);
+    }, 50);
+    
   }, [generatedContent]);
 
-  const handleContentEdit = () => {
-    if (editableDivRef.current && 
-        !isUpdatingFromProps.current && 
-        !isComposing.current &&
-        !isInternalUpdate.current) {
-      
-      isInternalUpdate.current = true;
-      const updatedContent = editableDivRef.current.innerHTML;
-      onContentChange(updatedContent);
-      
-      // 내부 업데이트 플래그 해제
-      setTimeout(() => {
-        isInternalUpdate.current = false;
-      }, 50);
-    }
-  };
-
-  // 한글 입력 이벤트 처리
+  // 한글 입력 시작
   const handleCompositionStart = () => {
-    console.log('한글 입력 시작');
-    isComposing.current = true;
+    console.log('Composition started');
+    setIsComposing(true);
+    saveSelection();
   };
 
+  // 한글 입력 중
   const handleCompositionUpdate = () => {
-    // 입력 중에는 커서 위치만 업데이트
-    getCursorPosition();
+    // 입력 중에는 위치만 저장하고 업데이트하지 않음
+    saveSelection();
   };
 
+  // 한글 입력 완료
   const handleCompositionEnd = () => {
-    console.log('한글 입력 완료');
-    isComposing.current = false;
+    console.log('Composition ended');
+    setIsComposing(false);
     
+    // 약간의 지연 후 업데이트
     setTimeout(() => {
-      if (!isUpdatingFromProps.current) {
-        handleContentEdit();
+      if (editableDivRef.current && !isInternalUpdate) {
+        const content = editableDivRef.current.innerHTML;
+        debouncedContentUpdate(content);
       }
-    }, 10);
+    }, 50);
   };
 
-  // 특정 키에 대한 안전한 처리
+  // 키보드 입력 처리 - 특별한 키들에 대한 세밀한 제어
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (isComposing.current) return;
+    if (isComposing || isInternalUpdate) return;
 
     const key = event.key;
     
-    // 커서 위치 저장
-    getCursorPosition();
+    // 현재 선택 영역 저장
+    saveSelection();
     
-    // 특별한 처리가 필요한 키들
-    if (key === 'Enter') {
-      event.stopPropagation();
-      // 엔터는 기본 동작 허용하되 상태 업데이트는 지연
+    // 특정 키들에 대해서는 즉시 처리하지 않고 keyup에서 처리
+    if (key === ' ' || key === 'Backspace' || key === 'Delete') {
+      setSuppressNextUpdate(true);
+      
+      // 다음 프레임에서 suppression 해제
       setTimeout(() => {
-        if (!isUpdatingFromProps.current) {
-          skipNextCursorRestore.current = true; // 엔터 후 커서 복원 건너뛰기
-          handleContentEdit();
-        }
-      }, 0);
-    } else if (key === ' ' || key === 'Backspace' || key === 'Delete') {
-      // 스페이스, 백스페이스, 델리트는 즉시 처리하지 않음
-      skipNextCursorRestore.current = true;
+        setSuppressNextUpdate(false);
+      }, 10);
     }
   };
 
-  // 키를 놓았을 때의 처리
+  // 키를 놓았을 때 처리
   const handleKeyUp = (event: React.KeyboardEvent) => {
-    if (isComposing.current) return;
+    if (isComposing || isInternalUpdate) return;
     
     const key = event.key;
     
     // 특정 키들에 대해서만 지연된 업데이트
     if (key === ' ' || key === 'Backspace' || key === 'Delete') {
       setTimeout(() => {
-        if (!isUpdatingFromProps.current && !isComposing.current) {
-          handleContentEdit();
+        if (editableDivRef.current && !isComposing && !isInternalUpdate) {
+          const content = editableDivRef.current.innerHTML;
+          debouncedContentUpdate(content);
         }
-      }, 10);
+      }, 100);
     }
   };
 
+  // 일반적인 입력 처리
   const handleInput = (event: React.FormEvent) => {
-    if (isComposing.current || isUpdatingFromProps.current) return;
+    if (isComposing || isInternalUpdate || suppressNextUpdate) return;
     
-    // 커서 위치 업데이트
-    getCursorPosition();
+    saveSelection();
     
-    // 일반적인 텍스트 입력에 대해서만 즉시 처리
     const nativeEvent = event.nativeEvent as InputEvent;
     const inputType = nativeEvent.inputType;
     
-    // 특정 입력 타입은 지연 처리
+    // 특정 입력 타입들은 keyUp에서 처리되므로 여기서는 제외
     if (inputType === 'deleteContentBackward' || 
         inputType === 'deleteContentForward' ||
-        inputType === 'insertText' && nativeEvent.data === ' ') {
-      return; // keyUp에서 처리됨
+        (inputType === 'insertText' && nativeEvent.data === ' ')) {
+      return;
     }
     
-    // 나머지는 즉시 처리
-    setTimeout(() => {
-      if (!isUpdatingFromProps.current && !isComposing.current) {
-        handleContentEdit();
-      }
-    }, 0);
+    // 즉시 처리할 수 있는 입력들
+    if (editableDivRef.current) {
+      const content = editableDivRef.current.innerHTML;
+      debouncedContentUpdate(content);
+    }
   };
 
-  const handleBeforeInput = (event: React.FormEvent) => {
-    getCursorPosition();
-  };
-
-  // 포커스 이벤트 처리
+  // 포커스 관련 이벤트들
   const handleFocus = () => {
-    getCursorPosition();
+    saveSelection();
   };
 
   const handleClick = () => {
-    // 클릭 후 커서 위치 업데이트
+    // 클릭 후 약간의 지연을 두고 선택 영역 저장
     setTimeout(() => {
-      getCursorPosition();
-    }, 0);
+      saveSelection();
+    }, 10);
   };
+
+  const handleBlur = () => {
+    // 포커스를 잃을 때 마지막으로 업데이트
+    if (editableDivRef.current && !isComposing && !isInternalUpdate) {
+      const content = editableDivRef.current.innerHTML;
+      onContentChange(content);
+    }
+  };
+
+  // 클린업
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+      if (restoreTimerRef.current) {
+        clearTimeout(restoreTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleCopyToClipboard = () => {
     if (!editableDivRef.current?.innerHTML) {
@@ -326,13 +344,12 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             onCompositionStart={handleCompositionStart}
             onCompositionUpdate={handleCompositionUpdate}
             onCompositionEnd={handleCompositionEnd}
-            onBeforeInput={handleBeforeInput}
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onKeyUp={handleKeyUp}
             onFocus={handleFocus}
             onClick={handleClick}
-            onBlur={handleContentEdit}
+            onBlur={handleBlur}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
           />
         ) : (
