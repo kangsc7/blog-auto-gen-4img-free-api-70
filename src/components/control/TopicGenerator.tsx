@@ -27,6 +27,12 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
 }) => {
+  const handleManualTopicKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleManualTopicAdd();
+    }
+  };
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -97,6 +103,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
               placeholder="직접 주제를 입력해주세요"
               value={manualTopic}
               onChange={(e) => setManualTopic(e.target.value)}
+              onKeyPress={handleManualTopicKeyPress}
               className="flex-1"
             />
             <Button 
