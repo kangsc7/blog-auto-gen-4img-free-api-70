@@ -14,7 +14,7 @@ import { useUserAccess } from '@/hooks/useUserAccess';
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager(appState, saveAppState);
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
 
@@ -23,7 +23,7 @@ export const useRefactoredAppController = () => {
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
   const topicControls = useTopicControls(appState, saveAppState);
-  const { copyToClipboard, downloadHTML: downloadAsHtml, openWhisk: shareContent } = useAppUtils(appState);
+  const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
   const {
     isOneClickGenerating,
@@ -62,7 +62,7 @@ export const useRefactoredAppController = () => {
   const generationStatus = {
     isGeneratingTopics,
     isGeneratingContent,
-    isGeneratingPrompt,
+    isGeneratingImage: isGeneratingPrompt,
     isDirectlyGenerating,
     isOneClickGenerating,
   };
@@ -70,16 +70,15 @@ export const useRefactoredAppController = () => {
   const generationFunctions = {
     generateTopics: () => generateTopics(),
     generateArticle,
-    generateImagePrompt,
+    createImagePrompt: generateImagePrompt,
     generateDirectImage,
     stopArticleGeneration,
   };
 
   const utilityFunctions = {
     copyToClipboard,
-    downloadAsHtml,
-    shareContent,
-    convertToMarkdown,
+    downloadHTML,
+    openWhisk,
   };
 
   return {

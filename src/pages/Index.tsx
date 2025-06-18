@@ -236,7 +236,11 @@ const Index = () => {
         generationStatus={generationStatus}
         generationFunctions={generationFunctions}
         topicControls={topicControls}
-        utilityFunctions={utilityFunctions}
+        utilityFunctions={{
+          copyToClipboard: utilityFunctions.copyToClipboard,
+          downloadHTML: utilityFunctions.downloadHTML,
+          openWhisk: utilityFunctions.openWhisk,
+        }}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
       />
