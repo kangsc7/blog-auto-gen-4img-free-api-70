@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   password: string;
@@ -18,8 +19,9 @@ export interface AppState {
   currentUser: string;
   referenceLink?: string;
   referenceSentence?: string;
-  colorTheme?: string; // 컬러테마 속성 추가
+  colorTheme?: string;
   preventDuplicates?: boolean;
+  topicCount?: number; // 누락된 속성 추가
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';
