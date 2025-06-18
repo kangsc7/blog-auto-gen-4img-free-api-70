@@ -67,38 +67,6 @@ const collectImagesFromMultiplePages = async (keyword: string, pixabayApiKey: st
     return allImages;
 };
 
-// 이미지를 Base64로 변환하는 함수 (티스토리 호환성 개선)
-const convertImageToBase64 = async (imageUrl: string): Promise<string | null> => {
-    try {
-        console.log('🔄 이미지 Base64 변환 시작:', imageUrl);
-        
-        // CORS 프록시를 사용하여 이미지 가져오기
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
-        const response = await fetch(proxyUrl);
-        
-        if (!response.ok) {
-            console.error('❌ 이미지 다운로드 실패:', response.status);
-            return null;
-        }
-        
-        const blob = await response.blob();
-        
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                console.log('✅ Base64 변환 완료');
-                resolve(base64String);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    } catch (error) {
-        console.error('❌ Base64 변환 오류:', error);
-        return null;
-    }
-};
-
 export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -126,9 +94,10 @@ export const generateMetaDescription = async (htmlContent: string, geminiApiKey:
 export const integratePixabayImages = async (
     htmlContent: string, 
     pixabayApiKey: string, 
-    geminiApiKey: string
+    geminiApiKey: string,
+    onImageFound?: (url: string, description: string, position: number) => void
 ): Promise<{ finalHtml: string; imageCount: number }> => {
-    console.log('🚀 Pixabay 이미지 통합 시작 (티스토리 최적화)');
+    console.log('🚀 Pixabay 이미지 통합 시작 (클립보드 방식)');
     console.log('📄 HTML 콘텐츠 길이:', htmlContent.length);
     
     const parser = new DOMParser();
@@ -190,59 +159,34 @@ export const integratePixabayImages = async (
                         usedImageUrls.add(imageUrl);
                         console.log('✅ 선택된 이미지:', imageUrl);
 
-                        // 티스토리 호환성을 위한 이미지 처리
+                        // 이미지 정보를 클립보드 시스템에 전달
+                        const sectionSummary = textToSummarize.substring(0, 100).replace(/[<>]/g, '').trim();
+                        const description = sectionSummary || h2.textContent?.trim() || keyword;
+                        
+                        if (onImageFound) {
+                            onImageFound(imageUrl, description, imageCount + 1);
+                        }
+
+                        // 클립보드 복사용 플레이스홀더 삽입
                         const imageContainer = doc.createElement('div');
                         imageContainer.style.textAlign = 'center';
                         imageContainer.style.margin = '2em 0';
+                        imageContainer.style.padding = '1em';
+                        imageContainer.style.border = '2px dashed #3b82f6';
+                        imageContainer.style.borderRadius = '8px';
+                        imageContainer.style.backgroundColor = '#eff6ff';
                         
-                        const img = doc.createElement('img');
+                        const placeholder = doc.createElement('div');
+                        placeholder.innerHTML = `
+                            <p style="color: #3b82f6; font-weight: bold; margin: 0;">📷 이미지 삽입 위치 ${imageCount + 1}</p>
+                            <p style="color: #6b7280; font-size: 0.9em; margin: 0.5em 0 0 0;">${description}</p>
+                            <p style="color: #9ca3af; font-size: 0.8em; margin: 0.5em 0 0 0;">※ 클립보드에서 이미지를 복사하여 이 위치에 붙여넣으세요</p>
+                        `;
                         
-                        // 티스토리에서 안정적으로 작동하는 이미지 설정
-                        img.src = imageUrl;
-                        
-                        // ALT 태그 - 해당 섹션의 요약문 생성
-                        const sectionSummary = textToSummarize.substring(0, 100).replace(/[<>]/g, '').trim();
-                        img.alt = sectionSummary || h2.textContent?.trim() || keyword;
-                        img.title = img.alt; // 티스토리 대표 이미지 설정용
-                        
-                        // 파일명 설정 (티스토리 업로드용)
-                        const sanitizedFilename = (h2.textContent?.trim() || keyword)
-                            .replace(/[^a-zA-Z0-9가-힣]/g, '_')
-                            .substring(0, 30);
-                        img.setAttribute('data-filename', sanitizedFilename + '.jpg');
-                        
-                        // 640x480 고정 크기 설정 (해상도 깨짐 방지)
-                        img.style.width = '640px';
-                        img.style.height = '480px';
-                        img.style.maxWidth = '100%';
-                        img.style.height = 'auto';
-                        img.style.aspectRatio = '4/3';
-                        img.style.objectFit = 'cover';
-                        img.style.borderRadius = '8px';
-                        img.style.display = 'block';
-                        img.style.marginLeft = 'auto';
-                        img.style.marginRight = 'auto';
-                        
-                        // 티스토리 복사용 추가 속성
-                        img.setAttribute('data-ke-mobilestyle', 'widthContent');
-                        img.setAttribute('data-origin-width', '640');
-                        img.setAttribute('data-origin-height', '480');
-                        
-                        imageContainer.appendChild(img);
-                        
-                        // 이미지 설명 추가 (접근성 향상)
-                        const caption = doc.createElement('p');
-                        caption.style.textAlign = 'center';
-                        caption.style.fontSize = '0.9em';
-                        caption.style.color = '#666';
-                        caption.style.marginTop = '0.5em';
-                        caption.style.fontStyle = 'italic';
-                        caption.textContent = `📷 ${sectionSummary}`;
-                        imageContainer.appendChild(caption);
-                        
+                        imageContainer.appendChild(placeholder);
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;
-                        console.log(`🖼️ 티스토리 최적화 이미지 ${imageCount} 삽입 완료`);
+                        console.log(`🖼️ 클립보드 플레이스홀더 ${imageCount} 삽입 완료`);
                     } else {
                         console.log('⚠️ 사용 가능한 이미지 없음 (모두 중복)');
                     }
@@ -257,6 +201,6 @@ export const integratePixabayImages = async (
         console.log('❌ H2 태그를 찾을 수 없음');
     }
     
-    console.log(`🏁 티스토리 최적화 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가`);
+    console.log(`🏁 클립보드 방식 Pixabay 이미지 통합 완료: ${imageCount}개 플레이스홀더 추가`);
     return { finalHtml: doc.body.innerHTML, imageCount };
 };

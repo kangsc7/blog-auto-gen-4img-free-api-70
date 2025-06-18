@@ -9,6 +9,7 @@ import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKey
 import { DuplicateErrorDialog } from '@/components/dialogs/DuplicateErrorDialog';
 import { TopicSelectionDialog } from '@/components/dialogs/TopicSelectionDialog';
 import { TopicConfirmDialog } from '@/components/dialogs/TopicConfirmDialog';
+import { ImageClipboardDialog } from '@/components/dialogs/ImageClipboardDialog';
 import { useRefactoredAppController } from '@/hooks/useRefactoredAppController';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -23,8 +24,8 @@ export const Index: React.FC = () => {
       <Header
         session={controller.session}
         loading={controller.authLoading}
-        handleLogin={controller.handleLogin}
-        handleSignUp={controller.handleSignUp}
+        handleLogin={() => controller.handleLogin({ email: '', password: '' })}
+        handleSignUp={() => controller.handleSignUp({ email: '', password: '' })}
         handleLogout={controller.handleLogout}
         profile={controller.profile}
       />
@@ -51,7 +52,9 @@ export const Index: React.FC = () => {
         generationFunctions={controller.generationFunctions}
         topicControls={controller.topicControls}
         utilityFunctions={{
-          ...controller.utilityFunctions
+          ...controller.utilityFunctions,
+          openImageClipboard: controller.pixabayClipboard.openClipboardDialog,
+          hasImages: controller.pixabayClipboard.images.length > 0,
         }}
         preventDuplicates={controller.preventDuplicates}
         handleTopicConfirm={controller.handleTopicConfirm}
@@ -95,6 +98,12 @@ export const Index: React.FC = () => {
       <DuplicateErrorDialog
         open={controller.showDuplicateErrorDialog}
         onOpenChange={controller.setShowDuplicateErrorDialog}
+      />
+
+      <ImageClipboardDialog
+        open={controller.pixabayClipboard.showClipboardDialog}
+        onOpenChange={controller.pixabayClipboard.closeClipboardDialog}
+        images={controller.pixabayClipboard.images}
       />
 
       <Footer isMobile={isMobile} />

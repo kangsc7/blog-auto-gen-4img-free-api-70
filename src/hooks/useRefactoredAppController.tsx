@@ -1,15 +1,15 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
-import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
+import { useGeminiManager } from '@/hooks/useGeminiManager';
+import { usePixabayManager } from '@/hooks/usePixabayManager';
+import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
-import { useArticleGenerator } from '@/hooks/useArticleGenerator';
-import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
 import { useOneClick } from '@/hooks/useOneClick';
 import { useUserAccess } from '@/hooks/useUserAccess';
+import { usePixabayClipboard } from '@/hooks/usePixabayClipboard';
 
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
@@ -144,6 +144,16 @@ export const useRefactoredAppController = () => {
     openWhisk,
   };
 
+  // 새로운 클립보드 훅 추가
+  const pixabayClipboard = usePixabayClipboard();
+
+  // 기존 articleGenerator에 이미지 콜백 추가
+  const articleGenerator = useArticleGenerator(
+    appState, 
+    saveAppState,
+    pixabayClipboard.addImageForClipboard
+  );
+
   return {
     appState,
     saveAppState,
@@ -183,5 +193,6 @@ export const useRefactoredAppController = () => {
     convertToMarkdown,
     handleTopicSelect,
     oneClickMode,
+    pixabayClipboard,
   };
 };

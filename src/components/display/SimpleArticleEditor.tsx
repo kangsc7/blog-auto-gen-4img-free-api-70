@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SimpleArticleEditorProps {
@@ -10,6 +10,8 @@ interface SimpleArticleEditorProps {
   isGeneratingContent: boolean;
   selectedTopic: string;
   onContentChange: (content: string) => void;
+  onOpenImageClipboard?: () => void;
+  hasImages?: boolean;
 }
 
 export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
@@ -17,6 +19,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   isGeneratingContent,
   selectedTopic,
   onContentChange,
+  onOpenImageClipboard,
+  hasImages = false,
 }) => {
   const { toast } = useToast();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -197,6 +201,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             {isUserEditing && <span className="ml-2 text-xs text-orange-500">✏️ 편집 중</span>}
           </span>
           <div className="flex space-x-2">
+            {hasImages && onOpenImageClipboard && (
+              <Button 
+                onClick={onOpenImageClipboard}
+                size="sm"
+                variant="outline"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <Image className="h-4 w-4 mr-1" />
+                이미지 클립보드
+              </Button>
+            )}
             {editorContent && !isGeneratingContent && (
               <>
                 <Button 

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -8,7 +7,8 @@ import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
 
 export const useArticleGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void
+  saveAppState: (newState: Partial<AppState>) => void,
+  onImageFound?: (url: string, description: string, position: number) => void
 ) => {
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
@@ -149,34 +149,38 @@ export const useArticleGenerator = (
       });
 
       if (pixabayApiKey && isPixabayValidated) {
-        toast({ title: "3단계: 이미지 추가 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
+        toast({ title: "3단계: 이미지 수집 중...", description: "클립보드 복사용 이미지를 준비하고 있습니다." });
         
         try {
-          const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
+          const { finalHtml: htmlWithPlaceholders, imageCount } = await integratePixabayImages(
             htmlContent,
             pixabayApiKey,
-            appState.apiKey!
+            appState.apiKey!,
+            onImageFound
           );
 
           if (cancelArticleGeneration.current) {
             throw new Error("사용자에 의해 중단되었습니다.");
           }
 
-          finalHtml = htmlWithImages;
+          finalHtml = htmlWithPlaceholders;
           
           if (imageCount > 0) {
-            pixabayImagesAdded = true;
-            toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
+            toast({ 
+              title: "이미지 준비 완료", 
+              description: `${imageCount}개의 이미지가 클립보드 복사용으로 준비되었습니다. 우측 상단의 "이미지 클립보드" 버튼을 클릭하세요.`,
+              duration: 6000
+            });
           } else {
-            toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
+            toast({ title: "이미지 준비 실패", description: `이미지를 준비하지 못했습니다. Pixabay API 키를 확인해주세요.`, variant: "default" });
           }
         } catch (imageError) {
-          console.error('Pixabay 이미지 통합 오류:', imageError);
-          toast({ title: "이미지 추가 오류", description: "이미지 추가 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", variant: "default" });
+          console.error('Pixabay 이미지 준비 오류:', imageError);
+          toast({ title: "이미지 준비 오류", description: "이미지 준비 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", variant: "default" });
         }
       } else {
-        console.log('Pixabay 설정 누락 - 이미지 추가 건너뛰기');
-        toast({ title: "이미지 추가 건너뛰기", description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", variant: "default" });
+        console.log('Pixabay 설정 누락 - 이미지 준비 건너뛰기');
+        toast({ title: "이미지 준비 건너뛰기", description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", variant: "default" });
       }
 
       try {

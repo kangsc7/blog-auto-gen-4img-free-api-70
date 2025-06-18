@@ -31,6 +31,8 @@ interface MainContentSectionProps {
     copyToClipboard: (text: string, type: string) => void;
     downloadHTML: () => void;
     openWhisk: () => void;
+    openImageClipboard?: () => void;
+    hasImages?: boolean;
   };
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
@@ -49,7 +51,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   deleteReferenceData,
 }) => {
   return (
-    <div className="container mx-auto px-4 py-6 max-w-full">
+    <div className="container mx-auto px-2 sm:px-4 py-6 max-w-full">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4">
           <LeftSidebar
@@ -83,6 +85,8 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             downloadHTML={utilityFunctions.downloadHTML}
             isGeneratingContent={generationStatus.isGeneratingContent}
             onTopicConfirm={handleTopicConfirm}
+            onOpenImageClipboard={utilityFunctions.openImageClipboard}
+            hasImages={utilityFunctions.hasImages}
           />
         </div>
       </div>
