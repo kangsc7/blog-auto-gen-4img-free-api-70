@@ -15,16 +15,12 @@ interface PixabayConfig {
 type ArticleGenerationError = 
   | 'NO_TOPIC'
   | 'API_KEY_INVALID'
-  | 'API_KEY_EXPIRED'
-  | 'API_QUOTA_EXCEEDED'
   | 'WEB_CRAWL_FAILED'
   | 'CONTENT_GENERATION_FAILED'
-  | 'API_RESPONSE_INVALID'
   | 'IMAGE_FETCH_FAILED'
   | 'HEADING_GENERATION_FAILED'
   | 'NETWORK_ERROR'
   | 'TIMEOUT_ERROR'
-  | 'SERVER_ERROR'
   | 'UNKNOWN_ERROR';
 
 interface DetailedError {
@@ -47,16 +43,10 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         return '❌ 주제 선택 오류: 글을 생성하기 전에 주제를 선택해주세요.';
       case 'API_KEY_INVALID':
         return '🔑 API 키 오류: API 키가 유효하지 않습니다. 다시 확인해주세요.';
-      case 'API_KEY_EXPIRED':
-        return '🔑 API 키 만료: API 키가 만료되었습니다. 새로운 키로 업데이트해주세요.';
-      case 'API_QUOTA_EXCEEDED':
-        return '📊 할당량 초과: API 사용 한도를 초과했습니다. 잠시 후 다시 시도하거나 요금제를 확인해주세요.';
       case 'WEB_CRAWL_FAILED':
         return '🌐 웹 크롤링 실패: 최신 정보 수집에 실패했지만 기본 정보로 계속 진행합니다.';
       case 'CONTENT_GENERATION_FAILED':
-        return '📝 콘텐츠 생성 실패: AI 글 생성에 실패했습니다. API 상태를 확인하고 잠시 후 다시 시도해주세요.';
-      case 'API_RESPONSE_INVALID':
-        return '📡 응답 형식 오류: API 응답 형식이 올바르지 않습니다. 서버 상태를 확인하고 다시 시도해주세요.';
+        return '📝 콘텐츠 생성 실패: AI 글 생성에 실패했습니다. 잠시 후 다시 시도해주세요.';
       case 'IMAGE_FETCH_FAILED':
         return '🖼️ 이미지 추가 실패: 이미지 가져오기에 실패했지만 글 생성은 계속됩니다.';
       case 'HEADING_GENERATION_FAILED':
@@ -64,44 +54,10 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       case 'NETWORK_ERROR':
         return '🌐 네트워크 오류: 인터넷 연결을 확인하고 다시 시도해주세요.';
       case 'TIMEOUT_ERROR':
-        return '⏰ 시간 초과: 요청 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.';
-      case 'SERVER_ERROR':
-        return '🔧 서버 오류: 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        return '⏰ 시간 초과: 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.';
       default:
-        return '❓ 알 수 없는 오류: 예상치 못한 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+        return '❓ 알 수 없는 오류: 예상치 못한 오류가 발생했습니다.';
     }
-  };
-
-  const validateApiResponse = (data: any): boolean => {
-    console.log('API 응답 검증 시작:', data);
-    
-    if (!data) {
-      console.error('API 응답이 null 또는 undefined입니다');
-      return false;
-    }
-    
-    if (typeof data !== 'object') {
-      console.error('API 응답이 객체가 아닙니다:', typeof data);
-      return false;
-    }
-    
-    if (!data.content) {
-      console.error('API 응답에 content 필드가 없습니다. 응답 구조:', Object.keys(data));
-      return false;
-    }
-    
-    if (typeof data.content !== 'string') {
-      console.error('content 필드가 문자열이 아닙니다:', typeof data.content);
-      return false;
-    }
-    
-    if (data.content.trim().length === 0) {
-      console.error('content 필드가 빈 문자열입니다');
-      return false;
-    }
-    
-    console.log('API 응답 검증 성공');
-    return true;
   };
 
   const generateArticle = async (options?: { topic?: string; keyword?: string; pixabayConfig?: PixabayConfig }): Promise<string> => {
@@ -124,21 +80,14 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
     try {
       setIsGeneratingContent(true);
       
-      console.log('=== 글 생성 프로세스 시작 ===');
-      console.log('주제:', finalTopic);
-      console.log('키워드:', finalKeyword);
-      console.log('API 키 상태:', { 
-        exists: !!appState.apiKey, 
-        validated: appState.isApiKeyValidated,
-        length: appState.apiKey?.length 
-      });
+      console.log('글 생성 시작:', { finalTopic, finalKeyword });
 
       // 1단계: 웹 크롤링으로 최신 정보 수집
       let additionalInfo = '';
       try {
-        console.log('1단계: 웹 크롤링 시작...');
+        console.log('웹 크롤링 시작...');
         additionalInfo = await WebCrawlerService.crawlForKeyword(finalKeyword, appState.apiKey);
-        console.log('웹 크롤링 완료 - 정보 길이:', additionalInfo.length);
+        console.log('웹 크롤링 완료');
       } catch (crawlError: any) {
         console.error('웹 크롤링 실패:', crawlError);
         const error = createDetailedError('WEB_CRAWL_FAILED', '웹 크롤링 실패', crawlError.message);
@@ -153,16 +102,12 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       // 2단계: AI 콘텐츠 생성
       let generatedContent = '';
       try {
-        console.log('2단계: AI 콘텐츠 생성 시작...');
+        console.log('AI 콘텐츠 생성 시작...');
         
-        // 향상된 타임아웃 설정 (2분)
+        // 타임아웃 설정
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-          console.error('API 요청 타임아웃 (120초)');
-          controller.abort();
-        }, 120000);
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초 타임아웃
 
-        console.log('API 요청 전송 중...');
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
@@ -178,60 +123,45 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         });
 
         clearTimeout(timeoutId);
-        console.log('API 응답 수신 - 상태:', response.status, response.statusText);
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('API 요청 실패 상세:', {
-            status: response.status,
-            statusText: response.statusText,
-            errorText: errorText,
-            headers: Object.fromEntries(response.headers.entries())
-          });
+          console.error('API 요청 실패:', response.status, errorText);
           
-          if (response.status === 401) {
+          if (response.status === 401 || response.status === 403) {
             throw createDetailedError('API_KEY_INVALID', 'API 키가 유효하지 않습니다', errorText);
-          } else if (response.status === 403) {
-            throw createDetailedError('API_KEY_EXPIRED', 'API 키가 만료되었거나 권한이 없습니다', errorText);
-          } else if (response.status === 429) {
-            throw createDetailedError('API_QUOTA_EXCEEDED', 'API 사용 한도를 초과했습니다', errorText);
           } else if (response.status >= 500) {
-            throw createDetailedError('SERVER_ERROR', '서버 내부 오류가 발생했습니다', errorText);
+            throw createDetailedError('CONTENT_GENERATION_FAILED', '서버 오류가 발생했습니다', errorText);
           } else {
             throw createDetailedError('CONTENT_GENERATION_FAILED', `API 요청 실패: ${response.status}`, errorText);
           }
         }
 
-        console.log('JSON 파싱 시작...');
         const data = await response.json();
-        console.log('API 응답 데이터 수신 완료');
 
-        if (!validateApiResponse(data)) {
-          throw createDetailedError('API_RESPONSE_INVALID', 'API 응답 형식이 올바르지 않습니다', JSON.stringify(data));
+        if (!data || !data.content) {
+          console.error('API 응답 데이터 오류:', data);
+          throw createDetailedError('CONTENT_GENERATION_FAILED', 'API 응답에 콘텐츠가 없습니다', JSON.stringify(data));
         }
 
         generatedContent = data.content;
-        console.log('AI 콘텐츠 생성 완료 - 길이:', generatedContent.length);
+        console.log('AI 콘텐츠 생성 완료');
 
       } catch (fetchError: any) {
-        console.error('콘텐츠 생성 중 오류:', fetchError);
-        
         if (fetchError.name === 'AbortError') {
-          throw createDetailedError('TIMEOUT_ERROR', '콘텐츠 생성 시간 초과', '120초');
+          throw createDetailedError('TIMEOUT_ERROR', '콘텐츠 생성 시간 초과', '60초');
         } else if (fetchError.type) {
           // 이미 DetailedError인 경우
           throw fetchError;
-        } else if (fetchError.message?.includes('fetch')) {
-          throw createDetailedError('NETWORK_ERROR', '네트워크 연결 오류', fetchError.message);
         } else {
-          throw createDetailedError('CONTENT_GENERATION_FAILED', '콘텐츠 생성 실패', fetchError.message);
+          throw createDetailedError('NETWORK_ERROR', '네트워크 오류', fetchError.message);
         }
       }
 
       // 3단계: Pixabay 이미지 검색 및 추가 (선택적)
       if (pixabayConfig?.validated && pixabayConfig?.key) {
         try {
-          console.log('3단계: Pixabay 이미지 검색 시작...');
+          console.log('Pixabay 이미지 검색 시작...');
           const pixabayResponse = await fetch('/api/get-image', {
             method: 'POST',
             headers: {
@@ -250,7 +180,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
               console.log('Pixabay 이미지 추가 완료');
             }
           } else {
-            console.error('Pixabay API 요청 실패:', pixabayResponse.status, pixabayResponse.statusText);
+            console.error('Pixabay API 요청 실패:', pixabayResponse.statusText);
           }
         } catch (pixabayError: any) {
           console.error('Pixabay 이미지 처리 중 오류:', pixabayError);
@@ -260,13 +190,14 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
             description: getErrorMessage(error),
             variant: "default"
           });
+          // 이미지 실패해도 글 생성은 계속 진행
         }
       }
 
       // 4단계: 동적 소제목 생성
       let dynamicHeadings: Array<{ title: string; emoji: string; content: string }> = [];
       try {
-        console.log('4단계: 동적 소제목 생성 시작...');
+        console.log('동적 소제목 생성 시작...');
         dynamicHeadings = await generateDynamicHeadings(
           finalKeyword, 
           finalTopic, 
@@ -294,7 +225,6 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
 
       // 5단계: 최종 HTML 생성
       try {
-        console.log('5단계: 최종 HTML 생성...');
         const finalHtml = getHtmlTemplate(
           finalColors, 
           finalTopic, 
@@ -305,7 +235,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           appState.adSenseSettings
         );
 
-        console.log('=== 글 생성 프로세스 완료 ===');
+        console.log('글 생성 완료');
         saveAppState({ generatedContent: finalHtml });
         
         toast({
@@ -321,18 +251,14 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       }
 
     } catch (error: any) {
-      console.error('=== 글 생성 중 전체 오류 발생 ===');
-      console.error('오류 타입:', error.type);
-      console.error('오류 메시지:', error.message);
-      console.error('오류 상세:', error.details);
-      console.error('원본 오류:', error);
+      console.error('글 생성 중 오류 발생:', error);
       
       let errorMessage = '';
       if (error.type && error.message) {
         // DetailedError인 경우
         errorMessage = getErrorMessage(error as DetailedError);
         if (error.details) {
-          console.error('추가 오류 상세:', error.details);
+          console.error('오류 상세:', error.details);
         }
       } else {
         // 일반 오류인 경우
