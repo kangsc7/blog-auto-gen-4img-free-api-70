@@ -27,7 +27,7 @@ interface UserManagementTableProps {
 }
 
 // 관리자 이메일 목록
-const ADMIN_EMAILS = ['K5321497@naver.com'];
+const ADMIN_EMAILS = ['5321497@naver.com'];
 
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmin = false }) => {
   const { users, loading, updateUserStatus, deleteUser } = useUserManagement();

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, Image } from 'lucide-react';
+import { CheckCircle, Image, Edit, Sparkles } from 'lucide-react';
 
 interface ProgressTrackerProps {
   topics: string[];
@@ -22,18 +22,25 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
 
   const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
 
-  // 아이콘 결정 함수
+  // 아이콘 결정 함수 - 각 단계별로 적절한 아이콘 표시
   const getStepIcon = (stepNumber: number, isCompleted: boolean, isActive: boolean) => {
-    if (stepNumber === 3 || stepNumber === 4) {
-      // 이미지 생성과 최종 완성 모두 Image 아이콘 사용
-      return <Image className="w-6 h-6" />;
-    }
-    
     if (isCompleted) {
       return <CheckCircle className="w-6 h-6" />;
     }
     
-    return stepNumber;
+    // 단계별 기본 아이콘
+    switch (stepNumber) {
+      case 1: // 주제 생성
+        return <Sparkles className="w-6 h-6" />;
+      case 2: // 글 작성
+        return <Edit className="w-6 h-6" />;
+      case 3: // 이미지 생성
+        return <Image className="w-6 h-6" />;
+      case 4: // 최종 완성
+        return <Image className="w-6 h-6" />;
+      default:
+        return stepNumber;
+    }
   };
 
   return (
