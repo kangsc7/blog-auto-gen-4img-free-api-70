@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { CheckCircle, Image, Edit, Sparkles } from 'lucide-react';
+import { CheckCircle, Image, Edit, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface ProgressTrackerProps {
   topics: string[];
@@ -37,7 +36,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, genera
       case 3: // 이미지 생성
         return <Image className="w-6 h-6" />;
       case 4: // 최종 완성
-        return <Image className="w-6 h-6" />;
+        return <CheckCircle2 className="w-6 h-6" />;
       default:
         return stepNumber;
     }
