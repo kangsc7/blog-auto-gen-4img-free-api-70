@@ -11,6 +11,14 @@ interface PixabayConfig {
   validated: boolean;
 }
 
+// AdSense 설정 인터페이스 추가
+interface AdSenseSettings {
+  enabled: boolean;
+  adClient: string;
+  adSlot: string;
+  adCount: number;
+}
+
 // 에러 타입 정의
 type ArticleGenerationError = 
   | 'NO_TOPIC'
@@ -225,6 +233,16 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
 
       // 5단계: 최종 HTML 생성
       try {
+        // AdSense 설정 안전하게 처리
+        const adSenseSettings: AdSenseSettings | undefined = appState.adSenseSettings ? {
+          enabled: Boolean(appState.adSenseSettings.enabled),
+          adClient: String(appState.adSenseSettings.adClient || ''),
+          adSlot: String(appState.adSenseSettings.adSlot || ''),
+          adCount: Number(appState.adSenseSettings.adCount) || 1
+        } : undefined;
+
+        console.log('AdSense 설정:', adSenseSettings);
+
         const finalHtml = getHtmlTemplate(
           finalColors, 
           finalTopic, 
@@ -232,7 +250,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           appState.referenceLink || 'https://worldpis.com',
           appState.referenceSentence || '워드프레스 꿀팁 더 보러가기',
           dynamicHeadings,
-          appState.adSenseSettings
+          adSenseSettings
         );
 
         console.log('글 생성 완료');
