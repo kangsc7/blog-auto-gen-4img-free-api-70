@@ -65,13 +65,19 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
       }
     }
 
-    const updatedTopics = [...appState.topics, manualTopic.trim()];
-    saveAppState({ topics: updatedTopics });
+    const newTopic = manualTopic.trim();
+    const updatedTopics = [...appState.topics, newTopic];
+    
+    // 주제를 추가하고 동시에 선택된 주제로 설정
+    saveAppState({ 
+      topics: updatedTopics,
+      selectedTopic: newTopic
+    });
     setManualTopic('');
     
     toast({
       title: "주제 추가 완료",
-      description: "수동 주제가 성공적으로 추가되었습니다."
+      description: "수동 주제가 성공적으로 추가되고 선택되었습니다."
     });
   };
 
