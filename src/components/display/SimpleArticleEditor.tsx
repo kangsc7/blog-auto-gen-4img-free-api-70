@@ -21,6 +21,60 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const { toast } = useToast();
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentContent, setCurrentContent] = useState('');
+  const [isUserEditing, setIsUserEditing] = useState(false);
+
+  // 커서 위치 저장/복원 함수
+  const saveCursorPosition = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && editorRef.current?.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      const preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(editorRef.current);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      return preCaretRange.toString().length;
+    }
+    return 0;
+  };
+
+  const restoreCursorPosition = (position: number) => {
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const createRange = (node: Node, position: number): { node: Node; offset: number } => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textLength = node.textContent?.length || 0;
+        return position <= textLength 
+          ? { node, offset: position }
+          : { node, offset: textLength };
+      }
+
+      let currentPosition = 0;
+      for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes[i];
+        const childLength = child.textContent?.length || 0;
+        
+        if (currentPosition + childLength >= position) {
+          return createRange(child, position - currentPosition);
+        }
+        currentPosition += childLength;
+      }
+      
+      return { node, offset: node.childNodes.length };
+    };
+
+    try {
+      const { node, offset } = createRange(editorRef.current, position);
+      const range = document.createRange();
+      range.setStart(node, offset);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (error) {
+      console.log('커서 위치 복원 중 오류 (무시 가능):', error);
+    }
+  };
 
   // 컴포넌트 초기화 시 localStorage에서 복원
   useEffect(() => {
@@ -30,21 +84,22 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       savedContentLength: savedContent?.length || 0 
     });
     
-    if (savedContent) {
+    if (savedContent && !currentContent) {
       setCurrentContent(savedContent);
       if (editorRef.current) {
         editorRef.current.innerHTML = savedContent;
       }
       onContentChange(savedContent);
     }
-  }, [onContentChange]);
+  }, [onContentChange, currentContent]);
 
-  // generatedContent 변경 시 에디터 업데이트 및 localStorage 저장
+  // generatedContent 변경 시 에디터 업데이트 - 사용자가 편집 중이 아닐 때만
   useEffect(() => {
-    if (generatedContent && generatedContent !== currentContent) {
+    if (generatedContent && generatedContent !== currentContent && !isUserEditing) {
       console.log('SimpleArticleEditor - 새로운 생성 콘텐츠 업데이트:', {
         generatedContentLength: generatedContent.length,
-        currentContentLength: currentContent.length
+        currentContentLength: currentContent.length,
+        isUserEditing
       });
       
       setCurrentContent(generatedContent);
@@ -56,7 +111,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       localStorage.setItem('blog_editor_content', generatedContent);
       onContentChange(generatedContent);
     }
-  }, [generatedContent, currentContent, onContentChange]);
+  }, [generatedContent, currentContent, onContentChange, isUserEditing]);
 
   // 탭 변경/새로고침 감지 시 자동 저장
   useEffect(() => {
@@ -93,6 +148,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       localStorage.setItem('blog_editor_content', newContent);
       console.log('SimpleArticleEditor - 사용자 편집 시 콘텐츠 저장');
     }
+  };
+
+  // 편집 시작/종료 감지
+  const handleFocus = () => {
+    setIsUserEditing(true);
+  };
+
+  const handleBlur = () => {
+    // 약간의 지연을 두고 편집 상태 해제 (다른 요소로 포커스가 이동할 수 있음)
+    setTimeout(() => {
+      setIsUserEditing(false);
+    }, 100);
   };
 
   // 키보드 이벤트 - 기본 동작만 허용
@@ -207,6 +274,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 contentEditable={true}
                 className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none"
                 onInput={handleInput}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 suppressContentEditableWarning={true}
                 style={{
