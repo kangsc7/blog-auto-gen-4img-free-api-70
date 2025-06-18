@@ -27,9 +27,9 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   handleManualTopicAdd,
   preventDuplicates,
 }) => {
-  // Safely access keyword with fallback
-  const keyword = appState.keyword || '';
-  const topicCount = appState.topicCount || 5;
+  // Safely access keyword with fallback to empty string
+  const keyword = appState?.keyword || '';
+  const topicCount = appState?.topicCount || 5;
 
   return (
     <Card className="shadow-md">

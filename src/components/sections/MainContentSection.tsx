@@ -7,21 +7,31 @@ import { AppState } from '@/types';
 interface MainContentSectionProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
-  isGeneratingTopics: boolean;
-  generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
-  isGeneratingContent: boolean;
-  generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
-  isGeneratingImage: boolean;
-  createImagePrompt: (inputText: string) => Promise<boolean>;
-  isDirectlyGenerating: boolean;
-  generateDirectImage: () => Promise<string>;
-  stopArticleGeneration: () => void;
-  manualTopic: string;
-  setManualTopic: React.Dispatch<React.SetStateAction<string>>;
-  handleManualTopicAdd: () => void;
-  selectTopic: (topic: string) => void;
-  copyToClipboard: (text: string, type: string) => void;
-  downloadHTML: () => void;
+  generationStatus: {
+    isGeneratingTopics: boolean;
+    isGeneratingContent: boolean;
+    isGeneratingImage: boolean;
+    isDirectlyGenerating: boolean;
+    isOneClickGenerating: boolean;
+  };
+  generationFunctions: {
+    generateTopics: () => Promise<string[] | null>;
+    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
+    createImagePrompt: (inputText: string) => Promise<boolean>;
+    generateDirectImage: () => Promise<string>;
+    stopArticleGeneration: () => void;
+  };
+  topicControls: {
+    manualTopic: string;
+    setManualTopic: React.Dispatch<React.SetStateAction<string>>;
+    selectTopic: (topic: string) => void;
+    handleManualTopicAdd: () => void;
+  };
+  utilityFunctions: {
+    copyToClipboard: (text: string, type: string) => void;
+    downloadHTML: () => void;
+    openWhisk: () => void;
+  };
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
   deleteReferenceData?: () => void;
@@ -30,21 +40,10 @@ interface MainContentSectionProps {
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
   appState,
   saveAppState,
-  isGeneratingTopics,
-  generateTopics,
-  isGeneratingContent,
-  generateArticle,
-  isGeneratingImage,
-  createImagePrompt,
-  isDirectlyGenerating,
-  generateDirectImage,
-  stopArticleGeneration,
-  manualTopic,
-  setManualTopic,
-  handleManualTopicAdd,
-  selectTopic,
-  copyToClipboard,
-  downloadHTML,
+  generationStatus,
+  generationFunctions,
+  topicControls,
+  utilityFunctions,
   preventDuplicates,
   handleTopicConfirm,
   deleteReferenceData,
@@ -56,21 +55,21 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
           <LeftSidebar
             appState={appState}
             saveAppState={saveAppState}
-            isGeneratingTopics={isGeneratingTopics}
-            generateTopics={generateTopics}
-            isGeneratingContent={isGeneratingContent}
-            generateArticle={generateArticle}
-            stopArticleGeneration={stopArticleGeneration}
-            isGeneratingImage={isGeneratingImage}
-            createImagePrompt={createImagePrompt}
-            isDirectlyGenerating={isDirectlyGenerating}
-            generateDirectImage={generateDirectImage}
-            manualTopic={manualTopic}
-            setManualTopic={setManualTopic}
-            handleManualTopicAdd={handleManualTopicAdd}
+            isGeneratingTopics={generationStatus.isGeneratingTopics}
+            generateTopics={generationFunctions.generateTopics}
+            isGeneratingContent={generationStatus.isGeneratingContent}
+            generateArticle={generationFunctions.generateArticle}
+            stopArticleGeneration={generationFunctions.stopArticleGeneration}
+            isGeneratingImage={generationStatus.isGeneratingImage}
+            createImagePrompt={generationFunctions.createImagePrompt}
+            isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+            generateDirectImage={generationFunctions.generateDirectImage}
+            manualTopic={topicControls.manualTopic}
+            setManualTopic={topicControls.setManualTopic}
+            handleManualTopicAdd={topicControls.handleManualTopicAdd}
             preventDuplicates={preventDuplicates}
-            selectTopic={selectTopic}
-            copyToClipboard={copyToClipboard}
+            selectTopic={topicControls.selectTopic}
+            copyToClipboard={utilityFunctions.copyToClipboard}
             deleteReferenceData={deleteReferenceData}
           />
         </div>
@@ -78,10 +77,10 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
           <RightContent
             appState={appState}
             saveAppState={saveAppState}
-            selectTopic={selectTopic}
-            copyToClipboard={copyToClipboard}
-            downloadHTML={downloadHTML}
-            isGeneratingContent={isGeneratingContent}
+            selectTopic={topicControls.selectTopic}
+            copyToClipboard={utilityFunctions.copyToClipboard}
+            downloadHTML={utilityFunctions.downloadHTML}
+            isGeneratingContent={generationStatus.isGeneratingContent}
             onTopicConfirm={handleTopicConfirm}
           />
         </div>
