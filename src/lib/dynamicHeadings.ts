@@ -25,7 +25,11 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
    - "지원 금액 및 혜택"
    - "활용법과 주의사항"
    - "실제 후기와 효과"
-   - "자주 묻는 질문"
+
+**🚨 절대 금지 사항:**
+- FAQ, 자주 묻는 질문, 질문과 답변 관련 소제목은 절대 생성하지 마세요
+- "FAQ", "질문", "Q&A" 등의 단어가 포함된 제목은 만들지 마세요
+- 5번째 섹션에서 별도로 FAQ가 추가되므로 중복을 피해야 합니다
 
 **출력 형식:**
 각 줄마다 다음 형식으로 출력해주세요:
@@ -35,7 +39,7 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 ${keyword} 기본 정보와 신청 자격|💡|${keyword}의 기본 개념과 누가 신청할 수 있는지 알아보세요
 ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요 서류를 상세히 안내합니다
 
-지금 즉시 7개의 소제목을 생성해주세요:
+지금 즉시 7개의 소제목을 생성해주세요 (FAQ 관련 제목 절대 금지):
 `;
 
   try {
@@ -64,7 +68,17 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
 
     const lines = generatedText.split('\n').filter(line => line.trim() && line.includes('|'));
     
-    const headings: DynamicHeading[] = lines.slice(0, 7).map(line => {
+    // FAQ 관련 키워드가 포함된 소제목 필터링
+    const filteredLines = lines.filter(line => {
+      const title = line.split('|')[0]?.toLowerCase() || '';
+      return !title.includes('faq') && 
+             !title.includes('자주') && 
+             !title.includes('질문') && 
+             !title.includes('q&a') &&
+             !title.includes('묻는');
+    });
+    
+    const headings: DynamicHeading[] = filteredLines.slice(0, 7).map(line => {
       const parts = line.split('|');
       return {
         title: parts[0]?.trim() || `${keyword} 관련 정보`,
@@ -73,18 +87,18 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
       };
     });
 
-    // 7개가 안 되면 기본 소제목으로 채우기
+    // 7개가 안 되면 기본 소제목으로 채우기 (FAQ 제외)
+    const defaultHeadings = [
+      { title: `${keyword} 기본 정보 완벽 정리`, emoji: '💡', content: '기본 개념과 핵심 정보를 정리합니다' },
+      { title: `${keyword} 신청 방법 가이드`, emoji: '📝', content: '신청 절차와 방법을 안내합니다' },
+      { title: `${keyword} 자격 요건 확인`, emoji: '👥', content: '지원 대상과 자격을 확인합니다' },
+      { title: `${keyword} 혜택 및 지원 내용`, emoji: '💰', content: '받을 수 있는 혜택을 알아봅니다' },
+      { title: `${keyword} 활용 팁과 주의사항`, emoji: '⚠️', content: '효과적인 활용법을 제공합니다' },
+      { title: `${keyword} 실제 후기와 효과`, emoji: '📈', content: '실제 사용자 후기를 공유합니다' },
+      { title: `${keyword} 최신 동향과 변화`, emoji: '🔄', content: '최근 변화와 동향을 분석합니다' }
+    ];
+    
     while (headings.length < 7) {
-      const defaultHeadings = [
-        { title: `${keyword} 기본 정보 완벽 정리`, emoji: '💡', content: '기본 개념과 핵심 정보를 정리합니다' },
-        { title: `${keyword} 신청 방법 가이드`, emoji: '📝', content: '신청 절차와 방법을 안내합니다' },
-        { title: `${keyword} 자격 요건 확인`, emoji: '👥', content: '지원 대상과 자격을 확인합니다' },
-        { title: `${keyword} 혜택 및 지원 내용`, emoji: '💰', content: '받을 수 있는 혜택을 알아봅니다' },
-        { title: `${keyword} 활용 팁과 주의사항`, emoji: '⚠️', content: '효과적인 활용법을 제공합니다' },
-        { title: `${keyword} 실제 후기와 효과`, emoji: '📈', content: '실제 사용자 후기를 공유합니다' },
-        { title: `${keyword} 자주 묻는 질문`, emoji: '❓', content: '궁금한 점들을 해결합니다' }
-      ];
-      
       const missingIndex = headings.length;
       if (missingIndex < defaultHeadings.length) {
         headings.push(defaultHeadings[missingIndex]);
@@ -97,7 +111,7 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
   } catch (error) {
     console.error('동적 소제목 생성 오류:', error);
     
-    // 오류 시 기본 소제목 반환
+    // 오류 시 기본 소제목 반환 (FAQ 제외)
     return [
       { title: `${keyword} 핵심 정보와 기본 내용`, emoji: '💡', content: '기본 정보를 정리합니다' },
       { title: `${keyword} 신청 방법 단계별 가이드`, emoji: '📝', content: '신청 절차를 안내합니다' },
@@ -105,7 +119,7 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
       { title: `${keyword} 지원 금액 및 혜택 내용`, emoji: '💰', content: '혜택 내용을 설명합니다' },
       { title: `${keyword} 효과적인 활용법과 주의사항`, emoji: '⚠️', content: '활용 방법을 제공합니다' },
       { title: `${keyword} 실제 혜택과 기대 효과`, emoji: '📈', content: '기대 효과를 분석합니다' },
-      { title: `${keyword} 자주 묻는 질문 FAQ`, emoji: '❓', content: '자주 묻는 질문에 답합니다' }
+      { title: `${keyword} 최신 동향과 업데이트`, emoji: '🔄', content: '최근 변화를 알려드립니다' }
     ];
   }
 };
