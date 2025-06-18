@@ -21,10 +21,10 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const { toast } = useToast();
   const editorRef = useRef<HTMLDivElement>(null);
   
-  // 단일 진실 공급원: React 상태만 사용
+  // 편집기 상태 관리
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isUserEditing, setIsUserEditing] = useState(false);
+  const [isEditorFocused, setIsEditorFocused] = useState(false); // 핵심: 편집기 포커스 상태
   const [lastSavedContent, setLastSavedContent] = useState('');
   
   // localStorage 키
@@ -79,50 +79,32 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet, safeLocalStorageSet]);
   
-  // 새로운 생성 콘텐츠 처리 - 사용자가 편집 중이 아닐 때만
+  // 새로운 생성 콘텐츠 처리 - 편집기에 포커스가 없을 때만
   useEffect(() => {
     if (isInitialized && 
         generatedContent && 
         generatedContent !== editorContent && 
-        !isUserEditing && 
+        !isEditorFocused && // 핵심: 포커스가 없을 때만 업데이트
         !isGeneratingContent) {
       
-      console.log('🔄 새로운 생성 콘텐츠 적용');
+      console.log('🔄 새로운 생성 콘텐츠 적용 (포커스 없음)');
       setEditorContent(generatedContent);
       safeLocalStorageSet(generatedContent);
       onContentChange(generatedContent);
     }
-  }, [generatedContent, editorContent, isUserEditing, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, editorContent, isEditorFocused, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
   
-  // DOM과 React 상태 동기화
+  // DOM과 React 상태 동기화 - 편집기에 포커스가 없을 때만
   useEffect(() => {
-    if (editorRef.current && editorContent && editorRef.current.innerHTML !== editorContent) {
-      // 사용자가 편집 중이 아닐 때만 DOM 업데이트
-      if (!isUserEditing) {
-        const selection = window.getSelection();
-        const range = selection?.getRangeAt(0);
-        const startOffset = range?.startOffset || 0;
-        const endOffset = range?.endOffset || 0;
-        
-        editorRef.current.innerHTML = editorContent;
-        
-        // 커서 위치 복원 시도
-        try {
-          if (selection && range && editorRef.current.firstChild) {
-            const newRange = document.createRange();
-            const textNode = editorRef.current.firstChild;
-            const maxOffset = Math.min(startOffset, textNode.textContent?.length || 0);
-            newRange.setStart(textNode, maxOffset);
-            newRange.setEnd(textNode, Math.min(endOffset, textNode.textContent?.length || 0));
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-          }
-        } catch (error) {
-          // 커서 복원 실패는 무시 (치명적이지 않음)
-        }
-      }
+    if (editorRef.current && 
+        editorContent && 
+        editorRef.current.innerHTML !== editorContent &&
+        !isEditorFocused) { // 핵심: 포커스가 없을 때만 DOM 업데이트
+      
+      console.log('🔄 DOM 업데이트 (포커스 없음)');
+      editorRef.current.innerHTML = editorContent;
     }
-  }, [editorContent, isUserEditing]);
+  }, [editorContent, isEditorFocused]);
   
   // 자동 저장 - 디바운스 적용
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -147,18 +129,32 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isGeneratingContent, performAutoSave]);
   
-  // 편집 상태 관리
+  // 편집기 포커스 상태 관리
   const handleFocus = useCallback(() => {
-    console.log('🎯 편집 시작');
-    setIsUserEditing(true);
+    console.log('🎯 편집기 포커스 획득');
+    setIsEditorFocused(true);
   }, []);
   
   const handleBlur = useCallback(() => {
-    console.log('📝 편집 종료');
-    // 지연을 두고 편집 상태 해제
+    console.log('📝 편집기 포커스 해제');
+    setIsEditorFocused(false);
+  }, []);
+  
+  // 마우스 이벤트 추가 처리
+  const handleMouseEnter = useCallback(() => {
+    console.log('🖱️ 마우스 편집기 진입');
+    setIsEditorFocused(true);
+  }, []);
+  
+  const handleMouseLeave = useCallback(() => {
+    console.log('🖱️ 마우스 편집기 이탈');
+    // 실제로 편집기에 텍스트 커서가 없을 때만 포커스 해제
     setTimeout(() => {
-      setIsUserEditing(false);
-    }, 300);
+      const activeElement = document.activeElement;
+      if (activeElement !== editorRef.current) {
+        setIsEditorFocused(false);
+      }
+    }, 100);
   }, []);
   
   // 페이지 언로드 시 최종 저장
@@ -242,6 +238,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
+              {isEditorFocused && <span className="ml-2 text-xs text-blue-500">✏️ 편집 중</span>}
             </span>
             <div className="flex space-x-2">
               {editorContent && !isGeneratingContent && (
@@ -290,6 +287,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
                 <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
+                {isEditorFocused && (
+                  <p className="text-xs text-blue-600 mt-1">🔒 편집 중: 자동 업데이트가 일시 중단되어 커서가 보호됩니다</p>
+                )}
               </div>
               <div
                 ref={editorRef}
@@ -298,6 +298,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 onInput={handleInput}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 suppressContentEditableWarning={true}
                 style={{
                   lineHeight: '1.6',

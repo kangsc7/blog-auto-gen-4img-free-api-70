@@ -18,7 +18,8 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 1. 각 소제목은 해당 키워드에 대한 실제 사용자 궁금증을 반영해야 합니다
 2. 검색 의도를 고려한 실용적인 제목이어야 합니다
 3. 적절한 이모지 1개를 포함해야 합니다
-4. 다음 패턴 중 하나를 반드시 포함해야 합니다:
+4. **소제목 길이는 공백 포함 60자 이내로 작성해주세요**
+5. 다음 패턴 중 하나를 반드시 포함해야 합니다:
    - "기본 정보와 개념 정리"
    - "신청 방법 및 절차"  
    - "자격 요건 및 대상"
@@ -30,6 +31,7 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 - FAQ, 자주 묻는 질문, 질문과 답변 관련 소제목은 절대 생성하지 마세요
 - "FAQ", "질문", "Q&A" 등의 단어가 포함된 제목은 만들지 마세요
 - 5번째 섹션에서 별도로 FAQ가 추가되므로 중복을 피해야 합니다
+- 소제목이 60자를 초과하면 안 됩니다
 
 **출력 형식:**
 각 줄마다 다음 형식으로 출력해주세요:
@@ -39,7 +41,7 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 ${keyword} 기본 정보와 신청 자격|💡|${keyword}의 기본 개념과 누가 신청할 수 있는지 알아보세요
 ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요 서류를 상세히 안내합니다
 
-지금 즉시 7개의 소제목을 생성해주세요 (FAQ 관련 제목 절대 금지):
+지금 즉시 7개의 소제목을 생성해주세요 (FAQ 관련 제목 절대 금지, 60자 이내 필수):
 `;
 
   try {
@@ -68,26 +70,35 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
 
     const lines = generatedText.split('\n').filter(line => line.trim() && line.includes('|'));
     
-    // FAQ 관련 키워드가 포함된 소제목 필터링
+    // FAQ 관련 키워드가 포함된 소제목 필터링 및 길이 제한
     const filteredLines = lines.filter(line => {
       const title = line.split('|')[0]?.toLowerCase() || '';
+      const titleLength = line.split('|')[0]?.trim().length || 0;
       return !title.includes('faq') && 
              !title.includes('자주') && 
              !title.includes('질문') && 
              !title.includes('q&a') &&
-             !title.includes('묻는');
+             !title.includes('묻는') &&
+             titleLength <= 60; // 60자 이내 제한
     });
     
     const headings: DynamicHeading[] = filteredLines.slice(0, 7).map(line => {
       const parts = line.split('|');
+      let title = parts[0]?.trim() || `${keyword} 관련 정보`;
+      
+      // 제목이 60자를 초과하면 자르기
+      if (title.length > 60) {
+        title = title.substring(0, 57) + '...';
+      }
+      
       return {
-        title: parts[0]?.trim() || `${keyword} 관련 정보`,
+        title,
         emoji: parts[1]?.trim() || '💡',
         content: parts[2]?.trim() || '관련 정보를 제공합니다'
       };
     });
 
-    // 7개가 안 되면 기본 소제목으로 채우기 (FAQ 제외)
+    // 7개가 안 되면 기본 소제목으로 채우기 (FAQ 제외, 60자 이내)
     const defaultHeadings = [
       { title: `${keyword} 기본 정보 완벽 정리`, emoji: '💡', content: '기본 개념과 핵심 정보를 정리합니다' },
       { title: `${keyword} 신청 방법 가이드`, emoji: '📝', content: '신청 절차와 방법을 안내합니다' },
@@ -101,7 +112,15 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
     while (headings.length < 7) {
       const missingIndex = headings.length;
       if (missingIndex < defaultHeadings.length) {
-        headings.push(defaultHeadings[missingIndex]);
+        let defaultTitle = defaultHeadings[missingIndex].title;
+        // 기본 제목도 60자 제한 적용
+        if (defaultTitle.length > 60) {
+          defaultTitle = defaultTitle.substring(0, 57) + '...';
+        }
+        headings.push({
+          ...defaultHeadings[missingIndex],
+          title: defaultTitle
+        });
       } else {
         break;
       }
@@ -111,7 +130,7 @@ ${keyword} 신청 방법 완벽 가이드|📝|단계별 신청 절차와 필요
   } catch (error) {
     console.error('동적 소제목 생성 오류:', error);
     
-    // 오류 시 기본 소제목 반환 (FAQ 제외)
+    // 오류 시 기본 소제목 반환 (FAQ 제외, 60자 이내)
     return [
       { title: `${keyword} 핵심 정보와 기본 내용`, emoji: '💡', content: '기본 정보를 정리합니다' },
       { title: `${keyword} 신청 방법 단계별 가이드`, emoji: '📝', content: '신청 절차를 안내합니다' },
