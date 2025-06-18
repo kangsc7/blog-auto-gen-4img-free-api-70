@@ -20,16 +20,6 @@ const Progress = React.forwardRef<
       className="h-full w-full flex-1 bg-primary transition-all"
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     />
-    <style jsx>{`
-      @keyframes wave {
-        0%, 60%, 100% {
-          transform: initial;
-        }
-        30% {
-          transform: translateY(-10px);
-        }
-      }
-    `}</style>
   </ProgressPrimitive.Root>
 ))
 Progress.displayName = ProgressPrimitive.Root.displayName
