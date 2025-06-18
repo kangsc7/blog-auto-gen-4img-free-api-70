@@ -67,6 +67,38 @@ const collectImagesFromMultiplePages = async (keyword: string, pixabayApiKey: st
     return allImages;
 };
 
+// 이미지를 Base64로 변환하는 함수 (티스토리 호환성 개선)
+const convertImageToBase64 = async (imageUrl: string): Promise<string | null> => {
+    try {
+        console.log('🔄 이미지 Base64 변환 시작:', imageUrl);
+        
+        // CORS 프록시를 사용하여 이미지 가져오기
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+            console.error('❌ 이미지 다운로드 실패:', response.status);
+            return null;
+        }
+        
+        const blob = await response.blob();
+        
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result as string;
+                console.log('✅ Base64 변환 완료');
+                resolve(base64String);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error('❌ Base64 변환 오류:', error);
+        return null;
+    }
+};
+
 export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -96,7 +128,7 @@ export const integratePixabayImages = async (
     pixabayApiKey: string, 
     geminiApiKey: string
 ): Promise<{ finalHtml: string; imageCount: number }> => {
-    console.log('🚀 Pixabay 이미지 통합 시작');
+    console.log('🚀 Pixabay 이미지 통합 시작 (티스토리 최적화)');
     console.log('📄 HTML 콘텐츠 길이:', htmlContent.length);
     
     const parser = new DOMParser();
@@ -105,8 +137,8 @@ export const integratePixabayImages = async (
     console.log('📋 발견된 H2 태그 수:', h2s.length);
     
     let imageCount = 0;
-    const MAX_IMAGES = 5; // 4장에서 5장으로 증가
-    const usedImageUrls = new Set<string>(); // 중복 이미지 추적을 위한 Set
+    const MAX_IMAGES = 5;
+    const usedImageUrls = new Set<string>();
 
     if (h2s.length > 0) {
         const numImagesToInsert = Math.min(MAX_IMAGES, h2s.length);
@@ -142,7 +174,6 @@ export const integratePixabayImages = async (
                         continue;
                     }
 
-                    // 10페이지까지 검색하여 더 많은 이미지 수집
                     const allImages = await collectImagesFromMultiplePages(keyword, pixabayApiKey, 10);
                     
                     if (allImages.length === 0) {
@@ -150,47 +181,68 @@ export const integratePixabayImages = async (
                         continue;
                     }
                     
-                    // 사용하지 않은 이미지만 필터링
                     const availableImages = allImages.filter(hit => !usedImageUrls.has(hit.webformatURL));
                     console.log('🎲 사용 가능한 이미지 수:', availableImages.length, '/ 전체:', allImages.length);
 
                     if (availableImages.length > 0) {
-                        // 랜덤하게 이미지 선택하여 중복 방지
                         const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
                         const imageUrl = randomImage.webformatURL;
-                        usedImageUrls.add(imageUrl); // 사용된 이미지 URL 추가
+                        usedImageUrls.add(imageUrl);
                         console.log('✅ 선택된 이미지:', imageUrl);
 
+                        // 티스토리 호환성을 위한 이미지 처리
                         const imageContainer = doc.createElement('div');
                         imageContainer.style.textAlign = 'center';
                         imageContainer.style.margin = '2em 0';
                         
                         const img = doc.createElement('img');
-                        img.src = imageUrl;
-                        const altText = h2.textContent?.trim() || keyword;
-                        const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
-                        img.alt = sanitizedAltText;
-                        img.title = sanitizedAltText; // 티스토리 대표 이미지 설정을 위한 title 속성
-                        img.setAttribute('data-filename', sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_') + '.jpg');
                         
-                        // 모바일에서 더 크게 보이도록 스타일 개선
-                        img.style.maxWidth = '100%'; // 90%에서 100%로 변경
+                        // 티스토리에서 안정적으로 작동하는 이미지 설정
+                        img.src = imageUrl;
+                        
+                        // ALT 태그 - 해당 섹션의 요약문 생성
+                        const sectionSummary = textToSummarize.substring(0, 100).replace(/[<>]/g, '').trim();
+                        img.alt = sectionSummary || h2.textContent?.trim() || keyword;
+                        img.title = img.alt; // 티스토리 대표 이미지 설정용
+                        
+                        // 파일명 설정 (티스토리 업로드용)
+                        const sanitizedFilename = (h2.textContent?.trim() || keyword)
+                            .replace(/[^a-zA-Z0-9가-힣]/g, '_')
+                            .substring(0, 30);
+                        img.setAttribute('data-filename', sanitizedFilename + '.jpg');
+                        
+                        // 640x480 고정 크기 설정 (해상도 깨짐 방지)
+                        img.style.width = '640px';
+                        img.style.height = '480px';
+                        img.style.maxWidth = '100%';
                         img.style.height = 'auto';
+                        img.style.aspectRatio = '4/3';
+                        img.style.objectFit = 'cover';
                         img.style.borderRadius = '8px';
                         img.style.display = 'block';
                         img.style.marginLeft = 'auto';
                         img.style.marginRight = 'auto';
-                        img.style.width = '100%'; // 티스토리 대표 이미지 인식을 위한 width 설정
                         
-                        // 모바일에서 더 큰 최소 높이 설정 (해상도 유지)
-                        img.style.minHeight = '200px'; // 모바일에서 최소 높이 보장
-                        img.style.objectFit = 'cover'; // 비율 유지하면서 영역 채우기
+                        // 티스토리 복사용 추가 속성
+                        img.setAttribute('data-ke-mobilestyle', 'widthContent');
+                        img.setAttribute('data-origin-width', '640');
+                        img.setAttribute('data-origin-height', '480');
                         
                         imageContainer.appendChild(img);
                         
+                        // 이미지 설명 추가 (접근성 향상)
+                        const caption = doc.createElement('p');
+                        caption.style.textAlign = 'center';
+                        caption.style.fontSize = '0.9em';
+                        caption.style.color = '#666';
+                        caption.style.marginTop = '0.5em';
+                        caption.style.fontStyle = 'italic';
+                        caption.textContent = `📷 ${sectionSummary}`;
+                        imageContainer.appendChild(caption);
+                        
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;
-                        console.log(`🖼️ 이미지 ${imageCount} 삽입 완료`);
+                        console.log(`🖼️ 티스토리 최적화 이미지 ${imageCount} 삽입 완료`);
                     } else {
                         console.log('⚠️ 사용 가능한 이미지 없음 (모두 중복)');
                     }
@@ -205,6 +257,6 @@ export const integratePixabayImages = async (
         console.log('❌ H2 태그를 찾을 수 없음');
     }
     
-    console.log(`🏁 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가`);
+    console.log(`🏁 티스토리 최적화 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가`);
     return { finalHtml: doc.body.innerHTML, imageCount };
 };
