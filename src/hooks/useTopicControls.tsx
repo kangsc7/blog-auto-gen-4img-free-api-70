@@ -21,6 +21,15 @@ const calculateSimilarity = (str1: string, str2: string): number => {
   return (matches / maxLength) * 100;
 };
 
+// 주제에서 핵심 키워드를 추출하는 함수
+const extractKeywordFromTopic = (topic: string): string => {
+  // 년도는 보존하고, 불필요한 단어들만 제거
+  return topic
+    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게|업법|총정리/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 interface UseTopicControlsProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
@@ -68,10 +77,14 @@ export const useTopicControls = ({ appState, saveAppState, preventDuplicates, ca
     const newTopic = manualTopic.trim();
     const updatedTopics = [...appState.topics, newTopic];
     
-    // 주제를 추가하고 동시에 선택된 주제로 설정
+    // 수동 입력된 주제에서 핵심 키워드 추출
+    const extractedKeyword = extractKeywordFromTopic(newTopic);
+    
+    // 주제를 추가하고 동시에 선택된 주제로 설정, 핵심 키워드도 설정
     saveAppState({ 
       topics: updatedTopics,
-      selectedTopic: newTopic
+      selectedTopic: newTopic,
+      keyword: extractedKeyword || newTopic // 추출된 키워드가 없으면 전체 주제를 키워드로 사용
     });
     setManualTopic('');
     
