@@ -103,13 +103,13 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <CardContent className="space-y-4">
               {geminiManager && (
                 <GeminiApiKeyManager
-                  apiKey={geminiManager.apiKey}
-                  setApiKey={geminiManager.setApiKey}
-                  isApiKeyValidated={geminiManager.isApiKeyValidated}
-                  setIsApiKeyValidated={geminiManager.setIsApiKeyValidated}
-                  isValidating={geminiManager.isValidating}
-                  validateApiKey={geminiManager.validateApiKey}
-                  deleteApiKeyFromStorage={geminiManager.deleteApiKeyFromStorage}
+                  geminiApiKey={geminiManager.apiKey}
+                  setGeminiApiKey={geminiManager.setApiKey}
+                  isGeminiApiKeyValidated={geminiManager.isApiKeyValidated}
+                  setIsGeminiApiKeyValidated={geminiManager.setIsApiKeyValidated}
+                  isGeminiValidating={geminiManager.isValidating}
+                  validateGeminiApiKey={geminiManager.validateApiKey}
+                  deleteGeminiApiKeyFromStorage={geminiManager.deleteApiKeyFromStorage}
                 />
               )}
               {pixabayManager && (

@@ -17,10 +17,10 @@ export const useRefactoredAppController = () => {
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
   // useAllApiKeysManager에 올바른 매개변수 전달
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager(
     appState,
-    saveAppState,
-  });
+    saveAppState
+  );
   
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();

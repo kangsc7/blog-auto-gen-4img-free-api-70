@@ -62,27 +62,25 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-2">
             {session && (
               <>
-                {/* 중복 방지/허용 토글 버튼 */}
+                {/* 중복 방지/허용 토글 버튼 - 크고 눈에 잘 띄는 버튼 */}
                 {onPreventDuplicatesToggle && (
                   <Button
                     onClick={onPreventDuplicatesToggle}
                     variant={preventDuplicates ? "default" : "outline"}
-                    size="sm"
-                    className={preventDuplicates ? "bg-green-600 hover:bg-green-700" : ""}
+                    className={`px-8 py-6 text-xl font-bold ${preventDuplicates ? "bg-emerald-600 hover:bg-emerald-700" : "border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white"} min-w-[140px] h-16`}
                   >
                     {preventDuplicates ? "중복금지" : "중복허용"}
                   </Button>
                 )}
 
-                {/* 초기화 버튼 */}
+                {/* 초기화 버튼 - 크고 눈에 잘 띄는 버튼 */}
                 {onResetApp && (
                   <Button
                     onClick={onResetApp}
                     variant="outline"
-                    size="sm"
-                    className="flex items-center space-x-1"
+                    className="px-8 py-6 text-xl font-bold border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white min-w-[140px] h-16"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-6 w-6 mr-2" />
                     <span>초기화</span>
                   </Button>
                 )}
