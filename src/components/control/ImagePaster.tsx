@@ -76,56 +76,35 @@ export const ImagePaster = () => {
                 toast({ title: "변환 실패", description: "이미지를 변환하는 중 오류가 발생했습니다.", variant: "destructive" });
             }
         } else {
-            // 이미지가 없으면 텍스트 확인 (Whisk에서 복사한 텍스트 무시)
-            let hasText = false;
-            for (const item of Array.from(items)) {
-                if (item.type === 'text/plain') {
-                    hasText = true;
-                    break;
-                }
-            }
-            
-            if (hasText) {
-                toast({ 
-                    title: "이미지만 붙여넣기 가능", 
-                    description: "Whisk에서 이미지를 우클릭 → '이미지 복사'를 선택한 후 붙여넣어 주세요.", 
-                    variant: "destructive" 
-                });
-            } else {
-                toast({ 
-                    title: "붙여넣기 오류", 
-                    description: "클립보드에서 이미지를 찾을 수 없습니다. 이미지 파일을 복사했는지 확인해주세요.", 
-                    variant: "destructive" 
-                });
-            }
+            // Whisk 텍스트나 기타 텍스트 무시
+            toast({ 
+                title: "이미지만 붙여넣기 가능", 
+                description: "Whisk에서 이미지를 우클릭 → '이미지 복사'를 선택한 후 붙여넣어 주세요.", 
+                variant: "destructive" 
+            });
         }
     }, [toast]);
 
     const handleCopyHtml = async () => {
         if (!convertedImage) return;
 
-        const imgTag = `<img src="${convertedImage}" alt="pasted_and_converted_image" style="max-width: 100%; height: auto;">`;
+        // 간단한 img 태그만 복사 (data URL 포함)
+        const imgTag = `<img src="${convertedImage}" alt="블로그 이미지" style="max-width: 100%; height: auto; border-radius: 8px;">`;
+        
         try {
-            const response = await fetch(convertedImage);
-            const imageBlob = await response.blob();
-            
-            const clipboardItem = new ClipboardItem({
-                [imageBlob.type]: imageBlob,
-                'text/html': new Blob([imgTag], { type: 'text/html' }),
-                'text/plain': new Blob([imgTag], { type: 'text/plain' }),
+            // 텍스트로만 복사 (HTML 태그 형태로)
+            await navigator.clipboard.writeText(imgTag);
+            toast({ 
+                title: "복사 완료", 
+                description: "이미지 HTML 태그가 복사되었습니다. 블로그 편집기에 붙여넣으세요." 
             });
-
-            await navigator.clipboard.write([clipboardItem]);
-            toast({ title: "복사 완료", description: "이미지 및 HTML 태그가 복사되었습니다. 블로그, 그림판 등에 붙여넣으세요." });
         } catch (error) {
-            console.error('Failed to copy image and HTML: ', error);
-            try {
-                await navigator.clipboard.writeText(imgTag);
-                toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. 그림판에 붙여넣으려면 이미지 위에서 우클릭 후 '이미지 복사'를 이용해주세요." });
-            } catch (copyError) {
-                console.error('Failed to copy HTML as text: ', copyError);
-                toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
-            }
+            console.error('Failed to copy HTML: ', error);
+            toast({ 
+                title: "복사 실패", 
+                description: "클립보드 복사에 실패했습니다.", 
+                variant: "destructive" 
+            });
         }
     };
 

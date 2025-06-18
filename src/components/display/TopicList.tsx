@@ -49,7 +49,7 @@ export const TopicList: React.FC<TopicListProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-blue-700">
               <Lightbulb className="h-5 w-5 mr-2" />
-              생성된 주제 목록
+              생성된 주제 목록 <span className="text-orange-600 font-bold">(글 작성 시작하려면 아래 주제를 선택하세요!)</span>
             </span>
             <span className="text-sm text-gray-500">{topics.length}개 생성됨</span>
           </CardTitle>
