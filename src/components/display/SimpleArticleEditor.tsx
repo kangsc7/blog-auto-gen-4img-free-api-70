@@ -12,6 +12,47 @@ interface SimpleArticleEditorProps {
   onContentChange: (content: string) => void;
 }
 
+// 커서 위치 저장 및 복원 유틸리티
+const saveCursorPosition = (element: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+  
+  const range = selection.getRangeAt(0);
+  if (!element.contains(range.commonAncestorContainer)) return null;
+  
+  return {
+    startContainer: range.startContainer,
+    startOffset: range.startOffset,
+    endContainer: range.endContainer,
+    endOffset: range.endOffset
+  };
+};
+
+const restoreCursorPosition = (element: HTMLElement, position: any) => {
+  if (!position) return false;
+  
+  try {
+    const selection = window.getSelection();
+    if (!selection) return false;
+    
+    // 저장된 노드들이 여전히 DOM에 존재하는지 확인
+    if (!element.contains(position.startContainer) || !element.contains(position.endContainer)) {
+      return false;
+    }
+    
+    const range = document.createRange();
+    range.setStart(position.startContainer, position.startOffset);
+    range.setEnd(position.endContainer, position.endOffset);
+    
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
+  } catch (error) {
+    console.warn('커서 위치 복원 실패:', error);
+    return false;
+  }
+};
+
 export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   generatedContent,
   isGeneratingContent,
@@ -24,15 +65,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   // 편집기 상태 관리
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isEditorFocused, setIsEditorFocused] = useState(false);
-  const [isUserTyping, setIsUserTyping] = useState(false); // 새로운 타이핑 상태
+  const [isEditorActive, setIsEditorActive] = useState(false); // 포커스 + 마우스 진입 상태
+  const [isUserInteracting, setIsUserInteracting] = useState(false); // 실제 사용자 상호작용
   const [lastSavedContent, setLastSavedContent] = useState('');
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
   
-  // 타이핑 감지용 타이머
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  // 사용자 상호작용 감지 타이머
+  const interactionTimeoutRef = useRef<NodeJS.Timeout>();
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  const cursorPositionRef = useRef<any>(null);
   
   // 안전한 localStorage 작업
   const safeLocalStorageGet = useCallback(() => {
@@ -59,7 +102,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [lastSavedContent]);
   
-  // 한 번만 실행되는 초기화
+  // 초기화 - 한 번만 실행
   useEffect(() => {
     if (!isInitialized) {
       console.log('🚀 SimpleArticleEditor 초기화 시작');
@@ -83,13 +126,13 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet, safeLocalStorageSet]);
   
-  // 새로운 생성 콘텐츠 처리 - 사용자가 타이핑 중이 아닐 때만
+  // 새로운 생성 콘텐츠 처리 - 사용자가 상호작용 중이 아닐 때만
   useEffect(() => {
     if (isInitialized && 
         generatedContent && 
         generatedContent !== editorContent && 
-        !isEditorFocused && 
-        !isUserTyping && // 타이핑 중이 아닐 때만
+        !isEditorActive && 
+        !isUserInteracting && 
         !isGeneratingContent) {
       
       console.log('🔄 새로운 생성 콘텐츠 적용 (사용자 비활성 상태)');
@@ -97,23 +140,36 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       safeLocalStorageSet(generatedContent);
       onContentChange(generatedContent);
     }
-  }, [generatedContent, editorContent, isEditorFocused, isUserTyping, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, editorContent, isEditorActive, isUserInteracting, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
   
-  // DOM과 React 상태 동기화 - 사용자가 타이핑 중이 아닐 때만
+  // DOM 업데이트 - 커서 위치 보존
   useEffect(() => {
     if (editorRef.current && 
         editorContent && 
         editorRef.current.innerHTML !== editorContent &&
-        !isEditorFocused && 
-        !isUserTyping) { // 타이핑 중이 아닐 때만 DOM 업데이트
+        !isEditorActive && 
+        !isUserInteracting) {
       
-      console.log('🔄 DOM 업데이트 (사용자 비활성 상태)');
+      console.log('🔄 DOM 업데이트 (커서 위치 보존)');
+      
+      // 커서 위치 저장
+      const savedPosition = saveCursorPosition(editorRef.current);
+      
+      // DOM 업데이트
       editorRef.current.innerHTML = editorContent;
+      
+      // 커서 위치 복원 시도
+      if (savedPosition) {
+        setTimeout(() => {
+          if (editorRef.current) {
+            restoreCursorPosition(editorRef.current, savedPosition);
+          }
+        }, 0);
+      }
     }
-  }, [editorContent, isEditorFocused, isUserTyping]);
+  }, [editorContent, isEditorActive, isUserInteracting]);
   
-  // 자동 저장 - 디바운스 적용
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  // 자동 저장
   const performAutoSave = useCallback((content: string) => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -125,64 +181,88 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }, 500);
   }, [safeLocalStorageSet, onContentChange]);
   
-  // 사용자 입력 처리 - 타이핑 상태 관리 추가
+  // 사용자 입력 처리
   const handleInput = useCallback(() => {
     if (editorRef.current && !isGeneratingContent) {
+      // 커서 위치 저장
+      cursorPositionRef.current = saveCursorPosition(editorRef.current);
+      
       const newContent = editorRef.current.innerHTML;
       setEditorContent(newContent);
       performAutoSave(newContent);
       
-      // 타이핑 상태 설정
-      setIsUserTyping(true);
-      console.log('✏️ 사용자 타이핑 시작');
+      // 사용자 상호작용 상태 설정
+      setIsUserInteracting(true);
+      console.log('✏️ 사용자 입력 감지');
       
-      // 타이핑 완료 감지 (1초 후)
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+      // 상호작용 완료 감지 (2초 후)
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
       }
       
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsUserTyping(false);
-        console.log('⏹️ 사용자 타이핑 완료');
-      }, 1000);
+      interactionTimeoutRef.current = setTimeout(() => {
+        setIsUserInteracting(false);
+        console.log('⏹️ 사용자 상호작용 완료');
+      }, 2000);
     }
   }, [isGeneratingContent, performAutoSave]);
   
-  // 편집기 포커스 상태 관리
+  // 키보드 이벤트 처리
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // 모든 키보드 이벤트에서 사용자 상호작용 상태 설정
+    setIsUserInteracting(true);
+    
+    if (interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
+    }
+    
+    interactionTimeoutRef.current = setTimeout(() => {
+      setIsUserInteracting(false);
+    }, 2000);
+  }, []);
+  
+  // 포커스 관리
   const handleFocus = useCallback(() => {
     console.log('🎯 편집기 포커스 획득');
-    setIsEditorFocused(true);
+    setIsEditorActive(true);
   }, []);
   
   const handleBlur = useCallback(() => {
     console.log('📝 편집기 포커스 해제');
-    setIsEditorFocused(false);
     
-    // 포커스 해제 시 타이핑 상태도 초기화
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    // 약간의 딜레이를 주어 다른 이벤트와의 충돌 방지
     setTimeout(() => {
-      setIsUserTyping(false);
-      console.log('🔄 포커스 해제로 인한 타이핑 상태 초기화');
+      const activeElement = document.activeElement;
+      if (activeElement !== editorRef.current) {
+        setIsEditorActive(false);
+        
+        // 포커스 해제 시 상호작용 상태도 정리
+        if (interactionTimeoutRef.current) {
+          clearTimeout(interactionTimeoutRef.current);
+        }
+        setTimeout(() => {
+          setIsUserInteracting(false);
+        }, 500);
+      }
     }, 100);
   }, []);
   
   // 마우스 이벤트 처리
   const handleMouseEnter = useCallback(() => {
     console.log('🖱️ 마우스 편집기 진입');
-    setIsEditorFocused(true);
+    setIsEditorActive(true);
   }, []);
   
   const handleMouseLeave = useCallback(() => {
     console.log('🖱️ 마우스 편집기 이탈');
+    
     setTimeout(() => {
       const activeElement = document.activeElement;
-      if (activeElement !== editorRef.current && !isUserTyping) {
-        setIsEditorFocused(false);
+      if (activeElement !== editorRef.current && !isUserInteracting) {
+        setIsEditorActive(false);
       }
     }, 100);
-  }, [isUserTyping]);
+  }, [isUserInteracting]);
   
   // 페이지 언로드 시 최종 저장
   useEffect(() => {
@@ -209,8 +289,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
       }
     };
   }, [editorContent, safeLocalStorageSet]);
@@ -268,8 +348,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
-              {isEditorFocused && <span className="ml-2 text-xs text-blue-500">✏️ 편집 중</span>}
-              {isUserTyping && <span className="ml-2 text-xs text-orange-500">⌨️ 타이핑 중</span>}
+              {isEditorActive && <span className="ml-2 text-xs text-blue-500">✏️ 활성</span>}
+              {isUserInteracting && <span className="ml-2 text-xs text-orange-500">⌨️ 입력 중</span>}
             </span>
             <div className="flex space-x-2">
               {editorContent && !isGeneratingContent && (
@@ -318,8 +398,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
                 <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
-                {isUserTyping && (
-                  <p className="text-xs text-orange-600 mt-1">⌨️ 타이핑 중: DOM 업데이트가 일시 중단되어 커서 위치가 보호됩니다</p>
+                {isUserInteracting && (
+                  <p className="text-xs text-orange-600 mt-1">⌨️ 입력 중: DOM 업데이트가 일시 중단되어 커서 위치가 보호됩니다</p>
                 )}
               </div>
               <div
@@ -327,6 +407,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 contentEditable={true}
                 className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none"
                 onInput={handleInput}
+                onKeyDown={handleKeyDown}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onMouseEnter={handleMouseEnter}
@@ -336,7 +417,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                   lineHeight: '1.6',
                   fontFamily: 'inherit'
                 }}
-                dangerouslySetInnerHTML={{ __html: editorContent }}
               />
             </div>
           ) : (
