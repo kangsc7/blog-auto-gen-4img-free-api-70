@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getHtmlTemplate } from '@/lib/htmlTemplate';
@@ -107,14 +106,13 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         additionalInfo = `${finalKeyword}에 대한 기본 정보를 바탕으로 글을 작성합니다.`;
       }
       
-      // 2단계: AI 콘텐츠 생성
+      // 2단계: AI 콘텐츠 생성 (AdSense 코드 제외하고 전송)
       let generatedContent = '';
       try {
         console.log('AI 콘텐츠 생성 시작...');
         
-        // 타임아웃 설정
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초 타임아웃
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         const response = await fetch('/api/generate', {
           method: 'POST',
@@ -159,7 +157,6 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         if (fetchError.name === 'AbortError') {
           throw createDetailedError('TIMEOUT_ERROR', '콘텐츠 생성 시간 초과', '60초');
         } else if (fetchError.type) {
-          // 이미 DetailedError인 경우
           throw fetchError;
         } else {
           throw createDetailedError('NETWORK_ERROR', '네트워크 오류', fetchError.message);
@@ -198,7 +195,6 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
             description: getErrorMessage(error),
             variant: "default"
           });
-          // 이미지 실패해도 글 생성은 계속 진행
         }
       }
 
@@ -221,7 +217,6 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           variant: "default"
         });
         
-        // 기본 소제목으로 대체
         dynamicHeadings = [
           { title: `${finalTopic} 완전 가이드`, emoji: '💡', content: '기본 정보를 완벽 정리합니다' },
           { title: `${finalKeyword} 활용 방법`, emoji: '📝', content: '실제 활용법을 안내합니다' },
@@ -231,17 +226,17 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         ];
       }
 
-      // 5단계: 최종 HTML 생성
+      // 5단계: 최종 HTML 생성 (AdSense 설정 안전하게 처리)
       try {
-        // AdSense 설정 안전하게 처리
-        const adSenseSettings: AdSenseSettings | undefined = appState.adSenseSettings ? {
+        // AdSense 설정을 안전하게 처리
+        const adSenseSettings: AdSenseSettings | undefined = appState.adSenseSettings?.enabled ? {
           enabled: Boolean(appState.adSenseSettings.enabled),
           adClient: String(appState.adSenseSettings.adClient || ''),
           adSlot: String(appState.adSenseSettings.adSlot || ''),
           adCount: Number(appState.adSenseSettings.adCount) || 1
         } : undefined;
 
-        console.log('AdSense 설정:', adSenseSettings);
+        console.log('AdSense 설정 확인:', adSenseSettings);
 
         const finalHtml = getHtmlTemplate(
           finalColors, 
@@ -273,13 +268,11 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       
       let errorMessage = '';
       if (error.type && error.message) {
-        // DetailedError인 경우
         errorMessage = getErrorMessage(error as DetailedError);
         if (error.details) {
           console.error('오류 상세:', error.details);
         }
       } else {
-        // 일반 오류인 경우
         const detailedError = createDetailedError('UNKNOWN_ERROR', '예상치 못한 오류', error.message);
         errorMessage = getErrorMessage(detailedError);
       }
