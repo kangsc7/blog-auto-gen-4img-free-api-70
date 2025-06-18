@@ -18,6 +18,7 @@ interface MainContentSectionProps {
     generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
     createImagePrompt: (inputText: string) => Promise<boolean>;
     generateDirectImage: () => Promise<string | null>;
+    stopArticleGeneration: () => void;
   };
   topicControls: {
     manualTopic: string;

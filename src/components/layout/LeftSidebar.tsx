@@ -57,7 +57,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
-        generateTopics={generationFunctions.generateTopics}
+        generateTopicsFromKeyword={generationFunctions.generateTopics}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
         manualTopic={topicControls.manualTopic}
         setManualTopic={topicControls.setManualTopic}
@@ -78,7 +78,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {/* 이미지 생성 */}
       <ImageCreation
         appState={appState}
-        saveAppState={saveAppState}
         isGeneratingImage={generationStatus.isGeneratingImage}
         isDirectlyGenerating={generationStatus.isDirectlyGenerating}
         createImagePrompt={generationFunctions.createImagePrompt}
