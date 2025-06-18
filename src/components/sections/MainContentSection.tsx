@@ -48,24 +48,28 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <LeftSidebar
-          appState={appState}
-          saveAppState={saveAppState}
-          generationStatus={generationStatus}
-          generationFunctions={generationFunctions}
-          topicControls={topicControls}
-          utilityFunctions={utilityFunctions}
-          preventDuplicates={preventDuplicates}
-        />
-        <RightContent
-          appState={appState}
-          saveAppState={saveAppState}
-          selectTopic={topicControls.selectTopic}
-          copyToClipboard={utilityFunctions.copyToClipboard}
-          downloadHTML={utilityFunctions.downloadHTML}
-          isGeneratingContent={generationStatus.isGeneratingContent}
-          onTopicConfirm={handleTopicConfirm}
-        />
+        <div className="lg:col-span-4">
+          <LeftSidebar
+            appState={appState}
+            saveAppState={saveAppState}
+            generationStatus={generationStatus}
+            generationFunctions={generationFunctions}
+            topicControls={topicControls}
+            utilityFunctions={utilityFunctions}
+            preventDuplicates={preventDuplicates}
+          />
+        </div>
+        <div className="lg:col-span-8">
+          <RightContent
+            appState={appState}
+            saveAppState={saveAppState}
+            selectTopic={topicControls.selectTopic}
+            copyToClipboard={utilityFunctions.copyToClipboard}
+            downloadHTML={utilityFunctions.downloadHTML}
+            isGeneratingContent={generationStatus.isGeneratingContent}
+            onTopicConfirm={handleTopicConfirm}
+          />
+        </div>
       </div>
     </div>
   );
