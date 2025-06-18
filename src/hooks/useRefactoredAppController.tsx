@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -11,18 +12,18 @@ import { useOneClick } from '@/hooks/useOneClick';
 import { useUserAccess } from '@/hooks/useUserAccess';
 
 export const useRefactoredAppController = () => {
-  const { session, profile, authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { appState, saveAppState, handleResetApp } = useAppStateManager();
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager();
+  const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
+  const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager(appState, saveAppState);
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingPrompt, generateImagePrompt } = useImagePromptGenerator(appState, saveAppState);
+  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.apiKey, hasAccess || isAdmin);
 
   const topicControls = useTopicControls(appState, saveAppState);
-  const { copyToClipboard, downloadAsHtml, shareContent, convertToMarkdown } = useAppUtils(appState);
+  const { copyToClipboard, downloadHTML: downloadAsHtml, openWhisk: shareContent } = useAppUtils({ appState });
 
   const {
     isOneClickGenerating,
@@ -53,25 +54,31 @@ export const useRefactoredAppController = () => {
     }, 1000);
   };
 
+  const convertToMarkdown = () => {
+    const markdown = `# ${appState.selectedTopic}\n\n${appState.generatedContent}`;
+    copyToClipboard(markdown, "마크다운");
+  };
+
   const generationStatus = {
     isGeneratingTopics,
     isGeneratingContent,
-    isGeneratingPrompt,
+    isGeneratingImage: isGeneratingPrompt,
+    isDirectlyGenerating,
     isOneClickGenerating,
   };
 
   const generationFunctions = {
     generateTopics: () => generateTopics(),
     generateArticle,
-    generateImagePrompt,
+    createImagePrompt: generateImagePrompt,
+    generateDirectImage,
     stopArticleGeneration,
   };
 
   const utilityFunctions = {
     copyToClipboard,
-    downloadAsHtml,
-    shareContent,
-    convertToMarkdown,
+    downloadHTML: downloadAsHtml,
+    openWhisk: shareContent,
   };
 
   return {
@@ -103,5 +110,6 @@ export const useRefactoredAppController = () => {
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
+    convertToMarkdown,
   };
 };

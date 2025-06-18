@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -46,6 +47,7 @@ const Index = () => {
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
+    convertToMarkdown,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
@@ -231,10 +233,21 @@ const Index = () => {
       <MainContentSection
         appState={appState}
         saveAppState={saveAppState}
-        generationStatus={generationStatus}
-        generationFunctions={generationFunctions}
+        generationStatus={{
+          ...generationStatus,
+          isGeneratingPrompt: generationStatus.isGeneratingImage
+        }}
+        generationFunctions={{
+          ...generationFunctions,
+          generateImagePrompt: generationFunctions.createImagePrompt
+        }}
         topicControls={topicControls}
-        utilityFunctions={utilityFunctions}
+        utilityFunctions={{
+          ...utilityFunctions,
+          downloadAsHtml: utilityFunctions.downloadHTML,
+          shareContent: utilityFunctions.openWhisk,
+          convertToMarkdown
+        }}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
       />
