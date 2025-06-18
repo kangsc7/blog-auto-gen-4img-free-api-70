@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -16,11 +15,11 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager에 올바른 매개변수 전달
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager(
+  // useAllApiKeysManager에 올바른 매개변수 전달 - 객체로 전달
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState
-  );
+  });
   
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
@@ -30,7 +29,7 @@ export const useRefactoredAppController = () => {
   // 픽사베이 클립보드 훅
   const pixabayClipboard = usePixabayClipboard();
 
-  // articleGenerator에 이미지 콜백 추가
+  // articleGenerator에 올바른 매개변수 전달 - 3개의 매개변수 전달
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(
     appState, 
     saveAppState,
