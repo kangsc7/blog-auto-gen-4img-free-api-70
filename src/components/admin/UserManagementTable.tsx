@@ -4,7 +4,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Trash2, Eye } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RemainingTime from './RemainingTime';
 import type { UserStatus } from '@/types';
@@ -30,7 +30,7 @@ interface UserManagementTableProps {
 const ADMIN_EMAILS = ['5321497@naver.com'];
 
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmin = false }) => {
-  const { users, loading, updateUserStatus, deleteUser } = useUserManagement();
+  const { users, loading, updateUserStatus } = useUserManagement();
 
   if (loading) {
     return (
