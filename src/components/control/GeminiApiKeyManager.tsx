@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, TestTube } from 'lucide-react';
 
 interface GeminiApiKeyManagerProps {
   geminiApiKey: string;
@@ -12,6 +12,7 @@ interface GeminiApiKeyManagerProps {
   setIsGeminiApiKeyValidated: (validated: boolean) => void;
   isGeminiValidating: boolean;
   validateGeminiApiKey: (key: string) => Promise<boolean>;
+  testGeminiConnection?: (key: string) => Promise<boolean>;
   deleteGeminiApiKeyFromStorage: () => void;
 }
 
@@ -22,6 +23,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
   setIsGeminiApiKeyValidated,
   isGeminiValidating,
   validateGeminiApiKey,
+  testGeminiConnection,
   deleteGeminiApiKeyFromStorage,
 }) => {
   console.log('GeminiApiKeyManager 렌더링:', { geminiApiKey, isGeminiApiKeyValidated });
@@ -30,7 +32,18 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
   const getMaskedApiKey = (key: string) => {
     if (!key) return '';
     if (key.length <= 8) return '*'.repeat(key.length);
-    return key.substring(0, 4) + '*'.repeat(Math.max(key.length - 8, 4)) + key.substring(key.length - 4);
+    return key.substring(0, 6) + '*'.repeat(Math.max(key.length - 12, 8)) + key.substring(key.length - 6);
+  };
+
+  const handleConnectionTest = async () => {
+    if (!testGeminiConnection || !geminiApiKey) return;
+    
+    try {
+      await testGeminiConnection(geminiApiKey);
+      // 성공 시 토스트는 testGeminiConnection 내부에서 처리
+    } catch (error) {
+      // 실패 시 토스트는 testGeminiConnection 내부에서 처리
+    }
   };
 
   return (
@@ -48,7 +61,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
             <Input
               type={isGeminiApiKeyValidated ? "password" : "text"}
               inputMode="text"
-              placeholder="API 키를 입력해주세요"
+              placeholder="AIza로 시작하는 39자리 API 키를 입력해주세요"
               value={isGeminiApiKeyValidated ? getMaskedApiKey(geminiApiKey) : geminiApiKey || ''}
               onChange={(e) => {
                 setGeminiApiKey(e.target.value);
@@ -73,7 +86,19 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={deleteGeminiApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
+            {isGeminiApiKeyValidated && testGeminiConnection && (
+              <Button 
+                onClick={handleConnectionTest} 
+                size="sm" 
+                variant="outline" 
+                className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                disabled={isGeminiValidating}
+              >
+                <TestTube className="h-4 w-4 mr-1" />
+                연결 테스트
+              </Button>
+            )}
+            <Button onClick={deleteGeminiApiKeyFromStorage} size="sm" variant="destructive" className="flex-1">
               키 삭제
             </Button>
           </div>
@@ -82,6 +107,9 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
           </p>
           {isGeminiApiKeyValidated && (
             <p className="text-xs text-green-600 mt-1">✅ API 키가 검증 및 저장되었습니다.</p>
+          )}
+          {!isGeminiApiKeyValidated && geminiApiKey && (
+            <p className="text-xs text-orange-600 mt-1">⚠️ API 키를 검증해주세요.</p>
           )}
         </div>
       </CardContent>

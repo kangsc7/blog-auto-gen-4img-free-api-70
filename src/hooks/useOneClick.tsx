@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -26,6 +25,53 @@ export const useOneClick = (
     setIsOneClickGenerating(false);
     setOneClickMode(null);
     toast({ title: '원클릭 생성 중단', description: '원클릭 생성이 중단되었습니다.' });
+  };
+
+  // API 연결 상태 확인 함수
+  const checkApiConnection = async (apiKey: string): Promise<boolean> => {
+    try {
+      console.log('🔍 API 연결 상태 확인 중...');
+      
+      const testResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "test" }] }],
+          generationConfig: { maxOutputTokens: 5, temperature: 0.1 },
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+
+      if (!testResponse.ok) {
+        console.error('❌ API 연결 테스트 실패:', testResponse.status, testResponse.statusText);
+        const errorData = await testResponse.json().catch(() => null);
+        
+        if (testResponse.status === 401) {
+          throw new Error('API 키가 유효하지 않습니다. Gemini API 키를 다시 확인해주세요.');
+        } else if (testResponse.status === 403) {
+          throw new Error('API 키 권한이 없습니다. API 키 설정을 확인해주세요.');
+        } else if (testResponse.status === 429) {
+          throw new Error('API 호출 한도를 초과했습니다. 잠시 후 다시 시도해주세요.');
+        } else {
+          throw new Error(`API 연결 실패 (${testResponse.status}): ${errorData?.error?.message || testResponse.statusText}`);
+        }
+      }
+
+      const testData = await testResponse.json();
+      console.log('✅ API 연결 테스트 성공');
+      return true;
+    } catch (error) {
+      console.error('❌ API 연결 확인 오류:', error);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('API 연결 시간이 초과되었습니다. 네트워크 연결을 확인해주세요.');
+        }
+        throw error;
+      }
+      
+      throw new Error('API 연결 확인 중 알 수 없는 오류가 발생했습니다.');
+    }
   };
 
   // 향상된 평생 키워드 생성 함수
@@ -63,9 +109,9 @@ export const useOneClick = (
     ];
 
     try {
-      // 랜덤으로 5개 카테고리 선택
+      // 랜덤으로 3개 카테고리 선택
       const shuffledCategories = evergreenCategories.sort(() => 0.5 - Math.random());
-      const selectedCategories = shuffledCategories.slice(0, 5);
+      const selectedCategories = shuffledCategories.slice(0, 3);
       
       console.log('✅ 선택된 평생 키워드 카테고리:', selectedCategories);
 
@@ -74,7 +120,7 @@ export const useOneClick = (
 카테고리: ${selectedCategories.join(', ')}
 
 **키워드 생성 규칙:**
-- 10자 이내의 간결한 표현
+- 8자 이내의 간결한 표현
 - 시간이 지나도 변하지 않는 가치 있는 정보
 - 실제 검색하고 싶은 구체적 내용
 - 실행 가능한 실용적 주제
@@ -89,10 +135,11 @@ export const useOneClick = (
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 1.2,
-            maxOutputTokens: 50,
+            temperature: 1.0,
+            maxOutputTokens: 30,
           },
         }),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (!response.ok) {
@@ -111,13 +158,14 @@ export const useOneClick = (
       // 키워드 정제 - 불필요한 문구 제거
       keyword = keyword.replace(/^키워드:\s*/, '').replace(/^-\s*/, '').replace(/^\d+\.\s*/, '');
       keyword = keyword.split('\n')[0].trim(); // 첫 번째 줄만 사용
+      keyword = keyword.substring(0, 8); // 8자로 제한
       
       console.log('✅ 생성된 평생 키워드:', keyword);
       return keyword;
     } catch (error) {
       console.error('❌ 평생 키워드 생성 오류:', error);
       // 백업 키워드 반환
-      const backupKeywords = ['생활 절약 팁', '건강한 식단', '홈트레이닝', '재테크 기초', '요리 레시피'];
+      const backupKeywords = ['생활 절약', '건강 관리', '홈트레이닝', '재테크', '요리법'];
       const backupKeyword = backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
       console.log('🔄 백업 키워드 사용:', backupKeyword);
       return backupKeyword;
@@ -133,8 +181,8 @@ export const useOneClick = (
       const latestTrends = await RealTimeTrendCrawler.getLatestTrends(apiKey);
       
       if (latestTrends && latestTrends.length > 0) {
-        // 첫 번째 트렌드를 키워드로 사용
-        const keyword = latestTrends[0];
+        // 첫 번째 트렌드를 키워드로 사용 (8자로 제한)
+        const keyword = latestTrends[0].substring(0, 8);
         console.log('✅ 선택된 최신 이슈 키워드:', keyword);
         return keyword;
       } else {
@@ -151,12 +199,6 @@ export const useOneClick = (
   const handleOneClickStart = async (mode: 'latest' | 'evergreen') => {
     try {
       console.log(`🚀 ${mode === 'latest' ? '최신 이슈' : '평생 키워드'} 원클릭 생성 시작`);
-      console.log('🔍 현재 앱 상태 검증:', { 
-        isApiKeyValidated: appState.isApiKeyValidated, 
-        apiKey: !!appState.apiKey,
-        preventDuplicates,
-        hasAccess 
-      });
       
       // 1. API 키 검증 강화
       if (!appState.isApiKeyValidated || !appState.apiKey) {
@@ -169,14 +211,27 @@ export const useOneClick = (
         return;
       }
 
-      // 2. 진행 상태 설정
+      // 2. API 연결 상태 확인
+      try {
+        await checkApiConnection(appState.apiKey);
+      } catch (connectionError) {
+        console.error('❌ API 연결 확인 실패:', connectionError);
+        toast({
+          title: "API 연결 실패",
+          description: connectionError instanceof Error ? connectionError.message : 'API 연결을 확인할 수 없습니다.',
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 3. 진행 상태 설정
       setIsOneClickGenerating(true);
       setOneClickMode(mode);
 
       let keyword: string;
       
       if (mode === 'latest') {
-        // 최신 이슈 처리 - 개선된 버전
+        // 최신 이슈 처리
         toast({
           title: "최신 이슈 키워드 생성 중",
           description: "현재 시간대의 최신 이슈 키워드를 생성하고 있습니다...",
@@ -184,7 +239,7 @@ export const useOneClick = (
 
         keyword = await generateLatestIssueKeyword(appState.apiKey);
       } else {
-        // 평생 키워드 처리 - 완전히 개선된 버전
+        // 평생 키워드 처리
         toast({
           title: "평생 키워드 생성 중",
           description: "카테고리별 평생 키워드를 생성하고 있습니다...",
@@ -195,7 +250,7 @@ export const useOneClick = (
 
       console.log('✅ 설정된 키워드:', keyword);
       
-      // 3. 키워드를 앱 상태에 저장
+      // 4. 키워드를 앱 상태에 저장
       saveAppState({ keyword });
       
       toast({
@@ -203,15 +258,15 @@ export const useOneClick = (
         description: `"${keyword}" 키워드로 주제를 생성하는 중입니다...`,
       });
 
-      // 4. 키워드 저장 완료를 위한 대기
+      // 5. 키워드 저장 완료를 위한 대기
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log('🔄 주제 생성 함수 호출 시작...');
       
-      // 5. 주제 생성 - 강화된 에러 처리
+      // 6. 주제 생성 - 강화된 에러 처리
       let topics: string[] | null = null;
       let retryCount = 0;
-      const maxRetries = 3;
+      const maxRetries = 2;
 
       while (!topics && retryCount < maxRetries) {
         try {
@@ -240,7 +295,7 @@ export const useOneClick = (
         throw new Error('주제 생성에 실패했습니다. API 상태를 확인해주세요.');
       }
 
-      // 6. 첫 번째 주제 자동 선택 및 글 생성
+      // 7. 첫 번째 주제 자동 선택 및 글 생성
       const selectedTopic = topics[0];
       console.log('✅ 자동 선택된 주제:', selectedTopic);
       
@@ -257,7 +312,7 @@ export const useOneClick = (
       
       console.log('🔄 글 생성 시작:', { topic: selectedTopic, keyword });
       
-      // 7. 컨텐츠 생성 - 강화된 에러 처리
+      // 8. 컨텐츠 생성 - 강화된 에러 처리
       const result = await generateArticle({ topic: selectedTopic, keyword });
       
       if (result) {
