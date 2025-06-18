@@ -39,6 +39,9 @@ export const Index: React.FC = () => {
         handleStopOneClick={controller.handleStopOneClick}
         appState={controller.appState}
         isGeneratingContent={controller.generationStatus.isGeneratingContent}
+        preventDuplicates={controller.preventDuplicates}
+        onPreventDuplicatesToggle={controller.handlePreventDuplicatesToggle}
+        onResetApp={controller.handleResetApp}
       />
 
       <MainContentSection

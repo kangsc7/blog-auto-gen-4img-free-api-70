@@ -39,7 +39,8 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">Gemini API 키</label>
           <div className="flex space-x-2">
             <Input
-              type="password"
+              type="text"
+              inputMode="text"
               placeholder="API 키를 입력해주세요"
               value={geminiApiKey || ''}
               onChange={(e) => {

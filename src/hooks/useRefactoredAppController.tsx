@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -36,7 +37,11 @@ export const useRefactoredAppController = () => {
     pixabayClipboard.addImageForClipboard
   );
   
-  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
+  // useImagePromptGenerator에 올바른 매개변수 전달 - 2개의 매개변수만 전달
+  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
+    appState, 
+    saveAppState
+  );
 
   const topicControls = useTopicControls({ appState, saveAppState });
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
