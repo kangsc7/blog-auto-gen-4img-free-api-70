@@ -11,17 +11,63 @@ interface PixabayConfig {
   validated: boolean;
 }
 
+// 에러 타입 정의
+type ArticleGenerationError = 
+  | 'NO_TOPIC'
+  | 'API_KEY_INVALID'
+  | 'WEB_CRAWL_FAILED'
+  | 'CONTENT_GENERATION_FAILED'
+  | 'IMAGE_FETCH_FAILED'
+  | 'HEADING_GENERATION_FAILED'
+  | 'NETWORK_ERROR'
+  | 'TIMEOUT_ERROR'
+  | 'UNKNOWN_ERROR';
+
+interface DetailedError {
+  type: ArticleGenerationError;
+  message: string;
+  details?: string;
+}
+
 export const useArticleGenerator = (appState: AppState, saveAppState: (newState: Partial<AppState>) => void) => {
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+
+  const createDetailedError = (type: ArticleGenerationError, message: string, details?: string): DetailedError => {
+    return { type, message, details };
+  };
+
+  const getErrorMessage = (error: DetailedError): string => {
+    switch (error.type) {
+      case 'NO_TOPIC':
+        return '❌ 주제 선택 오류: 글을 생성하기 전에 주제를 선택해주세요.';
+      case 'API_KEY_INVALID':
+        return '🔑 API 키 오류: API 키가 유효하지 않습니다. 다시 확인해주세요.';
+      case 'WEB_CRAWL_FAILED':
+        return '🌐 웹 크롤링 실패: 최신 정보 수집에 실패했지만 기본 정보로 계속 진행합니다.';
+      case 'CONTENT_GENERATION_FAILED':
+        return '📝 콘텐츠 생성 실패: AI 글 생성에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      case 'IMAGE_FETCH_FAILED':
+        return '🖼️ 이미지 추가 실패: 이미지 가져오기에 실패했지만 글 생성은 계속됩니다.';
+      case 'HEADING_GENERATION_FAILED':
+        return '📋 소제목 생성 실패: 동적 소제목 생성에 실패하여 기본 소제목을 사용합니다.';
+      case 'NETWORK_ERROR':
+        return '🌐 네트워크 오류: 인터넷 연결을 확인하고 다시 시도해주세요.';
+      case 'TIMEOUT_ERROR':
+        return '⏰ 시간 초과: 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.';
+      default:
+        return '❓ 알 수 없는 오류: 예상치 못한 오류가 발생했습니다.';
+    }
+  };
 
   const generateArticle = async (options?: { topic?: string; keyword?: string; pixabayConfig?: PixabayConfig }): Promise<string> => {
     const { topic: overrideTopic, keyword: overrideKeyword, pixabayConfig } = options || {};
 
     if (!appState.selectedTopic && !overrideTopic) {
+      const error = createDetailedError('NO_TOPIC', '주제가 선택되지 않았습니다');
       toast({
-        title: "주제 선택 필요",
-        description: "글을 생성하기 전에 주제를 선택해주세요.",
+        title: "글 생성 실패",
+        description: getErrorMessage(error),
         variant: "destructive"
       });
       return '';
@@ -36,46 +82,83 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       
       console.log('글 생성 시작:', { finalTopic, finalKeyword });
 
-      // 웹 크롤링으로 최신 정보 수집 (실패해도 계속 진행)
+      // 1단계: 웹 크롤링으로 최신 정보 수집
       let additionalInfo = '';
       try {
         console.log('웹 크롤링 시작...');
         additionalInfo = await WebCrawlerService.crawlForKeyword(finalKeyword, appState.apiKey);
         console.log('웹 크롤링 완료');
-      } catch (crawlError) {
-        console.error('웹 크롤링 실패, 기본 정보로 진행:', crawlError);
+      } catch (crawlError: any) {
+        console.error('웹 크롤링 실패:', crawlError);
+        const error = createDetailedError('WEB_CRAWL_FAILED', '웹 크롤링 실패', crawlError.message);
+        toast({
+          title: "웹 크롤링 경고",
+          description: getErrorMessage(error),
+          variant: "default"
+        });
         additionalInfo = `${finalKeyword}에 대한 기본 정보를 바탕으로 글을 작성합니다.`;
       }
       
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: finalTopic,
-          keyword: finalKeyword,
-          apiKey: appState.apiKey,
-          additionalInfo: additionalInfo,
-        }),
-      });
+      // 2단계: AI 콘텐츠 생성
+      let generatedContent = '';
+      try {
+        console.log('AI 콘텐츠 생성 시작...');
+        
+        // 타임아웃 설정
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초 타임아웃
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API 요청 실패:', response.status, errorText);
-        throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            topic: finalTopic,
+            keyword: finalKeyword,
+            apiKey: appState.apiKey,
+            additionalInfo: additionalInfo,
+          }),
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API 요청 실패:', response.status, errorText);
+          
+          if (response.status === 401 || response.status === 403) {
+            throw createDetailedError('API_KEY_INVALID', 'API 키가 유효하지 않습니다', errorText);
+          } else if (response.status >= 500) {
+            throw createDetailedError('CONTENT_GENERATION_FAILED', '서버 오류가 발생했습니다', errorText);
+          } else {
+            throw createDetailedError('CONTENT_GENERATION_FAILED', `API 요청 실패: ${response.status}`, errorText);
+          }
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.content) {
+          console.error('API 응답 데이터 오류:', data);
+          throw createDetailedError('CONTENT_GENERATION_FAILED', 'API 응답에 콘텐츠가 없습니다', JSON.stringify(data));
+        }
+
+        generatedContent = data.content;
+        console.log('AI 콘텐츠 생성 완료');
+
+      } catch (fetchError: any) {
+        if (fetchError.name === 'AbortError') {
+          throw createDetailedError('TIMEOUT_ERROR', '콘텐츠 생성 시간 초과', '60초');
+        } else if (fetchError.type) {
+          // 이미 DetailedError인 경우
+          throw fetchError;
+        } else {
+          throw createDetailedError('NETWORK_ERROR', '네트워크 오류', fetchError.message);
+        }
       }
 
-      const data = await response.json();
-
-      if (!data || !data.content) {
-        console.error('API 응답 데이터 오류:', data);
-        throw new Error('API 응답에 content가 없습니다.');
-      }
-
-      let generatedContent = data.content;
-
-      // Pixabay API 키가 유효하면 이미지 검색 및 추가
+      // 3단계: Pixabay 이미지 검색 및 추가 (선택적)
       if (pixabayConfig?.validated && pixabayConfig?.key) {
         try {
           console.log('Pixabay 이미지 검색 시작...');
@@ -99,13 +182,19 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           } else {
             console.error('Pixabay API 요청 실패:', pixabayResponse.statusText);
           }
-        } catch (pixabayError) {
+        } catch (pixabayError: any) {
           console.error('Pixabay 이미지 처리 중 오류:', pixabayError);
+          const error = createDetailedError('IMAGE_FETCH_FAILED', 'Pixabay 이미지 가져오기 실패', pixabayError.message);
+          toast({
+            title: "이미지 추가 경고",
+            description: getErrorMessage(error),
+            variant: "default"
+          });
           // 이미지 실패해도 글 생성은 계속 진행
         }
       }
 
-      // 동적 소제목 생성 및 HTML 구조에 맞게 변환
+      // 4단계: 동적 소제목 생성
       let dynamicHeadings: Array<{ title: string; emoji: string; content: string }> = [];
       try {
         console.log('동적 소제목 생성 시작...');
@@ -115,8 +204,15 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           appState.huggingFaceApiKey || ''
         );
         console.log('동적 소제목 생성 완료:', dynamicHeadings);
-      } catch (headingError) {
+      } catch (headingError: any) {
         console.error('동적 소제목 생성 실패:', headingError);
+        const error = createDetailedError('HEADING_GENERATION_FAILED', '동적 소제목 생성 실패', headingError.message);
+        toast({
+          title: "소제목 생성 경고",
+          description: getErrorMessage(error),
+          variant: "default"
+        });
+        
         // 기본 소제목으로 대체
         dynamicHeadings = [
           { title: `${finalTopic} 완전 가이드`, emoji: '💡', content: '기본 정보를 완벽 정리합니다' },
@@ -127,26 +223,52 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         ];
       }
 
-      // 최종 HTML 생성 시 AdSense 설정 포함
-      const finalHtml = getHtmlTemplate(
-        finalColors, 
-        finalTopic, 
-        finalKeyword, 
-        appState.referenceLink || 'https://worldpis.com',
-        appState.referenceSentence || '워드프레스 꿀팁 더 보러가기',
-        dynamicHeadings,
-        appState.adSenseSettings
-      );
+      // 5단계: 최종 HTML 생성
+      try {
+        const finalHtml = getHtmlTemplate(
+          finalColors, 
+          finalTopic, 
+          finalKeyword, 
+          appState.referenceLink || 'https://worldpis.com',
+          appState.referenceSentence || '워드프레스 꿀팁 더 보러가기',
+          dynamicHeadings,
+          appState.adSenseSettings
+        );
 
-      console.log('글 생성 완료');
-      saveAppState({ generatedContent: finalHtml });
-      return finalHtml;
+        console.log('글 생성 완료');
+        saveAppState({ generatedContent: finalHtml });
+        
+        toast({
+          title: "✅ 글 생성 성공!",
+          description: `"${finalTopic}" 주제로 글이 성공적으로 생성되었습니다.`,
+          variant: "default"
+        });
+        
+        return finalHtml;
+      } catch (templateError: any) {
+        console.error('HTML 템플릿 생성 오류:', templateError);
+        throw createDetailedError('CONTENT_GENERATION_FAILED', 'HTML 템플릿 생성 실패', templateError.message);
+      }
 
     } catch (error: any) {
       console.error('글 생성 중 오류 발생:', error);
+      
+      let errorMessage = '';
+      if (error.type && error.message) {
+        // DetailedError인 경우
+        errorMessage = getErrorMessage(error as DetailedError);
+        if (error.details) {
+          console.error('오류 상세:', error.details);
+        }
+      } else {
+        // 일반 오류인 경우
+        const detailedError = createDetailedError('UNKNOWN_ERROR', '예상치 못한 오류', error.message);
+        errorMessage = getErrorMessage(detailedError);
+      }
+      
       toast({
         title: "글 생성 오류",
-        description: error.message || "글을 생성하는 동안 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        description: errorMessage,
         variant: "destructive"
       });
       return '';
