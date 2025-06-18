@@ -114,6 +114,17 @@ export const useAuth = () => {
         if (profileError) {
           console.error('프로필 생성 오류:', profileError);
         }
+
+        // 회원가입 성공 후 자동 로그인 시도
+        const loginResult = await handleLogin({
+          email: signUpData.email,
+          password: signUpData.password
+        });
+
+        if (loginResult) {
+          toast({ title: "회원가입 및 로그인 성공", description: "환영합니다!" });
+          return true;
+        }
       }
 
       toast({ title: "회원가입 성공", description: "이메일 인증을 완료하고 로그인해주세요." });

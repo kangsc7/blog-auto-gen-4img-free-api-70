@@ -26,13 +26,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ handleLogin, handleSignUp })
 
     setLoading(true);
     if (isSignUp) {
-      const success = await handleSignUp({ email, password });
-      if (success) {
-        // 회원가입 성공 시 자동으로 로그인 창으로 전환
-        setIsSignUp(false);
-        setEmail('');
-        setPassword('');
-      }
+      await handleSignUp({ email, password });
     } else {
       await handleLogin({ email, password });
     }
