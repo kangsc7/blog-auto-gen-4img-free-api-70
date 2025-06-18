@@ -12,6 +12,47 @@ interface SimpleArticleEditorProps {
   onContentChange: (content: string) => void;
 }
 
+// 커서 위치 저장 및 복원 유틸리티
+const saveCursorPosition = (element: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+  
+  const range = selection.getRangeAt(0);
+  if (!element.contains(range.commonAncestorContainer)) return null;
+  
+  return {
+    startContainer: range.startContainer,
+    startOffset: range.startOffset,
+    endContainer: range.endContainer,
+    endOffset: range.endOffset
+  };
+};
+
+const restoreCursorPosition = (element: HTMLElement, position: any) => {
+  if (!position) return false;
+  
+  try {
+    const selection = window.getSelection();
+    if (!selection) return false;
+    
+    // 저장된 노드들이 여전히 DOM에 존재하는지 확인
+    if (!element.contains(position.startContainer) || !element.contains(position.endContainer)) {
+      return false;
+    }
+    
+    const range = document.createRange();
+    range.setStart(position.startContainer, position.startOffset);
+    range.setEnd(position.endContainer, position.endOffset);
+    
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
+  } catch (error) {
+    console.warn('커서 위치 복원 실패:', error);
+    return false;
+  }
+};
+
 export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   generatedContent,
   isGeneratingContent,
@@ -24,14 +65,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   // 편집기 상태 관리
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEditorActive, setIsEditorActive] = useState(false); // 포커스 + 마우스 진입 상태
+  const [isUserInteracting, setIsUserInteracting] = useState(false); // 실제 사용자 상호작용
   const [lastSavedContent, setLastSavedContent] = useState('');
-  const [lastGeneratedContent, setLastGeneratedContent] = useState('');
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
   
-  // 자동 저장 타이머
+  // 사용자 상호작용 감지 타이머
+  const interactionTimeoutRef = useRef<NodeJS.Timeout>();
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  const cursorPositionRef = useRef<any>(null);
   
   // 안전한 localStorage 작업
   const safeLocalStorageGet = useCallback(() => {
@@ -48,7 +92,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       if (content && content !== lastSavedContent) {
         localStorage.setItem(STORAGE_KEY, content);
         setLastSavedContent(content);
-        console.log('✅ 콘텐츠 자동 저장됨:', content.length, '글자');
+        console.log('✅ 콘텐츠 저장됨:', content.length, '글자');
         return true;
       }
       return false;
@@ -65,76 +109,65 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       
       const savedContent = safeLocalStorageGet();
       
-      if (savedContent && savedContent.length > 0) {
+      if (savedContent) {
         console.log('📂 저장된 콘텐츠 복원:', savedContent.length, '글자');
         setEditorContent(savedContent);
         setLastSavedContent(savedContent);
-        setLastGeneratedContent(savedContent);
         onContentChange(savedContent);
-        
-        // DOM 업데이트
-        if (editorRef.current) {
-          editorRef.current.innerHTML = savedContent;
-        }
       } else if (generatedContent && !isGeneratingContent) {
         console.log('🆕 초기 생성 콘텐츠 설정:', generatedContent.length, '글자');
         setEditorContent(generatedContent);
-        setLastGeneratedContent(generatedContent);
         safeLocalStorageSet(generatedContent);
         onContentChange(generatedContent);
-        
-        // DOM 업데이트
-        if (editorRef.current) {
-          editorRef.current.innerHTML = generatedContent;
-        }
       }
       
       setIsInitialized(true);
-      console.log('✅ 편집기 초기화 완료');
+      console.log('✅ 초기화 완료');
     }
   }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet, safeLocalStorageSet]);
   
-  // 새로운 생성 콘텐츠 처리 - 원클릭 생성 완료 후 콘텐츠 업데이트
+  // 새로운 생성 콘텐츠 처리 - 사용자가 상호작용 중이 아닐 때만
   useEffect(() => {
     if (isInitialized && 
         generatedContent && 
-        generatedContent !== lastGeneratedContent &&
+        generatedContent !== editorContent && 
+        !isEditorActive && 
+        !isUserInteracting && 
         !isGeneratingContent) {
       
-      console.log('🔄 원클릭 생성 완료 - 새로운 콘텐츠 적용');
-      console.log('이전 생성 콘텐츠 길이:', lastGeneratedContent.length);
-      console.log('새로운 생성 콘텐츠 길이:', generatedContent.length);
+      console.log('🔄 새로운 생성 콘텐츠 적용 (사용자 비활성 상태)');
+      setEditorContent(generatedContent);
+      safeLocalStorageSet(generatedContent);
+      onContentChange(generatedContent);
+    }
+  }, [generatedContent, editorContent, isEditorActive, isUserInteracting, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  
+  // DOM 업데이트 - 커서 위치 보존
+  useEffect(() => {
+    if (editorRef.current && 
+        editorContent && 
+        editorRef.current.innerHTML !== editorContent &&
+        !isEditorActive && 
+        !isUserInteracting) {
       
-      // 현재 편집된 내용이 있는지 확인
-      const currentEditedContent = editorRef.current?.innerHTML || '';
-      const hasUserEdits = currentEditedContent && 
-                          currentEditedContent !== lastGeneratedContent && 
-                          currentEditedContent.length > 0;
+      console.log('🔄 DOM 업데이트 (커서 위치 보존)');
       
-      if (!hasUserEdits) {
-        // 사용자 편집이 없으면 새로운 콘텐츠로 업데이트
-        console.log('✅ 사용자 편집 없음 - 새로운 콘텐츠로 업데이트');
-        setEditorContent(generatedContent);
-        setLastGeneratedContent(generatedContent);
-        safeLocalStorageSet(generatedContent);
-        onContentChange(generatedContent);
-        
-        // DOM 업데이트
-        if (editorRef.current) {
-          editorRef.current.innerHTML = generatedContent;
-        }
-      } else {
-        // 사용자 편집이 있으면 확인 없이 기존 내용 유지
-        console.log('⚠️ 사용자 편집 감지 - 기존 편집 내용 보존');
-        setLastGeneratedContent(generatedContent); // 추적용으로만 업데이트
-        toast({
-          title: "편집 내용 보존됨",
-          description: "새로운 글이 생성되었지만 현재 편집 중인 내용을 보존했습니다.",
-          duration: 3000
-        });
+      // 커서 위치 저장
+      const savedPosition = saveCursorPosition(editorRef.current);
+      
+      // DOM 업데이트
+      editorRef.current.innerHTML = editorContent;
+      
+      // 커서 위치 복원 시도
+      if (savedPosition) {
+        setTimeout(() => {
+          if (editorRef.current) {
+            restoreCursorPosition(editorRef.current, savedPosition);
+          }
+        }, 0);
       }
     }
-  }, [generatedContent, lastGeneratedContent, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet, toast]);
+  }, [editorContent, isEditorActive, isUserInteracting]);
   
   // 자동 저장
   const performAutoSave = useCallback((content: string) => {
@@ -145,48 +178,104 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     autoSaveTimeoutRef.current = setTimeout(() => {
       safeLocalStorageSet(content);
       onContentChange(content);
-      console.log('💾 자동 저장 완료');
-    }, 1000);
+    }, 500);
   }, [safeLocalStorageSet, onContentChange]);
   
   // 사용자 입력 처리
   const handleInput = useCallback(() => {
     if (editorRef.current && !isGeneratingContent) {
+      // 커서 위치 저장
+      cursorPositionRef.current = saveCursorPosition(editorRef.current);
+      
       const newContent = editorRef.current.innerHTML;
-      console.log('✏️ 사용자 입력 감지:', newContent.length, '글자');
       setEditorContent(newContent);
       performAutoSave(newContent);
+      
+      // 사용자 상호작용 상태 설정
+      setIsUserInteracting(true);
+      console.log('✏️ 사용자 입력 감지');
+      
+      // 상호작용 완료 감지 (2초 후)
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
+      }
+      
+      interactionTimeoutRef.current = setTimeout(() => {
+        setIsUserInteracting(false);
+        console.log('⏹️ 사용자 상호작용 완료');
+      }, 2000);
     }
   }, [isGeneratingContent, performAutoSave]);
   
-  // 글 생성 중일 때 편집기 비활성화
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.contentEditable = isGeneratingContent ? 'false' : 'true';
-      if (isGeneratingContent) {
-        editorRef.current.style.opacity = '0.6';
-        editorRef.current.style.pointerEvents = 'none';
-      } else {
-        editorRef.current.style.opacity = '1';
-        editorRef.current.style.pointerEvents = 'auto';
-      }
+  // 키보드 이벤트 처리
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // 모든 키보드 이벤트에서 사용자 상호작용 상태 설정
+    setIsUserInteracting(true);
+    
+    if (interactionTimeoutRef.current) {
+      clearTimeout(interactionTimeoutRef.current);
     }
-  }, [isGeneratingContent]);
+    
+    interactionTimeoutRef.current = setTimeout(() => {
+      setIsUserInteracting(false);
+    }, 2000);
+  }, []);
+  
+  // 포커스 관리
+  const handleFocus = useCallback(() => {
+    console.log('🎯 편집기 포커스 획득');
+    setIsEditorActive(true);
+  }, []);
+  
+  const handleBlur = useCallback(() => {
+    console.log('📝 편집기 포커스 해제');
+    
+    // 약간의 딜레이를 주어 다른 이벤트와의 충돌 방지
+    setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement !== editorRef.current) {
+        setIsEditorActive(false);
+        
+        // 포커스 해제 시 상호작용 상태도 정리
+        if (interactionTimeoutRef.current) {
+          clearTimeout(interactionTimeoutRef.current);
+        }
+        setTimeout(() => {
+          setIsUserInteracting(false);
+        }, 500);
+      }
+    }, 100);
+  }, []);
+  
+  // 마우스 이벤트 처리
+  const handleMouseEnter = useCallback(() => {
+    console.log('🖱️ 마우스 편집기 진입');
+    setIsEditorActive(true);
+  }, []);
+  
+  const handleMouseLeave = useCallback(() => {
+    console.log('🖱️ 마우스 편집기 이탈');
+    
+    setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement !== editorRef.current && !isUserInteracting) {
+        setIsEditorActive(false);
+      }
+    }, 100);
+  }, [isUserInteracting]);
   
   // 페이지 언로드 시 최종 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (editorContent && editorRef.current) {
-        const finalContent = editorRef.current.innerHTML;
-        safeLocalStorageSet(finalContent);
+      if (editorContent) {
+        safeLocalStorageSet(editorContent);
         console.log('💾 페이지 종료 전 최종 저장');
       }
     };
     
     const handleVisibilityChange = () => {
-      if (document.hidden && editorContent && editorRef.current) {
-        const finalContent = editorRef.current.innerHTML;
-        safeLocalStorageSet(finalContent);
+      if (document.hidden && editorContent) {
+        safeLocalStorageSet(editorContent);
         console.log('👁️ 창 전환 시 저장');
       }
     };
@@ -200,18 +289,20 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
+      }
     };
   }, [editorContent, safeLocalStorageSet]);
   
   // 클립보드 복사
   const handleCopyToClipboard = useCallback(() => {
-    const currentContent = editorRef.current?.innerHTML || editorContent;
-    if (!currentContent) {
+    if (!editorContent) {
       toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    navigator.clipboard.writeText(currentContent).then(() => {
+    navigator.clipboard.writeText(editorContent).then(() => {
       toast({ title: "복사 완료", description: "수정된 HTML이 클립보드에 복사되었습니다." });
     }).catch(() => {
       toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
@@ -220,13 +311,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   // HTML 파일 다운로드
   const handleDownloadHTML = useCallback(() => {
-    const currentContent = editorRef.current?.innerHTML || editorContent;
-    if (!currentContent) {
+    if (!editorContent) {
       toast({ title: "다운로드 오류", description: "다운로드할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    const blob = new Blob([currentContent], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([editorContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -258,14 +348,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
-              {isGeneratingContent && (
-                <span className="ml-2 text-sm text-orange-600 animate-pulse">
-                  (생성 중...)
-                </span>
-              )}
+              {isEditorActive && <span className="ml-2 text-xs text-blue-500">✏️ 활성</span>}
+              {isUserInteracting && <span className="ml-2 text-xs text-orange-500">⌨️ 입력 중</span>}
             </span>
             <div className="flex space-x-2">
-              {(editorContent || (editorRef.current && editorRef.current.innerHTML)) && !isGeneratingContent && (
+              {editorContent && !isGeneratingContent && (
                 <>
                   <Button 
                     onClick={handleCopyToClipboard}
@@ -303,20 +390,28 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 </span>
                 가 글을 생성하고 있습니다...
               </p>
-              <p className="text-sm animate-fade-in">편집기는 생성 완료 후 활성화됩니다.</p>
+              <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
             </div>
-          ) : (editorContent || generatedContent) ? (
+          ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
-                <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 원클릭 생성 후에도 편집 내용이 안전하게 보존됩니다</p>
+                <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
+                {isUserInteracting && (
+                  <p className="text-xs text-orange-600 mt-1">⌨️ 입력 중: DOM 업데이트가 일시 중단되어 커서 위치가 보호됩니다</p>
+                )}
               </div>
               <div
                 ref={editorRef}
-                contentEditable={!isGeneratingContent}
-                className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none transition-opacity"
+                contentEditable={true}
+                className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none"
                 onInput={handleInput}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 suppressContentEditableWarning={true}
                 style={{
                   lineHeight: '1.6',
