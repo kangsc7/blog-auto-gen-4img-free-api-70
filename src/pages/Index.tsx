@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -9,6 +8,7 @@ import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKey
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
+import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -41,6 +41,8 @@ const Index = () => {
     topicControls,
     utilityFunctions,
     handleTopicConfirm,
+    showTopicSelectionDialog,
+    setShowTopicSelectionDialog,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
@@ -232,6 +234,12 @@ const Index = () => {
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
+      />
+
+      {/* 주제 선택 알림 팝업 */}
+      <TopicSelectionNotification
+        open={showTopicSelectionDialog}
+        onOpenChange={setShowTopicSelectionDialog}
       />
       
       <ScrollToTopButton />

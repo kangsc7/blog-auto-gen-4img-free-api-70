@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
@@ -12,6 +12,7 @@ export const useArticleGenerator = (
 ) => {
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const cancelArticleGeneration = useRef(false);
 
   const generateArticle = async (
     options?: {
@@ -41,10 +42,16 @@ export const useArticleGenerator = (
     }
 
     setIsGeneratingContent(true);
-    // 글 생성 시작할 때 기존 콘텐츠와 이미지 프롬프트만 초기화 (불필요한 초기화 제거)
+    cancelArticleGeneration.current = false;
+    
+    // 글 생성 시작할 때 기존 콘텐츠와 이미지 프롬프트만 초기화
     saveAppState({ imagePrompt: '' });
     
     try {
+      if (cancelArticleGeneration.current) {
+        throw new Error("사용자에 의해 중단되었습니다.");
+      }
+
       // 웹 크롤링 단계 알림
       toast({ 
         title: "1단계: 웹 정보 수집 중...", 
@@ -63,6 +70,10 @@ export const useArticleGenerator = (
         referenceSentence: appState.referenceSentence,
         apiKey: appState.apiKey!,
       });
+
+      if (cancelArticleGeneration.current) {
+        throw new Error("사용자에 의해 중단되었습니다.");
+      }
 
       // 글 생성 단계 알림
       toast({ 
@@ -85,6 +96,10 @@ export const useArticleGenerator = (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
+
+      if (cancelArticleGeneration.current) {
+        throw new Error("사용자에 의해 중단되었습니다.");
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -114,6 +129,10 @@ export const useArticleGenerator = (
       let finalHtml = htmlContent;
       let pixabayImagesAdded = false;
 
+      if (cancelArticleGeneration.current) {
+        throw new Error("사용자에 의해 중단되었습니다.");
+      }
+
       const pixabayConfig = options?.pixabayConfig;
       if (pixabayConfig?.key && pixabayConfig?.validated) {
         toast({ title: "3단계: 이미지 추가 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
@@ -123,6 +142,10 @@ export const useArticleGenerator = (
           pixabayConfig.key,
           appState.apiKey!
         );
+
+        if (cancelArticleGeneration.current) {
+          throw new Error("사용자에 의해 중단되었습니다.");
+        }
 
         finalHtml = htmlWithImages;
         
@@ -136,13 +159,17 @@ export const useArticleGenerator = (
 
       try {
         const metaDescription = await generateMetaDescription(htmlContent, appState.apiKey!);
-        if (metaDescription) {
+        if (metaDescription && !cancelArticleGeneration.current) {
           const sanitizedMeta = metaDescription.replace(/-->/g, '-- >');
           const metaComment = `<!-- META DESCRIPTION: ${sanitizedMeta} -->`;
           finalHtml = `${metaComment}\n${finalHtml}`;
         }
       } catch (error) {
         console.error("메타 설명 생성 중 오류:", error);
+      }
+
+      if (cancelArticleGeneration.current) {
+        throw new Error("사용자에 의해 중단되었습니다.");
       }
 
       const stateToSave: Partial<AppState> = { 
@@ -162,12 +189,38 @@ export const useArticleGenerator = (
       return finalHtml;
     } catch (error) {
       console.error('글 생성 오류:', error);
-      toast({ title: "글 생성 실패", description: error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다.", variant: "destructive" });
+      
+      const errorMessage = error instanceof Error ? error.message : "블로그 글 생성 중 오류가 발생했습니다.";
+      
+      if (errorMessage === "사용자에 의해 중단되었습니다.") {
+        toast({ 
+          title: "글 생성 중단됨", 
+          description: "사용자 요청에 따라 글 생성을 중단했습니다.", 
+          variant: "default" 
+        });
+      } else {
+        toast({ 
+          title: "글 생성 실패", 
+          description: errorMessage, 
+          variant: "destructive" 
+        });
+      }
       return null;
     } finally {
       setIsGeneratingContent(false);
+      cancelArticleGeneration.current = false;
     }
   };
 
-  return { isGeneratingContent, generateArticle };
+  // 글 생성 중단 함수
+  const stopArticleGeneration = () => {
+    cancelArticleGeneration.current = true;
+    toast({
+      title: "글 생성 중단 요청",
+      description: "현재 진행 중인 글 생성을 중단하고 있습니다...",
+      variant: "default"
+    });
+  };
+
+  return { isGeneratingContent, generateArticle, stopArticleGeneration };
 };

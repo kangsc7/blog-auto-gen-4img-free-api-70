@@ -123,7 +123,14 @@ export const useRefactoredAppController = () => {
     }
   };
   
-  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
+  const { 
+    isOneClickGenerating, 
+    handleLatestIssueOneClick, 
+    handleEvergreenKeywordOneClick, 
+    handleStopOneClick,
+    showTopicSelectionDialog,
+    setShowTopicSelectionDialog
+  } = useOneClick(
     appState,
     saveAppState,
     generateTopics,
@@ -166,5 +173,7 @@ export const useRefactoredAppController = () => {
     utilityFunctions,
     canUseFeatures,
     handleTopicConfirm,
+    showTopicSelectionDialog,
+    setShowTopicSelectionDialog,
   };
 };
