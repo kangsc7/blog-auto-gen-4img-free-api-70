@@ -21,24 +21,76 @@ const extractNaturalKeyword = (topic: string): string => {
     .trim();
 };
 
-// 더 자연스러운 관련 용어 생성 함수
-const generateNaturalContext = (naturalKeyword: string, originalKeyword: string): { [key: string]: string } => {
-  const baseTerms = ['지원금', '혜택', '제도', '프로그램', '서비스'];
-  const contextTerms = ['관련 지원', '이런 혜택', '해당 제도', '이 프로그램', '지원 서비스'];
+// 주제 분류 함수 추가
+const classifyTopic = (topic: string, keyword: string): 'government' | 'cooking' | 'general' => {
+  const governmentKeywords = ['지원금', '신청', '혜택', '정부', '제도', '급여', '보조금', '바우처', '복지'];
+  const cookingKeywords = ['요리', '음식', '레시피', '담그기', '만들기', '김치', '국', '찌개', '반찬'];
   
-  // 자연스러운 맥락적 표현들 생성
-  return {
-    INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 관련 혜택`,
-    CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_2: `${naturalKeyword} 관련`,
-    SECTION_CONTENT_3: `디지털플랫폼 활용`,
-    SECTION_CONTENT_4: `이 지원금`,
-    SECTION_CONTENT_5: `${naturalKeyword} 지원`,
-    SUMMARY_TITLE: naturalKeyword,
-    REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
-    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
-  };
+  const fullText = `${topic} ${keyword}`.toLowerCase();
+  
+  if (governmentKeywords.some(word => fullText.includes(word))) {
+    return 'government';
+  } else if (cookingKeywords.some(word => fullText.includes(word))) {
+    return 'cooking';
+  } else {
+    return 'general';
+  }
+};
+
+// 주제별 맞춤형 맥락 생성 함수
+const generateContextualTerms = (naturalKeyword: string, originalKeyword: string, topicType: 'government' | 'cooking' | 'general'): { [key: string]: string } => {
+  switch (topicType) {
+    case 'government':
+      const baseTerms = ['지원금', '혜택', '제도', '프로그램', '서비스'];
+      const contextTerms = ['관련 지원', '이런 혜택', '해당 제도', '이 프로그램', '지원 서비스'];
+      
+      return {
+        INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 관련 혜택`,
+        CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
+        SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
+        SECTION_CONTENT_2: `${naturalKeyword} 관련`,
+        SECTION_CONTENT_3: `디지털플랫폼 활용`,
+        SECTION_CONTENT_4: `이 지원금`,
+        SECTION_CONTENT_5: `${naturalKeyword} 지원`,
+        SUMMARY_TITLE: naturalKeyword,
+        REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
+        GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
+      };
+
+    case 'cooking':
+      const cookingTerms = ['요리법', '레시피', '방법', '팁', '노하우'];
+      const cookingContext = ['요리', '만들기', '조리법', '레시피', '방법'];
+      
+      return {
+        INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 요리법`,
+        CONTENT_KEYWORD_1: `${naturalKeyword} ${cookingTerms[Math.floor(Math.random() * cookingTerms.length)]}`,
+        SECTION_CONTENT_1: `이 ${cookingContext[Math.floor(Math.random() * cookingContext.length)]}`,
+        SECTION_CONTENT_2: `${naturalKeyword} 관련`,
+        SECTION_CONTENT_3: `요리 팁`,
+        SECTION_CONTENT_4: `이 요리법`,
+        SECTION_CONTENT_5: `${naturalKeyword} 요리`,
+        SUMMARY_TITLE: naturalKeyword,
+        REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
+        GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 만들기, ${naturalKeyword} 레시피, 요리팁, 요리법, 조리방법, 맛있게 만들기`
+      };
+
+    default: // general
+      const generalTerms = ['방법', '팁', '가이드', '정보', '노하우'];
+      const generalContext = ['정보', '방법', '가이드', '팁', '노하우'];
+      
+      return {
+        INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 정보`,
+        CONTENT_KEYWORD_1: `${naturalKeyword} ${generalTerms[Math.floor(Math.random() * generalTerms.length)]}`,
+        SECTION_CONTENT_1: `이 ${generalContext[Math.floor(Math.random() * generalContext.length)]}`,
+        SECTION_CONTENT_2: `${naturalKeyword} 관련`,
+        SECTION_CONTENT_3: `실용적인 정보`,
+        SECTION_CONTENT_4: `이 정보`,
+        SECTION_CONTENT_5: `${naturalKeyword} 관련`,
+        SUMMARY_TITLE: naturalKeyword,
+        REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
+        GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 방법, ${naturalKeyword} 팁, 실용정보, 가이드, 노하우, 유용한정보`
+      };
+  }
 };
 
 export const getEnhancedArticlePrompt = async ({
@@ -55,8 +107,11 @@ export const getEnhancedArticlePrompt = async ({
   // 주제에서 자연스러운 핵심 키워드 추출 (년도 절대 보존)
   const naturalKeyword = extractNaturalKeyword(topic);
   
-  // 자연스러운 맥락적 표현들 생성
-  const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
+  // 주제 분류
+  const topicType = classifyTopic(topic, keyword);
+  
+  // 주제별 맞춤형 맥락적 표현들 생성
+  const contextualTerms = generateContextualTerms(naturalKeyword, keyword, topicType);
   
   // 동적 소제목 생성 (5개로 축소)
   console.log('동적 소제목 생성 시작:', keyword, topic);
@@ -72,11 +127,51 @@ export const getEnhancedArticlePrompt = async ({
   // 웹 크롤링으로 최신 정보 및 공식 링크 수집
   const crawledInfo = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
 
+  // 주제별 맞춤형 프롬프트 생성
+  const getTopicSpecificPrompt = (type: 'government' | 'cooking' | 'general'): string => {
+    switch (type) {
+      case 'government':
+        return `
+        **🚨 정부 지원금/제도 관련 글 작성 지침 🚨**
+        이 글은 정부 지원금이나 제도에 관한 내용이므로:
+        - 신청 방법, 자격 요건, 혜택 내용을 구체적으로 설명
+        - 공식 사이트 링크를 반드시 포함 (보건복지부, 행정안전부 등)
+        - 실제 신청 과정에서의 주의사항과 팁 제공
+        - "이 제도를 통해 도움을 받았던 경험" 같은 표현 사용 가능
+        `;
+        
+      case 'cooking':
+        return `
+        **🚨 요리/음식 관련 글 작성 지침 🚨**
+        이 글은 요리나 음식에 관한 내용이므로:
+        - 재료, 조리법, 보관법 등을 구체적으로 설명
+        - 요리 팁과 실용적인 노하우 제공
+        - "직접 요리해본 경험", "실제로 만들어본 후기" 같은 표현 사용
+        - 식품의약품안전처, 농림축산식품부 등 관련 기관 정보 포함
+        - 절대로 "제도", "지원금", "신청" 같은 정부 관련 용어 사용 금지
+        `;
+        
+      default:
+        return `
+        **🚨 일반 주제 글 작성 지침 🚨**
+        이 글은 일반적인 정보 제공 글이므로:
+        - 주제에 맞는 실용적인 정보와 팁 제공
+        - 구체적인 방법론과 단계별 설명
+        - "직접 경험해본 내용", "실제 사용 후기" 같은 표현 사용
+        - 관련 공신력 있는 기관이나 사이트 정보 포함
+        - 주제와 관련 없는 "제도", "지원금" 같은 용어 사용 금지
+        `;
+    }
+  };
+
   return `
         당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
         주제: "${topic}"
         입력 키워드: "${keyword}"
         자연스러운 키워드: "${naturalKeyword}"
+        주제 분류: ${topicType}
+
+        ${getTopicSpecificPrompt(topicType)}
 
         === 최신 웹 크롤링 정보 ===
         ${crawledInfo}
@@ -91,6 +186,12 @@ export const getEnhancedArticlePrompt = async ({
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
         
+        **🚨 주제별 맞춤 작성 - 절대 준수 사항 🚨**
+        **주제 분류가 "${topicType}"이므로, 반드시 해당 주제에 맞는 내용과 표현만 사용하세요.**
+        - ${topicType === 'cooking' ? '요리/음식 관련 내용만 작성하고, 정부 지원금이나 제도 관련 표현은 절대 사용 금지' : ''}
+        - ${topicType === 'government' ? '정부 지원금/제도 관련 표현 사용 가능' : ''}
+        - ${topicType === 'general' ? '일반적인 정보 제공 글로 작성하고, 주제와 관련 없는 표현 사용 금지' : ''}
+        
         **🚨 전체 글자수 제한 - 절대 준수 사항 🚨**
         **전체 글자수는 공백 포함 4,350자를 절대 초과해서는 안 됩니다.**
         - HTML 태그를 제외한 순수 텍스트 기준으로 4,350자 이내
@@ -98,7 +199,7 @@ export const getEnhancedArticlePrompt = async ({
         - 간결하고 핵심적인 정보만 포함하되, 고급 정보 품질은 유지
         - 불필요한 설명이나 반복은 절대 금지
         - FAQ는 3개로 축소, 주의사항도 3개로 축소
-        
+
         **🚨 6개 H2 섹션으로 구성 - 스토리텔링과 자연스러운 흐름 중시 🚨**
         기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
         각 섹션은 마치 친구가 직접 경험한 이야기를 들려주듯 자연스럽게 연결되어야 합니다.
@@ -134,13 +235,6 @@ export const getEnhancedArticlePrompt = async ({
         
         **절대로 섹션을 건너뛰거나 생략하지 마세요!**
         
-        **🚨 자연스러운 키워드 사용 - 반복 금지 및 다양성 확보 🚨**
-        - 각 섹션에서 동일한 키워드나 표현을 반복하지 마세요
-        - 자연스러운 동의어와 유사 표현을 활용하세요: "이 지원금", "해당 혜택", "관련 제도", "이런 프로그램" 등
-        - 독자들이 "똑같은 내용의 반복"이라고 느끼지 않도록 다양한 표현을 사용하세요
-        - 키워드 밀도는 자연스럽게 1.5-2% 수준으로 유지하되, 억지로 반복하지 마세요
-        - 각 섹션마다 다른 관점에서 접근하여 내용의 다양성을 확보하세요
-
         **🚨 모든 공식 사이트 자동 링크 연결 + 주제별 관련 공인 사이트 추가 🚨**
         
         **정부 및 공공기관 자동 링크 (URL 주소 표기 금지):**
@@ -208,6 +302,14 @@ export const getEnhancedArticlePrompt = async ({
         - 대신 자연스러운 키워드 "${naturalKeyword}"나 관련 용어를 사용하세요
         - 각 섹션에서는 아래 맥락적 표현들을 활용하세요:
 
+        **🚨 자연스러운 키워드 사용 - 반복 금지 및 다양성 확보 🚨**
+        - 각 섹션에서 동일한 키워드나 표현을 반복하지 마세요
+        - 주제에 맞는 자연스러운 동의어와 유사 표현을 활용하세요
+        - ${topicType === 'cooking' ? '"이 요리법", "해당 레시피", "관련 조리법", "이런 방법"' : topicType === 'government' ? '"이 지원금", "해당 혜택", "관련 제도", "이런 프로그램"' : '"이 정보", "해당 방법", "관련 가이드", "이런 팁"'} 등
+        - 독자들이 "똑같은 내용의 반복"이라고 느끼지 않도록 다양한 표현을 사용하세요
+        - 키워드 밀도는 자연스럽게 1.5-2% 수준으로 유지하되, 억지로 반복하지 마세요
+        - 각 섹션마다 다른 관점에서 접근하여 내용의 다양성을 확보하세요
+
         **사용할 맥락적 표현들:**
         - [INTRO_KEYWORD_CONTEXT] → "${contextualTerms.INTRO_KEYWORD_CONTEXT}"
         - [CONTENT_KEYWORD_1] → "${contextualTerms.CONTENT_KEYWORD_1}" 
@@ -220,19 +322,6 @@ export const getEnhancedArticlePrompt = async ({
         - [SUMMARY_TITLE] → "${contextualTerms.SUMMARY_TITLE}"
         - [REFERENCE_TEXT] → "${referenceSentence || contextualTerms.REFERENCE_TEXT}"
         - [GENERATED_TAGS] → "${contextualTerms.GENERATED_TAGS}"
-
-        2. **지침용 텍스트 절대 금지**: [독자의 흥미를 유발하는...], [여기에 관련 정부기관 웹사이트 링크 삽입] 같은 지침용 대괄호 텍스트는 절대 그대로 출력하지 마세요.
-
-        3. **공식 링크 필수 포함 및 하이퍼링크 적용**: 
-        크롤링된 정보를 바탕으로 정부기관, 공공기관의 공식 웹사이트 링크를 본문에 최소 3-5개 반드시 **완전한 a 태그 형식**으로 삽입해주세요.
-
-        4. **깊이 있는 전문 콘텐츠**: 
-        - "알아보겠어요", "확인해보세요" 같은 애매한 표현 금지
-        - 구체적인 수치, 실제 사례, 단계별 방법론 필수 포함
-        - 일반인이 모르는 전문가 수준의 팁과 노하우 제공
-        - 실무에서 바로 적용 가능한 구체적인 정보 제공
-
-        5. **자연스러운 키워드 강조**: 필요한 경우에만 "<strong>${naturalKeyword}</strong>" 형태로 자연스럽게 강조하되, 억지로 반복하지 마세요.
 
         다음 지침에 따라 작성해주세요:
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식을 포함하지 마세요.
@@ -263,27 +352,26 @@ ${htmlTemplate}
 --- HTML TEMPLATE END ---
 
         ⚠️ 재확인 사항:
+        - **주제 분류 "${topicType}"에 맞는 내용과 표현만 사용해야 합니다**
+        - **주제와 관련 없는 "제도", "지원금", "신청" 등의 표현은 절대 사용 금지**
         - **전체 글자수는 공백 포함 4,350자를 절대 초과하면 안 됩니다**
         - **6개의 모든 H2 섹션을 빠짐없이 작성해야 합니다**
         - **각 섹션은 190자에서 250자 사이의 적절한 분량이어야 합니다**
         - **140글자마다 2-3문장 끝에서 </p> 태그로 문단을 나누고 공백을 넣어야 합니다**
         - **3번째 섹션에는 주의사항 카드(3개 항목), 5번째 섹션에는 FAQ 카드(3개 질문)가 반드시 포함되어야 합니다**
         - **6번째 섹션은 격려와 용기를 주는 내용으로 작성되어야 합니다**
-        - **외부 링크 정보([REFERENCE_TEXT])가 6번째 섹션에 중앙 정렬된 박스로 표시되어야 합니다**
         - **본문에 3-5개의 권위 있는 공식 사이트 하이퍼링크가 포함되어야 합니다**
         - 동적 생성된 소제목의 의도에 맞는 전문적인 내용으로 각 섹션을 작성해야 합니다
         - 대괄호 안의 지침 텍스트가 그대로 출력되면 안 됩니다
         - 원본 키워드 "${keyword}"를 그대로 강조하여 반복 사용하지 마세요
         - 자연스러운 키워드 "${naturalKeyword}"나 맥락적 표현을 사용하세요
-        - 공식 링크가 최소 3-5개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
+        - 주제에 맞는 공식 링크가 최소 3-5개 포함되어야 하며, 반드시 완전한 a 태그 형식이어야 합니다
         - 모든 내용이 구체적이고 실용적인 고급 정보여야 합니다
         - 크롤링된 정보를 최대한 활용해야 합니다
         - 링크는 절대로 "사이트명(URL)" 형식으로 작성하지 마세요
         - 모든 링크는 클릭 가능한 하이퍼링크로 작성해야 합니다
         - "알아보겠어요" 같은 애매한 표현 대신 구체적인 정보를 제공해야 합니다
         - 각 섹션마다 동일한 키워드나 표현을 반복하지 말고 자연스러운 다양성을 유지해야 합니다
-        - 모든 공식 사이트는 하이퍼링크로 연결하되 URL 주소는 표기하지 마세요
-        - 주제와 관련된 공인 사이트들을 각 섹션에 자연스럽게 포함하여 SEO 점수를 높여야 합니다
         - **각 섹션이 자연스럽게 연결되어 독자의 체류시간을 증가시켜야 합니다**
         - **스토리텔링 요소와 개인 경험담을 포함하여 몰입도를 높여야 합니다**
         - **전체 글자수 4,350자 제한을 절대 준수해야 합니다**
@@ -318,7 +406,7 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 **절대 금지**:
 ❌ "년 디지털플랫폼..." (숫자 없는 년)
 ❌ "디지털플랫폼 ${extractedYear}년..." (년도가 뒤에 위치)
-❌ "${extractedYear} �지털플랫폼..." (년 없이 숫자만)
+❌ "${extractedYear} 디지털플랫폼..." (년 없이 숫자만)
 
 **필수 생성 패턴** (이 중에서만 선택):
 - "${extractedYear}년 [핵심키워드] 신청방법"
