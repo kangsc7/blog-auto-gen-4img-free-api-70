@@ -15,7 +15,6 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager에 올바른 매개변수 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState
@@ -26,21 +25,20 @@ export const useRefactoredAppController = () => {
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator({ appState, saveAppState });
   
-  // 픽사베이 클립보드 훅
   const pixabayClipboard = usePixabayClipboard();
 
-  // articleGenerator에 올바른 매개변수 전달 - 3개의 매개변수 필요
-  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator({
+  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(
     appState, 
     saveAppState,
-    addImageForClipboard: pixabayClipboard.addImageForClipboard
-  });
+    pixabayClipboard.addImageForClipboard
+  );
   
-  // useImagePromptGenerator에 올바른 매개변수 전달 - 2개의 매개변수만 전달
-  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator({
+  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
     appState, 
-    saveAppState
-  });
+    saveAppState,
+    huggingFaceManager?.huggingFaceApiKey || '',
+    hasAccess || isAdmin
+  );
 
   const topicControls = useTopicControls({ appState, saveAppState });
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
@@ -68,18 +66,15 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
 
-  // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelectWithConfirm = (topic: string) => {
     console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
   const handleTopicConfirm = () => {
     console.log('주제 확인 및 선택:', pendingTopic);
     
@@ -103,7 +98,6 @@ export const useRefactoredAppController = () => {
     }
   };
 
-  // 주제 확인 다이얼로그 취소
   const handleTopicCancel = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
@@ -115,7 +109,6 @@ export const useRefactoredAppController = () => {
     copyToClipboard(markdown, "마크다운");
   };
 
-  // 통합된 중단 기능
   const handleUnifiedStop = () => {
     console.log('통합 중단 버튼 클릭 - 상태:', { 
       isOneClickGenerating, 
@@ -131,7 +124,6 @@ export const useRefactoredAppController = () => {
     }
   };
 
-  // 중복 방지 토글 핸들러
   const handlePreventDuplicatesToggle = () => {
     const newValue = !preventDuplicates;
     setPreventDuplicates(newValue);
