@@ -39,7 +39,7 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
+// 동적 섹션 생성 함수 (200-270자 제한 적용)
 const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
@@ -50,13 +50,6 @@ const getDynamicSection = (colors: any, heading: { title: string; emoji: string;
 ${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다.
 </p>
 <p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요. 실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊
-</p>
-<p style="height: 20px;">&nbsp;</p>
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
-</p>
 ${sectionNumber === 2 ? `
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
 <table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
@@ -86,13 +79,28 @@ ${sectionNumber === 5 ? `
 A: 승인 후 약 1-2주 내에 카드가 발급되며, 발급 즉시 사용 가능합니다. 카드 활성화는 자동으로 처리되니 별도 절차는 불필요해요.</p>
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
 A: 세대주 또는 배우자만 신청 가능하며, 위임장과 함께 인감증명서가 있으면 대리 신청도 가능합니다. 단, 대리인은 성인이어야 해요.</p>
-<p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
+<p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
 A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능하며, 카드 재발급 없이 기존 카드로 이용할 수 있어요.</p>
-<p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
-A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
 </div>
 ` : ''}
 <p style="height: 20px;">&nbsp;</p>
+`;
+
+// 시각요약 카드 섹션 복구
+const getSummaryCardSection = (naturalKeyword: string): string => `
+<div class="single-summary-card-container">
+<div class="single-summary-card">
+<div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">[SUMMARY_TITLE] 핵심 정보 요약</h3></div>
+<div class="card-content">
+<div class="section"><strong>지원 대상:</strong> <span class="highlight">기준 중위소득 60% 이하 가구 (생계·의료급여 수급자, 차상위계층)</span></div>
+<div class="section"><strong>지원 금액:</strong> <span class="highlight">가구원 수에 따라 22만원~70만원 차등 지급</span></div>
+<div class="section"><strong>신청 방법:</strong><div class="formula">거주지 주민센터 방문 또는 온라인 신청</div></div>
+<div class="section"><strong>사용 용도:</strong> <span class="highlight">전기·가스·지역난방비, 연탄·등유 구매</span></div>
+<div class="section"><strong>신청 기간:</strong> <span class="highlight">매년 11월부터 다음해 10월까지 (연중 신청 가능)</span></div>
+</div>
+<div class="card-footer">성공적인 신청을 위한 필수 체크리스트!</div>
+</div>
+</div>
 `;
 
 // 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
@@ -110,22 +118,6 @@ const getEncouragementSection = (colors: any, keyword: string, refLink: string, 
 <strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
 </p>
 <p style="height: 20px;">&nbsp;</p>
-`;
-
-const getSummaryCardSection = (naturalKeyword: string): string => `
-<div class="single-summary-card-container">
-<div class="single-summary-card">
-<div class="card-header"><span class="card-header-icon">💡</span><h3 data-ke-size="size23">[SUMMARY_TITLE] 핵심 정보 요약</h3></div>
-<div class="card-content">
-<div class="section"><strong>지원 대상:</strong> <span class="highlight">기준 중위소득 60% 이하 가구 (생계·의료급여 수급자, 차상위계층)</span></div>
-<div class="section"><strong>지원 금액:</strong> <span class="highlight">가구원 수에 따라 22만원~70만원 차등 지급</span></div>
-<div class="section"><strong>신청 방법:</strong><div class="formula">거주지 주민센터 방문 또는 온라인 신청</div></div>
-<div class="section"><strong>사용 용도:</strong> <span class="highlight">전기·가스·지역난방비, 연탄·등유 구매</span></div>
-<div class="section"><strong>신청 기간:</strong> <span class="highlight">매년 11월부터 다음해 10월까지 (연중 신청 가능)</span></div>
-</div>
-<div class="card-footer">성공적인 신청을 위한 필수 체크리스트!</div>
-</div>
-</div>
 `;
 
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
@@ -214,7 +206,7 @@ const getTagsSection = (topic: string, keyword: string): string => {
 <p style="height: 20px;">&nbsp;</p>`;
 };
 
-// 동적 HTML 템플릿 생성 함수 수정 - refLink와 referenceSentence를 격려 섹션에 전달
+// 동적 HTML 템플릿 생성 함수 수정 - 시각요약 카드 포함
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
@@ -242,9 +234,12 @@ export const getHtmlTemplate = (
     htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
   }
 
-  // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달
+  // 6번째 섹션 (격려 섹션) 추가
   htmlParts.push(getEncouragementSection(colors, keyword, refLink, referenceSentence));
+  
+  // 시각요약 카드 섹션 추가
   htmlParts.push(getSummaryCardSection(keyword));
+  
   htmlParts.push(getClosingSection(colors, refLink, referenceSentence));
   htmlParts.push(getTagsSection(topic, keyword));
 

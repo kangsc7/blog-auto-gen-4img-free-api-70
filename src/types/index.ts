@@ -1,31 +1,25 @@
-
 export interface User {
   id: string;
   password: string;
 }
 
 export interface AppState {
-  isLoggedIn: boolean;
-  currentUser: string;
-  apiKey: string;
-  isApiKeyValidated: boolean;
-  pixabayApiKey: string;
-  isPixabayApiKeyValidated: boolean;
-  huggingFaceApiKey: string;
-  isHuggingFaceApiKeyValidated: boolean;
   keyword: string;
-  topicCount: number;
   topics: string[];
   selectedTopic: string;
-  colorTheme: string;
-  referenceLink: string;
-  referenceSentence: string;
   generatedContent: string;
-  imageStyle: string;
   imagePrompt: string;
-  generatedImageUrl: string;
-  preventDuplicates: boolean;
-  saveReferenceTrigger?: boolean;
+  apiKey: string | null;
+  isApiKeyValidated: boolean;
+  pixabayApiKey: string | null;
+  isPixabayApiKeyValidated: boolean;
+  huggingFaceApiKey: string | null;
+  isHuggingFaceApiKeyValidated: boolean;
+  currentUser: string;
+  referenceLink?: string;
+  referenceSentence?: string;
+  colorTheme?: string; // 컬러테마 속성 추가
+  preventDuplicates?: boolean;
 }
 
 export type UserStatus = 'pending' | 'approved' | 'rejected';

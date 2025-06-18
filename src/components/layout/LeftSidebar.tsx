@@ -4,7 +4,11 @@ import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Palette } from 'lucide-react';
 import { AppState } from '@/types';
+import { colorThemes } from '@/data/constants';
 
 interface LeftSidebarProps {
   appState: AppState;
@@ -34,7 +38,6 @@ interface LeftSidebarProps {
     downloadHTML: () => void;
   };
   preventDuplicates: boolean;
-  deleteReferenceData?: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -45,48 +48,73 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   topicControls,
   utilityFunctions,
   preventDuplicates,
-  deleteReferenceData,
 }) => {
+  const handleColorThemeChange = (value: string) => {
+    saveAppState({ colorTheme: value });
+  };
+
   return (
-    <div className="lg:col-span-5 space-y-6">
-      {/* 주제 생성 */}
+    <div className="space-y-6">
       <TopicGenerator
-        appState={appState}
-        saveAppState={saveAppState}
-        generateTopicsFromKeyword={generationFunctions.generateTopics}
+        keyword={appState.keyword}
+        setKeyword={(keyword) => saveAppState({ keyword })}
+        topics={appState.topics}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
+        generateTopics={generationFunctions.generateTopics}
         manualTopic={topicControls.manualTopic}
         setManualTopic={topicControls.setManualTopic}
         handleManualTopicAdd={topicControls.handleManualTopicAdd}
         preventDuplicates={preventDuplicates}
       />
 
-      {/* 블로그 글 생성 */}
+      {/* 컬러테마 선택 섹션 */}
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="flex items-center text-purple-700">
+            <Palette className="h-5 w-5 mr-2" />
+            블로그 컬러테마 선택
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select value={appState.colorTheme || 'classic-blue'} onValueChange={handleColorThemeChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="컬러테마를 선택하세요" />
+            </SelectTrigger>
+            <SelectContent>
+              {colorThemes.map((theme) => (
+                <SelectItem key={theme.value} value={theme.value}>
+                  {theme.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500 mt-2">
+            선택한 테마가 생성되는 블로그 글의 색상에 적용됩니다
+          </p>
+        </CardContent>
+      </Card>
+
       <ArticleGenerator
-        appState={appState}
-        saveAppState={saveAppState}
-        selectTopic={topicControls.selectTopic}
+        selectedTopic={appState.selectedTopic}
         isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticleContent={generationFunctions.generateArticle}
+        generateArticle={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
+        keyword={appState.keyword}
       />
 
-      {/* 이미지 생성 */}
-      <ImageCreation
-        appState={appState}
-        isGeneratingImage={generationStatus.isGeneratingImage}
-        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-        createImagePrompt={generationFunctions.createImagePrompt}
-        generateDirectImage={generationFunctions.generateDirectImage}
-        copyToClipboard={utilityFunctions.copyToClipboard}
-        openWhisk={utilityFunctions.openWhisk}
-      />
-
-      {/* 외부 링크 및 문장 참조 입력 - 이미지 생성 섹션 아래로 이동 */}
-      <ExternalReferenceInput 
+      <ExternalReferenceInput
         appState={appState}
         saveAppState={saveAppState}
-        deleteReferenceData={deleteReferenceData}
+      />
+
+      <ImageCreation
+        imagePrompt={appState.imagePrompt}
+        setImagePrompt={(prompt) => saveAppState({ imagePrompt: prompt })}
+        isGeneratingImage={generationStatus.isGeneratingImage}
+        createImagePrompt={generationFunctions.createImagePrompt}
+        generatedContent={appState.generatedContent}
+        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+        generateDirectImage={generationFunctions.generateDirectImage}
       />
     </div>
   );
