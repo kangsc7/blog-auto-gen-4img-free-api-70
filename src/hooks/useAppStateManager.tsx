@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -44,7 +45,8 @@ const STORAGE_KEYS = {
   SELECTED_TOPIC: 'blog_selected_topic',
   TOPICS: 'blog_topics',
   KEYWORD: 'blog_keyword',
-  COLOR_THEME: 'blog_color_theme'
+  COLOR_THEME: 'blog_color_theme',
+  LAST_GENERATION_SOURCE: 'blog_last_generation_source' // 원클릭 vs 일반 생성 구분
 };
 
 export const useAppStateManager = () => {
@@ -53,12 +55,14 @@ export const useAppStateManager = () => {
   const [preventDuplicates, setPreventDuplicates] = useState(true);
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
+  const lastContentUpdateSource = useRef<'oneclick' | 'manual' | 'init'>('init');
 
   // localStorage에서 블로그 관련 데이터 로드 - 참조 링크와 문장 영구 보존
   const loadBlogDataFromStorage = useCallback(() => {
     try {
       const editorContent = localStorage.getItem(STORAGE_KEYS.EDITOR_CONTENT);
       const generatedContent = localStorage.getItem(STORAGE_KEYS.GENERATED_CONTENT);
+      const lastGenerationSource = localStorage.getItem(STORAGE_KEYS.LAST_GENERATION_SOURCE) || 'init';
       
       const finalContent = editorContent || generatedContent || '';
       
@@ -71,7 +75,8 @@ export const useAppStateManager = () => {
         hasGeneratedContent: !!generatedContent,
         finalContentLength: finalContent.length,
         referenceLink,
-        referenceSentence: referenceSentence.substring(0, 50) + '...'
+        referenceSentence: referenceSentence.substring(0, 50) + '...',
+        lastGenerationSource
       });
 
       return {
@@ -81,7 +86,8 @@ export const useAppStateManager = () => {
         selectedTopic: localStorage.getItem(STORAGE_KEYS.SELECTED_TOPIC) || '',
         topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
         keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
-        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || ''
+        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || '',
+        lastGenerationSource: lastGenerationSource as 'oneclick' | 'manual' | 'init'
       };
     } catch (error) {
       console.error('블로그 데이터 로드 실패:', error);
@@ -90,12 +96,24 @@ export const useAppStateManager = () => {
   }, []);
 
   // localStorage에 블로그 관련 데이터 저장 - 참조 링크와 문장 영구 보존
-  const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
+  const saveBlogDataToStorage = useCallback((data: Partial<AppState>, source?: 'oneclick' | 'manual' | 'init') => {
     try {
       if (data.generatedContent !== undefined) {
         localStorage.setItem(STORAGE_KEYS.GENERATED_CONTENT, data.generatedContent);
-        localStorage.setItem(STORAGE_KEYS.EDITOR_CONTENT, data.generatedContent);
-        console.log('앱 상태 관리자 - 콘텐츠 저장 및 동기화:', data.generatedContent.length);
+        
+        // 원클릭 생성의 경우 에디터 콘텐츠도 즉시 동기화
+        if (source === 'oneclick') {
+          localStorage.setItem(STORAGE_KEYS.EDITOR_CONTENT, data.generatedContent);
+          localStorage.setItem(STORAGE_KEYS.LAST_GENERATION_SOURCE, 'oneclick');
+          lastContentUpdateSource.current = 'oneclick';
+          console.log('원클릭 생성 - 에디터 콘텐츠 즉시 동기화:', data.generatedContent.length);
+        } else if (source === 'manual') {
+          localStorage.setItem(STORAGE_KEYS.LAST_GENERATION_SOURCE, 'manual');
+          lastContentUpdateSource.current = 'manual';
+          console.log('수동 생성 - 콘텐츠 저장:', data.generatedContent.length);
+        }
+        
+        console.log('앱 상태 관리자 - 콘텐츠 저장:', data.generatedContent.length);
       }
       if (data.referenceLink !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
@@ -182,8 +200,13 @@ export const useAppStateManager = () => {
     }));
   }, [preventDuplicates]);
 
-  const saveAppState = useCallback((newState: Partial<AppState>) => {
-    console.log('💾 앱 상태 업데이트 요청 (API 키 및 블로그 데이터 영구 보존):', newState);
+  const saveAppState = useCallback((newState: Partial<AppState>, options?: { source?: 'oneclick' | 'manual' | 'init' }) => {
+    const source = options?.source || 'manual';
+    console.log('💾 앱 상태 업데이트 요청 (API 키 및 블로그 데이터 영구 보존):', {
+      ...newState,
+      source,
+      hasGeneratedContent: !!newState.generatedContent
+    });
     
     // API 키 관련 상태가 변경되면 localStorage에도 즉시 저장하여 영구 보존
     if (newState.apiKey !== undefined) {
@@ -206,7 +229,7 @@ export const useAppStateManager = () => {
     }
 
     // 블로그 관련 데이터도 localStorage에 저장
-    saveBlogDataToStorage(newState);
+    saveBlogDataToStorage(newState, source);
 
     setAppState(prev => {
       const updatedState = { ...prev, ...newState };
@@ -214,6 +237,12 @@ export const useAppStateManager = () => {
       return updatedState;
     });
   }, [saveBlogDataToStorage]);
+
+  // 원클릭 생성용 특별 저장 함수
+  const saveAppStateForOneClick = useCallback((newState: Partial<AppState>) => {
+    console.log('🎯 원클릭 생성 전용 상태 저장:', newState);
+    return saveAppState(newState, { source: 'oneclick' });
+  }, [saveAppState]);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
     console.log(`🗑️ ${keyType} API 키를 기본값으로 복원`);
@@ -259,7 +288,10 @@ export const useAppStateManager = () => {
     localStorage.removeItem(STORAGE_KEYS.TOPICS);
     localStorage.removeItem(STORAGE_KEYS.KEYWORD);
     localStorage.removeItem(STORAGE_KEYS.COLOR_THEME);
+    localStorage.removeItem(STORAGE_KEYS.LAST_GENERATION_SOURCE);
     // 참조 링크와 문장은 초기화하지 않음 (영구 보존)
+    
+    lastContentUpdateSource.current = 'init';
     
     setAppState({
       ...defaultState,
@@ -282,6 +314,7 @@ export const useAppStateManager = () => {
   return {
     appState,
     saveAppState,
+    saveAppStateForOneClick, // 원클릭 전용 저장 함수 추가
     deleteApiKeyFromStorage,
     deleteReferenceData,
     resetApp,

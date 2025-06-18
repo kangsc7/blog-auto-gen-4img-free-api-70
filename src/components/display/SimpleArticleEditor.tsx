@@ -25,6 +25,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastSavedContent, setLastSavedContent] = useState('');
+  const [lastGeneratedContent, setLastGeneratedContent] = useState('');
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
@@ -68,6 +69,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         console.log('📂 저장된 콘텐츠 복원:', savedContent.length, '글자');
         setEditorContent(savedContent);
         setLastSavedContent(savedContent);
+        setLastGeneratedContent(savedContent);
         onContentChange(savedContent);
         
         // DOM 업데이트
@@ -77,6 +79,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       } else if (generatedContent && !isGeneratingContent) {
         console.log('🆕 초기 생성 콘텐츠 설정:', generatedContent.length, '글자');
         setEditorContent(generatedContent);
+        setLastGeneratedContent(generatedContent);
         safeLocalStorageSet(generatedContent);
         onContentChange(generatedContent);
         
@@ -91,25 +94,47 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet, safeLocalStorageSet]);
   
-  // 새로운 생성 콘텐츠 처리 - 편집기가 비어있을 때만 적용
+  // 새로운 생성 콘텐츠 처리 - 원클릭 생성 완료 후 콘텐츠 업데이트
   useEffect(() => {
     if (isInitialized && 
         generatedContent && 
-        generatedContent !== editorContent && 
-        !editorContent &&
+        generatedContent !== lastGeneratedContent &&
         !isGeneratingContent) {
       
-      console.log('🔄 새로운 생성 콘텐츠 적용');
-      setEditorContent(generatedContent);
-      safeLocalStorageSet(generatedContent);
-      onContentChange(generatedContent);
+      console.log('🔄 원클릭 생성 완료 - 새로운 콘텐츠 적용');
+      console.log('이전 생성 콘텐츠 길이:', lastGeneratedContent.length);
+      console.log('새로운 생성 콘텐츠 길이:', generatedContent.length);
       
-      // DOM 업데이트
-      if (editorRef.current) {
-        editorRef.current.innerHTML = generatedContent;
+      // 현재 편집된 내용이 있는지 확인
+      const currentEditedContent = editorRef.current?.innerHTML || '';
+      const hasUserEdits = currentEditedContent && 
+                          currentEditedContent !== lastGeneratedContent && 
+                          currentEditedContent.length > 0;
+      
+      if (!hasUserEdits) {
+        // 사용자 편집이 없으면 새로운 콘텐츠로 업데이트
+        console.log('✅ 사용자 편집 없음 - 새로운 콘텐츠로 업데이트');
+        setEditorContent(generatedContent);
+        setLastGeneratedContent(generatedContent);
+        safeLocalStorageSet(generatedContent);
+        onContentChange(generatedContent);
+        
+        // DOM 업데이트
+        if (editorRef.current) {
+          editorRef.current.innerHTML = generatedContent;
+        }
+      } else {
+        // 사용자 편집이 있으면 확인 없이 기존 내용 유지
+        console.log('⚠️ 사용자 편집 감지 - 기존 편집 내용 보존');
+        setLastGeneratedContent(generatedContent); // 추적용으로만 업데이트
+        toast({
+          title: "편집 내용 보존됨",
+          description: "새로운 글이 생성되었지만 현재 편집 중인 내용을 보존했습니다.",
+          duration: 3000
+        });
       }
     }
-  }, [generatedContent, editorContent, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, lastGeneratedContent, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet, toast]);
   
   // 자동 저장
   const performAutoSave = useCallback((content: string) => {
@@ -133,6 +158,20 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       performAutoSave(newContent);
     }
   }, [isGeneratingContent, performAutoSave]);
+  
+  // 글 생성 중일 때 편집기 비활성화
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.contentEditable = isGeneratingContent ? 'false' : 'true';
+      if (isGeneratingContent) {
+        editorRef.current.style.opacity = '0.6';
+        editorRef.current.style.pointerEvents = 'none';
+      } else {
+        editorRef.current.style.opacity = '1';
+        editorRef.current.style.pointerEvents = 'auto';
+      }
+    }
+  }, [isGeneratingContent]);
   
   // 페이지 언로드 시 최종 저장
   useEffect(() => {
@@ -219,6 +258,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
+              {isGeneratingContent && (
+                <span className="ml-2 text-sm text-orange-600 animate-pulse">
+                  (생성 중...)
+                </span>
+              )}
             </span>
             <div className="flex space-x-2">
               {(editorContent || (editorRef.current && editorRef.current.innerHTML)) && !isGeneratingContent && (
@@ -259,19 +303,19 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 </span>
                 가 글을 생성하고 있습니다...
               </p>
-              <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
+              <p className="text-sm animate-fade-in">편집기는 생성 완료 후 활성화됩니다.</p>
             </div>
           ) : (editorContent || generatedContent) ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
-                <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
+                <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 원클릭 생성 후에도 편집 내용이 안전하게 보존됩니다</p>
               </div>
               <div
                 ref={editorRef}
-                contentEditable={true}
-                className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none"
+                contentEditable={!isGeneratingContent}
+                className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none transition-opacity"
                 onInput={handleInput}
                 suppressContentEditableWarning={true}
                 style={{

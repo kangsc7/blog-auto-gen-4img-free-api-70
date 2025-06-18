@@ -8,7 +8,7 @@ import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
 
 export const useArticleGenerator = (
   appState: AppState,
-  saveAppState: (newState: Partial<AppState>) => void
+  saveAppState: (newState: Partial<AppState>, options?: { source?: 'oneclick' | 'manual' | 'init' }) => void
 ) => {
   const { toast } = useToast();
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
@@ -20,9 +20,12 @@ export const useArticleGenerator = (
       topic?: string;
       keyword?: string;
       pixabayConfig?: { key: string; validated: boolean };
+      isOneClickGeneration?: boolean; // 원클릭 생성 여부 추가
     }
   ): Promise<string | null> => {
     const selectedTopic = options?.topic || appState.selectedTopic;
+    const isOneClickGeneration = options?.isOneClickGeneration || false;
+    
     if (!selectedTopic) {
       toast({ title: "주제 선택 오류", description: "주제를 먼저 선택해주세요.", variant: "destructive" });
       return null;
@@ -48,8 +51,16 @@ export const useArticleGenerator = (
     // AbortController 생성
     currentController.current = new AbortController();
     
-    // 글 생성 시작할 때 기존 콘텐츠와 이미지 프롬프트만 초기화
-    saveAppState({ imagePrompt: '' });
+    console.log('🚀 글 생성 시작:', {
+      topic: selectedTopic,
+      keyword: coreKeyword,
+      isOneClickGeneration
+    });
+    
+    // 원클릭 생성이 아닌 경우에만 기존 콘텐츠와 이미지 프롬프트 초기화
+    if (!isOneClickGeneration) {
+      saveAppState({ imagePrompt: '' }, { source: 'manual' });
+    }
     
     try {
       if (cancelArticleGeneration.current) {
@@ -203,10 +214,21 @@ export const useArticleGenerator = (
         stateToSave.imagePrompt = '✅ Pixabay 이미지가 자동으로 적용되었습니다.';
       }
 
-      saveAppState(stateToSave);
+      // 원클릭 생성인지 수동 생성인지에 따라 다른 저장 방식 사용
+      const saveSource = isOneClickGeneration ? 'oneclick' : 'manual';
+      saveAppState(stateToSave, { source: saveSource });
+      
+      console.log('✅ 글 생성 완료:', {
+        contentLength: finalHtml.length,
+        source: saveSource,
+        hasImages: pixabayImagesAdded
+      });
+      
       toast({ 
         title: "웹 크롤링 기반 블로그 글 생성 완료", 
-        description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
+        description: isOneClickGeneration ? 
+          "원클릭 생성이 완료되었습니다. 편집기에서 확인하세요!" :
+          "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
       });
       return finalHtml;
     } catch (error) {
