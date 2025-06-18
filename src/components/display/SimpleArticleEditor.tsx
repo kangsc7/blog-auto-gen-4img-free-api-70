@@ -24,6 +24,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   // 단순화된 상태 관리
   const [editorContent, setEditorContent] = useState('');
   const [isUserEditing, setIsUserEditing] = useState(false);
+  const [lastGeneratedContent, setLastGeneratedContent] = useState('');
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
@@ -52,41 +53,63 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 새로운 생성 콘텐츠가 들어왔을 때 즉시 적용 (강제 업데이트)
+  // 새로운 생성 콘텐츠 강제 적용 - 개선된 로직
   useEffect(() => {
+    console.log('🔍 콘텐츠 동기화 체크:', {
+      hasGeneratedContent: !!generatedContent,
+      contentLength: generatedContent?.length || 0,
+      isGenerating: isGeneratingContent,
+      isDifferent: generatedContent !== lastGeneratedContent,
+      editorContentLength: editorContent.length
+    });
+
+    // 새로운 콘텐츠가 있고, 생성이 완료되었고, 이전과 다른 경우에만 업데이트
     if (generatedContent && 
-        generatedContent !== editorContent && 
-        !isGeneratingContent) {
+        !isGeneratingContent && 
+        generatedContent !== lastGeneratedContent &&
+        generatedContent.trim().length > 0) {
       
-      console.log('🔄 새로운 생성 콘텐츠 강제 적용:', generatedContent.length);
+      console.log('✅ 새로운 콘텐츠 강제 적용 시작');
       
-      // 사용자 편집 상태와 관계없이 새 콘텐츠 적용
+      // 즉시 상태 업데이트
       setEditorContent(generatedContent);
+      setLastGeneratedContent(generatedContent);
       safeLocalStorageSet(generatedContent);
       onContentChange(generatedContent);
       
-      if (editorRef.current) {
-        editorRef.current.innerHTML = generatedContent;
-      }
+      // DOM 업데이트 - 다음 프레임에서 실행
+      requestAnimationFrame(() => {
+        if (editorRef.current) {
+          editorRef.current.innerHTML = generatedContent;
+          console.log('✅ DOM 업데이트 완료');
+        }
+      });
       
       // 사용자 편집 상태 초기화
       setIsUserEditing(false);
-      console.log('✅ 새로운 콘텐츠 적용 완료');
+      
+      toast({
+        title: "✅ 블로그 글 로드 완료",
+        description: "새로 생성된 글이 편집기에 적용되었습니다.",
+        duration: 3000
+      });
     }
-  }, [generatedContent, isGeneratingContent, editorContent, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, isGeneratingContent, lastGeneratedContent, onContentChange, safeLocalStorageSet, toast]);
   
-  // 초기 로드 시 localStorage에서 복원
+  // 초기 로드 시 localStorage에서 복원 (생성된 콘텐츠가 없을 때만)
   useEffect(() => {
-    const savedContent = safeLocalStorageGet();
-    if (savedContent && !generatedContent && !isGeneratingContent) {
-      console.log('📂 저장된 콘텐츠 복원');
-      setEditorContent(savedContent);
-      onContentChange(savedContent);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = savedContent;
+    if (!generatedContent && !isGeneratingContent && !editorContent) {
+      const savedContent = safeLocalStorageGet();
+      if (savedContent) {
+        console.log('📂 저장된 콘텐츠 복원');
+        setEditorContent(savedContent);
+        onContentChange(savedContent);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = savedContent;
+        }
       }
     }
-  }, [safeLocalStorageGet, generatedContent, isGeneratingContent, onContentChange]);
+  }, [safeLocalStorageGet, generatedContent, isGeneratingContent, editorContent, onContentChange]);
   
   // 자동 저장
   const performAutoSave = useCallback((content: string) => {
@@ -179,6 +202,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
   }, [editorContent, selectedTopic, toast]);
 
+  // 디버깅을 위한 현재 상태 표시
+  const showDebugInfo = process.env.NODE_ENV === 'development';
+
   return (
     <>
       <style>{`
@@ -199,6 +225,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
+              {showDebugInfo && (
+                <span className="ml-2 text-xs text-gray-400">
+                  (콘텐츠: {editorContent.length}자)
+                </span>
+              )}
             </span>
             <div className="flex space-x-2">
               {editorContent && !isGeneratingContent && (
@@ -266,6 +297,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <div className="text-center py-8 text-gray-500">
               <Edit className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>주제를 선택하고 글을 생성해보세요!</p>
+              {showDebugInfo && (
+                <div className="mt-4 text-xs text-gray-400">
+                  <p>생성된 콘텐츠: {generatedContent ? '있음' : '없음'}</p>
+                  <p>생성 중: {isGeneratingContent ? '예' : '아니오'}</p>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

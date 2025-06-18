@@ -68,7 +68,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
         <CardTitle className="flex items-center justify-between text-purple-700">
           <span className="flex items-center">
             <ExternalLink className="h-5 w-5 mr-2" />
-            외부 링크 및 문장 참조 (영구 보존)
+            외부 링크 설정
           </span>
           <div className="flex space-x-2">
             <Button
