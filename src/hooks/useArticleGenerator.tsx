@@ -56,7 +56,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           topic: finalTopic,
           keyword: finalKeyword,
           apiKey: appState.apiKey,
-          additionalInfo: additionalInfo, // 웹 크롤링 정보 추가
+          additionalInfo: additionalInfo,
         }),
       });
 
@@ -106,7 +106,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
       }
 
       // 동적 소제목 생성 및 HTML 구조에 맞게 변환
-      let dynamicHeadings = '';
+      let dynamicHeadings: Array<{ title: string; emoji: string; content: string }> = [];
       try {
         console.log('동적 소제목 생성 시작...');
         dynamicHeadings = await generateDynamicHeadings(
@@ -114,10 +114,17 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
           finalTopic, 
           appState.huggingFaceApiKey || ''
         );
-        console.log('동적 소제목 생성 완료');
+        console.log('동적 소제목 생성 완료:', dynamicHeadings);
       } catch (headingError) {
         console.error('동적 소제목 생성 실패:', headingError);
-        dynamicHeadings = `<h2>${finalTopic} 완전 가이드</h2><h2>${finalKeyword} 활용 방법</h2><h2>실제 적용 사례</h2>`;
+        // 기본 소제목으로 대체
+        dynamicHeadings = [
+          { title: `${finalTopic} 완전 가이드`, emoji: '💡', content: '기본 정보를 완벽 정리합니다' },
+          { title: `${finalKeyword} 활용 방법`, emoji: '📝', content: '실제 활용법을 안내합니다' },
+          { title: `실제 적용 사례`, emoji: '📈', content: '성공 사례를 공유합니다' },
+          { title: `${finalKeyword} 주의사항`, emoji: '⚠️', content: '주의할 점들을 알려드립니다' },
+          { title: `자주 묻는 질문`, emoji: '❓', content: '궁금한 점들을 해결합니다' }
+        ];
       }
 
       // 최종 HTML 생성 시 AdSense 설정 포함
@@ -128,7 +135,7 @@ export const useArticleGenerator = (appState: AppState, saveAppState: (newState:
         appState.referenceLink || 'https://worldpis.com',
         appState.referenceSentence || '워드프레스 꿀팁 더 보러가기',
         dynamicHeadings,
-        appState.adSenseSettings // AdSense 설정 추가
+        appState.adSenseSettings
       );
 
       console.log('글 생성 완료');
