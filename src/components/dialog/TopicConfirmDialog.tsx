@@ -25,6 +25,20 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
+    onConfirm();
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('TopicConfirmDialog handleCancel 호출됨');
+    onCancel();
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent className="max-w-md">
@@ -52,13 +66,13 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
           <AlertDialogCancel 
-            onClick={onCancel}
+            onClick={handleCancel}
             className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             아니요
           </AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold"
           >
             네, 작성하겠습니다
