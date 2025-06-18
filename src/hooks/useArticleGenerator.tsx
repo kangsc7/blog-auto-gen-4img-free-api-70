@@ -138,28 +138,45 @@ export const useArticleGenerator = (
         throw new Error("사용자에 의해 중단되었습니다.");
       }
 
-      const pixabayConfig = options?.pixabayConfig;
-      if (pixabayConfig?.key && pixabayConfig?.validated) {
+      // Pixabay API 키와 검증 상태를 appState에서 직접 가져오기
+      const pixabayApiKey = appState.pixabayApiKey;
+      const isPixabayValidated = appState.isPixabayApiKeyValidated;
+      
+      console.log('Pixabay 설정 확인:', { 
+        hasKey: !!pixabayApiKey, 
+        isValidated: isPixabayValidated,
+        keyLength: pixabayApiKey?.length 
+      });
+
+      if (pixabayApiKey && isPixabayValidated) {
         toast({ title: "3단계: 이미지 추가 중...", description: "게시물에 관련 이미지를 추가하고 있습니다." });
         
-        const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
-          htmlContent,
-          pixabayConfig.key,
-          appState.apiKey!
-        );
+        try {
+          const { finalHtml: htmlWithImages, imageCount } = await integratePixabayImages(
+            htmlContent,
+            pixabayApiKey,
+            appState.apiKey!
+          );
 
-        if (cancelArticleGeneration.current) {
-          throw new Error("사용자에 의해 중단되었습니다.");
-        }
+          if (cancelArticleGeneration.current) {
+            throw new Error("사용자에 의해 중단되었습니다.");
+          }
 
-        finalHtml = htmlWithImages;
-        
-        if (imageCount > 0) {
+          finalHtml = htmlWithImages;
+          
+          if (imageCount > 0) {
             pixabayImagesAdded = true;
             toast({ title: "이미지 추가 완료", description: `${imageCount}개의 이미지가 본문에 추가되었습니다.`});
-        } else {
+          } else {
             toast({ title: "이미지 추가 실패", description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, variant: "default" });
+          }
+        } catch (imageError) {
+          console.error('Pixabay 이미지 통합 오류:', imageError);
+          toast({ title: "이미지 추가 오류", description: "이미지 추가 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", variant: "default" });
         }
+      } else {
+        console.log('Pixabay 설정 누락 - 이미지 추가 건너뛰기');
+        toast({ title: "이미지 추가 건너뛰기", description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", variant: "default" });
       }
 
       try {
@@ -228,12 +245,21 @@ export const useArticleGenerator = (
 
   // 글 생성 중단 함수 (즉시 중단 기능 강화)
   const stopArticleGeneration = () => {
+    console.log('글 생성 중단 요청 - 상태:', { 
+      isGenerating: isGeneratingContent, 
+      hasController: !!currentController.current 
+    });
+    
     cancelArticleGeneration.current = true;
     
     // 진행 중인 fetch 요청 중단
     if (currentController.current) {
       currentController.current.abort();
+      console.log('AbortController.abort() 호출됨');
     }
+    
+    // 강제로 상태 초기화
+    setIsGeneratingContent(false);
     
     toast({
       title: "글 생성 즉시 중단",

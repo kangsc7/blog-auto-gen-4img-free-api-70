@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle, Image, Edit, Sparkles, CheckCircle2 } from 'lucide-react';
 
@@ -10,13 +11,25 @@ interface ProgressTrackerProps {
 const steps = ['주제 생성', '글 작성', '이미지 생성', '최종 완성'];
 
 export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ topics, generatedContent, imagePrompt }) => {
+  // 진행 상태를 더 정확히 계산
   let preciseActiveStep = 1;
-  if (imagePrompt) {
-    preciseActiveStep = 4;
-  } else if (generatedContent) {
-    preciseActiveStep = 3;
-  } else if (topics.length > 0) {
-    preciseActiveStep = 2;
+  
+  if (topics.length > 0) {
+    preciseActiveStep = 2; // 주제 생성 완료
+  }
+  
+  if (generatedContent) {
+    preciseActiveStep = 3; // 글 작성 완료
+    
+    // 이미지가 있거나 Pixabay 이미지가 적용된 경우
+    if (imagePrompt || generatedContent.includes('<img')) {
+      preciseActiveStep = 4; // 이미지 생성 완료
+    }
+  }
+  
+  // 글 작성이 완료되면 자동으로 최종 완성으로 처리
+  if (generatedContent && generatedContent.length > 100) {
+    preciseActiveStep = 4; // 최종 완성
   }
 
   const progressPercentage = preciseActiveStep > 1 ? ((preciseActiveStep - 1) / (steps.length - 1)) * 100 : 0;
