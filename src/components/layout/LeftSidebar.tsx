@@ -22,7 +22,7 @@ interface LeftSidebarProps {
   isGeneratingImage: boolean;
   createImagePrompt: (inputText: string) => Promise<boolean>;
   isDirectlyGenerating: boolean;
-  generateDirectImage: () => Promise<boolean>;
+  generateDirectImage: () => Promise<string>;
   manualTopic: string;
   setManualTopic: React.Dispatch<React.SetStateAction<string>>;
   handleManualTopicAdd: () => void;
@@ -106,7 +106,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                         className="w-4 h-4 rounded-full border" 
                         style={{ backgroundColor: theme.preview }}
                       />
-                      <span>{theme.name}</span>
+                      <span>{theme.label}</span>
                     </div>
                   </SelectItem>
                 ))}

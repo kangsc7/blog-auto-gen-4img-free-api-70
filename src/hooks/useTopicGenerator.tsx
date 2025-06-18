@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
-import { getEnhancedTopicPrompt } from '@/lib/enhancedPrompts';
 
 // 간단한 유사도 검사 함수 (70% 기준)
 const calculateSimilarity = (str1: string, str2: string): number => {
@@ -20,6 +19,35 @@ const calculateSimilarity = (str1: string, str2: string): number => {
   }
   
   return (matches / maxLength) * 100;
+};
+
+const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
+  return `
+당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
+
+주어진 키워드: "${keyword}"
+생성할 주제 수: ${count}개
+
+다음 조건을 모두 만족하는 블로그 주제를 생성해주세요:
+
+1. **SEO 최적화**: 검색 엔진에서 상위 노출될 수 있는 키워드 조합
+2. **실용성**: 독자에게 실질적인 도움이 되는 내용
+3. **시의성**: 2025년 현재 시점에서 관심도가 높은 주제
+4. **구체성**: 막연한 제목이 아닌 구체적이고 명확한 주제
+5. **다양성**: 서로 다른 관점과 접근법을 가진 주제들
+
+각 주제는 다음 형식으로 작성:
+- 40자 이내의 간결하고 임팩트 있는 제목
+- 검색 의도를 정확히 반영한 키워드 포함
+- 클릭을 유도하는 매력적인 표현
+
+출력 형식: 번호 없이 각 주제를 한 줄씩 작성해주세요.
+
+예시:
+${keyword} 초보자를 위한 완벽 가이드 2025
+${keyword} 전문가가 알려주는 숨겨진 팁 5가지
+${keyword} 비용 절약하는 스마트한 방법
+`;
 };
 
 export const useTopicGenerator = (
