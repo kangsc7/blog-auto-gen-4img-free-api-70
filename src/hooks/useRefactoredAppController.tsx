@@ -2,9 +2,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
-import { useGeminiManager } from '@/hooks/useGeminiManager';
-import { usePixabayManager } from '@/hooks/usePixabayManager';
-import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
 import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
 import { useArticleGenerator } from '@/hooks/useArticleGenerator';
@@ -19,7 +16,7 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager 올바른 단일 파라미터 전달
+  // useAllApiKeysManager에 올바른 매개변수 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState,
@@ -30,7 +27,7 @@ export const useRefactoredAppController = () => {
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator({ appState, saveAppState });
   
-  // 새로운 클립보드 훅 추가
+  // 픽사베이 클립보드 훅
   const pixabayClipboard = usePixabayClipboard();
 
   // articleGenerator에 이미지 콜백 추가
@@ -42,7 +39,6 @@ export const useRefactoredAppController = () => {
   
   const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
-  // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
   const topicControls = useTopicControls({ appState, saveAppState });
   const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
 
@@ -69,7 +65,7 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 추가
+  // 주제 확인 다이얼로그 상태
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
 
@@ -90,18 +86,14 @@ export const useRefactoredAppController = () => {
     }
     
     try {
-      // 1. 먼저 주제를 선택 (appState 업데이트)
       console.log('topicControls.selectTopic 호출:', pendingTopic);
       topicControls.selectTopic(pendingTopic);
       
-      // 2. 다이얼로그 닫기
       setShowTopicConfirmDialog(false);
       
-      // 3. 즉시 글 생성 시작
       console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
       generateArticle({ topic: pendingTopic, keyword: appState.keyword });
       
-      // 4. 상태 초기화
       setPendingTopic('');
     } catch (error) {
       console.error('주제 확인 처리 중 오류:', error);
@@ -120,7 +112,7 @@ export const useRefactoredAppController = () => {
     copyToClipboard(markdown, "마크다운");
   };
 
-  // 통합된 중단 기능 - 원클릭과 일반 글 생성 모두 중단
+  // 통합된 중단 기능
   const handleUnifiedStop = () => {
     console.log('통합 중단 버튼 클릭 - 상태:', { 
       isOneClickGenerating, 
@@ -134,6 +126,13 @@ export const useRefactoredAppController = () => {
     if (isGeneratingContent) {
       stopArticleGeneration();
     }
+  };
+
+  // 중복 방지 토글 핸들러
+  const handlePreventDuplicatesToggle = () => {
+    const newValue = !preventDuplicates;
+    setPreventDuplicates(newValue);
+    saveAppState({ preventDuplicates: newValue });
   };
 
   const generationStatus = {
@@ -173,16 +172,17 @@ export const useRefactoredAppController = () => {
     huggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
+    handlePreventDuplicatesToggle,
     handleResetApp,
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick: handleUnifiedStop, // 통합된 중단 기능 사용
+    handleStopOneClick: handleUnifiedStop,
     generationStatus,
     generationFunctions,
     topicControls: {
       ...topicControls,
-      selectTopic: handleTopicSelectWithConfirm, // 주제 선택 시 확인 다이얼로그 표시
+      selectTopic: handleTopicSelectWithConfirm,
     },
     utilityFunctions,
     handleTopicConfirm,

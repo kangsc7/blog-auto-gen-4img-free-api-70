@@ -28,6 +28,9 @@ export const Index: React.FC = () => {
         handleSignUp={() => controller.handleSignUp({ email: '', password: '' })}
         handleLogout={controller.handleLogout}
         profile={controller.profile}
+        onResetApp={controller.handleResetApp}
+        preventDuplicates={controller.preventDuplicates}
+        onPreventDuplicatesToggle={controller.handlePreventDuplicatesToggle}
       />
 
       <RefactoredApiKeysSection
