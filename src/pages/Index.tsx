@@ -233,21 +233,10 @@ const Index = () => {
       <MainContentSection
         appState={appState}
         saveAppState={saveAppState}
-        generationStatus={{
-          ...generationStatus,
-          isGeneratingPrompt: generationStatus.isGeneratingImage
-        }}
-        generationFunctions={{
-          ...generationFunctions,
-          generateImagePrompt: generationFunctions.createImagePrompt
-        }}
+        generationStatus={generationStatus}
+        generationFunctions={generationFunctions}
         topicControls={topicControls}
-        utilityFunctions={{
-          ...utilityFunctions,
-          downloadAsHtml: utilityFunctions.downloadHTML,
-          shareContent: utilityFunctions.openWhisk,
-          convertToMarkdown
-        }}
+        utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
       />

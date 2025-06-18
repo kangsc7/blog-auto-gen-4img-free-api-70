@@ -20,10 +20,10 @@ export const useRefactoredAppController = () => {
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.apiKey, hasAccess || isAdmin);
+  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
 
   const topicControls = useTopicControls(appState, saveAppState);
-  const { copyToClipboard, downloadHTML: downloadAsHtml, openWhisk: shareContent } = useAppUtils({ appState });
+  const { copyToClipboard, downloadHTML: downloadAsHtml, openWhisk: shareContent } = useAppUtils(appState);
 
   const {
     isOneClickGenerating,
@@ -62,7 +62,7 @@ export const useRefactoredAppController = () => {
   const generationStatus = {
     isGeneratingTopics,
     isGeneratingContent,
-    isGeneratingImage: isGeneratingPrompt,
+    isGeneratingPrompt,
     isDirectlyGenerating,
     isOneClickGenerating,
   };
@@ -70,15 +70,16 @@ export const useRefactoredAppController = () => {
   const generationFunctions = {
     generateTopics: () => generateTopics(),
     generateArticle,
-    createImagePrompt: generateImagePrompt,
+    generateImagePrompt,
     generateDirectImage,
     stopArticleGeneration,
   };
 
   const utilityFunctions = {
     copyToClipboard,
-    downloadHTML: downloadAsHtml,
-    openWhisk: shareContent,
+    downloadAsHtml,
+    shareContent,
+    convertToMarkdown,
   };
 
   return {
