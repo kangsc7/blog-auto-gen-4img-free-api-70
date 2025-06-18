@@ -22,6 +22,7 @@ export const useOneClick = (
   const { toast } = useToast();
   const [isOneClickGenerating, setIsOneClickGenerating] = useState(false);
   const [showTopicSelectionDialog, setShowTopicSelectionDialog] = useState(false);
+  const [showDuplicateErrorDialog, setShowDuplicateErrorDialog] = useState(false);
   const cancelGeneration = useRef(false);
   const { generateLatestKeyword, generateEvergreenKeyword } = useKeywordGenerator(appState);
 
@@ -204,6 +205,7 @@ export const useOneClick = (
       }
       
       let keyword: string | null = null;
+      let allKeywordsUsed = false;
 
       console.log(`최신 트렌드 키워드 생성 시작 - 중복 방지 설정:`, preventDuplicates);
 
@@ -211,7 +213,7 @@ export const useOneClick = (
       toast({ title: `1단계: 최신 트렌드 키워드 생성`, description: `다양한 소스에서 최신 트렌드 키워드를 생성합니다...` });
       
       let keywordAttempts = 0;
-      const maxKeywordAttempts = 8; // 재시도 횟수 증가
+      const maxKeywordAttempts = 8;
       
       while (keywordAttempts < maxKeywordAttempts && !keyword) {
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -233,13 +235,19 @@ export const useOneClick = (
           
           keywordAttempts++;
           if (!keyword && keywordAttempts < maxKeywordAttempts) {
-            await sleep(1500); // 대기 시간 증가
+            await sleep(3000); // 3초 딜레이 추가
           }
         } catch (error) {
           console.error(`키워드 생성 시도 ${keywordAttempts + 1} 실패:`, error);
           keywordAttempts++;
-          await sleep(1500);
+          if (keywordAttempts < maxKeywordAttempts) {
+            await sleep(3000); // 3초 딜레이 추가
+          }
         }
+      }
+
+      if (!keyword && keywordAttempts >= maxKeywordAttempts && preventDuplicates) {
+        allKeywordsUsed = true;
       }
 
       // 백업 키워드 로직 강화
@@ -270,7 +278,7 @@ export const useOneClick = (
       saveAppState({ keyword });
       toast({ title: "키워드 설정 완료", description: `'${keyword}' 키워드로 주제 생성을 시작합니다.` });
       
-      await sleep(1500);
+      await sleep(2000);
       if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
       // 2단계: 주제 생성 (재시도 로직 강화)
@@ -278,7 +286,8 @@ export const useOneClick = (
       
       let topics: string[] | null = null;
       let topicAttempts = 0;
-      const maxTopicAttempts = 5; // 재시도 횟수 증가
+      const maxTopicAttempts = 5;
+      let allTopicsDuplicated = false;
       
       while (topicAttempts < maxTopicAttempts && (!topics || topics.length === 0)) {
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
@@ -289,15 +298,36 @@ export const useOneClick = (
           // 중복 방지 설정을 일시적으로 비활성화하여 주제 생성 시도
           if (topicAttempts >= 2 && preventDuplicates) {
             console.log('주제 생성 실패로 인해 일시적으로 중복 검사 완화');
-            // 임시로 preventDuplicates를 false로 설정하여 주제 생성
+            const originalPreventDuplicates = appState.preventDuplicates;
             saveAppState({ preventDuplicates: false });
             topics = await generateTopics(keyword);
-            saveAppState({ preventDuplicates: true }); // 다시 복원
+            saveAppState({ preventDuplicates: originalPreventDuplicates });
           } else {
             topics = await generateTopics(keyword);
           }
           
           console.log(`생성된 주제들 (시도 ${topicAttempts + 1}):`, topics);
+          
+          // 중복 검사 실시
+          if (topics && topics.length > 0 && preventDuplicates) {
+            const originalLength = topics.length;
+            const filteredTopics = [];
+            
+            for (const topic of topics) {
+              const isUsed = await isTopicUsed(topic, userId);
+              if (!isUsed) {
+                filteredTopics.push(topic);
+              }
+            }
+            
+            if (filteredTopics.length === 0 && originalLength > 0) {
+              allTopicsDuplicated = true;
+              console.log('모든 주제가 중복됨 - 중복 검사 실패');
+              break;
+            }
+            
+            topics = filteredTopics;
+          }
           
           if (!topics || topics.length === 0) {
             toast({ 
@@ -308,13 +338,21 @@ export const useOneClick = (
           
           topicAttempts++;
           if ((!topics || topics.length === 0) && topicAttempts < maxTopicAttempts) {
-            await sleep(2000);
+            await sleep(3000); // 3초 딜레이 추가
           }
         } catch (error) {
           console.error(`주제 생성 시도 ${topicAttempts + 1} 실패:`, error);
           topicAttempts++;
-          await sleep(2000);
+          if (topicAttempts < maxTopicAttempts) {
+            await sleep(3000); // 3초 딜레이 추가
+          }
         }
+      }
+
+      // 중복으로 인한 실패 감지
+      if ((allKeywordsUsed || allTopicsDuplicated || (!topics || topics.length === 0)) && preventDuplicates) {
+        setShowDuplicateErrorDialog(true);
+        return;
       }
 
       if (!topics || topics.length === 0) {
@@ -411,12 +449,14 @@ export const useOneClick = (
             
             keywordAttempts++;
             if (!keyword && keywordAttempts < maxKeywordAttempts) {
-              await sleep(1000);
+              await sleep(3000); // 3초 딜레이 추가
             }
           } catch (error) {
             console.error(`키워드 생성 시도 ${keywordAttempts + 1} 실패:`, error);
             keywordAttempts++;
-            await sleep(1000);
+            if (keywordAttempts < maxKeywordAttempts) {
+              await sleep(3000); // 3초 딜레이 추가
+            }
           }
         }
 
@@ -438,7 +478,7 @@ export const useOneClick = (
         saveAppState({ keyword });
         toast({ title: "키워드 설정 완료", description: `'${keyword}' 키워드로 주제 생성을 시작합니다.` });
         
-        await sleep(1500);
+        await sleep(2000);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
         // 2단계: 주제 생성
@@ -465,12 +505,14 @@ export const useOneClick = (
             
             topicAttempts++;
             if ((!topics || topics.length === 0) && topicAttempts < maxTopicAttempts) {
-              await sleep(2000);
+              await sleep(3000); // 3초 딜레이 추가
             }
           } catch (error) {
             console.error(`주제 생성 시도 ${topicAttempts + 1} 실패:`, error);
             topicAttempts++;
-            await sleep(2000);
+            if (topicAttempts < maxTopicAttempts) {
+              await sleep(3000); // 3초 딜레이 추가
+            }
           }
         }
 
@@ -478,7 +520,7 @@ export const useOneClick = (
           throw new Error("여러 번 시도했지만 주제 생성에 실패했습니다.");
         }
 
-        await sleep(1500);
+        await sleep(2000);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
         // 3단계: 주제 선택
@@ -543,12 +585,14 @@ export const useOneClick = (
             
             articleAttempts++;
             if (!articleGenerated && articleAttempts < maxArticleAttempts) {
-              await sleep(3000);
+              await sleep(3000); // 3초 딜레이 추가
             }
           } catch (error) {
             console.error(`글 생성 시도 ${articleAttempts + 1} 실패:`, error);
             articleAttempts++;
-            await sleep(3000);
+            if (articleAttempts < maxArticleAttempts) {
+              await sleep(3000); // 3초 딜레이 추가
+            }
           }
         }
 
@@ -583,7 +627,7 @@ export const useOneClick = (
             description: `생성에 실패했습니다. 자동으로 다시 시도합니다...`,
             variant: "default"
           });
-          await sleep(3000);
+          await sleep(3000); // 3초 딜레이 추가
           return await attemptGeneration();
         }
 
@@ -618,6 +662,8 @@ export const useOneClick = (
     handleEvergreenKeywordOneClick: runEvergreenFlow, 
     handleStopOneClick,
     showTopicSelectionDialog,
-    setShowTopicSelectionDialog
+    setShowTopicSelectionDialog,
+    showDuplicateErrorDialog,
+    setShowDuplicateErrorDialog
   };
 };

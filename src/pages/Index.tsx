@@ -9,6 +9,7 @@ import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
+import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -43,6 +44,8 @@ const Index = () => {
     handleTopicConfirm,
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
+    showDuplicateErrorDialog,
+    setShowDuplicateErrorDialog,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
@@ -240,6 +243,12 @@ const Index = () => {
       <TopicSelectionNotification
         open={showTopicSelectionDialog}
         onOpenChange={setShowTopicSelectionDialog}
+      />
+
+      {/* 중복 오류 다이얼로그 */}
+      <DuplicateErrorDialog
+        open={showDuplicateErrorDialog}
+        onOpenChange={setShowDuplicateErrorDialog}
       />
       
       <ScrollToTopButton />
