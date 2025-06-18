@@ -195,7 +195,7 @@ export const useOneClick = (
     cancelGeneration.current = false;
     const userId = profile.id;
     let retryCount = 0;
-    const maxRetries = 1; // 한 번 더 재시도
+    const maxRetries = 3; // 재시도 횟수 증가
 
     const attemptGeneration = async (): Promise<boolean> => {
       try {
@@ -206,160 +206,120 @@ export const useOneClick = (
         }
         
         let keyword: string | null = null;
-        const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '틈새';
+        const keywordType = keywordSource === 'latest' ? '최신 트렌드' : '평생 가치';
 
         console.log(`${keywordType} 키워드 생성 시작 - 중복 방지 설정:`, preventDuplicates);
 
-        // 사용자가 이미 사용한 키워드 목록 가져오기 (중복 금지일 때만)
-        const usedKeywords = await getUserUsedKeywords(userId);
-        console.log(`${keywordType} 키워드 생성 - 사용된 키워드:`, usedKeywords);
-
-        if (keywordSource === 'latest') {
-          toast({ title: `1단계: 실시간 ${keywordType} 키워드 생성`, description: `Google Trends 데이터를 분석합니다...` });
-          let attempt = 0;
-          const maxAttempts = preventDuplicates ? 3 : 1;
-          
-          while(attempt < maxAttempts && !keyword) {
-              if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-              const generatedKeyword = await generateLatestKeyword();
-              if (generatedKeyword) {
-                  const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
-                  if (!used) {
-                      keyword = generatedKeyword;
-                      toast({ title: "트렌드 키워드 생성 완료", description: `"${keyword}" - 실시간 트렌드 반영됨` });
-                  } else {
-                      toast({ title: "중복 키워드 발생", description: `'${generatedKeyword}' 재생성 중... (${attempt + 1}/${maxAttempts})`});
-                      await sleep(500);
-                  }
-              } else {
-                  await sleep(500);
-              }
-              attempt++;
-          }
-          
-          if (!keyword) {
-            if (!preventDuplicates) {
-              const retryKeyword = await generateLatestKeyword();
-              keyword = retryKeyword || '2025년 생활 꿀팁';
-            } else {
-              throw new Error("실시간 트렌드 키워드 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-            }
-          }
+        // 1단계: 키워드 생성 (다중 시도)
+        toast({ title: `1단계: ${keywordType} 키워드 생성`, description: `다양한 소스에서 ${keywordType} 키워드를 생성합니다...` });
         
-        } else {
-          toast({ title: `1단계: 검증된 ${keywordType} 키워드 선택`, description: `데이터베이스에서 최적 키워드를 선택합니다...` });
-          let attempt = 0;
-          const maxAttempts = preventDuplicates ? 3 : 1;
+        let keywordAttempts = 0;
+        const maxKeywordAttempts = 5;
+        
+        while (keywordAttempts < maxKeywordAttempts && !keyword) {
+          if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
           
-          while(attempt < maxAttempts && !keyword) {
-              if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-              const generatedKeyword = await generateEvergreenKeyword();
-              if (generatedKeyword) {
-                  const used = preventDuplicates ? await isKeywordUsed(generatedKeyword, userId) : false;
-                  if (!used) {
-                      keyword = generatedKeyword;
-                      toast({ title: "틈새 키워드 선택 완료", description: `"${keyword}" - 검증된 평생 키워드` });
-                  } else {
-                      toast({ title: "중복 키워드 발생", description: `'${generatedKeyword}' 다른 키워드 선택 중... (${attempt + 1}/${maxAttempts})`});
-                      await sleep(500);
-                  }
-              } else {
-                  await sleep(500);
+          try {
+            if (keywordSource === 'latest') {
+              keyword = await generateLatestKeyword();
+            } else {
+              keyword = await generateEvergreenKeyword();
+            }
+            
+            if (keyword && preventDuplicates) {
+              const isUsed = await isKeywordUsed(keyword, userId);
+              if (isUsed) {
+                console.log(`키워드 중복 감지: ${keyword}, 재생성 중... (${keywordAttempts + 1}/${maxKeywordAttempts})`);
+                keyword = null;
+                toast({ 
+                  title: "키워드 중복 감지", 
+                  description: `다른 ${keywordType} 키워드를 생성합니다... (${keywordAttempts + 1}/${maxKeywordAttempts})` 
+                });
               }
-              attempt++;
-          }
-
-          if (!keyword && preventDuplicates) {
-            toast({ title: "AI 키워드 중복/실패", description: "데이터베이스에서 직접 선택합니다." });
-            if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-
-            const { data: usedKeywordsData, error: usedKeywordsError } = await supabase
-                .from('user_used_keywords')
-                .select('keyword_id')
-                .eq('user_id', userId);
-
-            if (usedKeywordsError) throw new Error(`사용한 키워드 목록 조회 오류: ${usedKeywordsError.message}`);
-            const usedKeywordIds = usedKeywordsData.map(row => row.keyword_id);
-
-            let keywordQuery = supabase
-                .from('keywords')
-                .select('keyword_text, id')
-                .eq('type', 'evergreen');
-
-            if (usedKeywordIds.length > 0) {
-                 keywordQuery = keywordQuery.not('id', 'in', `(${usedKeywordIds.join(',')})`);
-            }
-
-            let { data: availableKeywords, error: keywordsError } = await keywordQuery;
-            if (keywordsError) throw new Error(`DB 키워드 조회 오류: ${keywordsError.message}`);
-            
-            if (!availableKeywords || availableKeywords.length === 0) {
-                 toast({ title: "키워드 목록 초기화", description: `모든 '평생' 키워드를 사용했습니다. 목록을 초기화합니다.` });
-                 const { data: allKeywordsOfType, error: allKeywordsError } = await supabase
-                    .from('keywords')
-                    .select('id')
-                    .eq('type', 'evergreen');
-
-                if (allKeywordsError) throw new Error(`키워드 목록 초기화 실패: ${allKeywordsError.message}`);
-                
-                if (allKeywordsOfType.length > 0) {
-                    const keywordIdsToDelete = allKeywordsOfType.map(k => k.id);
-                    const { error: deleteError } = await supabase
-                        .from('user_used_keywords')
-                        .delete()
-                        .eq('user_id', userId)
-                        .in('keyword_id', keywordIdsToDelete);
-                    if (deleteError) throw new Error(`키워드 사용 이력 초기화 실패: ${deleteError.message}`);
-                }
-                const { data: refetchedKeywords, error: refetchedError } = await supabase.from('keywords').select('keyword_text, id').eq('type', 'evergreen');
-                if (refetchedError) throw new Error(`초기화 후 키워드 조회 오류: ${refetchedError.message}`);
-                availableKeywords = refetchedKeywords;
-            }
-
-            if (!availableKeywords || availableKeywords.length === 0) {
-              throw new Error("데이터베이스에 사용 가능한 평생 키워드가 없습니다.");
             }
             
-            const selectedKeyword = availableKeywords[Math.floor(Math.random() * availableKeywords.length)];
-            keyword = selectedKeyword.keyword_text;
-          } else if (!keyword) {
-            // 중복 허용일 때는 간단히 재시도하거나 기본값 사용
-            const retryKeyword = await generateEvergreenKeyword();
-            keyword = retryKeyword || '생활 절약 꿀팁';
+            keywordAttempts++;
+            if (!keyword && keywordAttempts < maxKeywordAttempts) {
+              await sleep(1000); // 잠시 대기 후 재시도
+            }
+          } catch (error) {
+            console.error(`키워드 생성 시도 ${keywordAttempts + 1} 실패:`, error);
+            keywordAttempts++;
+            await sleep(1000);
           }
         }
 
         if (!keyword) {
-            throw new Error(`${keywordType} 키워드를 생성하거나 선택하는데 실패했습니다.`);
+          // 키워드 생성 실패 시 안전한 백업 키워드 사용
+          const backupKeywords = keywordSource === 'latest' 
+            ? ['2025년 생활 트렌드', '디지털 생활 팁', '건강한 라이프스타일']
+            : ['생활 효율 개선법', '기본 생활 관리법', '실용적 생활 정보'];
+          
+          keyword = backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
+          toast({ 
+            title: "백업 키워드 사용", 
+            description: `"${keyword}" - 안전한 ${keywordType} 키워드로 진행합니다.` 
+          });
         }
-        
-        if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-        
-        await recordKeywordUsage(keyword, userId, keywordSource);
 
-        console.log('키워드 설정:', keyword);
+        // 키워드 사용 기록
+        if (preventDuplicates) {
+          await recordKeywordUsage(keyword, userId, keywordSource);
+        }
+
+        console.log('최종 선택된 키워드:', keyword);
         saveAppState({ keyword });
-        toast({ title: "키워드 자동 입력 완료", description: `'${keyword}' (으)로 주제 생성을 시작합니다.` });
+        toast({ title: "키워드 설정 완료", description: `'${keyword}' 키워드로 주제 생성을 시작합니다.` });
         
         await sleep(1500);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-        toast({ title: "2단계: AI 주제 생성 시작", description: "선택된 키워드로 블로그 주제를 생성합니다..." });
-        console.log('주제 생성 호출 - 키워드:', keyword);
-        const newTopics = await generateTopics(keyword);
-        console.log('생성된 주제들:', newTopics);
-        if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-        if (!newTopics || newTopics.length === 0) {
-          throw new Error("주제 생성에 실패하여 중단합니다.");
+        // 2단계: 주제 생성 (다중 시도)
+        toast({ title: "2단계: AI 주제 생성", description: "선택된 키워드로 다양한 블로그 주제를 생성합니다..." });
+        
+        let topics: string[] | null = null;
+        let topicAttempts = 0;
+        const maxTopicAttempts = 3;
+        
+        while (topicAttempts < maxTopicAttempts && (!topics || topics.length === 0)) {
+          if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
+          
+          try {
+            console.log(`주제 생성 시도 ${topicAttempts + 1} - 키워드:`, keyword);
+            topics = await generateTopics(keyword);
+            console.log(`생성된 주제들 (시도 ${topicAttempts + 1}):`, topics);
+            
+            if (!topics || topics.length === 0) {
+              toast({ 
+                title: "주제 생성 재시도", 
+                description: `주제 생성을 다시 시도합니다... (${topicAttempts + 1}/${maxTopicAttempts})` 
+              });
+            }
+            
+            topicAttempts++;
+            if ((!topics || topics.length === 0) && topicAttempts < maxTopicAttempts) {
+              await sleep(2000);
+            }
+          } catch (error) {
+            console.error(`주제 생성 시도 ${topicAttempts + 1} 실패:`, error);
+            topicAttempts++;
+            await sleep(2000);
+          }
         }
 
-        await sleep(2000);
+        if (!topics || topics.length === 0) {
+          throw new Error("여러 번 시도했지만 주제 생성에 실패했습니다.");
+        }
+
+        await sleep(1500);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
+        // 3단계: 주제 선택 (중복 체크 및 스마트 선택)
         let selectedTopic: string | null = null;
+        
         if (preventDuplicates) {
           const availableTopics = [];
-          for (const topic of newTopics) {
+          for (const topic of topics) {
             const isUsed = await isTopicUsed(topic, userId);
             if (!isUsed) {
               availableTopics.push(topic);
@@ -367,17 +327,20 @@ export const useOneClick = (
           }
           
           if (availableTopics.length === 0) {
-            toast({ title: "주제 중복 경고", description: "생성된 모든 주제가 이미 사용되었습니다. 첫 번째 주제를 선택합니다." });
-            selectedTopic = newTopics[0];
+            toast({ 
+              title: "주제 중복 감지", 
+              description: "생성된 모든 주제가 이미 사용되었습니다. 가장 적합한 주제를 선택합니다." 
+            });
+            selectedTopic = topics[0]; // 첫 번째 주제 선택
           } else {
             selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
           }
         } else {
-          selectedTopic = newTopics[Math.floor(Math.random() * newTopics.length)];
+          selectedTopic = topics[Math.floor(Math.random() * topics.length)];
         }
 
-        console.log('선택된 주제:', selectedTopic);
-        toast({ title: "3단계: 주제 선택", description: `"${selectedTopic}"을(를) 자동으로 선택했습니다.` });
+        console.log('최종 선택된 주제:', selectedTopic);
+        toast({ title: "3단계: 주제 선택 완료", description: `"${selectedTopic}"을(를) 선택했습니다.` });
         selectTopic(selectedTopic);
 
         if (preventDuplicates) {
@@ -387,14 +350,50 @@ export const useOneClick = (
         await sleep(2000);
         if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-        toast({ title: "4단계: AI 글 생성 시작", description: "선택된 주제로 블로그 본문을 생성합니다..." });
-        const articleGenerated = await generateArticle({ topic: selectedTopic, keyword });
-        if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
-        if (!articleGenerated) {
-          throw new Error("글 생성에 실패하여 중단합니다.");
+        // 4단계: 글 생성 (다중 시도)
+        toast({ title: "4단계: AI 글 생성", description: "선택된 주제로 고품질 블로그 글을 생성합니다..." });
+        
+        let articleGenerated = false;
+        let articleAttempts = 0;
+        const maxArticleAttempts = 3;
+        
+        while (articleAttempts < maxArticleAttempts && !articleGenerated) {
+          if (cancelGeneration.current) throw new Error("사용자에 의해 중단되었습니다.");
+          
+          try {
+            console.log(`글 생성 시도 ${articleAttempts + 1} - 주제:`, selectedTopic);
+            const result = await generateArticle({ topic: selectedTopic, keyword });
+            
+            if (result) {
+              articleGenerated = true;
+              console.log(`글 생성 성공 (시도 ${articleAttempts + 1})`);
+            } else {
+              toast({ 
+                title: "글 생성 재시도", 
+                description: `글 생성을 다시 시도합니다... (${articleAttempts + 1}/${maxArticleAttempts})` 
+              });
+            }
+            
+            articleAttempts++;
+            if (!articleGenerated && articleAttempts < maxArticleAttempts) {
+              await sleep(3000);
+            }
+          } catch (error) {
+            console.error(`글 생성 시도 ${articleAttempts + 1} 실패:`, error);
+            articleAttempts++;
+            await sleep(3000);
+          }
         }
 
-        toast({ title: "원클릭 생성 완료!", description: `${keywordType} 키워드 기반 모든 과정이 성공적으로 완료되었습니다.` });
+        if (!articleGenerated) {
+          throw new Error("여러 번 시도했지만 글 생성에 실패했습니다.");
+        }
+
+        toast({ 
+          title: "🎉 원클릭 생성 완료!", 
+          description: `${keywordType} 키워드 기반 모든 과정이 성공적으로 완료되었습니다.` 
+        });
+        
         return true;
 
       } catch (error) {
@@ -409,21 +408,21 @@ export const useOneClick = (
           return false;
         }
 
-        // 주제 중복이나 글 생성 실패시 재시도
-        if ((errorMessage.includes("주제") || errorMessage.includes("글 생성")) && retryCount < maxRetries) {
+        // 재시도 로직
+        if (retryCount < maxRetries) {
           retryCount++;
           toast({
-            title: "자동 재시도 중",
-            description: `생성에 실패했습니다. 자동으로 다시 시도합니다... (${retryCount}/${maxRetries + 1})`,
+            title: `자동 재시도 중 (${retryCount}/${maxRetries})`,
+            description: `생성에 실패했습니다. 자동으로 다시 시도합니다...`,
             variant: "default"
           });
-          await sleep(2000);
+          await sleep(3000);
           return await attemptGeneration();
         }
 
         toast({
-          title: "원클릭 생성 오류",
-          description: errorMessage,
+          title: "원클릭 생성 최종 실패",
+          description: `${maxRetries}번 시도했지만 실패했습니다: ${errorMessage}`,
           variant: "destructive"
         });
         return false;
