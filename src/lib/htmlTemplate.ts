@@ -1,7 +1,9 @@
 
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
-  .wrapper-div { padding: 0 15px; }
+  .wrapper-div { 
+    padding: 0 8px !important; 
+  }
   /* 모바일에서 이미지 더 크게 표시 */
   img { 
     max-width: 100% !important; 
@@ -10,12 +12,70 @@ const getCssStyles = (colors: any): string => `
   }
 }
 @media (max-width: 480px) {
-  /* 작은 모바일에서도 충분한 크기 보장 */
+  /* 작은 모바일에서도 충분한 크기 보장 및 여백 최소화 */
+  .wrapper-div { 
+    padding: 0 4px !important; 
+  }
   img { 
     min-height: 200px !important; 
   }
 }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:2px solid ${colors.primary};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
+
+/* 고품질 비교표 디자인 */
+.premium-comparison-table-container {
+  margin: 30px 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  overflow-x: auto;
+}
+.premium-comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  margin: 0 auto;
+  background: white;
+}
+.premium-comparison-table thead th {
+  background: ${colors.primary};
+  color: white;
+  padding: 15px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  border: none;
+}
+.premium-comparison-table tbody td {
+  padding: 14px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 15px;
+  vertical-align: middle;
+}
+.premium-comparison-table tbody tr:nth-child(even) {
+  background: ${colors.highlight};
+}
+.premium-comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.premium-comparison-table .highlight-cell {
+  background: ${colors.textHighlight};
+  font-weight: 600;
+  color: ${colors.primary};
+}
+.premium-comparison-table-caption {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+}
+@media (max-width: 768px) {
+  .premium-comparison-table {
+    min-width: 600px; /* 모바일에서 스크롤 가능하도록 */
+  }
+}
 `;
 
 const getHeaderSection = (topic: string): string => `
@@ -63,15 +123,44 @@ ${sectionNumber === 2 ? `
 </tbody></table></div>
 ` : ''}
 ${sectionNumber === 3 ? `
-<div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
-    <strong style="color: ${colors.warnBorder};">⚠️ 전문가 팁 - 꼭 확인하세요!</strong><br>
-    <ul style="margin: 10px 0; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">신청 기간을 놓치면 그 해 지원이 불가능해요 - 보통 11월부터 다음해 10월까지</li>
-        <li style="margin-bottom: 8px;">가구원 수에 따라 지원 금액이 달라지니 정확한 가구원 신고가 중요해요</li>
-        <li style="margin-bottom: 8px;">바우처 카드는 <a href="https://www.energyvoucher.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">에너지바우처 공식사이트</a>에서 미리 확인하세요</li>
-        <li style="margin-bottom: 8px;">소득·재산 기준이 매년 조금씩 변동될 수 있으니 신청 전 최신 정보를 확인하세요</li>
-        <li>복수 지원금 동시 신청 시 중복 제한이 있을 수 있으니 사전 문의가 필수입니다</li>
-    </ul>
+<div class="premium-comparison-table-container">
+<table class="premium-comparison-table">
+<thead>
+  <tr>
+    <th>구분</th>
+    <th>선정 기준</th>
+    <th>지원 금액</th>
+    <th>신청 방법</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="highlight-cell">생계급여</td>
+    <td>중위소득 30% 이하</td>
+    <td>월 58만원~108만원<br>(가구원 수 따라 상이)</td>
+    <td>주민센터 방문 또는<br>복지로 온라인 신청</td>
+  </tr>
+  <tr>
+    <td>주거급여</td>
+    <td>중위소득 46% 이하</td>
+    <td>임차료 지원<br>(지역별 차등)</td>
+    <td>주민센터 또는<br>LH 마이홈</td>
+  </tr>
+  <tr>
+    <td class="highlight-cell">교육급여</td>
+    <td>중위소득 50% 이하</td>
+    <td>학용품비, 입학금,<br>수업료 지원</td>
+    <td>학교 또는<br>교육청 신청</td>
+  </tr>
+  <tr>
+    <td>의료급여</td>
+    <td>중위소득 40% 이하</td>
+    <td>의료비 본인부담금<br>경감 혜택</td>
+    <td>주민센터 방문<br>상담 필수</td>
+  </tr>
+</tbody>
+</table>
+<div class="premium-comparison-table-caption">※ 각 지원금은 정책 변경에 따라 달라질 수 있으니 관계 기관에 문의하세요</div>
 </div>
 ` : ''}
 ${sectionNumber === 5 ? `
@@ -145,7 +234,8 @@ const getTagsSection = (topic: string, keyword: string): string => {
     const stopWords = [
       '활용법', '방법', '전략', '가이드', '완벽', '최신', '최대한', '확실하게', 
       '업법', '성공률', '높이는', '꿀팁', '노하우', '비법', '총정리', '정리',
-      '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택'
+      '2023년', '2024년', '2025년', '현재', '최근', '신청', '지원', '혜택',
+      '웹사이트', '한국', '금융감독원', '금감원', '한국은행', '한은'
     ];
     
     let cleanedTopic = topicText;
@@ -192,7 +282,6 @@ const getTagsSection = (topic: string, keyword: string): string => {
     '지원대상', 
     '혜택',
     '정부지원',
-    '2025년',
     '교육과정',
     '생활정보'
   ];

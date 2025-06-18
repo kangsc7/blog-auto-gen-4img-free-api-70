@@ -71,9 +71,19 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
         </div>
 
+        {/* 주제 생성 규칙 안내 */}
+        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+          <p className="font-semibold">🔔 주제 생성 규칙</p>
+          <ul className="list-disc pl-4 mt-1 space-y-1">
+            <li>연도 표기(2023년, 2024년 등) 없이 생성됩니다</li>
+            <li>해당 연도 하반기 등의 시기 표현도 포함되지 않습니다</li>
+            <li>시간에 구애받지 않는 주제로 생성됩니다</li>
+          </ul>
+        </div>
+
         <Button 
           onClick={() => generateTopicsFromKeyword()}
-          disabled={!keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
+          disabled={!keyword?.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
           className={`w-full transition-all duration-300 ${
             isGeneratingTopics 
               ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
@@ -105,7 +115,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
             />
             <Button 
               onClick={handleManualTopicAdd}
-              disabled={!manualTopic.trim()}
+              disabled={!manualTopic?.trim()}
               variant="outline"
               className="text-blue-600 border-blue-600 hover:bg-blue-50"
             >

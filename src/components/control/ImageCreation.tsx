@@ -47,7 +47,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
     const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
     
     // 티스토리 대표 이미지 설정을 위한 메타데이터 포함
-    const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" title="${sanitizedAltText}" data-filename="${sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.png" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px; width: 100%;">`;
+    const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" title="${sanitizedAltText}" data-filename="${sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.png" style="max-width: 640px; height: 480px; display: block; margin-left: auto; margin-right: auto; border-radius: 8px; width: 100%; object-fit: cover;">`;
 
     try {
         const response = await fetch(generatedImage);
@@ -79,6 +79,20 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
             toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
         }
     }
+  };
+
+  const handleOpenWhisk = () => {
+    if (!appState.imagePrompt) {
+      toast({ 
+        title: "프롬프트 없음", 
+        description: "먼저 이미지 프롬프트를 생성해주세요.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    copyToClipboard(appState.imagePrompt, '이미지 프롬프트');
+    openWhisk();
   };
 
   return (
@@ -121,17 +135,14 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
-                    onClick={() => {
-                      copyToClipboard(appState.imagePrompt, '이미지 프롬프트');
-                      openWhisk();
-                    }}
+                    onClick={handleOpenWhisk}
                     className="w-full bg-gray-700 hover:bg-gray-800"
                   >
                     Whisk 열기 (복사)
                   </Button>
                   <Button
                     onClick={handleGenerateImage}
-                    disabled={isDirectlyGenerating || !appState.imagePrompt}
+                    disabled={isDirectlyGenerating || !appState.imagePrompt || !appState.isHuggingFaceKeyValidated}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
                     {isDirectlyGenerating ? '이미지 생성중...' : '2. 이미지 생성'}
@@ -152,7 +163,12 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                 <Skeleton className="w-full h-64 rounded-lg" />
               ) : generatedImage ? (
                 <div className="space-y-2">
-                  <img src={generatedImage} alt="Generated from prompt" className="rounded-lg w-full" />
+                  <img 
+                    src={generatedImage} 
+                    alt="Generated from prompt" 
+                    className="rounded-lg w-full h-auto object-cover" 
+                    style={{maxWidth: '640px', height: '480px', objectFit: 'cover'}}
+                  />
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700 text-primary-foreground"
                     onClick={handleCopyImageHtml}

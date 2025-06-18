@@ -49,7 +49,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   deleteReferenceData,
 }) => {
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6 max-w-full">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4">
           <LeftSidebar
@@ -71,6 +71,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             selectTopic={topicControls.selectTopic}
             copyToClipboard={utilityFunctions.copyToClipboard}
             deleteReferenceData={deleteReferenceData}
+            openWhisk={utilityFunctions.openWhisk}
           />
         </div>
         <div className="lg:col-span-8">

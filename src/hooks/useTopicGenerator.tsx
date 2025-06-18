@@ -2,53 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
-
-// 간단한 유사도 검사 함수 (70% 기준)
-const calculateSimilarity = (str1: string, str2: string): number => {
-  const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
-  const s1 = normalize(str1);
-  const s2 = normalize(str2);
-  
-  if (s1 === s2) return 100;
-  
-  const maxLength = Math.max(s1.length, s2.length);
-  let matches = 0;
-  
-  for (let i = 0; i < Math.min(s1.length, s2.length); i++) {
-    if (s1[i] === s2[i]) matches++;
-  }
-  
-  return (matches / maxLength) * 100;
-};
-
-const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
-  return `
-당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
-
-주어진 키워드: "${keyword}"
-생성할 주제 수: ${count}개
-
-다음 조건을 모두 만족하는 블로그 주제를 생성해주세요:
-
-1. **SEO 최적화**: 검색 엔진에서 상위 노출될 수 있는 키워드 조합
-2. **실용성**: 독자에게 실질적인 도움이 되는 내용
-3. **시의성**: 2025년 현재 시점에서 관심도가 높은 주제
-4. **구체성**: 막연한 제목이 아닌 구체적이고 명확한 주제
-5. **다양성**: 서로 다른 관점과 접근법을 가진 주제들
-
-각 주제는 다음 형식으로 작성:
-- 40자 이내의 간결하고 임팩트 있는 제목
-- 검색 의도를 정확히 반영한 키워드 포함
-- 클릭을 유도하는 매력적인 표현
-
-출력 형식: 번호 없이 각 주제를 한 줄씩 작성해주세요.
-
-예시:
-${keyword} 초보자를 위한 완벽 가이드 2025
-${keyword} 전문가가 알려주는 숨겨진 팁 5가지
-${keyword} 비용 절약하는 스마트한 방법
-`;
-};
+import stringSimilarity from 'string-similarity';
 
 export const useTopicGenerator = (
   appState: AppState,
@@ -56,172 +10,191 @@ export const useTopicGenerator = (
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
-  const [lastGenerationTime, setLastGenerationTime] = useState(0);
+
+  const filterAndDeduplicateTopics = (topics: string[], existingTopics: string[] = [], preventDuplicates = true): string[] => {
+    // 1. 정제: 특수문자, 연도 및 시기 표현 제거
+    const cleanedTopics = topics.map(topic => {
+      return topic.trim()
+        .replace(/\(\d+\)/g, '') // (2023) 형태 제거
+        .replace(/\[.*?\]/g, '') // [2023] 형태 제거
+        .replace(/\d{4}년/g, '') // 2023년 형태 제거
+        .replace(/\d{4}-\d{4}/g, '') // 2023-2024 형태 제거
+        .replace(/\d{4}-\d{2}/g, '') // 2023-24 형태 제거
+        .replace(/\d{4}~\d{4}/g, '') // 2023~2024 형태 제거
+        .replace(/\d{4}~\d{2}/g, '') // 2023~24 형태 제거
+        .replace(/\d{4}\s*년\s*(상반기|하반기)/g, '') // 2023년 상반기/하반기 제거
+        .replace(/(상반기|하반기|분기)/g, '') // 상반기/하반기/분기 표현 제거
+        .replace(/상하반기/g, '') // '상하반기' 표현 제거
+        .replace(/최신 현황/g, '') // '최신 현황' 제거
+        .replace(/20\d{2}/g, '') // 2019, 2020, 2021 등 연도 제거
+        .replace(/\d+(월|주)/g, '') // 1월, 2월, 1주, 2주 등 제거
+        .replace(/웹사이트/g, '') // 웹사이트 제거
+        .replace(/홈페이지/g, '') // 홈페이지 제거
+        .replace(/\s+/g, ' ') // 다중 공백을 단일 공백으로
+        .trim();
+    });
+
+    // 2. 필터링: 빈 문자열이나 너무 짧은 주제 제거
+    const filteredTopics = cleanedTopics.filter(topic => topic.length > 5);
+
+    // 3. 중복 제거 (중복 방지 설정이 켜져 있는 경우에만)
+    let result: string[] = [];
+    
+    if (preventDuplicates) {
+      // 중복 방지: 유사도 70% 이상은 중복으로 처리
+      const allTopics = [...existingTopics, ...filteredTopics];
+      
+      filteredTopics.forEach(topic => {
+        // 이미 존재하는 주제와 유사한지 확인
+        const isAlreadyExists = existingTopics.some(existingTopic => {
+          const similarity = stringSimilarity.compareTwoStrings(
+            existingTopic.toLowerCase(), 
+            topic.toLowerCase()
+          );
+          return similarity > 0.7;
+        });
+        
+        // 현재 처리 중인 결과에 이미 추가된 주제와 유사한지 확인
+        const isDuplicateInCurrentResult = result.some(addedTopic => {
+          const similarity = stringSimilarity.compareTwoStrings(
+            addedTopic.toLowerCase(), 
+            topic.toLowerCase()
+          );
+          return similarity > 0.7;
+        });
+        
+        if (!isAlreadyExists && !isDuplicateInCurrentResult) {
+          result.push(topic);
+        }
+      });
+    } else {
+      // 중복 방지 없이 모든 주제 추가
+      result = filteredTopics;
+    }
+    
+    return result;
+  };
 
   const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
-    const rawKeyword = (keywordOverride || appState.keyword).trim();
-    const cleanedKeyword = rawKeyword.replace(/\s+/g, ' ').trim();
+    const keyword = keywordOverride || appState.keyword;
     
-    if (!cleanedKeyword) {
+    if (!keyword || !keyword.trim()) {
       toast({
-        title: "키워드 오류",
-        description: "핵심 키워드를 입력해주세요.",
+        title: "키워드 누락",
+        description: "주제를 생성하기 위해서는 키워드가 필요합니다.",
         variant: "destructive"
       });
       return null;
     }
-
+    
     if (!appState.isApiKeyValidated) {
       toast({
         title: "API 키 검증 필요",
-        description: "먼저 API 키를 입력하고 검증해주세요.",
+        description: "API 키를 입력하고 검증한 후 다시 시도해주세요.",
         variant: "destructive"
       });
       return null;
     }
-
-    // 3초 딜레이 체크 (완화)
-    const currentTime = Date.now();
-    const timeSinceLastGeneration = currentTime - lastGenerationTime;
-    if (timeSinceLastGeneration < 2000 && lastGenerationTime > 0) {
-      const remainingTime = Math.ceil((2000 - timeSinceLastGeneration) / 1000);
-      toast({
-        title: "잠시만 기다려주세요",
-        description: `${remainingTime}초 후에 다시 시도할 수 있습니다.`,
-        variant: "default"
-      });
-      return null;
-    }
-
+    
     setIsGeneratingTopics(true);
-    setLastGenerationTime(currentTime);
     
     try {
-      const count = appState.topicCount;
-      const enhancedPrompt = getEnhancedTopicPrompt(cleanedKeyword, count);
-      
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
+      
+      const topicCount = appState.topicCount || 5;
+      const prompt = `
+당신은 주어진 키워드를 바탕으로 다양하고 독창적인 블로그 주제를 생성하는 AI 전문가입니다. 
+키워드: "${keyword}"
 
-      // API 요청 타임아웃 설정
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
+다음 조건을 정확히 준수하세요:
+1. 정확히 ${topicCount}개의 블로그 주제를 생성하세요.
+2. 각 주제는 최소 6글자, 최대 40글자로 제한하세요.
+3. 주제는 "제목:" 없이 순수 주제 텍스트만 작성하세요.
+4. 주제 앞에는 번호만 매겨주세요 (예: "1. 주제내용").
+5. 주제와 키워드의 관련성을 높게 유지하세요.
+6. 주제는 한국어로 작성하세요.
+7. 질문형 주제를 포함하여 다양한 형식의 주제를 제시하세요.
 
+**절대적 금지사항**:
+1. 연도 표기(2023년, 2024년 등)를 포함하지 마세요!
+2. 계절이나 "상반기/하반기" 같은 시기 표현을 포함하지 마세요!
+3. "웹사이트"나 "홈페이지"라는 단어를 사용하지 마세요!
+4. "월", "주" 등의 시간 표현을 사용하지 마세요!
+5. 설명이나 해설을 추가하지 마세요.
+6. 제목을 생성하지 말고 순수 주제만 작성하세요.
+
+예시 형식:
+1. 주제 내용
+2. 주제 내용
+...
+
+위의 지침에 따라 ${topicCount}개의 블로그 주제를 생성해주세요.
+`;
+      
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ 
-          contents: [{ parts: [{ text: enhancedPrompt }] }],
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.2, // 온도 조정으로 안정성 향상
-            maxOutputTokens: 2048,
-            topP: 0.8,
-            topK: 40,
-          }
-        })
+            temperature: 1.0,
+            topP: 0.95,
+            topK: 64,
+            maxOutputTokens: 8192,
+          },
+        }),
       });
-
-      clearTimeout(timeoutId);
-
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error?.message || `HTTP ${response.status}: API 요청 실패`;
-        throw new Error(errorMessage);
+        const errorText = await response.text();
+        throw new Error(`API 오류: ${errorText}`);
       }
       
       const data = await response.json();
       
-      // API 응답 검증 강화
-      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Gemini API 응답 오류:', data);
-        throw new Error('API로부터 유효한 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
       }
       
-      const generatedText = data.candidates[0].content.parts[0].text;
-      console.log('Gemini API 원본 응답:', generatedText);
+      const rawTopics = data.candidates[0].content.parts[0].text
+        .split('\n')
+        .filter((line: string) => /^\d+\./.test(line.trim()))
+        .map((line: string) => line.replace(/^\d+\.\s*/, '').trim());
       
-      // 텍스트 파싱 개선
-      const lines = generatedText.split('\n').filter(line => line.trim().length > 0);
-      const newTopics = lines
-        .map(topic => topic.replace(/^[0-9-."']+\s*/, '').trim())
-        .filter(topic => topic.length > 5 && topic.length < 200)
-        .slice(0, count); // 요청한 개수만큼만 선택
-
-      if (newTopics.length === 0) {
-        console.error('파싱된 주제가 없음. 원본 텍스트:', generatedText);
-        throw new Error('생성된 텍스트에서 유효한 주제를 추출할 수 없습니다. 다시 시도해주세요.');
-      }
-
-      let finalTopics = newTopics;
-
-      // Get preventDuplicates from appState
-      const preventDuplicates = appState.preventDuplicates || false;
-
-      // 중복 금지 설정이 활성화된 경우에만 유사도 검사
-      if (preventDuplicates && appState.topics.length > 0) {
-        finalTopics = newTopics.filter(newTopic => {
-          return !appState.topics.some(existingTopic => {
-            const similarity = calculateSimilarity(newTopic, existingTopic);
-            return similarity >= 70;
-          });
+      // 기존 주제와 새 주제의 중복 제거
+      const existingTopics = appState.topics || [];
+      const preventDuplicates = appState.preventDuplicates !== undefined ? appState.preventDuplicates : true;
+      const filteredTopics = filterAndDeduplicateTopics(rawTopics, existingTopics, preventDuplicates);
+      
+      if (filteredTopics.length === 0) {
+        toast({
+          title: "주제 생성 결과 없음",
+          description: "필터링 후 남은 주제가 없습니다. 다른 키워드로 다시 시도해주세요.",
+          variant: "destructive"
         });
-
-        const removedCount = newTopics.length - finalTopics.length;
-        if (removedCount > 0) {
-          console.log(`중복 제거: ${removedCount}개 주제 제거됨`);
-          toast({
-            title: "중복 주제 제거",
-            description: `70% 이상 유사한 ${removedCount}개 주제가 제거되었습니다.`,
-            variant: "default"
-          });
-        }
+        return null;
       }
-
-      // 주제가 전혀 없는 경우 처리
-      if (finalTopics.length === 0) {
-        if (preventDuplicates) {
-          // 중복 방지 모드에서 모든 주제가 중복인 경우, 일부 주제를 허용
-          finalTopics = newTopics.slice(0, Math.min(3, newTopics.length));
-          toast({
-            title: "중복 주제 일부 허용",
-            description: `모든 주제가 중복되어 ${finalTopics.length}개 주제를 허용했습니다.`,
-            variant: "default"
-          });
-        } else {
-          throw new Error('생성된 주제가 없습니다. 다른 키워드로 시도해주세요.');
-        }
-      }
-
-      // 상태 업데이트 - 중복 허용/금지에 관계없이 추가
-      const combinedTopics = [...appState.topics, ...finalTopics];
-      saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
       
-      toast({ 
-        title: "AI 기반 주제 생성 완료", 
-        description: `${finalTopics.length}개의 주제가 성공적으로 생성되었습니다.` 
+      // 기존 주제와 새 주제 합치기
+      const combinedTopics = [...existingTopics, ...filteredTopics];
+      
+      // 상태 업데이트
+      saveAppState({ topics: combinedTopics });
+      
+      toast({
+        title: "주제 생성 완료",
+        description: `${filteredTopics.length}개의 새로운 주제가 생성되었습니다.`
       });
       
-      return finalTopics;
+      return filteredTopics;
     } catch (error) {
-      console.error('주제 생성 상세 오류:', error);
-      let errorMessage = "주제 생성 중 오류가 발생했습니다.";
-      
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = "요청 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.";
-        } else if (error.message.includes('API key')) {
-          errorMessage = "API 키에 문제가 있습니다. API 키를 다시 확인해주세요.";
-        } else if (error.message.includes('quota') || error.message.includes('limit')) {
-          errorMessage = "API 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      toast({ 
-        title: "주제 생성 실패", 
-        description: errorMessage, 
-        variant: "destructive" 
+      console.error("주제 생성 오류:", error);
+      toast({
+        title: "주제 생성 실패",
+        description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
+        variant: "destructive"
       });
       return null;
     } finally {

@@ -30,6 +30,7 @@ interface LeftSidebarProps {
   selectTopic: (topic: string) => void;
   copyToClipboard: (text: string, type: string) => void;
   deleteReferenceData?: () => void;
+  openWhisk: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -51,9 +52,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   selectTopic,
   copyToClipboard,
   deleteReferenceData,
+  openWhisk,
 }) => {
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [showExternalReference, setShowExternalReference] = useState(false);
+  const [showColorTheme, setShowColorTheme] = useState(false);
 
   const handleDoubleClickApiKeys = () => {
     setShowApiKeys(!showApiKeys);
@@ -62,9 +65,19 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const handleDoubleClickExternalReference = () => {
     setShowExternalReference(!showExternalReference);
   };
+  
+  const handleDoubleClickColorTheme = () => {
+    setShowColorTheme(!showColorTheme);
+  };
+  
+  // 랜덤 컬러 테마 선택 함수
+  const selectRandomColorTheme = () => {
+    const randomIndex = Math.floor(Math.random() * colorThemes.length);
+    saveAppState({ colorTheme: colorThemes[randomIndex].value });
+  };
 
   return (
-    <div className="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
+    <div className="w-full bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
       <div className="p-4 space-y-4">
         {/* API 키 설정 */}
         <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickApiKeys}>
@@ -85,37 +98,54 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         </Card>
 
         {/* 컬러 테마 선택 */}
-        <Card className="shadow-md">
+        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickColorTheme}>
           <CardHeader>
-            <CardTitle className="flex items-center text-purple-700">
-              <Settings className="h-5 w-5 mr-2" />
-              블로그 컬러 테마
+            <CardTitle className="flex items-center justify-between text-purple-700">
+              <span className="flex items-center">
+                <Settings className="h-5 w-5 mr-2" />
+                블로그 컬러 테마
+              </span>
+              {showColorTheme ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Select 
-              value={appState.colorTheme || ''} 
-              onValueChange={(value) => saveAppState({ colorTheme: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="컬러 테마 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {colorThemes.map((theme) => (
-                  <SelectItem key={theme.value} value={theme.value}>
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full border" 
-                        style={{ backgroundColor: theme.value }}
-                      />
-                      <span>{theme.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500 mt-2">선택한 테마가 블로그 글에 적용됩니다</p>
-          </CardContent>
+          {showColorTheme && (
+            <CardContent>
+              <Select 
+                value={appState.colorTheme || ''} 
+                onValueChange={(value) => saveAppState({ colorTheme: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="컬러 테마 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {colorThemes.map((theme) => (
+                    <SelectItem key={theme.value} value={theme.value}>
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className="w-4 h-4 rounded-full border" 
+                          style={{ backgroundColor: theme.value }}
+                        />
+                        <span>{theme.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={selectRandomColorTheme} 
+                variant="outline" 
+                className="w-full mt-2"
+              >
+                랜덤 테마 선택
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">선택한 테마가 블로그 글에 적용됩니다</p>
+            </CardContent>
+          )}
+          {!showColorTheme && (
+            <CardContent className="text-xs text-gray-600">
+              <p>더블클릭으로 컬러 테마 설정을 열거나 닫을 수 있습니다.</p>
+            </CardContent>
+          )}
         </Card>
 
         {/* 주제 생성 */}
@@ -148,7 +178,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           isDirectlyGenerating={isDirectlyGenerating}
           generateDirectImage={generateDirectImage}
           copyToClipboard={copyToClipboard}
-          openWhisk={() => {}}
+          openWhisk={openWhisk}
         />
 
         {/* 외부 링크 설정 */}

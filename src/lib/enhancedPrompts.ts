@@ -34,7 +34,7 @@ const generateNaturalContext = (naturalKeyword: string, originalKeyword: string)
     SECTION_CONTENT_5: `${naturalKeyword} 지원`,
     SUMMARY_TITLE: naturalKeyword,
     REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
-    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
+    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 정부지원금, 복지혜택, 생계급여`
   };
 };
 
@@ -58,7 +58,6 @@ export const getEnhancedArticlePrompt = async ({
   
   const selectedHeadings = dynamicHeadings.slice(0, 5);
   const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, selectedHeadings);
-  const currentYear = new Date().getFullYear();
 
   const crawledInfo = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
 
@@ -85,58 +84,27 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 전체 글자수는 공백 포함 4,350자를 절대 초과해서는 안 됩니다.
 **각 H2 섹션의 본문은 정확히 200자에서 270자 사이로 작성**해야 합니다.
 
-**🚨 6개 H2 섹션으로 구성 🚨**
-1-5번째 섹션: 동적 생성된 소제목 사용
-6번째 섹션: "더 자세한 세부 정보가 필요하시요? 🌟" (고정)
+**🚨 이미지 규격 및 alt 태그 - 필수 적용 🚨**
+- 모든 이미지는 width="640" height="480" 속성이 포함되어야 합니다.
+- 이미지에는 반드시 alt 태그를 넣고, 해당 섹션의 요약문을 alt 태그로 설정하세요.
+- 이미지 CSS: style="max-width: 640px; height: 480px; object-fit: cover; display: block; margin-left: auto; margin-right: auto; border-radius: 8px;"
 
-**🚨 FAQ와 주의사항 카드 필수 추가 🚨**
-- 3번째 섹션에는 반드시 주의사항 카드를 추가 (3개 항목)
-- 5번째 섹션에만 FAQ 카드를 추가 (3개 질문과 답변)
+**🚨 금지어와 표현 제한 🚨**
+- 웹사이트라는 단어 사용 금지 (예: "금융감독원 웹사이트" → "금융감독원")
+- 연도 표기(2023년, 2024년 등) 사용 금지
+- 하반기, 상반기와 같은 시기 표현 사용 금지
+- "자세한 내용은 [기관명] 홈페이지를 참조하세요" 같은 문구 사용 금지
 
-**🚨 공식 사이트 자동 링크 연결 - 필수 적용 🚨**
-본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
-반드시 다음 형식으로 작성하세요:
-- 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
-- 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
-- 보건복지부: <a href="https://www.mohw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>
-- 고용노동부: <a href="https://www.moel.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">고용노동부</a>
-- 국세청: <a href="https://www.nts.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">국세청</a>
+**🚨 시각적 요소 필수 포함 🚨**
+- 반드시 여러 색상의 시각요약 카드와 비교표를 포함해야 합니다.
+- 비교표는 ${colors.primary} 컬러를 헤더에 사용하여 통일성을 유지하세요.
 
-**🚨 문단 구성 및 가독성 규칙 🚨**
-140글자 내외에서 2-3문장이 끝나면 반드시 </p> 태그로 닫고 새로운 <p> 태그로 시작하세요.
-각 <p> 태그 사이에는 반드시 공백 줄바꿈을 추가하세요: <p style="height: 20px;">&nbsp;</p>
+**🚨 모바일 최적화 🚨**
+- 모바일 사용자를 위해 좌우 여백을 최소화하세요.
+- 모바일에서도 이미지와 표가 잘 보이도록 반응형으로 작성하세요.
 
-**🚨 고급 정보 제공 의무 🚨**
-각 섹션에서는 다음을 반드시 포함해야 합니다:
-- 구체적인 수치 데이터 (금액, 비율, 기간 등)
-- 실제 적용 사례 또는 예시  
-- 단계별 실행 방법
-- 전문가만 아는 숨겨진 팁
-- 주의해야 할 함정이나 놓치기 쉬운 포인트
+제공된 HTML 템플릿을 사용하여 위의 규칙을 모두 준수하면서, 전문적이고 유익한 블로그 글을 작성해주세요. 미리 정의된 클래스와 스타일을 활용하여 일관된 디자인을 유지하세요.
 
-다음 지침에 따라 작성해주세요:
-- 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공
-- 크롤링 정보 우선 활용: 위에서 제공된 최신 웹 정보를 글의 근거로 최우선 활용
-- 대상 독자: 한국어 사용자
-- 시의성: 크롤링된 최신 정보를 반영하여 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급
-- 문체: 친근한 구어체('~해요', '~죠' 체) 사용
-- 가독성: 140글자마다 2-3문장 끝에서 </p> 태그로 닫고 새로운 <p> 태그로 시작
-
-사용할 변수:
-- Primary Color: ${colors.primary}
-- Secondary Color: ${colors.secondary}
-- Text Highlight Color: ${colors.textHighlight}
-- Highlight Color: ${colors.highlight}
-- Highlight Border Color: ${colors.highlightBorder}
-- Warn BG Color: ${colors.warnBg}
-- Warn Border Color: ${colors.warnBorder}
-- Link Color: ${colors.link}
-- Reference Link: ${refLink}
-- Topic: ${topic}
-- Original Keyword: ${keyword}
-- Natural Keyword: ${naturalKeyword}
-
-아래는 반드시 따라야 할 HTML 템플릿입니다:
-
-${htmlTemplate}`;
+최종 HTML 코드만 제공해주세요.
+`;
 };

@@ -40,7 +40,10 @@ export const useRefactoredAppController = () => {
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog
+    setShowDuplicateErrorDialog,
+    handleTopicSelect,
+    handleTopicSelectionCancel,
+    oneClickMode
   } = useOneClick(
     appState,
     saveAppState,
@@ -57,7 +60,7 @@ export const useRefactoredAppController = () => {
   const [pendingTopic, setPendingTopic] = useState<string>('');
 
   // 주제 선택 시 확인 다이얼로그 표시
-  const handleTopicSelect = (topic: string) => {
+  const handleTopicSelectWithConfirm = (topic: string) => {
     console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
@@ -165,7 +168,7 @@ export const useRefactoredAppController = () => {
     generationFunctions,
     topicControls: {
       ...topicControls,
-      selectTopic: handleTopicSelect, // 주제 선택 시 확인 다이얼로그 표시
+      selectTopic: handleTopicSelectWithConfirm, // 주제 선택 시 확인 다이얼로그 표시
     },
     utilityFunctions,
     handleTopicConfirm,
@@ -178,5 +181,7 @@ export const useRefactoredAppController = () => {
     pendingTopic,
     handleTopicCancel,
     convertToMarkdown,
+    handleTopicSelect,
+    oneClickMode,
   };
 };
