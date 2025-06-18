@@ -41,9 +41,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     );
   }
 
-  const pendingUsers = users.filter((user) => user.status === 'pending');
   const approvedUsers = users.filter((user) => user.status === 'approved');
-  const rejectedUsers = users.filter((user) => user.status === 'rejected');
 
   // 사용자가 관리자인지 확인하는 함수
   const isAdminUser = (email: string) => {
@@ -52,50 +50,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
 
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>승인 대기 ({pendingUsers.length})</CardTitle>
-          <CardDescription>
-            {isAdmin 
-              ? '새롭게 가입하여 승인을 기다리는 사용자 목록입니다.' 
-              : '승인을 기다리는 사용자들입니다.'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이메일</TableHead>
-                <TableHead>가입일</TableHead>
-                {isAdmin && <TableHead className="text-right">관리</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingUsers.length === 0 ? (
-                <TableRow><TableCell colSpan={isAdmin ? 3 : 2} className="h-24 text-center">대기중인 사용자가 없습니다.</TableCell></TableRow>
-              ) : (
-                pendingUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.email}
-                      {isAdminUser(user.email) && <Badge variant="secondary" className="ml-2">관리자</Badge>}
-                    </TableCell>
-                    <TableCell>{new Date(user.created_at).toLocaleString()}</TableCell>
-                    {isAdmin && (
-                      <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => updateUserStatus(user.id, 'approved')}>승인</Button>
-                        <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>거절</Button>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>승인된 사용자 ({approvedUsers.length})</CardTitle>
@@ -133,57 +87,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                         {!isAdminUser(user.email) && (
                           <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
                         )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>거절된 사용자 ({rejectedUsers.length})</CardTitle>
-          <CardDescription>
-            {isAdmin 
-              ? '가입이 거절되었거나 승인이 만료된 사용자 목록입니다.' 
-              : '접근이 거절되거나 만료된 사용자들입니다.'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이메일</TableHead>
-                <TableHead>처리일</TableHead>
-                <TableHead>상태</TableHead>
-                {isAdmin && <TableHead className="text-right">관리</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rejectedUsers.length === 0 ? (
-                <TableRow><TableCell colSpan={isAdmin ? 4 : 3} className="h-24 text-center">거절된 사용자가 없습니다.</TableCell></TableRow>
-              ) : (
-                rejectedUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.email}
-                      {isAdminUser(user.email) && <Badge variant="secondary" className="ml-2">관리자</Badge>}
-                    </TableCell>
-                    <TableCell>{new Date(user.updated_at).toLocaleString()}</TableCell>
-                    <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge></TableCell>
-                    {isAdmin && (
-                      <TableCell className="text-right space-x-2">
-                         <Button size="sm" variant="outline" onClick={() => updateUserStatus(user.id, 'approved')}>승인</Button>
-                         {!isAdminUser(user.email) && (
-                           <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id)}>
-                             <Trash2 className="h-4 w-4" />
-                             삭제
-                           </Button>
-                         )}
                       </TableCell>
                     )}
                   </TableRow>
