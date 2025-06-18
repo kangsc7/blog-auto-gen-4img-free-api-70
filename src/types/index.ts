@@ -1,3 +1,4 @@
+
 export interface AppState {
   apiKey: string;
   pixabayApiKey: string;
@@ -15,4 +16,17 @@ export interface AppState {
   referenceSentence: string;
   colorTheme: string;
   preventDuplicates: boolean;
+  currentUser: string;
+}
+
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type AppRole = 'admin' | 'user';
+
+export interface Profile {
+  id: string;
+  email: string;
+  status: UserStatus;
+  created_at: string;
+  updated_at: string;
+  approved_at: string | null;
 }

@@ -21,8 +21,8 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
     pixabay: appState.pixabayApiKey?.substring(0, 20) + '...',
     huggingface: appState.huggingFaceApiKey?.substring(0, 20) + '...',
     geminiValidated: appState.isApiKeyValidated,
-    pixabayValidated: appState.isPixabayApiKeyValidated,
-    huggingfaceValidated: appState.isHuggingFaceApiKeyValidated,
+    pixabayValidated: appState.isPixabayKeyValidated,
+    huggingfaceValidated: appState.isHuggingFaceKeyValidated,
     hasInitialized: hasInitialized.current
   });
 
@@ -50,11 +50,11 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
         }
         if (!appState.pixabayApiKey) {
           updates.pixabayApiKey = DEFAULT_API_KEYS.PIXABAY;
-          updates.isPixabayApiKeyValidated = true;
+          updates.isPixabayKeyValidated = true;
         }
         if (!appState.huggingFaceApiKey) {
           updates.huggingFaceApiKey = DEFAULT_API_KEYS.HUGGING_FACE;
-          updates.isHuggingFaceApiKeyValidated = true;
+          updates.isHuggingFaceKeyValidated = true;
         }
         
         if (Object.keys(updates).length > 0) {
@@ -85,27 +85,27 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
 
   const pixabayManager = usePixabayManager({
     initialApiKey: appState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY,
-    initialValidated: appState.isPixabayApiKeyValidated ?? true,
+    initialValidated: appState.isPixabayKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('🖼️ Pixabay API 키 변경됨:', key.substring(0, 20) + '...');
       saveAppState({ pixabayApiKey: key });
     },
     onValidationChange: (validated) => {
       console.log('✅ Pixabay API 키 검증 상태 변경됨:', validated);
-      saveAppState({ isPixabayApiKeyValidated: validated });
+      saveAppState({ isPixabayKeyValidated: validated });
     },
   });
 
   const huggingFaceManager = useHuggingFaceManager({
     initialApiKey: appState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
-    initialValidated: appState.isHuggingFaceApiKeyValidated ?? true,
+    initialValidated: appState.isHuggingFaceKeyValidated ?? true,
     onApiKeyChange: (key) => {
       console.log('🤗 HuggingFace API 키 변경됨:', key.substring(0, 20) + '...');
       saveAppState({ huggingFaceApiKey: key });
     },
     onValidationChange: (validated) => {
       console.log('✅ HuggingFace API 키 검증 상태 변경됨:', validated);
-      saveAppState({ isHuggingFaceApiKeyValidated: validated });
+      saveAppState({ isHuggingFaceKeyValidated: validated });
     },
   });
 

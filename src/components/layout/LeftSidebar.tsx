@@ -104,7 +104,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                     <div className="flex items-center space-x-2">
                       <div 
                         className="w-4 h-4 rounded-full border" 
-                        style={{ backgroundColor: theme.preview }}
+                        style={{ backgroundColor: theme.value }}
                       />
                       <span>{theme.label}</span>
                     </div>
@@ -141,7 +141,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         {/* 이미지 프롬프트 및 생성 */}
         <ImageCreation
           appState={appState}
-          saveAppState={saveAppState}
           isGeneratingImage={isGeneratingImage}
           createImagePrompt={createImagePrompt}
           isDirectlyGenerating={isDirectlyGenerating}

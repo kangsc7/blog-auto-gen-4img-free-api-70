@@ -99,7 +99,7 @@ export const useArticleGenerator = (
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
-        signal: currentController.current.signal, // AbortController 신호 추가
+        signal: currentController.current.signal,
       });
 
       if (cancelArticleGeneration.current) {
@@ -140,7 +140,7 @@ export const useArticleGenerator = (
 
       // Pixabay API 키와 검증 상태를 appState에서 직접 가져오기
       const pixabayApiKey = appState.pixabayApiKey;
-      const isPixabayValidated = appState.isPixabayApiKeyValidated;
+      const isPixabayValidated = appState.isPixabayKeyValidated;
       
       console.log('Pixabay 설정 확인:', { 
         hasKey: !!pixabayApiKey, 
