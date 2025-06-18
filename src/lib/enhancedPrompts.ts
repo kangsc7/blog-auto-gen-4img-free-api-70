@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -66,7 +67,7 @@ export const getEnhancedArticlePrompt = async ({
   // 5개 섹션만 사용하도록 조정
   const selectedHeadings = dynamicHeadings.slice(0, 5);
   
-  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, selectedHeadings);
+  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence || '');
   const currentYear = new Date().getFullYear();
 
   // 웹 크롤링으로 최신 정보 및 공식 링크 수집
@@ -285,13 +286,13 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
   }
 };
 
-export const generateBlogArticlePrompt = (
+export const generateBlogArticlePrompt = async (
   topic: string,
   keyword: string,
   referenceLink?: string,
   referenceSentence?: string,
   officialLink?: string
-): string => {
+): Promise<string> => {
   const colors = getColors('default');
   const refLink = referenceLink || 'https://worldpis.com';
   
@@ -309,7 +310,7 @@ export const generateBlogArticlePrompt = (
   // 5개 섹션만 사용하도록 조정
   const selectedHeadings = dynamicHeadings.slice(0, 5);
   
-  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, selectedHeadings);
+  const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence || '');
   const currentYear = new Date().getFullYear();
 
   // 웹 크롤링으로 최신 정보 및 공식 링크 수집
