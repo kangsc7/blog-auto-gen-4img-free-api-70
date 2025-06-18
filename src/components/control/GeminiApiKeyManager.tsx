@@ -65,7 +65,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
           </div>
           <div className="flex space-x-2 mt-2">
             <Button onClick={deleteGeminiApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
-              기본값으로 복원
+              키 삭제
             </Button>
           </div>
           <p className="text-xs text-blue-600 mt-1">

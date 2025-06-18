@@ -17,8 +17,8 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // 클릭으로 확장/축소 토글
-  const handleToggle = () => {
+  // 더블클릭으로 확장/축소 토글
+  const handleDoubleClick = () => {
     setIsExpanded(!isExpanded);
   };
 
@@ -38,7 +38,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
       isExpanded ? 'mb-4' : 'mb-1'
     }`}>
       <div 
-        onClick={handleToggle}
+        onDoubleClick={handleDoubleClick}
         className={`cursor-pointer transition-all duration-500 ease-in-out transform ${
           isExpanded 
             ? 'opacity-100 max-h-96 scale-100' 
@@ -85,7 +85,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
         
         {!isExpanded && (
           <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2 mt-2 border border-gray-200">
-            💡 클릭해서 API 키 설정 보기
+            💡 더블클릭해서 API 키 설정 보기
           </div>
         )}
       </div>
