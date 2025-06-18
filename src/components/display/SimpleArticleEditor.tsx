@@ -24,11 +24,15 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   // 편집기 상태 관리
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isEditorFocused, setIsEditorFocused] = useState(false); // 핵심: 편집기 포커스 상태
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false); // 새로운 타이핑 상태
   const [lastSavedContent, setLastSavedContent] = useState('');
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
+  
+  // 타이핑 감지용 타이머
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
   
   // 안전한 localStorage 작업
   const safeLocalStorageGet = useCallback(() => {
@@ -79,32 +83,34 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet, safeLocalStorageSet]);
   
-  // 새로운 생성 콘텐츠 처리 - 편집기에 포커스가 없을 때만
+  // 새로운 생성 콘텐츠 처리 - 사용자가 타이핑 중이 아닐 때만
   useEffect(() => {
     if (isInitialized && 
         generatedContent && 
         generatedContent !== editorContent && 
-        !isEditorFocused && // 핵심: 포커스가 없을 때만 업데이트
+        !isEditorFocused && 
+        !isUserTyping && // 타이핑 중이 아닐 때만
         !isGeneratingContent) {
       
-      console.log('🔄 새로운 생성 콘텐츠 적용 (포커스 없음)');
+      console.log('🔄 새로운 생성 콘텐츠 적용 (사용자 비활성 상태)');
       setEditorContent(generatedContent);
       safeLocalStorageSet(generatedContent);
       onContentChange(generatedContent);
     }
-  }, [generatedContent, editorContent, isEditorFocused, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, editorContent, isEditorFocused, isUserTyping, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
   
-  // DOM과 React 상태 동기화 - 편집기에 포커스가 없을 때만
+  // DOM과 React 상태 동기화 - 사용자가 타이핑 중이 아닐 때만
   useEffect(() => {
     if (editorRef.current && 
         editorContent && 
         editorRef.current.innerHTML !== editorContent &&
-        !isEditorFocused) { // 핵심: 포커스가 없을 때만 DOM 업데이트
+        !isEditorFocused && 
+        !isUserTyping) { // 타이핑 중이 아닐 때만 DOM 업데이트
       
-      console.log('🔄 DOM 업데이트 (포커스 없음)');
+      console.log('🔄 DOM 업데이트 (사용자 비활성 상태)');
       editorRef.current.innerHTML = editorContent;
     }
-  }, [editorContent, isEditorFocused]);
+  }, [editorContent, isEditorFocused, isUserTyping]);
   
   // 자동 저장 - 디바운스 적용
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -116,16 +122,29 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     autoSaveTimeoutRef.current = setTimeout(() => {
       safeLocalStorageSet(content);
       onContentChange(content);
-    }, 500); // 500ms 디바운스
+    }, 500);
   }, [safeLocalStorageSet, onContentChange]);
   
-  // 사용자 입력 처리
+  // 사용자 입력 처리 - 타이핑 상태 관리 추가
   const handleInput = useCallback(() => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
       setEditorContent(newContent);
       performAutoSave(newContent);
-      console.log('✏️ 사용자 편집 감지');
+      
+      // 타이핑 상태 설정
+      setIsUserTyping(true);
+      console.log('✏️ 사용자 타이핑 시작');
+      
+      // 타이핑 완료 감지 (1초 후)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsUserTyping(false);
+        console.log('⏹️ 사용자 타이핑 완료');
+      }, 1000);
     }
   }, [isGeneratingContent, performAutoSave]);
   
@@ -138,9 +157,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const handleBlur = useCallback(() => {
     console.log('📝 편집기 포커스 해제');
     setIsEditorFocused(false);
+    
+    // 포커스 해제 시 타이핑 상태도 초기화
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    setTimeout(() => {
+      setIsUserTyping(false);
+      console.log('🔄 포커스 해제로 인한 타이핑 상태 초기화');
+    }, 100);
   }, []);
   
-  // 마우스 이벤트 추가 처리
+  // 마우스 이벤트 처리
   const handleMouseEnter = useCallback(() => {
     console.log('🖱️ 마우스 편집기 진입');
     setIsEditorFocused(true);
@@ -148,14 +176,13 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   const handleMouseLeave = useCallback(() => {
     console.log('🖱️ 마우스 편집기 이탈');
-    // 실제로 편집기에 텍스트 커서가 없을 때만 포커스 해제
     setTimeout(() => {
       const activeElement = document.activeElement;
-      if (activeElement !== editorRef.current) {
+      if (activeElement !== editorRef.current && !isUserTyping) {
         setIsEditorFocused(false);
       }
     }, 100);
-  }, []);
+  }, [isUserTyping]);
   
   // 페이지 언로드 시 최종 저장
   useEffect(() => {
@@ -181,6 +208,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
     };
   }, [editorContent, safeLocalStorageSet]);
@@ -239,6 +269,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
               {isEditorFocused && <span className="ml-2 text-xs text-blue-500">✏️ 편집 중</span>}
+              {isUserTyping && <span className="ml-2 text-xs text-orange-500">⌨️ 타이핑 중</span>}
             </span>
             <div className="flex space-x-2">
               {editorContent && !isGeneratingContent && (
@@ -287,8 +318,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
                 <p>아래 내용을 자유롭게 수정하세요. 이미지도 Ctrl+V로 붙여넣을 수 있습니다.</p>
                 <p className="text-xs text-green-600 mt-1">✅ 실시간 자동 저장: 창 전환/새로고침 시에도 안전하게 보존됩니다</p>
-                {isEditorFocused && (
-                  <p className="text-xs text-blue-600 mt-1">🔒 편집 중: 자동 업데이트가 일시 중단되어 커서가 보호됩니다</p>
+                {isUserTyping && (
+                  <p className="text-xs text-orange-600 mt-1">⌨️ 타이핑 중: DOM 업데이트가 일시 중단되어 커서 위치가 보호됩니다</p>
                 )}
               </div>
               <div
