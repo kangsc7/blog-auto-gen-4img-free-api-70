@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,110 +20,133 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromProps = useRef(false);
-  const isComposing = useRef(false); // 한글 입력 중인지 추적
+  const isComposing = useRef(false);
   const lastKnownCursorPosition = useRef(0);
+  const skipNextCursorRestore = useRef(false);
+  const isInternalUpdate = useRef(false);
 
-  // 커서 위치를 텍스트 오프셋으로 저장/복원하는 더 안정적인 방법
+  // 더 정확한 커서 위치 계산
   const getCursorPosition = (): number => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) return lastKnownCursorPosition.current;
+    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) {
+      return lastKnownCursorPosition.current;
+    }
     
-    const range = selection.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(editableDivRef.current);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
-    
-    const position = preCaretRange.toString().length;
-    lastKnownCursorPosition.current = position;
-    return position;
+    try {
+      const range = selection.getRangeAt(0);
+      const preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(editableDivRef.current);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      
+      const position = preCaretRange.toString().length;
+      lastKnownCursorPosition.current = position;
+      return position;
+    } catch (error) {
+      console.warn('커서 위치 계산 중 오류:', error);
+      return lastKnownCursorPosition.current;
+    }
   };
 
+  // 더 안정적인 커서 위치 복원
   const setCursorPosition = (position: number) => {
-    if (!editableDivRef.current || isComposing.current) return; // 한글 입력 중에는 커서 이동 금지
+    if (!editableDivRef.current || isComposing.current || skipNextCursorRestore.current) {
+      skipNextCursorRestore.current = false;
+      return;
+    }
     
     const selection = window.getSelection();
     if (!selection) return;
 
-    let currentPosition = 0;
-    const walker = document.createTreeWalker(
-      editableDivRef.current,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
+    try {
+      let currentPosition = 0;
+      const walker = document.createTreeWalker(
+        editableDivRef.current,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
 
-    let node;
-    while (node = walker.nextNode()) {
-      const textLength = node.textContent?.length || 0;
-      if (currentPosition + textLength >= position) {
-        const range = document.createRange();
-        const offsetInNode = position - currentPosition;
-        range.setStart(node, Math.min(offsetInNode, textLength));
-        range.setEnd(node, Math.min(offsetInNode, textLength));
-        
-        selection.removeAllRanges();
-        selection.addRange(range);
-        lastKnownCursorPosition.current = position;
-        return;
+      let node;
+      while (node = walker.nextNode()) {
+        const textLength = node.textContent?.length || 0;
+        if (currentPosition + textLength >= position) {
+          const range = document.createRange();
+          const offsetInNode = Math.min(position - currentPosition, textLength);
+          range.setStart(node, offsetInNode);
+          range.setEnd(node, offsetInNode);
+          
+          selection.removeAllRanges();
+          selection.addRange(range);
+          lastKnownCursorPosition.current = position;
+          return;
+        }
+        currentPosition += textLength;
       }
-      currentPosition += textLength;
-    }
 
-    // 만약 위치를 찾지 못했다면 끝으로 이동
-    const range = document.createRange();
-    range.selectNodeContents(editableDivRef.current);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    lastKnownCursorPosition.current = editableDivRef.current.textContent?.length || 0;
+      // 위치를 찾지 못한 경우 마지막으로 이동
+      const range = document.createRange();
+      range.selectNodeContents(editableDivRef.current);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      lastKnownCursorPosition.current = editableDivRef.current.textContent?.length || 0;
+    } catch (error) {
+      console.warn('커서 위치 복원 중 오류:', error);
+    }
   };
 
   useEffect(() => {
-    // 한글 입력 중이거나 외부 업데이트 중에는 DOM 업데이트 금지
     if (editableDivRef.current && 
         editableDivRef.current.innerHTML !== generatedContent && 
-        !isComposing.current) {
+        !isComposing.current &&
+        !isInternalUpdate.current) {
       
-      // 현재 커서 위치 저장
       const cursorPosition = getCursorPosition();
-      
-      // 외부에서 오는 업데이트임을 표시
       isUpdatingFromProps.current = true;
       
-      // 내용 업데이트
       editableDivRef.current.innerHTML = generatedContent;
       
-      // 커서 위치 복원 (약간의 지연 후)
+      // DOM 업데이트 후 커서 복원
       requestAnimationFrame(() => {
-        setCursorPosition(cursorPosition);
-        isUpdatingFromProps.current = false;
+        requestAnimationFrame(() => {
+          setCursorPosition(cursorPosition);
+          isUpdatingFromProps.current = false;
+        });
       });
     }
   }, [generatedContent]);
 
   const handleContentEdit = () => {
-    if (editableDivRef.current && !isUpdatingFromProps.current && !isComposing.current) {
+    if (editableDivRef.current && 
+        !isUpdatingFromProps.current && 
+        !isComposing.current &&
+        !isInternalUpdate.current) {
+      
+      isInternalUpdate.current = true;
       const updatedContent = editableDivRef.current.innerHTML;
       onContentChange(updatedContent);
+      
+      // 내부 업데이트 플래그 해제
+      setTimeout(() => {
+        isInternalUpdate.current = false;
+      }, 50);
     }
   };
 
-  // 한글 입력 시작 처리
+  // 한글 입력 이벤트 처리
   const handleCompositionStart = () => {
     console.log('한글 입력 시작');
     isComposing.current = true;
   };
 
-  // 한글 입력 중 처리
   const handleCompositionUpdate = () => {
-    // 입력 중에는 아무것도 하지 않음
+    // 입력 중에는 커서 위치만 업데이트
+    getCursorPosition();
   };
 
-  // 한글 입력 완료 처리
   const handleCompositionEnd = () => {
     console.log('한글 입력 완료');
     isComposing.current = false;
     
-    // 한글 입력이 완료된 후에 상태 업데이트
     setTimeout(() => {
       if (!isUpdatingFromProps.current) {
         handleContentEdit();
@@ -132,42 +154,86 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     }, 10);
   };
 
+  // 특정 키에 대한 안전한 처리
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    // 한글 입력 중에는 특별한 키 처리를 하지 않음
-    if (isComposing.current) {
-      return;
-    }
+    if (isComposing.current) return;
 
-    if (event.key === 'Enter') {
-      // 엔터 키는 기본 동작을 허용하되, 상태 업데이트만 지연
-      event.stopPropagation(); // 이벤트 버블링 방지
-      
-      // 현재 커서 위치를 즉시 저장
-      const currentPosition = getCursorPosition();
-      
-      // 약간의 지연 후 상태 업데이트 (DOM 변경 후)
+    const key = event.key;
+    
+    // 커서 위치 저장
+    getCursorPosition();
+    
+    // 특별한 처리가 필요한 키들
+    if (key === 'Enter') {
+      event.stopPropagation();
+      // 엔터는 기본 동작 허용하되 상태 업데이트는 지연
       setTimeout(() => {
-        handleContentEdit();
-        // 커서 위치 재조정
-        requestAnimationFrame(() => {
-          setCursorPosition(currentPosition + 1); // 엔터로 인한 위치 조정
-        });
+        if (!isUpdatingFromProps.current) {
+          skipNextCursorRestore.current = true; // 엔터 후 커서 복원 건너뛰기
+          handleContentEdit();
+        }
       }, 0);
+    } else if (key === ' ' || key === 'Backspace' || key === 'Delete') {
+      // 스페이스, 백스페이스, 델리트는 즉시 처리하지 않음
+      skipNextCursorRestore.current = true;
+    }
+  };
+
+  // 키를 놓았을 때의 처리
+  const handleKeyUp = (event: React.KeyboardEvent) => {
+    if (isComposing.current) return;
+    
+    const key = event.key;
+    
+    // 특정 키들에 대해서만 지연된 업데이트
+    if (key === ' ' || key === 'Backspace' || key === 'Delete') {
+      setTimeout(() => {
+        if (!isUpdatingFromProps.current && !isComposing.current) {
+          handleContentEdit();
+        }
+      }, 10);
     }
   };
 
   const handleInput = (event: React.FormEvent) => {
-    // 한글 입력 중에는 즉시 처리하지 않음
-    if (!isUpdatingFromProps.current && !isComposing.current) {
-      // 커서 위치 업데이트
-      getCursorPosition();
-      handleContentEdit();
+    if (isComposing.current || isUpdatingFromProps.current) return;
+    
+    // 커서 위치 업데이트
+    getCursorPosition();
+    
+    // 일반적인 텍스트 입력에 대해서만 즉시 처리
+    const nativeEvent = event.nativeEvent as InputEvent;
+    const inputType = nativeEvent.inputType;
+    
+    // 특정 입력 타입은 지연 처리
+    if (inputType === 'deleteContentBackward' || 
+        inputType === 'deleteContentForward' ||
+        inputType === 'insertText' && nativeEvent.data === ' ') {
+      return; // keyUp에서 처리됨
     }
+    
+    // 나머지는 즉시 처리
+    setTimeout(() => {
+      if (!isUpdatingFromProps.current && !isComposing.current) {
+        handleContentEdit();
+      }
+    }, 0);
   };
 
   const handleBeforeInput = (event: React.FormEvent) => {
-    // 현재 커서 위치를 저장
     getCursorPosition();
+  };
+
+  // 포커스 이벤트 처리
+  const handleFocus = () => {
+    getCursorPosition();
+  };
+
+  const handleClick = () => {
+    // 클릭 후 커서 위치 업데이트
+    setTimeout(() => {
+      getCursorPosition();
+    }, 0);
   };
 
   const handleCopyToClipboard = () => {
@@ -262,8 +328,11 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             onCompositionEnd={handleCompositionEnd}
             onBeforeInput={handleBeforeInput}
             onInput={handleInput}
-            onBlur={handleContentEdit}
             onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
+            onFocus={handleFocus}
+            onClick={handleClick}
+            onBlur={handleContentEdit}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
           />
         ) : (
