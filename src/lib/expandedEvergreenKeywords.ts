@@ -1,4 +1,3 @@
-
 interface EvergreenCategory {
   name: string;
   keywords: string[];
@@ -155,7 +154,7 @@ export class ExpandedEvergreenService {
     return (matches / maxLength) * 100;
   }
 
-  private static getRandomFromDatabase(usedKeywords: string[]): string {
+  static getRandomFromDatabase(usedKeywords: string[]): string {
     const allKeywords = this.categories.flatMap(category => category.keywords);
     const availableKeywords = allKeywords.filter(keyword => 
       !usedKeywords.some(used => 

@@ -34,19 +34,27 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
 
-  // 컨텐츠가 변경될 때만 에디터 업데이트
+  // 컨텐츠가 변경될 때마다 에디터 업데이트 - 조건 개선
   useEffect(() => {
-    if (generatedContent !== currentContent && !isGeneratingContent) {
+    console.log('SimpleArticleEditor - generatedContent 변경 감지:', {
+      generatedContentLength: generatedContent?.length || 0,
+      currentContentLength: currentContent?.length || 0,
+      isGeneratingContent,
+      contentChanged: generatedContent !== currentContent
+    });
+
+    if (generatedContent && generatedContent !== currentContent) {
+      console.log('SimpleArticleEditor - 에디터 콘텐츠 업데이트 중...');
       setCurrentContent(generatedContent);
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
+        console.log('SimpleArticleEditor - 에디터 DOM 업데이트 완료');
       }
       // localStorage에 저장
-      if (generatedContent) {
-        localStorage.setItem('blog_editor_content', generatedContent);
-      }
+      localStorage.setItem('blog_editor_content', generatedContent);
+      onContentChange(generatedContent);
     }
-  }, [generatedContent, isGeneratingContent, currentContent]);
+  }, [generatedContent, currentContent, onContentChange]);
 
   // 사용자가 직접 편집할 때
   const handleInput = () => {
@@ -137,12 +145,13 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
             <p className="font-semibold text-lg">
-              <span className="font-bold text-blue-600 animate-pulse">
-                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite] transform-origin-[70%_70%]">파</span>
-                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.1s] transform-origin-[70%_70%]">코</span>
-                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.2s] transform-origin-[70%_70%]">월</span>
+              <span className="font-bold text-blue-600">
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite] transform-origin-[70%_70%] mr-0.5">파</span>
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.1s] transform-origin-[70%_70%] mr-0.5">코</span>
+                <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.2s] transform-origin-[70%_70%] mr-0.5">월</span>
                 <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.3s] transform-origin-[70%_70%]">드</span>
-              </span>가 글을 생성하고 있습니다...
+              </span>
+              가 글을 생성하고 있습니다...
             </p>
             <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
           </div>
@@ -172,6 +181,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           </div>
         )}
       </CardContent>
+
+      <style jsx>{`
+        @keyframes wave {
+          0%, 60%, 100% {
+            transform: initial;
+          }
+          30% {
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
     </Card>
   );
 };
