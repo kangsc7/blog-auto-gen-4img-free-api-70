@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -59,7 +58,7 @@ export const useRefactoredAppController = () => {
   } = useOneClick(
     appState,
     saveAppState,
-    generateTopics, // 수정: 함수 자체를 전달
+    generateTopics,
     topicControls.selectTopic,
     generateArticle,
     profile,
@@ -278,22 +277,12 @@ export const useRefactoredAppController = () => {
     handleStopOneClick: handleUnifiedStop,
     generationStatus,
     generationFunctions,
-    topicControls: {
-      ...topicControls,
-      selectTopic: handleTopicSelectWithConfirm,
-    },
+    topicControls,
     utilityFunctions,
-    handleTopicConfirm,
     showTopicSelectionDialog,
     setShowTopicSelectionDialog,
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
-    showTopicConfirmDialog,
-    setShowTopicConfirmDialog,
-    pendingTopic,
-    handleTopicCancel,
-    convertToMarkdown,
-    handleTopicSelect,
     oneClickMode,
     pixabayClipboard,
   };

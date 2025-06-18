@@ -53,7 +53,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                         <span className="text-center leading-tight">
                             최신 이슈
                             <br />
-                            원클릭 생성
+                            키워드(적용)
                         </span>
                     </Button>
 
@@ -67,7 +67,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                         <span className="text-center leading-tight">
                             평생 키워드
                             <br />
-                            원클릭 생성
+                            버튼(적용)
                         </span>
                     </Button>
                 </div>

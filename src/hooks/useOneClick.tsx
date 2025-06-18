@@ -8,7 +8,7 @@ import { RealTimeTrendCrawler } from '@/lib/realTimeTrendCrawler';
 export const useOneClick = (
   appState: AppState,
   saveAppState: (newState: Partial<AppState>) => void,
-  generateTopics: () => Promise<string[] | null>, // 수정: 함수 타입 명시
+  generateTopics: () => Promise<string[] | null>,
   selectTopic: (topic: string) => void,
   generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>,
   profile: Profile | null,
@@ -30,47 +30,41 @@ export const useOneClick = (
   // 향상된 평생 키워드 생성 함수
   const generateEvergreenKeyword = async (apiKey: string): Promise<string> => {
     const evergreenCategories = [
-      // 재테크 관련 (15개)
+      // 재테크 관련 (20개)
       '주식투자 기초', '부동산 투자', '적금 이자율', '연금저축', '펀드 투자', 
       '보험 선택', '세금 절약', '대출 관리', '신용점수', '가계부 작성',
       '투자 포트폴리오', '배당주 투자', '청약 당첨', 'ISA 계좌', '절약 노하우',
+      '암호화폐 기초', 'P2P 투자', '리츠 투자', '적금 상품', '통장 관리',
       
-      // 건강 관리 (15개)
+      // 건강 관리 (20개)
       '다이어트 방법', '홈트레이닝', '건강한 식단', '수면의 질', '스트레스 관리',
       '금연 성공법', '당뇨 관리', '혈압 관리', '관절 건강', '눈 건강',
       '면역력 강화', '갱년기 건강', '청소년 건강', '노인 건강', '정신건강',
+      '비타민 섭취', '운동 루틴', '체중 관리', '건강검진', '생활습관',
       
-      // 생활 정보 (15개)
+      // 생활 정보 (20개)
       '전기요금 절약', '가스비 절약', '수도요금 절약', '인터넷 요금', '휴대폰 요금',
       '청소 노하우', '세탁 방법', '정리정돈', '에어컨 관리', '난방비 절약',
       '대중교통 할인', '렌탈 vs 구매', '중고거래', '생활용품 관리', '안전 관리',
+      '보험 선택', '통신비 절약', '쇼핑 할인', '포인트 적립', '멤버십 활용',
       
-      // 요리 레시피 (15개)
+      // 요리 레시피 (20개)
       '간단한 요리', '밑반찬 만들기', '도시락 메뉴', '아이 간식', '건강 요리',
       '다이어트 요리', '단백질 요리', '채소 요리', '국물 요리', '홈베이킹',
       '김치 담그기', '계란 요리', '면 요리', '찜 요리', '볶음 요리',
+      '냉장고 정리', '식재료 보관', '밀키트 활용', '전자레인지 요리', '원팟 요리',
       
-      // 육아 정보 (10개)
-      '신생아 돌보기', '이유식 만들기', '아이 놀이법', '훈육 방법', '아이 건강관리',
-      '예방접종', '독서 습관', '창의력 발달', '학습 습관', '사회성 발달',
-      
-      // 자기계발 (10개)
+      // 자기계발 (20개)
       '독서 습관', '시간관리', '목표 달성', '집중력 향상', '기억력 개선',
       '창의력 기르기', '스트레스 해소', '자신감 키우기', '소통 능력', '리더십',
-      
-      // 인간관계 (10개)
-      '대화 기술', '경청 방법', '갈등 해결', '인맥 관리', '가족 소통',
-      '부부 관계', '직장 인간관계', '친구 사귀기', '예의와 매너', '감정 조절',
-      
-      // 취미생활 (10개)
-      '홈 가드닝', '사진 촬영', '그림 그리기', '음악 감상', '여행 계획',
-      '캠핑 준비', '등산 장비', '요가 기초', '명상 방법', '수공예'
+      '학습법', '노트 정리', '발표 기술', '면접 준비', '취업 준비',
+      '자격증 공부', '온라인 강의', '독서법', '암기법', '어학 학습'
     ];
 
     try {
-      // 랜덤으로 3개 카테고리 선택
+      // 랜덤으로 5개 카테고리 선택
       const shuffledCategories = evergreenCategories.sort(() => 0.5 - Math.random());
-      const selectedCategories = shuffledCategories.slice(0, 3);
+      const selectedCategories = shuffledCategories.slice(0, 5);
       
       console.log('✅ 선택된 평생 키워드 카테고리:', selectedCategories);
 
@@ -79,7 +73,7 @@ export const useOneClick = (
 카테고리: ${selectedCategories.join(', ')}
 
 **키워드 생성 규칙:**
-- 15자 이내의 간결한 표현
+- 10자 이내의 간결한 표현
 - 시간이 지나도 변하지 않는 가치 있는 정보
 - 실제 검색하고 싶은 구체적 내용
 - 실행 가능한 실용적 주제
@@ -95,7 +89,7 @@ export const useOneClick = (
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 1.2,
-            maxOutputTokens: 100,
+            maxOutputTokens: 50,
           },
         }),
       });
@@ -106,13 +100,17 @@ export const useOneClick = (
       }
 
       const data = await response.json();
-      const keyword = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      let keyword = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
       
       if (!keyword) {
         console.error('❌ 평생 키워드 응답이 비어있음');
         throw new Error('유효한 키워드를 받지 못했습니다');
       }
 
+      // 키워드 정제 - 불필요한 문구 제거
+      keyword = keyword.replace(/^키워드:\s*/, '').replace(/^-\s*/, '').replace(/^\d+\.\s*/, '');
+      keyword = keyword.split('\n')[0].trim(); // 첫 번째 줄만 사용
+      
       console.log('✅ 생성된 평생 키워드:', keyword);
       return keyword;
     } catch (error) {
@@ -122,6 +120,29 @@ export const useOneClick = (
       const backupKeyword = backupKeywords[Math.floor(Math.random() * backupKeywords.length)];
       console.log('🔄 백업 키워드 사용:', backupKeyword);
       return backupKeyword;
+    }
+  };
+
+  // 최신 이슈 키워드 생성 함수
+  const generateLatestIssueKeyword = async (apiKey: string): Promise<string> => {
+    try {
+      console.log('🔍 최신 이슈 키워드 생성 시작...');
+      
+      // 실시간 트렌드 크롤링
+      const latestTrends = await RealTimeTrendCrawler.getLatestTrends(apiKey);
+      
+      if (latestTrends && latestTrends.length > 0) {
+        // 첫 번째 트렌드를 키워드로 사용
+        const keyword = latestTrends[0];
+        console.log('✅ 선택된 최신 이슈 키워드:', keyword);
+        return keyword;
+      } else {
+        console.warn('⚠️ 크롤링된 트렌드가 없어 기본 키워드 사용');
+        return '최신 뉴스';
+      }
+    } catch (error) {
+      console.error('❌ 최신 이슈 키워드 생성 오류:', error);
+      return '최신 뉴스';
     }
   };
 
@@ -156,25 +177,11 @@ export const useOneClick = (
       if (mode === 'latest') {
         // 최신 이슈 처리 - 개선된 버전
         toast({
-          title: "실시간 이슈 크롤링 중",
-          description: "현재 시간대의 최신 이슈를 수집하고 있습니다...",
+          title: "최신 이슈 키워드 생성 중",
+          description: "현재 시간대의 최신 이슈 키워드를 생성하고 있습니다...",
         });
 
-        try {
-          console.log('🔍 실시간 트렌드 크롤링 시작...');
-          const latestTrends = await RealTimeTrendCrawler.getLatestTrends(appState.apiKey);
-          
-          if (latestTrends && latestTrends.length > 0) {
-            keyword = `최신 이슈, 뉴스, 트렌드, 실시간 화제: ${latestTrends.slice(0, 5).join(', ')}`;
-            console.log('✅ 크롤링된 최신 이슈:', latestTrends.slice(0, 5));
-          } else {
-            console.warn('⚠️ 크롤링된 트렌드가 없어 기본 키워드 사용');
-            keyword = '최신 이슈, 뉴스, 트렌드, 실시간 화제';
-          }
-        } catch (error) {
-          console.error('❌ 실시간 크롤링 오류:', error);
-          keyword = '최신 이슈, 뉴스, 트렌드, 실시간 화제';
-        }
+        keyword = await generateLatestIssueKeyword(appState.apiKey);
       } else {
         // 평생 키워드 처리 - 완전히 개선된 버전
         toast({
@@ -182,14 +189,7 @@ export const useOneClick = (
           description: "카테고리별 평생 키워드를 생성하고 있습니다...",
         });
 
-        try {
-          console.log('🔄 평생 키워드 생성 시작...');
-          keyword = await generateEvergreenKeyword(appState.apiKey);
-          console.log('✅ 최종 선택된 평생 키워드:', keyword);
-        } catch (error) {
-          console.error('❌ 평생 키워드 생성 오류:', error);
-          keyword = '생활 절약 팁';
-        }
+        keyword = await generateEvergreenKeyword(appState.apiKey);
       }
 
       console.log('✅ 설정된 키워드:', keyword);

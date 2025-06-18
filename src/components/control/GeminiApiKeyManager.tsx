@@ -26,11 +26,11 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
 }) => {
   console.log('GeminiApiKeyManager 렌더링:', { geminiApiKey, isGeminiApiKeyValidated });
 
-  // API 키를 마스킹하여 표시하는 함수
+  // API 키를 마스킹하여 표시하는 함수 - 개선된 버전
   const getMaskedApiKey = (key: string) => {
     if (!key) return '';
-    if (key.length <= 8) return key;
-    return key.substring(0, 4) + '*'.repeat(key.length - 8) + key.substring(key.length - 4);
+    if (key.length <= 8) return '*'.repeat(key.length);
+    return key.substring(0, 4) + '*'.repeat(Math.max(key.length - 8, 4)) + key.substring(key.length - 4);
   };
 
   return (
@@ -46,7 +46,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">Gemini API 키</label>
           <div className="flex space-x-2">
             <Input
-              type="text"
+              type={isGeminiApiKeyValidated ? "password" : "text"}
               inputMode="text"
               placeholder="API 키를 입력해주세요"
               value={isGeminiApiKeyValidated ? getMaskedApiKey(geminiApiKey) : geminiApiKey || ''}
