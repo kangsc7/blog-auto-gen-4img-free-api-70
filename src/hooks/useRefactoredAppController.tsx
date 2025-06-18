@@ -28,29 +28,6 @@ export const useRefactoredAppController = () => {
     appState,
     saveAppState
   );
-
-  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string> => {
-    if (!canUseFeatures) {
-      toast({
-        title: "접근 제한",
-        description: "이 기능을 사용할 권한이 없습니다.",
-        variant: "destructive"
-      });
-      return Promise.resolve('');
-    }
-    
-    return generateArticle({
-      ...options,
-      pixabayConfig: { 
-        key: pixabayManager.pixabayApiKey, 
-        validated: pixabayManager.isPixabayApiKeyValidated 
-      },
-    });
-  };
-
-  const generateArticleForManual = (topic?: string): Promise<string> => {
-    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
-  };
   
   const {
     manualTopic,
@@ -61,8 +38,7 @@ export const useRefactoredAppController = () => {
     appState, 
     saveAppState, 
     preventDuplicates: appState.preventDuplicates,
-    canUseFeatures,
-    generateArticle: generateArticleForManual
+    canUseFeatures 
   });
 
   const {
@@ -97,6 +73,25 @@ export const useRefactoredAppController = () => {
       saveAppState({ isLoggedIn: false, currentUser: '' });
     }
   }, [session?.user?.email, saveAppState]);
+
+  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return Promise.resolve('');
+    }
+    
+    return generateArticle({
+      ...options,
+      pixabayConfig: { 
+        key: pixabayManager.pixabayApiKey, 
+        validated: pixabayManager.isPixabayApiKeyValidated 
+      },
+    });
+  };
   
   const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
     appState,
@@ -110,6 +105,10 @@ export const useRefactoredAppController = () => {
   );
 
   const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
+
+  const generateArticleForManual = (topic?: string): Promise<string> => {
+    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
+  };
 
   const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
   const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };

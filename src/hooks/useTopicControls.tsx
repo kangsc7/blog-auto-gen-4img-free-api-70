@@ -43,16 +43,9 @@ interface UseTopicControlsProps {
   saveAppState: (newState: Partial<AppState>) => void;
   preventDuplicates: boolean;
   canUseFeatures: boolean;
-  generateArticle?: (topic?: string) => Promise<string | null>;
 }
 
-export const useTopicControls = ({ 
-  appState, 
-  saveAppState, 
-  preventDuplicates, 
-  canUseFeatures,
-  generateArticle 
-}: UseTopicControlsProps) => {
+export const useTopicControls = ({ appState, saveAppState, preventDuplicates, canUseFeatures }: UseTopicControlsProps) => {
   const { toast } = useToast();
   const [manualTopic, setManualTopic] = useState('');
 
@@ -61,7 +54,7 @@ export const useTopicControls = ({
     saveAppState({ selectedTopic: topic });
   };
 
-  const handleManualTopicAdd = async () => {
+  const handleManualTopicAdd = () => {
     if (!canUseFeatures) {
       toast({
         title: "접근 제한",
@@ -116,23 +109,9 @@ export const useTopicControls = ({
     
     toast({
       title: "주제 추가 완료",
-      description: `"${trimmedTopic}" 주제가 추가되고 선택되었습니다. 자동으로 글 생성을 시작합니다.`,
+      description: `"${trimmedTopic}" 주제가 추가되고 선택되었습니다. 핵심 키워드: "${extractedKeyword || trimmedTopic}"`,
       duration: 3000
     });
-
-    // 자동으로 글 생성 시작
-    if (generateArticle) {
-      try {
-        await generateArticle(trimmedTopic);
-      } catch (error) {
-        console.error('자동 글 생성 중 오류:', error);
-        toast({
-          title: "글 생성 오류",
-          description: "자동 글 생성 중 오류가 발생했습니다.",
-          variant: "destructive"
-        });
-      }
-    }
   };
 
   return {
