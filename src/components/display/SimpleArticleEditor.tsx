@@ -23,7 +23,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   // 단순화된 상태 관리
   const [editorContent, setEditorContent] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isUserEditing, setIsUserEditing] = useState(false);
   
   // localStorage 키
@@ -53,44 +52,15 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 초기화 - 단순화된 로직
+  // 새로운 생성 콘텐츠가 들어왔을 때 즉시 적용 (강제 업데이트)
   useEffect(() => {
-    if (!isInitialized) {
-      console.log('🚀 SimpleArticleEditor 초기화');
-      
-      const savedContent = safeLocalStorageGet();
-      let initialContent = '';
-      
-      if (savedContent && !isGeneratingContent) {
-        initialContent = savedContent;
-        console.log('📂 저장된 콘텐츠 복원');
-      } else if (generatedContent && !isGeneratingContent) {
-        initialContent = generatedContent;
-        console.log('🆕 생성된 콘텐츠 설정');
-      }
-      
-      if (initialContent) {
-        setEditorContent(initialContent);
-        onContentChange(initialContent);
-        if (editorRef.current) {
-          editorRef.current.innerHTML = initialContent;
-        }
-      }
-      
-      setIsInitialized(true);
-      console.log('✅ 초기화 완료');
-    }
-  }, [isInitialized, generatedContent, isGeneratingContent, onContentChange, safeLocalStorageGet]);
-  
-  // 새로운 생성 콘텐츠 처리 - 사용자가 편집 중이 아닐 때만
-  useEffect(() => {
-    if (isInitialized && 
-        generatedContent && 
+    if (generatedContent && 
         generatedContent !== editorContent && 
-        !isUserEditing && 
         !isGeneratingContent) {
       
-      console.log('🔄 새로운 생성 콘텐츠 적용');
+      console.log('🔄 새로운 생성 콘텐츠 강제 적용:', generatedContent.length);
+      
+      // 사용자 편집 상태와 관계없이 새 콘텐츠 적용
       setEditorContent(generatedContent);
       safeLocalStorageSet(generatedContent);
       onContentChange(generatedContent);
@@ -98,8 +68,25 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
       }
+      
+      // 사용자 편집 상태 초기화
+      setIsUserEditing(false);
+      console.log('✅ 새로운 콘텐츠 적용 완료');
     }
-  }, [generatedContent, editorContent, isUserEditing, isGeneratingContent, isInitialized, onContentChange, safeLocalStorageSet]);
+  }, [generatedContent, isGeneratingContent, editorContent, onContentChange, safeLocalStorageSet]);
+  
+  // 초기 로드 시 localStorage에서 복원
+  useEffect(() => {
+    const savedContent = safeLocalStorageGet();
+    if (savedContent && !generatedContent && !isGeneratingContent) {
+      console.log('📂 저장된 콘텐츠 복원');
+      setEditorContent(savedContent);
+      onContentChange(savedContent);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = savedContent;
+      }
+    }
+  }, [safeLocalStorageGet, generatedContent, isGeneratingContent, onContentChange]);
   
   // 자동 저장
   const performAutoSave = useCallback((content: string) => {
