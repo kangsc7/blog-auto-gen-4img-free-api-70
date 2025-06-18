@@ -89,81 +89,42 @@ export const ImagePaster = () => {
         if (!convertedImage) return;
 
         try {
-            // 이미지를 canvas에 그려서 blob으로 변환
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
+            // base64 데이터를 실제 이미지로 변환
+            const response = await fetch(convertedImage);
+            const blob = await response.blob();
             
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = convertedImage;
-            });
-            
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx?.drawImage(img, 0, 0);
-            
-            // canvas를 blob으로 변환
-            const blob = await new Promise<Blob>((resolve) => {
-                canvas.toBlob((blob) => {
-                    resolve(blob!);
-                }, 'image/jpeg', 0.9);
+            // 그림판과 같은 방식으로 실제 이미지 데이터를 클립보드에 복사
+            const clipboardItem = new ClipboardItem({
+                [blob.type]: blob
             });
 
-            // 다양한 형태로 클립보드에 복사 시도
-            try {
-                // 방법 1: 실제 이미지 파일로 복사 (가장 호환성이 좋음)
-                const clipboardItem = new ClipboardItem({
-                    'image/jpeg': blob,
-                    'image/png': blob, // PNG로도 시도
-                });
-                
-                await navigator.clipboard.write([clipboardItem]);
-                
-                toast({ 
-                    title: "이미지 복사 완료", 
-                    description: "이미지가 복사되었습니다. 블로그 에디터에 Ctrl+V로 붙여넣으세요!" 
-                });
-                return;
-            } catch (imageError) {
-                console.log('이미지 직접 복사 실패, HTML 방식으로 시도:', imageError);
-                
-                // 방법 2: HTML과 이미지를 함께 복사
-                const imgTag = `<img src="${convertedImage}" alt="블로그 이미지" style="max-width: 100%; height: auto; border-radius: 8px;">`;
-                
-                try {
-                    const clipboardItem = new ClipboardItem({
-                        'image/jpeg': blob,
-                        'text/html': new Blob([imgTag], { type: 'text/html' }),
-                        'text/plain': new Blob([convertedImage], { type: 'text/plain' }), // base64 데이터도 포함
-                    });
-
-                    await navigator.clipboard.write([clipboardItem]);
-                    
-                    toast({ 
-                        title: "복사 완료", 
-                        description: "이미지와 HTML이 복사되었습니다. 블로그 에디터에 붙여넣으세요!" 
-                    });
-                    return;
-                } catch (htmlError) {
-                    console.log('HTML 복사도 실패, 텍스트로 시도:', htmlError);
-                    
-                    // 방법 3: 텍스트로만 복사 (마지막 수단)
-                    await navigator.clipboard.writeText(convertedImage);
-                    toast({ 
-                        title: "이미지 링크 복사 완료", 
-                        description: "이미지 데이터가 텍스트로 복사되었습니다. 블로그에서 이미지 삽입 기능을 사용해서 붙여넣으세요." 
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('모든 복사 방법 실패:', error);
+            await navigator.clipboard.write([clipboardItem]);
+            
             toast({ 
-                title: "복사 실패", 
-                description: "클립보드 복사에 실패했습니다. 브라우저가 이미지 복사를 지원하지 않을 수 있습니다.", 
-                variant: "destructive" 
+                title: "이미지 복사 완료", 
+                description: "이미지가 실제 파일 형태로 복사되었습니다. 블로그 글 미리보기 창에 Ctrl+V로 붙여넣으세요!" 
             });
+
+        } catch (error) {
+            console.error('이미지 복사 실패:', error);
+            
+            // 폴백: HTML 형태로 복사 시도
+            try {
+                const imgTag = `<img src="${convertedImage}" alt="블로그 이미지" style="max-width: 100%; height: auto;">`;
+                await navigator.clipboard.writeText(imgTag);
+                toast({ 
+                    title: "HTML 코드로 복사됨", 
+                    description: "이미지가 HTML 코드로 복사되었습니다. 일부 에디터에서는 코드로 표시될 수 있습니다.", 
+                    variant: "destructive"
+                });
+            } catch (fallbackError) {
+                console.error('HTML 복사도 실패:', fallbackError);
+                toast({ 
+                    title: "복사 실패", 
+                    description: "이미지 복사에 실패했습니다. 브라우저가 이미지 복사를 지원하지 않을 수 있습니다.", 
+                    variant: "destructive" 
+                });
+            }
         }
     };
 
@@ -202,8 +163,8 @@ export const ImagePaster = () => {
                             블로그용 이미지 복사
                         </Button>
                         <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
-                            💡 <strong>사용법:</strong> 버튼 클릭 후 블로그 에디터에서 Ctrl+V로 붙여넣으세요. 
-                            실제 이미지 파일로 복사되어 대부분의 블로그 플랫폼에서 정상 표시됩니다.
+                            💡 <strong>사용법:</strong> 버튼 클릭 후 블로그 글 미리보기 창에서 Ctrl+V로 붙여넣으세요. 
+                            그림판과 같은 방식으로 실제 이미지 파일이 복사됩니다.
                         </div>
                          <Button 
                             onClick={() => setConvertedImage(null)}
