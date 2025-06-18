@@ -1,3 +1,4 @@
+
 import { crawlWebInfo } from './webCrawler';
 import { generateMetaDescription } from './pixabay';
 
@@ -69,7 +70,7 @@ export const getEnhancedArticlePrompt = async (params: {
 - 태그에는 주제명을 포함하지 말고, 핵심 키워드와 관련된 SEO 키워드만 포함해주세요
 - 웹에서 수집한 최신 정보를 적극 활용하여 더욱 풍부하고 정확한 내용을 작성해주세요
 - 자연스럽고 읽기 쉬운 한국어로 작성해주세요
-- 완전한 HTML 코드만 응답해주세요 (```html 태그나 추가 설명 없이)
+- 완전한 HTML 코드만 응답해주세요 (${'```'}html 태그나 추가 설명 없이)
 
 지금 바로 블로그 글을 작성해주세요.`;
 };
