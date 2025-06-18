@@ -88,8 +88,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   return (
     <div className="w-full bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
       <div className="p-4 space-y-4">
-        {/* API 키 설정 - 높이를 주제 생성과 동일하게 설정 */}
-        <Card className="shadow-md cursor-pointer min-h-[400px]" onDoubleClick={handleDoubleClickApiKeys}>
+        {/* API 키 설정 - 원래 크기로 복원 */}
+        <Card className="shadow-md cursor-pointer" onDoubleClick={handleDoubleClickApiKeys}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between text-gray-800">
               <span className="flex items-center">
