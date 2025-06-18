@@ -28,7 +28,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     saveAppState({ referenceLink: value });
   };
 
-  const handleReferenceSentenceChange = (e: React.ChangeEvent<HTMLTextAreaEvent>) => {
+  const handleReferenceSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     console.log('참조 문장 변경 (영구 보존):', value);
     saveAppState({ referenceSentence: value });
