@@ -233,6 +233,7 @@ const Index = () => {
         isOneClickGenerating={isOneClickGenerating}
         handleStopOneClick={handleStopOneClick}
         appState={appState}
+        isGeneratingContent={generationStatus.isGeneratingContent}
       />
       
       <MainContentSection

@@ -103,6 +103,22 @@ export const useRefactoredAppController = () => {
     copyToClipboard(markdown, "마크다운");
   };
 
+  // 통합된 중단 기능 - 원클릭과 일반 글 생성 모두 중단
+  const handleUnifiedStop = () => {
+    console.log('통합 중단 버튼 클릭 - 상태:', { 
+      isOneClickGenerating, 
+      isGeneratingContent 
+    });
+    
+    if (isOneClickGenerating) {
+      handleStopOneClick();
+    }
+    
+    if (isGeneratingContent) {
+      stopArticleGeneration();
+    }
+  };
+
   const generationStatus = {
     isGeneratingTopics,
     isGeneratingContent,
@@ -144,7 +160,7 @@ export const useRefactoredAppController = () => {
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick,
+    handleStopOneClick: handleUnifiedStop, // 통합된 중단 기능 사용
     generationStatus,
     generationFunctions,
     topicControls: {

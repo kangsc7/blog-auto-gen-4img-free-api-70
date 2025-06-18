@@ -11,6 +11,7 @@ interface OneClickSectionProps {
     isOneClickGenerating: boolean;
     handleStopOneClick: () => void;
     appState: AppState;
+    isGeneratingContent?: boolean; // 글 작성 중 상태 추가
 }
 
 export const OneClickSection: React.FC<OneClickSectionProps> = ({
@@ -19,13 +20,20 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
     isOneClickGenerating,
     handleStopOneClick,
     appState,
+    isGeneratingContent = false,
 }) => {
+    // 원클릭 버튼들은 원클릭 생성 중이거나 글 작성 중일 때 비활성화
+    const shouldDisableOneClickButtons = isOneClickGenerating || isGeneratingContent || !appState.isApiKeyValidated;
+    
+    // 중단 버튼은 원클릭 생성 중이거나 글 작성 중일 때 표시
+    const shouldShowStopButton = isOneClickGenerating || isGeneratingContent;
+
     return (
         <div className="max-w-7xl mx-auto my-4">
             <div className="flex justify-between items-center gap-4 p-6 rounded-xl shadow-lg bg-white border border-gray-200">
                 <Button 
                     onClick={handleLatestIssueOneClick} 
-                    disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
+                    disabled={shouldDisableOneClickButtons} 
                     className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
                 >
                     <Zap className="mr-3 h-7 w-7" />
@@ -42,7 +50,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
                         generatedContent={appState.generatedContent}
                         imagePrompt={appState.imagePrompt}
                     />
-                    {isOneClickGenerating && (
+                    {shouldShowStopButton && (
                          <Button 
                             variant="destructive" 
                             onClick={handleStopOneClick}
@@ -56,7 +64,7 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
 
                 <Button 
                     onClick={handleEvergreenKeywordOneClick} 
-                    disabled={isOneClickGenerating || !appState.isApiKeyValidated}
+                    disabled={shouldDisableOneClickButtons}
                     className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
                 >
                     <RefreshCw className="mr-3 h-7 w-7" />

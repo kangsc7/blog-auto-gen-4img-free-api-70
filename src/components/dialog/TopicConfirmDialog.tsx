@@ -25,24 +25,25 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const handleConfirm = () => {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
     onConfirm();
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     console.log('TopicConfirmDialog handleCancel 호출됨');
     onCancel();
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      handleCancel();
-    }
-  };
-
+  // onOpenChange는 사용하지 않고 명시적인 버튼 클릭만 처리
   return (
-    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
+    <AlertDialog open={isOpen}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader className="text-center">
           <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
