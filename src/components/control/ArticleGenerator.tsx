@@ -2,8 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PenTool, Square } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PenTool, Square, Palette } from 'lucide-react';
 import { AppState } from '@/types';
+import { colorThemes } from '@/data/constants';
+import { getColors } from '@/lib/promptUtils';
 
 interface ArticleGeneratorProps {
   appState: AppState;
@@ -33,6 +36,14 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
     }
   };
 
+  const handleColorThemeChange = (value: string) => {
+    saveAppState({ colorTheme: value });
+  };
+
+  const getSelectedThemeColors = () => {
+    return getColors(appState.colorTheme || 'classic-blue');
+  };
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -51,6 +62,48 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
               <span className="text-gray-500">먼저 주제를 선택해주세요</span>
             )}
           </div>
+        </div>
+
+        {/* 컬러 테마 선택 */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+            <Palette className="h-4 w-4 mr-1" />
+            컬러 테마 선택
+          </label>
+          <Select value={appState.colorTheme || ''} onValueChange={handleColorThemeChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="컬러 테마를 선택하세요 (미선택시 랜덤)" />
+            </SelectTrigger>
+            <SelectContent>
+              {colorThemes.map((theme) => {
+                const colors = getColors(theme.value);
+                return (
+                  <SelectItem key={theme.value} value={theme.value}>
+                    <div className="flex items-center">
+                      <div 
+                        className="w-4 h-4 rounded-full mr-2 border" 
+                        style={{ backgroundColor: colors.primary }}
+                      />
+                      {theme.label}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          {appState.colorTheme && (
+            <div className="mt-2 p-2 rounded border" style={{ backgroundColor: getSelectedThemeColors().secondary }}>
+              <div className="flex items-center text-sm">
+                <div 
+                  className="w-3 h-3 rounded-full mr-2" 
+                  style={{ backgroundColor: getSelectedThemeColors().primary }}
+                />
+                <span style={{ color: getSelectedThemeColors().primary }}>
+                  선택된 테마: {colorThemes.find(t => t.value === appState.colorTheme)?.label}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">
