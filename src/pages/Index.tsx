@@ -246,13 +246,13 @@ const Index = () => {
         handleTopicConfirm={handleTopicConfirm}
       />
 
-      {/* 주제 확인 다이얼로그 - 실제 작동하는 확인 다이얼로그 */}
+      {/* 주제 확인 다이얼로그 - 파라미터 제거하여 올바른 호출 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
         onConfirm={() => {
           console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
-          handleTopicConfirm(pendingTopic);
+          handleTopicConfirm(); // 파라미터 제거
         }}
         onCancel={() => {
           console.log('TopicConfirmDialog onCancel 호출됨');

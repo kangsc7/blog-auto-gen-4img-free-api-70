@@ -15,8 +15,11 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
   
-  // useAllApiKeysManager는 appState 객체만 받습니다
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager(appState);
+  // useAllApiKeysManager 올바른 파라미터 전달
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
+    appState,
+    saveAppState,
+  });
   
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
@@ -59,7 +62,7 @@ export const useRefactoredAppController = () => {
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 파라미터 제거
   const handleTopicConfirm = () => {
     console.log('주제 확인 및 선택:', pendingTopic);
     
