@@ -20,59 +20,107 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
 }) => {
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
+  const isUpdatingFromProps = useRef(false);
 
-  // 커서 위치 저장 및 복원을 위한 함수들
-  const saveCursorPosition = () => {
+  // 커서 위치를 텍스트 오프셋으로 저장/복원하는 더 안정적인 방법
+  const getCursorPosition = (): number => {
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      return selection.getRangeAt(0);
-    }
-    return null;
+    if (!selection || selection.rangeCount === 0 || !editableDivRef.current) return 0;
+    
+    const range = selection.getRangeAt(0);
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(editableDivRef.current);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    
+    return preCaretRange.toString().length;
   };
 
-  const restoreCursorPosition = (range: Range) => {
+  const setCursorPosition = (position: number) => {
+    if (!editableDivRef.current) return;
+    
     const selection = window.getSelection();
-    if (selection && range) {
-      selection.removeAllRanges();
-      selection.addRange(range);
+    if (!selection) return;
+
+    let currentPosition = 0;
+    const walker = document.createTreeWalker(
+      editableDivRef.current,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node;
+    while (node = walker.nextNode()) {
+      const textLength = node.textContent?.length || 0;
+      if (currentPosition + textLength >= position) {
+        const range = document.createRange();
+        const offsetInNode = position - currentPosition;
+        range.setStart(node, Math.min(offsetInNode, textLength));
+        range.setEnd(node, Math.min(offsetInNode, textLength));
+        
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return;
+      }
+      currentPosition += textLength;
     }
+
+    // 만약 위치를 찾지 못했다면 끝으로 이동
+    const range = document.createRange();
+    range.selectNodeContents(editableDivRef.current);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
   };
 
   useEffect(() => {
     if (editableDivRef.current && editableDivRef.current.innerHTML !== generatedContent) {
-      // 커서 위치 저장
-      const savedRange = saveCursorPosition();
+      // 현재 커서 위치 저장
+      const cursorPosition = getCursorPosition();
+      
+      // 외부에서 오는 업데이트임을 표시
+      isUpdatingFromProps.current = true;
       
       // 내용 업데이트
       editableDivRef.current.innerHTML = generatedContent;
       
-      // 커서 위치 복원 (약간의 지연을 두고)
-      if (savedRange) {
-        setTimeout(() => {
-          try {
-            restoreCursorPosition(savedRange);
-          } catch (error) {
-            console.log('커서 위치 복원 실패:', error);
-          }
-        }, 0);
-      }
+      // 커서 위치 복원 (약간의 지연 후)
+      requestAnimationFrame(() => {
+        setCursorPosition(cursorPosition);
+        isUpdatingFromProps.current = false;
+      });
     }
   }, [generatedContent]);
 
   const handleContentEdit = () => {
-    if (editableDivRef.current) {
+    if (editableDivRef.current && !isUpdatingFromProps.current) {
       const updatedContent = editableDivRef.current.innerHTML;
       onContentChange(updatedContent);
     }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    // 엔터 키 처리를 개선
     if (event.key === 'Enter') {
-      // 기본 동작을 막지 않고, 단순히 상태 업데이트만 지연
+      // 엔터 키는 기본 동작을 허용하되, 상태 업데이트만 지연
+      event.stopPropagation(); // 이벤트 버블링 방지
+      
+      // 현재 커서 위치를 즉시 저장
+      const currentPosition = getCursorPosition();
+      
+      // 약간의 지연 후 상태 업데이트 (DOM 변경 후)
       setTimeout(() => {
         handleContentEdit();
+        // 커서 위치 재조정
+        requestAnimationFrame(() => {
+          setCursorPosition(currentPosition + 1); // 엔터로 인한 위치 조정
+        });
       }, 0);
+    }
+  };
+
+  const handleInput = (event: React.FormEvent) => {
+    // input 이벤트에서는 즉시 처리
+    if (!isUpdatingFromProps.current) {
+      handleContentEdit();
     }
   };
 
@@ -163,7 +211,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
             contentEditable={true}
             className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
-            onInput={handleContentEdit}
+            onInput={handleInput}
             onBlur={handleContentEdit}
             onKeyDown={handleKeyDown}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
