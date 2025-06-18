@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -38,7 +37,8 @@ export const useRefactoredAppController = () => {
     appState, 
     saveAppState, 
     preventDuplicates: appState.preventDuplicates,
-    canUseFeatures 
+    canUseFeatures,
+    generateArticle: generateArticleForManual
   });
 
   const {
