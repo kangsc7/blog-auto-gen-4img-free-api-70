@@ -5,7 +5,6 @@ import { MainContentSection } from '@/components/sections/MainContentSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { DuplicateErrorDialog } from '@/components/dialogs/DuplicateErrorDialog';
 import { TopicSelectionDialog } from '@/components/dialogs/TopicSelectionDialog';
 import { TopicConfirmDialog } from '@/components/dialogs/TopicConfirmDialog';
@@ -31,12 +30,6 @@ export const Index: React.FC = () => {
         onResetApp={controller.handleResetApp}
         preventDuplicates={controller.preventDuplicates}
         onPreventDuplicatesToggle={controller.handlePreventDuplicatesToggle}
-      />
-
-      <RefactoredApiKeysSection
-        geminiManager={controller.geminiManager}
-        pixabayManager={controller.pixabayManager}
-        huggingFaceManager={controller.huggingFaceManager}
       />
 
       <OneClickSection
@@ -67,6 +60,9 @@ export const Index: React.FC = () => {
             referenceSentence: '' 
           })
         }
+        geminiManager={controller.geminiManager}
+        pixabayManager={controller.pixabayManager}
+        huggingFaceManager={controller.huggingFaceManager}
       />
 
       <TopicConfirmDialog

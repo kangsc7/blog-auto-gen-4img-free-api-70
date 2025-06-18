@@ -4,6 +4,9 @@ import { ChevronDown, ChevronUp, Settings, ExternalLink } from 'lucide-react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
+import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
+import { GeminiApiKeyManager } from '@/components/control/GeminiApiKeyManager';
+import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +34,9 @@ interface LeftSidebarProps {
   copyToClipboard: (text: string, type: string) => void;
   deleteReferenceData?: () => void;
   openWhisk: () => void;
+  geminiManager?: any;
+  pixabayManager?: any;
+  huggingFaceManager?: any;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -53,6 +59,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   copyToClipboard,
   deleteReferenceData,
   openWhisk,
+  geminiManager,
+  pixabayManager,
+  huggingFaceManager,
 }) => {
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [showExternalReference, setShowExternalReference] = useState(false);
@@ -91,6 +100,43 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </CardTitle>
           </CardHeader>
           {showApiKeys && (
+            <CardContent className="space-y-4">
+              {geminiManager && (
+                <GeminiApiKeyManager
+                  apiKey={geminiManager.apiKey}
+                  setApiKey={geminiManager.setApiKey}
+                  isApiKeyValidated={geminiManager.isApiKeyValidated}
+                  setIsApiKeyValidated={geminiManager.setIsApiKeyValidated}
+                  isValidating={geminiManager.isValidating}
+                  validateApiKey={geminiManager.validateApiKey}
+                  deleteApiKeyFromStorage={geminiManager.deleteApiKeyFromStorage}
+                />
+              )}
+              {pixabayManager && (
+                <PixabayApiKeyManager
+                  pixabayApiKey={pixabayManager.pixabayApiKey}
+                  setPixabayApiKey={pixabayManager.setPixabayApiKey}
+                  isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
+                  setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+                  isPixabayValidating={pixabayManager.isPixabayValidating}
+                  validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
+                  deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
+                />
+              )}
+              {huggingFaceManager && (
+                <HuggingFaceApiKeyManager
+                  huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+                  setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
+                  isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+                  setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+                  isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
+                  validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
+                  deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
+                />
+              )}
+            </CardContent>
+          )}
+          {!showApiKeys && (
             <CardContent className="text-xs text-gray-600">
               <p>더블클릭으로 API 키 설정을 열거나 닫을 수 있습니다.</p>
             </CardContent>

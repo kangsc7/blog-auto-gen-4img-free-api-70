@@ -37,6 +37,9 @@ interface MainContentSectionProps {
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
   deleteReferenceData?: () => void;
+  geminiManager?: any;
+  pixabayManager?: any;
+  huggingFaceManager?: any;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
@@ -49,6 +52,9 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   preventDuplicates,
   handleTopicConfirm,
   deleteReferenceData,
+  geminiManager,
+  pixabayManager,
+  huggingFaceManager,
 }) => {
   return (
     <div className="container mx-auto px-2 sm:px-4 py-6 max-w-full">
@@ -74,6 +80,9 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             copyToClipboard={utilityFunctions.copyToClipboard}
             deleteReferenceData={deleteReferenceData}
             openWhisk={utilityFunctions.openWhisk}
+            geminiManager={geminiManager}
+            pixabayManager={pixabayManager}
+            huggingFaceManager={huggingFaceManager}
           />
         </div>
         <div className="lg:col-span-8">
