@@ -1,3 +1,4 @@
+
 import { generateMetaDescription } from './pixabay';
 
 export const getHtmlTemplate = (
@@ -74,6 +75,7 @@ export const createBlogHtmlTemplate = async (
   title: string,
   content: string,
   referenceLink?: string,
+  referenceSentence?: string,
   geminiApiKey?: string
 ): Promise<string> => {
   console.log('📄 블로그 HTML 템플릿 생성 시작:', { title, hasReferenceLink: !!referenceLink });
@@ -98,11 +100,11 @@ export const createBlogHtmlTemplate = async (
     processedContent = firstLine + '\n<p data-ke-size="size16">&nbsp;</p>\n' + restContent;
   }
 
-  // 외부 링크를 태그 바로 위에 추가 (가운데 정렬)
+  // 외부 링크를 태그 바로 위에 추가 (새로운 스타일로 적용)
   let finalContent = processedContent;
   if (referenceLink && referenceLink.trim()) {
     // 태그들을 찾아서 그 위에 외부 링크 삽입
-    const tagPattern = /<p[^>]*data-ke-size="size16"[^>]*>.*?<\/p>\s*$/i;
+    const tagPattern = /<p[^>]*style="text-align: center[^"]*"[^>]*>(?!.*<a)[^<]*<\/p>\s*$/i;
     const tagMatch = finalContent.match(tagPattern);
     
     if (tagMatch) {
@@ -110,28 +112,35 @@ export const createBlogHtmlTemplate = async (
       const beforeTags = finalContent.substring(0, tagStartIndex);
       const tagsSection = finalContent.substring(tagStartIndex);
       
+      // 참조문장 가져오기 (기본값 설정)
+      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
+      
       const referenceLinkHtml = `
-<p data-ke-size="size16">&nbsp;</p>
-<div style="text-align: center; margin: 20px 0;">
-  <p style="margin: 10px 0; color: #666; font-size: 14px;">📎 더 많은 정보를 원한다면? 꼭 보리가기 👆</p>
-  <p style="margin: 5px 0;">
-    <a href="${referenceLink}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none; font-weight: bold; font-size: 16px;">🔗 위드프레스 꼼꼼 더 보리가기</a>
-  </p>
-</div>
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
+  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
+  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
+    <b>${displayText}</b>
+  </a>
+</p>
+
 <p data-ke-size="size16">&nbsp;</p>`;
       
       finalContent = beforeTags + referenceLinkHtml + tagsSection;
       console.log('🔗 외부 링크가 태그 위에 추가됨:', referenceLink);
     } else {
       // 태그가 없는 경우 콘텐츠 끝에 추가
+      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
+      
       const referenceLinkHtml = `
 <p data-ke-size="size16">&nbsp;</p>
-<div style="text-align: center; margin: 20px 0;">
-  <p style="margin: 10px 0; color: #666; font-size: 14px;">📎 더 많은 정보를 원한다면? 꼭 보리가기 👆</p>
-  <p style="margin: 5px 0;">
-    <a href="${referenceLink}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: none; font-weight: bold; font-size: 16px;">🔗 위드프레스 꼼꼼 더 보리가기</a>
-  </p>
-</div>
+
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
+  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
+  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
+    <b>${displayText}</b>
+  </a>
+</p>
+
 <p data-ke-size="size16">&nbsp;</p>`;
       
       finalContent = finalContent + referenceLinkHtml;

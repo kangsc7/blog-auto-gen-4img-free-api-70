@@ -16,8 +16,8 @@ interface ExternalReferenceInputProps {
 
 // 영구 저장을 위한 localStorage 키
 const REFERENCE_STORAGE_KEYS = {
-  LINK: 'blog_reference_link_permanent_v2',
-  SENTENCE: 'blog_reference_sentence_permanent_v2'
+  LINK: 'blog_reference_link_permanent_v3',
+  SENTENCE: 'blog_reference_sentence_permanent_v3'
 };
 
 export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
@@ -78,14 +78,24 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   };
 
   const handleSave = () => {
-    // 이미 실시간으로 저장되고 있으므로 확인 메시지만 표시
+    // 강제로 다시 저장하여 확실히 영구 저장되도록 함
+    const currentLink = appState.referenceLink || '';
+    const currentSentence = appState.referenceSentence || '';
+    
+    localStorage.setItem(REFERENCE_STORAGE_KEYS.LINK, currentLink);
+    localStorage.setItem(REFERENCE_STORAGE_KEYS.SENTENCE, currentSentence);
+    
+    // sessionStorage에도 추가 저장 (이중 보장)
+    sessionStorage.setItem('backup_reference_link', currentLink);
+    sessionStorage.setItem('backup_reference_sentence', currentSentence);
+    
     toast({
-      title: "영구 저장 완료",
-      description: "참조 링크와 문장이 영구 저장되었습니다. 재로그인, 새로고침해도 유지됩니다.",
+      title: "✅ 영구 저장 완료",
+      description: "참조 링크와 문장이 영구 저장되었습니다. 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.",
     });
     console.log('참조 정보 영구 저장 확인:', {
-      referenceLink: appState.referenceLink,
-      referenceSentence: appState.referenceSentence
+      referenceLink: currentLink,
+      referenceSentence: currentSentence
     });
   };
 
@@ -95,6 +105,10 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     // localStorage에서 완전 삭제
     localStorage.removeItem(REFERENCE_STORAGE_KEYS.LINK);
     localStorage.removeItem(REFERENCE_STORAGE_KEYS.SENTENCE);
+    
+    // sessionStorage에서도 삭제
+    sessionStorage.removeItem('backup_reference_link');
+    sessionStorage.removeItem('backup_reference_sentence');
     
     // 앱 상태 초기화
     saveAppState({ 
@@ -108,7 +122,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     }
     
     toast({
-      title: "영구 삭제 완료",
+      title: "🗑️ 영구 삭제 완료",
       description: "참조 링크와 문장이 완전히 삭제되었습니다.",
     });
     console.log('참조 정보 영구 삭제 완료');
@@ -178,22 +192,22 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
               참조 문장 (실시간 영구 저장)
             </label>
             <Textarea
-              placeholder="참조하고 싶은 특정 문장이나 내용을 입력하세요..."
+              placeholder="참조하고 싶은 특정 문장이나 내용을 입력하세요... (예: 👉 워드프레스 꿀팁 더 보러가기)"
               value={appState.referenceSentence || ''}
               onChange={handleReferenceSentenceChange}
               className="w-full min-h-[80px] resize-none"
               rows={3}
             />
             <p className="text-xs text-gray-500 mt-1">
-              특정 문장이나 내용을 참조하여 관련된 글을 작성합니다
+              특정 문장이나 내용을 참조하여 관련된 글을 작성하고, 이 문장이 하이퍼링크로 표시됩니다
             </p>
           </div>
 
           <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border">
             💡 참조 링크와 문장은 AI가 글을 작성할 때 추가적인 맥락과 정보로 활용되며, 
-            저장된 참조 링크는 블로그 글 본문 끝에 "위드프레스 꼼꼼 더 보리가기" 스타일로 자동 추가됩니다.
+            저장된 참조 링크는 블로그 글 본문 끝에 "이 글과 관련된 다른 정보가 궁금하다면?" 스타일로 자동 추가됩니다.
             <br />
-            🔒 <strong>실시간 영구 저장</strong>: 입력과 동시에 저장되며, 재로그인이나 새로고침해도 삭제되지 않습니다.
+            🔒 <strong>실시간 영구 저장</strong>: 입력과 동시에 저장되며, 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.
           </div>
 
           {(appState.referenceLink || appState.referenceSentence) && (

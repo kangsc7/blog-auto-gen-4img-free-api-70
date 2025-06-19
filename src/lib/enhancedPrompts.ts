@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -49,6 +48,7 @@ export const getEnhancedArticlePrompt = async ({
 }: EnhancedArticlePromptParams): Promise<string> => {
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
+  const refText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
   
   const naturalKeyword = extractNaturalKeyword(topic);
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
@@ -105,12 +105,18 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - **각 <p> 태그 사이에는 공백 줄바꿈을 추가하여 가독성을 높이세요**
 - 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 230-270자 범위 내인지 확인하세요
 
+**🚨 각 H2 섹션별 핵심 키워드 강조 - 필수 적용 🚨**
+**모든 H2 소제목 아래 본문에서 핵심 키워드 '${keyword}'는 문맥에 맞게 자연스럽게 사용하되, 정확히 1번만 <strong>${keyword}</strong> 와 같이 <strong> 태그로 강조해주세요.**
+- 이 규칙은 모든 H2 섹션에 예외 없이 엄격하게 적용됩니다
+- 각 섹션당 정확히 1개의 키워드만 강조하세요
+- 키워드 강조는 문맥상 자연스러운 위치에 배치하세요
+
 **예시 구조:**
 <p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
 
 <p style="height: 20px;">&nbsp;</p>
 
-<p>세 번째 문장과 네 번째 문장입니다.</p>
+<p>세 번째 문장과 <strong>${keyword}</strong>을(를) 포함한 네 번째 문장입니다.</p>
 
 **🚨 PC와 모바일 SEO 가독성 최적화 🚨**
 - **문장 길이**: 각 문장은 25-35자 이내로 제한
@@ -152,15 +158,16 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
     </div>
 </div>
 
-**🚨 "더 많은 정보" 참조 링크 스타일 (사각박스 제거) + 태그 추가 🚨**
+**🚨 외부 참조 링크 스타일 적용 🚨**
 ${referenceLink ? `
-- 글 하단에 다음과 같은 스타일로 참조 링크를 포함하고 바로 아래에 태그 7개를 추가하세요 (테두리 없이):
-<div style="text-align: center; margin: 40px 0; padding: 25px;">
-  <h4 style="color: ${colors.primary}; margin-bottom: 15px; font-size: 18px;">더 많은 정보를 원하시나요?</h4>
-  <a href="${referenceLink}" target="_blank" rel="noopener" style="display: inline-block; background: ${colors.primary}; color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; transition: all 0.3s ease;">
-    👉 워드프레스 꿀팁 더 보러가기
+- 글 하단에 다음과 같은 스타일로 참조 링크를 포함하고 바로 아래에 태그 7개를 추가하세요:
+
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
+  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
+  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
+    <b>${refText}</b>
   </a>
-</div>
+</p>
 
 <p style="height: 40px;">&nbsp;</p>
 
@@ -242,6 +249,7 @@ ${referenceSentence ? `
 - Warn Border Color: ${colors.warnBorder}
 - Link Color: ${colors.link}
 - Reference Link: ${refLink}
+- Reference Text: ${refText}
 - Topic: ${topic}
 - Original Keyword: ${keyword}
 - Natural Keyword: ${naturalKeyword}
@@ -260,13 +268,14 @@ ${htmlTemplate}
 - **모든 문단은 <p> 태그로 감싸고 각 <p> 태그 사이에 공백 줄바꿈 추가**
 - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
 - **H2, H3 소제목에 컬러테마 스타일 필수 적용 (번호 넘버링 절대 금지)**
+- **각 H2 섹션별로 핵심 키워드 '${keyword}'를 <strong> 태그로 정확히 1번만 강조**
 - **티스토리 호환 시각화 요약 카드 정확한 HTML로 필수 포함 (script 태그 금지)**
 - **주의카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
-- **외부 참조 링크와 문장 필수 적용**
+- **외부 참조 링크 정확한 스타일로 적용: 가운데 정렬, 태그 위에 배치**
 - **주제는 H3로 글 상단에, 간단한 공감 박스 포함 (테두리 제거)**
 - **주의사항 카드는 4번째 섹션 끝에 배치 (컬러테마 연동)**
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
-- **본문 끝 참조 링크는 테두리 없이 작성하고 바로 아래에 각 소제목 키워드 기반 태그 7개 추가**
+- **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
 - **태그는 순수 태그만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
   `;
 };
