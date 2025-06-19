@@ -21,6 +21,14 @@ const getCssStyles = (colors: any): string => `
     margin: 0 auto !important;
     padding: 0 !important;
   }
+  /* 모바일 가독성 향상을 위한 P태그 스타일링 */
+  p {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    margin-bottom: 18px !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+  }
 }
 @media (max-width: 480px) {
   .wrapper-div {
@@ -30,6 +38,10 @@ const getCssStyles = (colors: any): string => `
   /* 작은 모바일에서도 충분한 크기 보장 */
   img { 
     min-height: 200px !important; 
+  }
+  p {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
   }
 }
 
@@ -60,7 +72,16 @@ const getCssStyles = (colors: any): string => `
   text-align: center !important;
 }
 
-.single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
+/* 가독성 향상을 위한 P태그 기본 스타일 */
+p {
+  margin-bottom: 18px;
+  font-size: 17px;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align-center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
 .content-table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 16px; }
 .content-table th { padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333; }
 .content-table td { padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6; }
@@ -75,19 +96,55 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <div style="background-color: ${colors.secondary}; padding: 18px; border-radius: 10px; font-style: italic; margin-bottom: 28px; font-size: 18px; line-height: 1.7;">
 <b>📢 중요한 소식!</b> [INTRO_KEYWORD_CONTEXT]에 대해 궁금하셨나요? 이 글을 끝까지 읽으시면 정확한 정보와 함께 실질적인 도움을 받으실 수 있을 거예요!
 </div>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 최근 많은 분들이 [CONTENT_KEYWORD_1]에 대해 관심을 갖고 계시는데요. 실제로 저도 이 제도를 통해 도움을 받았던 경험이 있어요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 처음엔 복잡한 절차와 조건들 때문에 포기하려고 했었는데, 차근차근 알아보니 생각보다 어렵지 않더라고요. 😊 이 글에서는 복잡한 용어나 절차를 쉽게 풀어서 설명드릴 예정이에요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 특히 실제 신청 과정에서 놓치기 쉬운 부분들까지 상세히 다뤄보겠습니다! 💡
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
 `;
+
+// 150자 기준 자동 줄바꿈 함수 추가
+const addLineBreaksForReadability = (content: string): string => {
+  // 150자마다 문장 끝에서 줄바꿈 추가
+  const sentences = content.split('.');
+  let result = '';
+  let currentLength = 0;
+  
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i].trim();
+    if (!sentence) continue;
+    
+    currentLength += sentence.length;
+    result += sentence;
+    
+    if (i < sentences.length - 1) {
+      result += '.';
+      
+      // 150자를 넘었고 다음 문장이 있다면 줄바꿈 추가
+      if (currentLength >= 150 && i < sentences.length - 2) {
+        result += '</p><p style="height: 20px;">&nbsp;</p><p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">';
+        currentLength = 0;
+      } else {
+        result += ' ';
+      }
+    }
+  }
+  
+  return result;
+};
 
 const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => {
   // 테이블을 삽입할 최적의 섹션 결정 (보통 2-4번째 섹션)
@@ -105,25 +162,19 @@ const getDynamicSection = (colors: any, heading: { title: string; emoji: string;
 </h2>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다.
+[SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다. ${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요.
+여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다. 특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다. 특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요.
-</p>
-
-<p style="height: 20px;">&nbsp;</p>
-
-<p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊 마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
+실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊 마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡 관련 정보는 <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>나 <a href="https://www.naver.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">네이버</a>에서도 확인하실 수 있어요.
 </p>
 
 ${shouldInsertTable ? `
@@ -212,7 +263,7 @@ const getEncouragementSection = (colors: any, keyword: string, refLink: string, 
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
+혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요. 관련 자료는 <a href="https://www.daum.net" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">다음</a>이나 <a href="https://www.google.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">구글</a>에서도 검색해보실 수 있어요.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>
@@ -248,7 +299,7 @@ const getSummaryCardSection = (naturalKeyword: string): string => `
 
 const getClosingSection = (colors: any, refLink: string, referenceSentence?: string): string => `
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 전문가 수준의 깊이 있는 내용으로 다뤄봤는데요, 실제로 도움이 되는 정보들을 얻으셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요.
+지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 전문가 수준의 깊이 있는 내용으로 다뤄봤는데요, 실제로 도움이 되는 정보들을 얻으셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요. 추가 정보는 <a href="https://www.tistory.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">티스토리</a>나 <a href="https://blog.naver.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">네이버 블로그</a>에서도 확인해보세요.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>

@@ -26,7 +26,7 @@ export const integratePixabayImages = async (
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 처음 5개 섹션에만 이미지 삽입 (6번째는 마무리 섹션이므로 제외)
+    // 5개 섹션에 이미지 삽입 (6번째는 마무리 섹션이므로 제외)
     const sectionsToProcess = h2Sections.slice(0, 5);
     console.log(`이미지 삽입 대상 섹션 수: ${sectionsToProcess.length}`);
 
@@ -49,11 +49,11 @@ export const integratePixabayImages = async (
         if (imageUrl) {
           console.log(`✅ 섹션 ${i + 1} 이미지 발견:`, imageUrl);
           
-          // 이미지를 해당 섹션 끝에 삽입
+          // 이미지를 해당 섹션 끝에 삽입 - 티스토리 복사 최적화
           const sectionEndPattern = new RegExp(`(${escapeRegExp(sectionsToProcess[i])})`, 'g');
           const imageHtml = `
             <div style="text-align: center; margin: 20px 0;">
-              <img src="${imageUrl}" alt="섹션 ${i + 1} 관련 이미지" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+              <img src="${imageUrl}" alt="섹션 ${i + 1} 관련 이미지" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer;" class="copyable-image" data-original-src="${imageUrl}" onclick="copyImageToClipboard(this)">
             </div>`;
           
           finalHtml = finalHtml.replace(sectionEndPattern, `$1${imageHtml}`);
@@ -72,6 +72,39 @@ export const integratePixabayImages = async (
         continue;
       }
     }
+
+    // 이미지 복사 기능을 위한 JavaScript 추가
+    const imageScript = `
+    <script>
+    function copyImageToClipboard(imgElement) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob(function(blob) {
+          const item = new ClipboardItem({ 'image/png': blob });
+          navigator.clipboard.write([item]).then(() => {
+            alert('이미지가 클립보드에 복사되었습니다! 티스토리에 Ctrl+V로 붙여넣으세요.');
+          }).catch(err => {
+            console.error('이미지 복사 실패:', err);
+            // 대안: 이미지 URL 복사
+            navigator.clipboard.writeText(imgElement.src).then(() => {
+              alert('이미지 URL이 복사되었습니다.');
+            });
+          });
+        }, 'image/png');
+      };
+      img.src = imgElement.src;
+    }
+    </script>`;
+
+    finalHtml = finalHtml + imageScript;
 
     console.log(`🎯 총 ${totalImageCount}개 이미지 삽입 완료`);
     return { finalHtml, imageCount: totalImageCount, clipboardImages };
