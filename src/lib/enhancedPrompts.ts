@@ -86,8 +86,8 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 1. **주제 제목** (글 시작 부분에 반드시 포함):
 <h3 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; padding-bottom: 12px;">${topic}</h3>
 
-2. **간단한 공감 박스** (주제 제목 바로 다음에 반드시 포함):
-<div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border: 2px solid ${colors.primary}; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+2. **간단한 공감 박스** (주제 제목 바로 다음에 반드시 포함 - 테두리 제거):
+<div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
   <p style="color: #333; line-height: 1.6; font-size: 16px; margin: 0;">
     혹시 지금 이런 고민하고 계시나요? "${naturalKeyword}에 대해 정확한 정보를 찾고 있는데, 어디서부터 시작해야 할지 막막하네요..." 
     많은 분들이 똑같은 고민을 하고 계세요. 하지만 걱정하지 마세요! 이 글 하나로 ${naturalKeyword}의 모든 것을 완벽하게 정리해드릴게요.
@@ -98,12 +98,12 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 독자의 공감을 이끌어내는 친근한 문장으로 시작하여 주제에 대한 관심을 유발하는 내용
 
 **🚨 글자수 제한 - 절대 준수 사항 🚨**
-**각 H2 섹션의 본문은 반드시 공백 포함 190자에서 250자 사이로 작성해야 합니다.**
-- 이 글자수 제한은 절대적이며, 250자를 초과하거나 190자 미만이 되어서는 안 됩니다
+**각 H2 섹션의 본문은 반드시 공백 포함 230자에서 270자 사이로 작성해야 합니다.**
+- 이 글자수 제한은 절대적이며, 270자를 초과하거나 230자 미만이 되어서는 안 됩니다
 - **140자를 초과하면 두 번째 문장의 마침표(.) 부분에서 반드시 줄바꿈을 하고 공백 줄 하나를 추가하세요**
 - **모든 문단은 반드시 <p> 태그로 감싸서 작성하세요**
 - **각 <p> 태그 사이에는 공백 줄바꿈을 추가하여 가독성을 높이세요**
-- 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 190-250자 범위 내인지 확인하세요
+- 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 230-270자 범위 내인지 확인하세요
 
 **예시 구조:**
 <p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
@@ -127,7 +127,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - Text Highlight Color: ${colors.textHighlight}
 - Highlight Color: ${colors.highlight}
 - Link Color: ${colors.link}
-**모든 H2, H3 소제목도 반드시 다음 스타일을 적용하세요:**
+**모든 H2, H3 소제목도 반드시 다음 스타일을 적용하세요 (번호 없이):**
 - H2 태그: <h2 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px;">
 - H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em;">
 
@@ -164,15 +164,17 @@ ${referenceLink ? `
 
 <p style="height: 40px;">&nbsp;</p>
 
+<p style="height: 20px;">&nbsp;</p>
+
 <p style="text-align: center; font-size: 16px; color: #666; line-height: 1.8;">
-${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여
+[각 소제목의 핵심 키워드 기반 태그 7개를 여기에 쉼표로 구분하여 배치]
 </p>` : ''}
 
-**🚨 주의사항 카드 필수 삽입 🚨**
+**🚨 주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리) 🚨**
 - 4번째 섹션의 내용 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
-<div style="background: linear-gradient(135deg, ${colors.warnBg}, #fff3cd); border: 2px solid ${colors.warnBorder}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-  <h4 style="color: ${colors.warnBorder}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
-  <ul style="color: #856404; line-height: 1.6; margin: 0; padding-left: 20px;">
+<div style="background: linear-gradient(135deg, ${colors.secondary}, ${colors.highlight}); border: 3px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+  <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
+  <ul style="color: ${colors.primary}; line-height: 1.6; margin: 0; padding-left: 20px;">
     <li style="margin-bottom: 8px;">정확한 정보는 반드시 공식 사이트에서 확인하세요</li>
     <li style="margin-bottom: 8px;">신청 기한과 자격 요건을 미리 확인하시기 바랍니다</li>
     <li>개인정보 보호를 위해 안전한 사이트에서만 신청하세요</li>
@@ -208,8 +210,9 @@ ${referenceSentence ? `
 **🚨 주제와 내용 일치성 - 최우선 준수 사항 🚨**
 **글의 모든 내용은 반드시 주제 "${topic}"와 정확히 일치해야 합니다.**
 
-**🚨 6개 H2 섹션으로 구성 🚨**
+**🚨 6개 H2 섹션으로 구성 (번호 넘버링 금지) 🚨**
 기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
+**모든 H2 소제목에는 절대로 번호(1., 2., 3. 등)를 넣지 마세요.**
 
 **🚨 공식 사이트 자동 링크 연결 🚨**
 본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
@@ -217,12 +220,17 @@ ${referenceSentence ? `
 - 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
 - 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
 
+**🚨 각 소제목별 핵심 키워드 기반 태그 생성 🚨**
+생성된 5개의 동적 소제목에서 각각 핵심 키워드를 추출하여 7개의 태그를 만들어주세요:
+- 동적 소제목들: ${selectedHeadings.map(h => h.title).join(', ')}
+- 이 소제목들에서 핵심 키워드를 추출하여 "${naturalKeyword}, [소제목1 키워드], [소제목2 키워드], [소제목3 키워드], [소제목4 키워드], [소제목5 키워드], [주제 관련 키워드]" 형태로 7개 태그 생성
+
 다음 지침에 따라 작성해주세요:
 - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요
 - 대상 독자: 한국어 사용자
 - **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
 - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
-- **가독성 최우선**: 공백 포함 190-250자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
+- **가독성 최우선**: 공백 포함 230-270자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
 
 사용할 변수:
 - Primary Color: ${colors.primary}
@@ -246,19 +254,20 @@ ${htmlTemplate}
 
 ⚠️ 재확인 사항:
 - **모든 내용이 주제 "${topic}"와 정확히 일치해야 합니다**
-- **각 섹션은 정확히 공백 포함 190자에서 250자 사이의 적절한 분량이어야 합니다**
-- **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
+- **각 섹션은 정확히 공백 포함 230자에서 270자 사이의 적절한 분량이어야 합니다**
+- **절대로 270자를 초과하거나 230자 미만이 되어서는 안 됩니다**
 - **140자 도달 시 두 번째 문장 마침표에서 반드시 줄바꿈 및 공백 줄 추가**
 - **모든 문단은 <p> 태그로 감싸고 각 <p> 태그 사이에 공백 줄바꿈 추가**
 - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
-- **H2, H3 소제목에 컬러테마 스타일 필수 적용**
+- **H2, H3 소제목에 컬러테마 스타일 필수 적용 (번호 넘버링 절대 금지)**
 - **티스토리 호환 시각화 요약 카드 정확한 HTML로 필수 포함 (script 태그 금지)**
-- **주의카드, 테이블 필수 포함**
+- **주의카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
 - **외부 참조 링크와 문장 필수 적용**
-- **주제는 H3로 글 상단에, 간단한 공감 박스 포함**
-- **주의사항 카드는 4번째 섹션 끝에 배치**
+- **주제는 H3로 글 상단에, 간단한 공감 박스 포함 (테두리 제거)**
+- **주의사항 카드는 4번째 섹션 끝에 배치 (컬러테마 연동)**
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
-- **본문 끝 참조 링크는 테두리 없이 작성하고 바로 아래에 태그 7개 추가**
+- **본문 끝 참조 링크는 테두리 없이 작성하고 바로 아래에 각 소제목 키워드 기반 태그 7개 추가**
+- **태그는 순수 태그만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
   `;
 };
 
