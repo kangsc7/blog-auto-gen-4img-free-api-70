@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy, RefreshCw } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy, RefreshCw, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SimpleArticleEditorProps {
@@ -26,14 +26,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const [isUserEditing, setIsUserEditing] = useState(false);
   const [lastGeneratedContent, setLastGeneratedContent] = useState('');
   const [contentVersion, setContentVersion] = useState(0);
-  const [isContentVisible, setIsContentVisible] = useState(false); // 콘텐츠 가시성 상태 추가
+  const [isContentVisible, setIsContentVisible] = useState(false);
   
-  // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
   const LAST_GENERATED_KEY = 'blog_last_generated_content';
   const VERSION_KEY = 'blog_content_version';
   
-  // 타이머 refs
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const userEditTimeoutRef = useRef<NodeJS.Timeout>();
   const syncTimeoutRef = useRef<NodeJS.Timeout>();
@@ -60,7 +58,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 강화된 DOM 동기화 함수 - 다중 검증 및 강제 렌더링
   const forceDOMSync = useCallback((content: string) => {
     if (!editorRef.current || !content) {
       console.log('❌ DOM 동기화 조건 불충족:', { hasEditor: !!editorRef.current, hasContent: !!content });
@@ -72,18 +69,15 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       const editor = editorRef.current;
       
-      // 1차: 직접 innerHTML 설정
       editor.innerHTML = content;
       console.log('✅ 1차 innerHTML 설정 완료');
       
-      // 2차: 스타일 강제 적용으로 리플로우 유도
       const originalDisplay = editor.style.display;
       editor.style.display = 'none';
-      editor.offsetHeight; // 강제 리플로우
+      editor.offsetHeight;
       editor.style.display = originalDisplay || 'block';
       console.log('✅ 2차 강제 리플로우 완료');
       
-      // 3차: 다음 프레임에서 재검증
       requestAnimationFrame(() => {
         if (editor.innerHTML !== content) {
           console.log('⚠️ 3차 검증 실패 - 재설정');
@@ -93,13 +87,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         }
       });
       
-      // 4차: 약간의 딜레이 후 최종 검증
       setTimeout(() => {
         if (editor.innerHTML !== content) {
           console.log('⚠️ 최종 검증 실패 - 최종 재설정');
           editor.innerHTML = content;
           
-          // 최종 강제 렌더링
           editor.style.opacity = '0';
           setTimeout(() => {
             editor.style.opacity = '1';
@@ -118,7 +110,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 초기 로드 시 localStorage에서 복원
   useEffect(() => {
     console.log('🔄 편집기 초기화 시작');
     
@@ -140,12 +131,10 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       setContentVersion(savedVersion);
       onContentChange(savedContent);
       
-      // 강화된 DOM 동기화
       setTimeout(() => forceDOMSync(savedContent), 100);
     }
   }, []);
   
-  // 새로운 생성 콘텐츠 처리 - 대폭 강화된 로직
   useEffect(() => {
     console.log('🔍 새 콘텐츠 동기화 체크:', {
       hasGeneratedContent: !!generatedContent,
@@ -156,7 +145,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       contentVersion
     });
 
-    // 새로운 콘텐츠가 있고, 생성이 완료되었고, 이전과 다른 경우에만 업데이트
     if (generatedContent && 
         !isGeneratingContent && 
         generatedContent !== lastGeneratedContent &&
@@ -166,42 +154,32 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       
       const newVersion = contentVersion + 1;
       
-      // 즉시 상태 업데이트
       setEditorContent(generatedContent);
       setLastGeneratedContent(generatedContent);
       setContentVersion(newVersion);
-      setIsContentVisible(false); // 일시적으로 숨김
+      setIsContentVisible(false);
       
-      // localStorage 저장
       safeLocalStorageSet(STORAGE_KEY, generatedContent);
       safeLocalStorageSet(LAST_GENERATED_KEY, generatedContent);
       safeLocalStorageSet(VERSION_KEY, newVersion.toString());
       
-      // 부모 컴포넌트에 알림
       onContentChange(generatedContent);
-      
-      // 사용자 편집 상태 초기화
       setIsUserEditing(false);
       
-      // 다단계 DOM 동기화 프로세스
       console.log('🔄 다단계 DOM 동기화 시작');
       
-      // 1단계: 즉시 동기화
       const success1 = forceDOMSync(generatedContent);
       
-      // 2단계: 짧은 딜레이 후 재동기화
       setTimeout(() => {
         console.log('🔄 2단계 DOM 동기화');
         forceDOMSync(generatedContent);
       }, 200);
       
-      // 3단계: 중간 딜레이 후 재동기화 (이미지 로딩 대기)
       setTimeout(() => {
         console.log('🔄 3단계 DOM 동기화 (이미지 로딩 대기)');
         forceDOMSync(generatedContent);
       }, 1000);
       
-      // 4단계: 최종 동기화
       setTimeout(() => {
         console.log('🔄 4단계 최종 DOM 동기화');
         const finalSuccess = forceDOMSync(generatedContent);
@@ -225,7 +203,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [generatedContent, isGeneratingContent, lastGeneratedContent, onContentChange, safeLocalStorageSet, toast, forceDOMSync, editorContent.length, contentVersion]);
   
-  // 수동 새로고침 기능 추가
   const handleManualRefresh = useCallback(() => {
     console.log('🔄 수동 새로고침 시작');
     if (editorContent) {
@@ -242,7 +219,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [editorContent, forceDOMSync, toast]);
   
-  // 자동 저장
   const performAutoSave = useCallback((content: string) => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -259,7 +235,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }, 300);
   }, [safeLocalStorageSet, onContentChange, contentVersion]);
   
-  // 사용자 입력 처리
   const handleInput = useCallback(() => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
@@ -315,7 +290,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     };
   }, [editorContent, safeLocalStorageGet, safeLocalStorageSet, forceDOMSync, contentVersion]);
   
-  // 페이지 언로드 시 최종 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       console.log('💾 페이지 언로드 - 최종 저장');
@@ -341,14 +315,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      // 모든 타이머 정리
       [autoSaveTimeoutRef, userEditTimeoutRef, syncTimeoutRef, forceRenderTimeoutRef].forEach(ref => {
         if (ref.current) clearTimeout(ref.current);
       });
     };
   }, [editorContent, safeLocalStorageSet, contentVersion]);
   
-  // 초기화 감지를 위한 전역 이벤트 리스너
   useEffect(() => {
     const handleReset = () => {
       console.log('🔄 초기화 이벤트 감지 - 편집기 내용 삭제');
@@ -371,7 +343,48 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     };
   }, []);
   
-  // 클립보드 복사
+  // 티스토리 대표 이미지 설정을 위한 HTML 복사 (개선됨)
+  const handleCopyHTMLForTistory = useCallback(async () => {
+    if (!editorContent) {
+      toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      // 티스토리 호환 HTML 생성
+      const tistoryOptimizedHtml = editorContent
+        .replace(/class="tistory-image"/g, 'class="tistory-image" style="cursor: pointer; user-select: auto; -webkit-user-drag: auto;"')
+        .replace(/<img([^>]*)>/g, '<img$1 oncontextmenu="return true;" draggable="true">');
+      
+      // HTML과 텍스트 모두 클립보드에 복사
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([tistoryOptimizedHtml], { type: 'text/html' }),
+        'text/plain': new Blob([tistoryOptimizedHtml], { type: 'text/plain' }),
+      });
+
+      await navigator.clipboard.write([clipboardItem]);
+      
+      toast({ 
+        title: "✅ 티스토리용 HTML 복사 완료", 
+        description: "티스토리에 붙여넣기 후 이미지를 잘라내고 다시 붙여넣으면 대표 이미지로 설정 가능합니다!",
+        duration: 6000
+      });
+    } catch (error) {
+      console.error('티스토리용 HTML 복사 실패:', error);
+      // 일반 텍스트로 폴백
+      try {
+        await navigator.clipboard.writeText(editorContent);
+        toast({ 
+          title: "HTML 텍스트 복사 완료", 
+          description: "HTML 코드가 텍스트로 복사되었습니다.",
+          duration: 5000
+        });
+      } catch (fallbackError) {
+        toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
+      }
+    }
+  }, [editorContent, toast]);
+  
   const handleCopyToClipboard = useCallback(() => {
     if (!editorContent) {
       toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
@@ -385,7 +398,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     });
   }, [editorContent, toast]);
   
-  // HTML 파일 다운로드
   const handleDownloadHTML = useCallback(() => {
     if (!editorContent) {
       toast({ title: "다운로드 오류", description: "다운로드할 콘텐츠가 없습니다.", variant: "destructive" });
@@ -405,7 +417,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
   }, [editorContent, selectedTopic, toast]);
 
-  // 디버깅을 위한 현재 상태 표시
   const showDebugInfo = process.env.NODE_ENV === 'development';
 
   return (
@@ -430,7 +441,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (강화된 렌더링 보장)
+              블로그 글 편집기 (티스토리 대표이미지 지원)
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
               {!isContentVisible && editorContent && <span className="ml-2 text-xs text-blue-500">🔄 렌더링 중</span>}
               {showDebugInfo && (
@@ -452,6 +463,15 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     새로고침
                   </Button>
                   <Button 
+                    onClick={handleCopyHTMLForTistory}
+                    size="sm"
+                    variant="outline"
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    티스토리용 복사
+                  </Button>
+                  <Button 
                     onClick={handleCopyToClipboard}
                     size="sm"
                     variant="outline"
@@ -464,7 +484,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     onClick={handleDownloadHTML}
                     size="sm"
                     variant="outline"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                    className="text-orange-600 border-orange-600 hover:bg-orange-50"
                   >
                     <Download className="h-4 w-4 mr-1" />
                     다운로드
@@ -492,8 +512,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (강화된 렌더링 보장)</p>
-                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 렌더링 문제가 발생하면 새로고침 버튼을 클릭하세요.</p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (티스토리 대표이미지 설정 지원)</p>
+                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 "티스토리용 복사" 버튼으로 이미지 잘라내기/붙여넣기가 가능합니다.</p>
                 {isUserEditing && (
                   <p className="text-xs text-orange-600 mt-1">⌨️ 편집 중: 안전하게 보호됩니다</p>
                 )}
