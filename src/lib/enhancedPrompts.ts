@@ -1,4 +1,3 @@
-
 import { WebCrawlerService } from './webCrawler';
 
 interface EnhancedPromptParams {
@@ -41,7 +40,7 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
 
 ### 글 구조 및 스타일
 1. **제목 (H1)**: 매력적이고 클릭을 유도하는 제목
-2. **주제 표시 (H3)**: 제목 바로 아래에 주제를 별도 H3로 표시
+2. **주제 표시 (H3)**: 제목 바로 아래에 주제를 별도 H3로 표시 (밑줄 없음)
 3. **공감 박스**: 다음 이미지 형식으로 단순화된 구조로 작성
    - 배경색: 연한 회색 (#f8f9fa)
    - 테두리: 1px solid #dee2e6
@@ -49,7 +48,7 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
    - 둥근 모서리: 8px
    - 내용: 독자와의 공감대 형성하는 2-3줄 문장
 4. **본문 소제목 (H2)**: 5-6개의 소제목으로 구성
-5. **각 섹션**: 200-270자 내외로 구체적이고 실용적인 내용
+5. **각 섹션**: 140자를 넘지 않는 범위에서 구체적이고 실용적인 내용. 140자에 도달하면 두 번째 문장 끝 마침표(.) 후 줄바꿈과 공백 줄 추가
 6. **시각화 요약카드**: 6번째 소제목의 내용 끝에 위치
 7. **참조 링크**: 글 끝에 테두리 없이 하이퍼링크와 문장만 표시
 
@@ -58,6 +57,7 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
 - 각 소제목마다 구체적인 방법, 팁, 사례 포함
 - 독자의 관심을 끄는 흥미로운 내용
 - SEO 최적화를 위한 키워드 자연스러운 배치
+- 각 섹션은 140자 제한을 준수하며, 필요시 두 번째 문장 끝에서 줄바꿈
 
 ### HTML 구조 예시
 
@@ -74,17 +74,17 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
 [독자와의 공감대를 형성하는 2-3줄 문장]
 </div>
 
-<h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; border-bottom: 2px solid ${colors.secondary}; padding-bottom: 8px;">
+<h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 8px;">
 🔍 1. [첫 번째 소제목]
 </h2>
-[200-270자 내외의 구체적인 내용]
+[140자 이내의 구체적인 내용. 140자에 도달하면 두 번째 문장 끝 마침표 후 줄바꿈과 공백 줄 추가]
 
 <!-- 2-5번째 소제목들도 동일한 패턴 -->
 
-<h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; border-bottom: 2px solid ${colors.secondary}; padding-bottom: 8px;">
+<h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 8px;">
 💡 6. [여섯 번째 소제목]
 </h2>
-[200-270자 내외의 구체적인 내용]
+[140자 이내의 구체적인 내용]
 
 <!-- 6번째 소제목 내용 끝에 시각화 요약카드 배치 -->
 <div style="background: linear-gradient(135deg, ${colors.secondary}, ${colors.background}); border: 2px solid ${colors.primary}; border-radius: 15px; padding: 25px; margin: 30px 0; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
@@ -123,12 +123,16 @@ ${referenceSentence} <a href="${referenceLink}" target="_blank" style="color: ${
 </div>` : ''}
 
 **중요 지침:**
-- 각 소제목별로 200-270자 내외의 충실한 내용 작성
+- 각 소제목별로 140자 이내의 충실한 내용 작성
+- 140자에 도달하면 두 번째 문장 끝 마침표(.) 후 줄바꿈과 공백 줄 추가
 - 시각화 요약카드는 반드시 6번째 소제목 내용 끝에 배치
 - 참조 링크는 글 끝에 테두리 없이 표시
 - 이모지를 적절히 활용하여 가독성 향상
 - 실용적이고 구체적인 정보 위주로 작성
 - HTML 태그를 정확히 사용하여 구조화된 글 작성
+- H2 소제목에는 border-bottom 속성을 사용하지 않음
+- H3 주제 표시에는 밑줄이나 border-bottom을 사용하지 않음
+- SCRIPT 태그나 JavaScript 코드는 절대 포함하지 않음
 
 이제 위 요구사항에 따라 완성도 높은 블로그 글을 작성해주세요.`;
 };

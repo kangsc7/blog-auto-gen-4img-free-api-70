@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 안전한 localStorage 로드
   const loadFromStorage = (): string => {
     try {
       const saved = localStorage.getItem(UNIFIED_EDITOR_KEY);
@@ -48,7 +48,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 편집기 내용 업데이트 (중복 방지)
   const updateEditorContent = (content: string, source: string) => {
     if (content === editorContent) {
       console.log(`⏭️ 편집기 내용 동일 - ${source} 건너뜀`);
@@ -66,7 +65,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     onContentChange(content);
     
-    // 디바운스된 저장
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -90,7 +88,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 새 생성 콘텐츠 처리 (생성 완료 시에만)
   useEffect(() => {
     if (!isGeneratingContent && generatedContent && generatedContent.length > 100 && isInitialized) {
       console.log('🎯 새 생성 콘텐츠 감지:', generatedContent.length + '자');
@@ -98,7 +95,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, [isGeneratingContent, generatedContent, isInitialized]);
 
-  // 글로벌 이벤트 리스너
   useEffect(() => {
     const handleContentUpdate = (event: CustomEvent) => {
       const newContent = event.detail.content;
@@ -123,7 +119,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [isInitialized]);
 
-  // 페이지 종료 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (editorContent) {
@@ -201,7 +196,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 사용자 편집 처리
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
@@ -210,17 +204,23 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사
+  // HTML 복사 - SCRIPT 태그 제거
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    navigator.clipboard.writeText(editorContent).then(() => {
+    // SCRIPT 태그와 JavaScript 코드 제거
+    const cleanedContent = editorContent
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/on\w+="[^"]*"/gi, '')
+      .replace(/javascript:[^"']*/gi, '');
+    
+    navigator.clipboard.writeText(cleanedContent).then(() => {
       toast({ 
         title: "✅ HTML 복사 완료", 
-        description: "티스토리 코드 편집창에 붙여넣으세요." 
+        description: "티스토리 코드 편집창에 붙여넣으세요. (SCRIPT 태그 제거됨)" 
       });
     });
   };
