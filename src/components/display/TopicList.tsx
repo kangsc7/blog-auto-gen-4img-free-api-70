@@ -42,6 +42,10 @@ export const TopicList: React.FC<TopicListProps> = ({
     setConfirmDialog({ isOpen: false, topic: '' });
   };
 
+  const handleClose = () => {
+    setConfirmDialog({ isOpen: false, topic: '' });
+  };
+
   return (
     <>
       <Card className="shadow-md">
@@ -85,6 +89,7 @@ export const TopicList: React.FC<TopicListProps> = ({
         topic={confirmDialog.topic}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
+        onClose={handleClose}
       />
     </>
   );

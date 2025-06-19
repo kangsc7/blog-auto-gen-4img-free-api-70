@@ -79,7 +79,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
       <EvergreenKeywordCounter />
 
-      {/* 이미지 생성 창들 - sticky 기능 제거하고 일반 레이아웃으로 변경 */}
       <div className="space-y-4">
         <ImageCreation
           appState={appState}
@@ -99,7 +98,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           }`}
         >
           <div className={`transition-all duration-300 overflow-hidden ${
-            isHuggingFaceExpanded ? 'max-h-96' : 'max-h-16'
+            isHuggingFaceExpanded ? 'max-h-[800px]' : 'max-h-16'
           }`}>
             <HuggingFaceImageGenerator
               huggingFaceApiKey={appState.huggingFaceApiKey}
