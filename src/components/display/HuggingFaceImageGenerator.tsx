@@ -24,7 +24,6 @@ export const HuggingFaceImageGenerator: React.FC<HuggingFaceImageGeneratorProps>
   const [generatedImage, setGeneratedImage] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const generateImage = async () => {
     if (!hasAccess) {
@@ -174,111 +173,103 @@ export const HuggingFaceImageGenerator: React.FC<HuggingFaceImageGeneratorProps>
   };
 
   return (
-    <Card 
-      className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-      onDoubleClick={() => setIsCollapsed(!isCollapsed)}
-    >
+    <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader>
         <CardTitle className="flex items-center text-purple-700">
           <Wand2 className="h-6 w-6 mr-2" />
           Hugging Face 이미지 생성기
-          <span className="ml-2 text-xs text-gray-500">(더블클릭: 접기/펼치기)</span>
         </CardTitle>
-        {!isCollapsed && (
-          <p className="text-sm text-gray-600">
-            영어 프롬프트를 입력하여 AI 이미지를 생성하고, 블로그 글에 추가하세요.
-          </p>
-        )}
+        <p className="text-sm text-gray-600">
+          영어 프롬프트를 입력하여 AI 이미지를 생성하고, 블로그 글에 추가하세요.
+        </p>
       </CardHeader>
-      {!isCollapsed && (
-        <CardContent className="space-y-6">
-          {/* 프롬프트 입력 */}
+      <CardContent className="space-y-6">
+        {/* 프롬프트 입력 */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              이미지 프롬프트 (영어로 입력)
+            </label>
+            <Textarea
+              placeholder="예: A beautiful sunset over mountains, 4k photorealistic style, high detail, natural lighting, cinematic"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="min-h-[100px] resize-none"
+              disabled={isGenerating}
+            />
+          </div>
+
+          {/* 생성 버튼 */}
+          <Button
+            onClick={generateImage}
+            disabled={!prompt.trim() || isGenerating || !isApiKeyValidated || !hasAccess}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            size="lg"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                이미지 생성 중...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-5 w-5 mr-2" />
+                이미지 생성
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* 생성된 이미지 */}
+        {generatedImage && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                이미지 프롬프트 (영어로 입력)
-              </label>
-              <Textarea
-                placeholder="예: A beautiful sunset over mountains, 4k photorealistic style, high detail, natural lighting, cinematic"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[100px] resize-none"
-                disabled={isGenerating}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <img
+                src={generatedImage}
+                alt="Generated"
+                className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                style={{ maxHeight: '400px', objectFit: 'contain' }}
               />
             </div>
-
-            {/* 생성 버튼 */}
+            
             <Button
-              onClick={generateImage}
-              disabled={!prompt.trim() || isGenerating || !isApiKeyValidated || !hasAccess}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={copyImageToClipboard}
+              disabled={isCopying}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
               size="lg"
             >
-              {isGenerating ? (
+              {isCopying ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  이미지 생성 중...
+                  복사 중...
                 </>
               ) : (
                 <>
-                  <ImageIcon className="h-5 w-5 mr-2" />
-                  이미지 생성
+                  <Copy className="h-5 w-5 mr-2" />
+                  이미지 복사 (편집기에 붙여넣기)
                 </>
               )}
             </Button>
           </div>
+        )}
 
-          {/* 생성된 이미지 */}
-          {generatedImage && (
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <img
-                  src={generatedImage}
-                  alt="Generated"
-                  className="w-full max-w-md mx-auto rounded-lg shadow-md"
-                  style={{ maxHeight: '400px', objectFit: 'contain' }}
-                />
-              </div>
-              
-              <Button
-                onClick={copyImageToClipboard}
-                disabled={isCopying}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                size="lg"
-              >
-                {isCopying ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    복사 중...
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-5 w-5 mr-2" />
-                    이미지 복사 (편집기에 붙여넣기)
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+        {/* 상태 메시지 */}
+        {!hasAccess && (
+          <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              이 기능을 사용하려면 접근 권한이 필요합니다.
+            </p>
+          </div>
+        )}
 
-          {/* 상태 메시지 */}
-          {!hasAccess && (
-            <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <p className="text-sm text-yellow-800">
-                이 기능을 사용하려면 접근 권한이 필요합니다.
-              </p>
-            </div>
-          )}
-
-          {!isApiKeyValidated && hasAccess && (
-            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
-                먼저 Hugging Face API 키를 설정하고 검증해주세요.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      )}
+        {!isApiKeyValidated && hasAccess && (
+          <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800">
+              먼저 Hugging Face API 키를 설정하고 검증해주세요.
+            </p>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };
