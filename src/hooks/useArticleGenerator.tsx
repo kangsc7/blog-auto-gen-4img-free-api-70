@@ -70,7 +70,6 @@ export const useArticleGenerator = (
         referenceLink: appState.referenceLink,
         referenceSentence: appState.referenceSentence,
         apiKey: appState.apiKey!,
-        sectionWordCount: '190-240', // 섹션 글자수 변경
       });
 
       if (cancelArticleGeneration.current) {

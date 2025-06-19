@@ -30,47 +30,36 @@ export const RightContent: React.FC<RightContentProps> = ({
     };
 
     return (
-        <div 
-            className="h-full"
-            style={{
-                width: '100%',
-                minWidth: 'calc(100vw - 460px)',
-                maxWidth: 'calc(100vw - 460px)'
-            }}
-        >
-            <div className="h-full overflow-y-auto">
-                <div className="space-y-6 p-1">
-                    <TopicList
-                        topics={appState.topics}
-                        selectedTopic={appState.selectedTopic}
-                        selectTopic={selectTopic}
-                        onTopicConfirm={onTopicConfirm}
-                    />
+        <div className="lg:col-span-8 space-y-6">
+            <TopicList
+                topics={appState.topics}
+                selectedTopic={appState.selectedTopic}
+                selectTopic={selectTopic}
+                onTopicConfirm={onTopicConfirm}
+            />
 
-                    <SimpleArticleEditor
-                        generatedContent={appState.generatedContent}
-                        isGeneratingContent={isGeneratingContent}
-                        selectedTopic={appState.selectedTopic}
-                        onContentChange={handleContentChange}
-                    />
+            <SimpleArticleEditor
+                generatedContent={appState.generatedContent}
+                isGeneratingContent={isGeneratingContent}
+                selectedTopic={appState.selectedTopic}
+                onContentChange={handleContentChange}
+            />
 
-                    {appState.generatedContent && (
-                        <ContentActions
-                            generatedContent={appState.generatedContent}
-                            copyToClipboard={copyToClipboard}
-                            downloadHTML={downloadHTML}
-                        />
-                    )}
+            {appState.generatedContent && (
+                <ContentActions
+                    generatedContent={appState.generatedContent}
+                    copyToClipboard={copyToClipboard}
+                    downloadHTML={downloadHTML}
+                />
+            )}
 
-                    {appState.generatedContent && (
-                        <SeoAnalyzer 
-                            generatedContent={appState.generatedContent}
-                            keyword={appState.keyword}
-                            selectedTopic={appState.selectedTopic}
-                        />
-                    )}
-                </div>
-            </div>
+            {appState.generatedContent && (
+                <SeoAnalyzer 
+                    generatedContent={appState.generatedContent}
+                    keyword={appState.keyword}
+                    selectedTopic={appState.selectedTopic}
+                />
+            )}
         </div>
     );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const [isUserEditing, setIsUserEditing] = useState(false);
   const [lastGeneratedContent, setLastGeneratedContent] = useState('');
   const [contentVersion, setContentVersion] = useState(0);
-  const [isContentVisible, setIsContentVisible] = useState(false);
+  const [isContentVisible, setIsContentVisible] = useState(false); // 콘텐츠 가시성 상태 추가
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
@@ -36,6 +37,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const userEditTimeoutRef = useRef<NodeJS.Timeout>();
   const syncTimeoutRef = useRef<NodeJS.Timeout>();
+  const forceRenderTimeoutRef = useRef<NodeJS.Timeout>();
   
   // 안전한 localStorage 작업
   const safeLocalStorageGet = useCallback((key: string) => {
@@ -58,36 +60,56 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 개선된 DOM 동기화 함수 - 검증 최적화
-  const optimizedDOMSync = useCallback((content: string) => {
+  // 강화된 DOM 동기화 함수 - 다중 검증 및 강제 렌더링
+  const forceDOMSync = useCallback((content: string) => {
     if (!editorRef.current || !content) {
+      console.log('❌ DOM 동기화 조건 불충족:', { hasEditor: !!editorRef.current, hasContent: !!content });
       return false;
     }
     
-    console.log('🔄 최적화된 DOM 동기화 시작:', content.length + '자');
+    console.log('🔄 강화된 DOM 동기화 시작:', content.length + '자');
     
     try {
       const editor = editorRef.current;
       
-      // 현재 내용과 동일한지 체크
-      if (editor.innerHTML === content) {
-        console.log('✅ 이미 동기화됨 - 스킵');
-        setIsContentVisible(true);
-        return true;
-      }
-      
-      // 직접 innerHTML 설정
+      // 1차: 직접 innerHTML 설정
       editor.innerHTML = content;
+      console.log('✅ 1차 innerHTML 설정 완료');
       
-      // 단순 검증 (한 번만)
+      // 2차: 스타일 강제 적용으로 리플로우 유도
+      const originalDisplay = editor.style.display;
+      editor.style.display = 'none';
+      editor.offsetHeight; // 강제 리플로우
+      editor.style.display = originalDisplay || 'block';
+      console.log('✅ 2차 강제 리플로우 완료');
+      
+      // 3차: 다음 프레임에서 재검증
+      requestAnimationFrame(() => {
+        if (editor.innerHTML !== content) {
+          console.log('⚠️ 3차 검증 실패 - 재설정');
+          editor.innerHTML = content;
+        } else {
+          console.log('✅ 3차 검증 성공');
+        }
+      });
+      
+      // 4차: 약간의 딜레이 후 최종 검증
       setTimeout(() => {
         if (editor.innerHTML !== content) {
-          console.log('⚠️ 재설정 필요');
+          console.log('⚠️ 최종 검증 실패 - 최종 재설정');
           editor.innerHTML = content;
+          
+          // 최종 강제 렌더링
+          editor.style.opacity = '0';
+          setTimeout(() => {
+            editor.style.opacity = '1';
+          }, 10);
+        } else {
+          console.log('✅ 최종 검증 성공 - DOM 동기화 완료');
         }
+        
         setIsContentVisible(true);
-        console.log('✅ DOM 동기화 완료');
-      }, 100);
+      }, 500);
       
       return true;
     } catch (error) {
@@ -118,11 +140,12 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       setContentVersion(savedVersion);
       onContentChange(savedContent);
       
-      setTimeout(() => optimizedDOMSync(savedContent), 100);
+      // 강화된 DOM 동기화
+      setTimeout(() => forceDOMSync(savedContent), 100);
     }
   }, []);
   
-  // 개선된 새 콘텐츠 처리 로직
+  // 새로운 생성 콘텐츠 처리 - 대폭 강화된 로직
   useEffect(() => {
     console.log('🔍 새 콘텐츠 동기화 체크:', {
       hasGeneratedContent: !!generatedContent,
@@ -133,41 +156,74 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       contentVersion
     });
 
+    // 새로운 콘텐츠가 있고, 생성이 완료되었고, 이전과 다른 경우에만 업데이트
     if (generatedContent && 
         !isGeneratingContent && 
         generatedContent !== lastGeneratedContent &&
         generatedContent.trim().length > 0) {
       
-      console.log('🚀 새로운 콘텐츠 적용 시작');
+      console.log('🚀 새로운 콘텐츠 강제 적용 시작 - 최우선 처리');
       
       const newVersion = contentVersion + 1;
       
-      // 상태 업데이트
+      // 즉시 상태 업데이트
       setEditorContent(generatedContent);
       setLastGeneratedContent(generatedContent);
       setContentVersion(newVersion);
-      setIsContentVisible(false);
+      setIsContentVisible(false); // 일시적으로 숨김
       
       // localStorage 저장
       safeLocalStorageSet(STORAGE_KEY, generatedContent);
       safeLocalStorageSet(LAST_GENERATED_KEY, generatedContent);
       safeLocalStorageSet(VERSION_KEY, newVersion.toString());
       
+      // 부모 컴포넌트에 알림
       onContentChange(generatedContent);
+      
+      // 사용자 편집 상태 초기화
       setIsUserEditing(false);
       
-      // 최적화된 DOM 동기화
-      const success = optimizedDOMSync(generatedContent);
+      // 다단계 DOM 동기화 프로세스
+      console.log('🔄 다단계 DOM 동기화 시작');
       
-      if (success) {
-        toast({
-          title: "✅ 블로그 글 로드 완료",
-          description: "새로 생성된 글이 편집기에 적용되었습니다.",
-          duration: 3000
-        });
-      }
+      // 1단계: 즉시 동기화
+      const success1 = forceDOMSync(generatedContent);
+      
+      // 2단계: 짧은 딜레이 후 재동기화
+      setTimeout(() => {
+        console.log('🔄 2단계 DOM 동기화');
+        forceDOMSync(generatedContent);
+      }, 200);
+      
+      // 3단계: 중간 딜레이 후 재동기화 (이미지 로딩 대기)
+      setTimeout(() => {
+        console.log('🔄 3단계 DOM 동기화 (이미지 로딩 대기)');
+        forceDOMSync(generatedContent);
+      }, 1000);
+      
+      // 4단계: 최종 동기화
+      setTimeout(() => {
+        console.log('🔄 4단계 최종 DOM 동기화');
+        const finalSuccess = forceDOMSync(generatedContent);
+        
+        if (finalSuccess) {
+          toast({
+            title: "✅ 블로그 글 로드 완료",
+            description: "새로 생성된 글이 편집기에 성공적으로 적용되었습니다.",
+            duration: 3000
+          });
+        } else {
+          console.error('❌ 최종 DOM 동기화 실패');
+          toast({
+            title: "⚠️ 편집기 로드 문제",
+            description: "글이 생성되었지만 편집기 표시에 문제가 있습니다. 새로고침을 시도해보세요.",
+            variant: "default",
+            duration: 5000
+          });
+        }
+      }, 2000);
     }
-  }, [generatedContent, isGeneratingContent, lastGeneratedContent, onContentChange, safeLocalStorageSet, toast, optimizedDOMSync, editorContent.length, contentVersion]);
+  }, [generatedContent, isGeneratingContent, lastGeneratedContent, onContentChange, safeLocalStorageSet, toast, forceDOMSync, editorContent.length, contentVersion]);
   
   // 수동 새로고침 기능 추가
   const handleManualRefresh = useCallback(() => {
@@ -175,7 +231,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     if (editorContent) {
       setIsContentVisible(false);
       setTimeout(() => {
-        const success = optimizedDOMSync(editorContent);
+        const success = forceDOMSync(editorContent);
         if (success) {
           toast({
             title: "새로고침 완료",
@@ -184,7 +240,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         }
       }, 100);
     }
-  }, [editorContent, optimizedDOMSync, toast]);
+  }, [editorContent, forceDOMSync, toast]);
   
   // 자동 저장
   const performAutoSave = useCallback((content: string) => {
@@ -236,7 +292,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         console.log('📂 창 포커스 시 콘텐츠 복원 (버전:', savedVersion + ')');
         setEditorContent(savedContent);
         setContentVersion(savedVersion);
-        optimizedDOMSync(savedContent);
+        forceDOMSync(savedContent);
       }
     };
 
@@ -257,7 +313,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('blur', handleWindowBlur);
     };
-  }, [editorContent, safeLocalStorageGet, safeLocalStorageSet, optimizedDOMSync, contentVersion]);
+  }, [editorContent, safeLocalStorageGet, safeLocalStorageSet, forceDOMSync, contentVersion]);
   
   // 페이지 언로드 시 최종 저장
   useEffect(() => {
@@ -285,7 +341,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      [autoSaveTimeoutRef, userEditTimeoutRef, syncTimeoutRef].forEach(ref => {
+      // 모든 타이머 정리
+      [autoSaveTimeoutRef, userEditTimeoutRef, syncTimeoutRef, forceRenderTimeoutRef].forEach(ref => {
         if (ref.current) clearTimeout(ref.current);
       });
     };
@@ -373,7 +430,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (최적화된 렌더링)
+              블로그 글 편집기 (강화된 렌더링 보장)
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
               {!isContentVisible && editorContent && <span className="ml-2 text-xs text-blue-500">🔄 렌더링 중</span>}
               {showDebugInfo && (
@@ -435,8 +492,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (최적화된 렌더링)</p>
-                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 안정적인 렌더링을 보장합니다.</p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (강화된 렌더링 보장)</p>
+                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 렌더링 문제가 발생하면 새로고침 버튼을 클릭하세요.</p>
                 {isUserEditing && (
                   <p className="text-xs text-orange-600 mt-1">⌨️ 편집 중: 안전하게 보호됩니다</p>
                 )}

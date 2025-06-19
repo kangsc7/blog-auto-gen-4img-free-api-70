@@ -27,24 +27,36 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // useCallback으로 함수 메모화 - 불필요한 리렌더링 방지
   const handleConfirm = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    // 이미 처리 중이거나 다이얼로그가 닫혀있으면 무시
     if (isProcessing || !isOpen) {
+      console.log('handleConfirm 무시됨:', { isProcessing, isOpen });
       return;
     }
     
     setIsProcessing(true);
     console.log('TopicConfirmDialog handleConfirm 시작:', topic);
     
-    // 즉시 다이얼로그 닫기
-    onCancel();
-    
-    // 즉시 글 작성 시작
-    onConfirm();
-    
-    setIsProcessing(false);
+    try {
+      // 즉시 다이얼로그 닫기
+      onCancel();
+      
+      // 처리 상태 초기화
+      setIsProcessing(false);
+      
+      // 약간의 지연 후 onConfirm 실행 (UI 업데이트 보장)
+      setTimeout(() => {
+        onConfirm();
+      }, 100);
+      
+    } catch (error) {
+      console.error('handleConfirm 오류:', error);
+      setIsProcessing(false);
+    }
   }, [isProcessing, isOpen, topic, onConfirm, onCancel]);
 
   const handleCancel = useCallback((e?: React.MouseEvent) => {
@@ -54,6 +66,7 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
     }
     
     if (isProcessing) {
+      console.log('handleCancel 무시됨 - 처리 중');
       return;
     }
     
@@ -62,6 +75,7 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
     onCancel();
   }, [isProcessing, onCancel]);
 
+  // 다이얼로그 상태 변경 시 처리 상태 초기화
   React.useEffect(() => {
     if (!isOpen) {
       setIsProcessing(false);
