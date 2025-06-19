@@ -3,6 +3,8 @@ import React, { useEffect } from 'react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
+import { OneClickSection } from '@/components/sections/OneClickSection';
+import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { useRefactoredAppController } from '@/hooks/useRefactoredAppController';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,6 +54,23 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <TopNavigation />
+
+      {/* API 키 설정 섹션 */}
+      <RefactoredApiKeysSection
+        geminiManager={geminiManager}
+        pixabayManager={pixabayManager}
+        huggingFaceManager={huggingFaceManager}
+      />
+
+      {/* 원클릭 생성 섹션 */}
+      <OneClickSection
+        handleLatestIssueOneClick={handleLatestIssueOneClick}
+        handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
+        isOneClickGenerating={isOneClickGenerating}
+        handleStopOneClick={handleStopOneClick}
+        appState={appState}
+        isGeneratingContent={generationStatus.isGeneratingContent}
+      />
 
       <MainContentSection
         appState={appState}
