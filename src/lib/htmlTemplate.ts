@@ -135,3 +135,115 @@ export const createBlogTemplate = (
 </body>
 </html>`;
 };
+
+// getHtmlTemplate 함수 추가
+export const getHtmlTemplate = (
+  colors: any,
+  topic: string,
+  keyword: string,
+  refLink: string,
+  refText: string,
+  headings: any[]
+): string => {
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${topic}</title>
+    <meta name="keywords" content="${keyword}">
+    <style>
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', Arial, sans-serif;
+            line-height: 1.8;
+            color: ${colors.primary};
+            background-color: ${colors.secondary};
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: ${colors.primary};
+            border-bottom: 3px solid ${colors.primary};
+            padding-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: ${colors.primary};
+            font-size: 1.6em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid ${colors.primary};
+            padding-left: 15px;
+        }
+        h3 {
+            color: ${colors.primary};
+            font-size: 1.3em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        p {
+            margin-bottom: 18px;
+            text-align: justify;
+        }
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .content-table th, .content-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .content-table th {
+            background-color: ${colors.highlight};
+            color: ${colors.primary};
+            font-weight: bold;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            display: block;
+            cursor: pointer;
+            user-select: none;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        @media (max-width: 768px) {
+            body { padding: 15px; font-size: 16px; }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.4em; }
+            h3 { font-size: 1.2em; }
+        }
+    </style>
+</head>
+<body>
+    <h1>${topic}</h1>
+    
+    <div class="intro">
+        <p>[인트로 내용]</p>
+    </div>
+
+    ${headings.map((heading, index) => `
+    <h2>${heading.title} ${heading.emoji}</h2>
+    <p>[섹션 ${index + 1} 내용 - 220-270자]</p>
+    `).join('')}
+
+    <div class="conclusion">
+        <p>[결론 내용]</p>
+        <p><a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">${refText}</a></p>
+    </div>
+</body>
+</html>`;
+};
