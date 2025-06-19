@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy, RefreshCw } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { EditorControls } from '@/components/editor/EditorControls';
+import { EditorLoadingState } from '@/components/editor/EditorLoadingState';
+import { EditorEmptyState } from '@/components/editor/EditorEmptyState';
 
 interface SimpleArticleEditorProps {
   generatedContent: string;
@@ -32,8 +34,6 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const userEditTimeoutRef = useRef<NodeJS.Timeout>();
-  const syncTimeoutRef = useRef<NodeJS.Timeout>();
-  const forceRenderTimeoutRef = useRef<NodeJS.Timeout>();
   
   const safeLocalStorageGet = useCallback((key: string) => {
     try {
@@ -59,11 +59,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       console.log('이미지 클릭 복사 시도:', imageUrl);
       
-      // 이미지를 fetch하여 blob으로 변환
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       
-      // ClipboardItem으로 이미지 복사
       const clipboardItem = new ClipboardItem({
         [blob.type]: blob
       });
@@ -87,6 +85,21 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [toast]);
   
+  // SCRIPT 태그 제거 함수
+  const removeScriptTags = useCallback((htmlContent: string) => {
+    return htmlContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }, []);
+  
+  // 주제 스타일링 적용 함수
+  const applyTopicStyling = useCallback((content: string) => {
+    const styledContent = content.replace(
+      /<h1([^>]*)>(.*?)<\/h1>/gi,
+      '<h4 style="color: #000000; font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">$2</h4><p data-ke-size="size16">&nbsp;</p>'
+    );
+    
+    return styledContent;
+  }, []);
+  
   const forceDOMSync = useCallback((content: string) => {
     if (!editorRef.current || !content) {
       console.log('❌ DOM 동기화 조건 불충족:', { hasEditor: !!editorRef.current, hasContent: !!content });
@@ -97,8 +110,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     
     try {
       const editor = editorRef.current;
+      const styledContent = applyTopicStyling(content);
       
-      editor.innerHTML = content;
+      editor.innerHTML = styledContent;
       console.log('✅ 1차 innerHTML 설정 완료');
       
       // 이미지 클릭 이벤트 리스너 추가
@@ -123,18 +137,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       console.log('✅ 2차 강제 리플로우 완료');
       
       requestAnimationFrame(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== styledContent) {
           console.log('⚠️ 3차 검증 실패 - 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = styledContent;
         } else {
           console.log('✅ 3차 검증 성공');
         }
       });
       
       setTimeout(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== styledContent) {
           console.log('⚠️ 최종 검증 실패 - 최종 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = styledContent;
           
           editor.style.opacity = '0';
           setTimeout(() => {
@@ -152,7 +166,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       console.error('❌ DOM 동기화 중 오류:', error);
       return false;
     }
-  }, [handleImageClick]);
+  }, [handleImageClick, applyTopicStyling]);
   
   useEffect(() => {
     console.log('🔄 편집기 초기화 시작');
@@ -359,7 +373,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       // 모든 타이머 정리
-      [autoSaveTimeoutRef, userEditTimeoutRef, syncTimeoutRef, forceRenderTimeoutRef].forEach(ref => {
+      [autoSaveTimeoutRef, userEditTimeoutRef].forEach(ref => {
         if (ref.current) clearTimeout(ref.current);
       });
     };
@@ -393,15 +407,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    navigator.clipboard.writeText(editorContent).then(() => {
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    navigator.clipboard.writeText(cleanedContent).then(() => {
       toast({ 
         title: "HTML 복사 완료", 
-        description: "HTML 코드가 클립보드에 복사되었습니다. 티스토리 코드 편집창에 붙여넣으세요. 이미지는 클릭해서 별도 복사하세요." 
+        description: "HTML 코드가 클립보드에 복사되었습니다. 스크립트 태그는 자동 제거되었습니다." 
       });
     }).catch(() => {
       toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
     });
-  }, [editorContent, toast]);
+  }, [editorContent, toast, removeScriptTags]);
   
   const handleDownloadHTML = useCallback(() => {
     if (!editorContent) {
@@ -409,7 +425,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    const blob = new Blob([editorContent], { type: 'text/html;charset=utf-8' });
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    const blob = new Blob([cleanedContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -420,7 +438,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
-  }, [editorContent, selectedTopic, toast]);
+  }, [editorContent, selectedTopic, toast, removeScriptTags]);
 
   const showDebugInfo = process.env.NODE_ENV === 'development';
 
@@ -465,56 +483,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 </span>
               )}
             </span>
-            <div className="flex space-x-2">
-              {editorContent && !isGeneratingContent && (
-                <>
-                  <Button 
-                    onClick={handleManualRefresh}
-                    size="sm"
-                    variant="outline"
-                    className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                    새로고침
-                  </Button>
-                  <Button 
-                    onClick={handleCopyToClipboard}
-                    size="sm"
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    <ClipboardCopy className="h-4 w-4 mr-1" />
-                    HTML 복사
-                  </Button>
-                  <Button 
-                    onClick={handleDownloadHTML}
-                    size="sm"
-                    variant="outline"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    다운로드
-                  </Button>
-                </>
-              )}
-            </div>
+            <EditorControls
+              editorContent={editorContent}
+              isGeneratingContent={isGeneratingContent}
+              onManualRefresh={handleManualRefresh}
+              onCopyToClipboard={handleCopyToClipboard}
+              onDownloadHTML={handleDownloadHTML}
+            />
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isGeneratingContent ? (
-            <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
-              <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
-              <p className="font-semibold text-lg">
-                <span className="font-bold text-blue-600">
-                  <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite] transform-origin-[70%_70%] mr-0.5">파</span>
-                  <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.1s] transform-origin-[70%_70%] mr-0.5">코</span>
-                  <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.2s] transform-origin-[70%_70%] mr-0.5">월</span>
-                  <span className="inline-block animate-[wave_1.5s_ease-in-out_infinite_0.3s] transform-origin-[70%_70%]">드</span>
-                </span>
-                가 글을 생성하고 있습니다...
-              </p>
-              <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
-            </div>
+            <EditorLoadingState />
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
@@ -546,18 +526,13 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
               />
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Edit className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>주제를 선택하고 글을 생성해보세요!</p>
-              {showDebugInfo && (
-                <div className="mt-4 text-xs text-gray-400">
-                  <p>생성된 콘텐츠: {generatedContent ? '있음' : '없음'}</p>
-                  <p>생성 중: {isGeneratingContent ? '예' : '아니오'}</p>
-                  <p>버전: {contentVersion}</p>
-                  <p>표시 상태: {isContentVisible ? '표시됨' : '숨김'}</p>
-                </div>
-              )}
-            </div>
+            <EditorEmptyState
+              showDebugInfo={showDebugInfo}
+              generatedContent={generatedContent}
+              isGeneratingContent={isGeneratingContent}
+              contentVersion={contentVersion}
+              isContentVisible={isContentVisible}
+            />
           )}
         </CardContent>
       </Card>

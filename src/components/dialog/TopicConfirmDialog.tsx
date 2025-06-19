@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import React, { useState } from 'react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface TopicConfirmDialogProps {
   isOpen: boolean;
@@ -17,12 +17,37 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   onCancel,
   topic,
 }) => {
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleConfirm = async () => {
+    if (isProcessing) {
+      console.log('이미 처리 중 - 중복 클릭 방지');
+      return;
+    }
+    
+    console.log('주제 확인 버튼 클릭됨:', topic);
+    setIsProcessing(true);
+    
+    try {
+      // onConfirm 함수 실행
+      await onConfirm();
+      
+      // 성공적으로 완료되면 다이얼로그 닫기
+      onClose();
+    } catch (error) {
+      console.error('주제 확인 처리 오류:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCancel = () => {
+    if (isProcessing) {
+      console.log('처리 중에는 취소할 수 없습니다');
+      return;
+    }
+    
+    console.log('주제 선택 취소됨');
     if (onCancel) {
       onCancel();
     }
@@ -30,7 +55,11 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isProcessing) {
+        onClose();
+      }
+    }}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-bold text-blue-600">
@@ -47,11 +76,19 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel
+            onClick={handleCancel}
+            disabled={isProcessing}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            취소
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
+            disabled={isProcessing}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            네, 작성하겠습니다
+            {isProcessing ? '처리중...' : '네, 작성하겠습니다'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

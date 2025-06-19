@@ -1,8 +1,9 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
-import { generateDynamicHeadings } from './dynamicHeadings';
+import { validatePromptIntegrity, restorePromptIfCorrupted, CORE_WRITING_GUIDELINES } from './promptBackup';
 
-interface EnhancedArticlePromptParams {
+interface PromptOptions {
   topic: string;
   keyword: string;
   selectedColorTheme: string;
@@ -11,53 +12,57 @@ interface EnhancedArticlePromptParams {
   apiKey: string;
 }
 
-// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 절대 보존)
-const extractNaturalKeyword = (topic: string): string => {
-  return topic
-    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게|업법/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-
-// 더 자연스러운 관련 용어 생성 함수
-const generateNaturalContext = (naturalKeyword: string, originalKeyword: string): { [key: string]: string } => {
-  const baseTerms = ['지원금', '혜택', '제도', '프로그램', '서비스'];
-  const contextTerms = ['관련 지원', '이런 혜택', '해당 제도', '이 프로그램', '지원 서비스'];
+export const getEnhancedArticlePrompt = async (options: PromptOptions): Promise<string> => {
+  const { topic, keyword, selectedColorTheme, referenceLink, referenceSentence, apiKey } = options;
   
-  return {
-    INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 관련 혜택`,
-    CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_2: `${naturalKeyword} 관련`,
-    SECTION_CONTENT_3: `디지털플랫폼 활용`,
-    SECTION_CONTENT_4: `이 지원금`,
-    SECTION_CONTENT_5: `${naturalKeyword} 지원`,
-    SUMMARY_TITLE: naturalKeyword,
-    REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
-    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
-  };
-};
+  console.log('🎨 강화된 프롬프트 생성:', {
+    topic,
+    keyword,
+    colorTheme: selectedColorTheme,
+    hasReferenceLink: !!referenceLink,
+    hasReferenceSentence: !!referenceSentence
+  });
 
-export const getEnhancedArticlePrompt = async ({
-  topic,
-  keyword,
-  selectedColorTheme,
-  referenceLink,
-  referenceSentence,
-  apiKey,
-}: EnhancedArticlePromptParams): Promise<string> => {
+  // 참조 링크가 있는 경우 웹 크롤링으로 내용 가져오기
+  let referenceContent = '';
+  if (referenceLink && referenceLink.trim()) {
+    try {
+      console.log('🔗 참조 링크에서 내용 추출 시도:', referenceLink);
+      
+      const crawlResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `다음 웹사이트 URL의 주요 내용을 요약해주세요. URL: ${referenceLink}
+
+웹사이트의 핵심 정보, 주요 포인트, 유용한 정보들을 간략하게 정리해주세요. 
+만약 URL에 접근할 수 없다면, URL 주소를 기반으로 추정되는 내용을 작성해주세요.
+
+요약은 200자 이내로 작성해주세요.`
+            }]
+          }],
+          generationConfig: { maxOutputTokens: 500, temperature: 0.7 }
+        })
+      });
+
+      if (crawlResponse.ok) {
+        const crawlData = await crawlResponse.json();
+        const extractedContent = crawlData.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (extractedContent) {
+          referenceContent = extractedContent.trim();
+          console.log('✅ 참조 링크 내용 추출 완료:', referenceContent.substring(0, 100) + '...');
+        }
+      }
+    } catch (error) {
+      console.error('❌ 참조 링크 내용 추출 실패:', error);
+    }
+  }
+
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
-  const refText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
-  
-  const naturalKeyword = extractNaturalKeyword(topic);
-  const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
-  
-  console.log('동적 소제목 생성 시작 (40자 제한):', keyword, topic);
-  const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
-  console.log('생성된 동적 소제목 (40자 제한):', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
-  
-  const selectedHeadings = dynamicHeadings.slice(0, 5);
+  const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
   
   const htmlTemplate = getHtmlTemplate(
     topic,
@@ -68,178 +73,81 @@ export const getEnhancedArticlePrompt = async ({
   );
   const currentYear = new Date().getFullYear();
 
-  return `
-당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
+  // 핵심 지침 구성 - 백업 시스템과 연동
+  const basePrompt = `당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
 주제: "${topic}"
-입력 키워드: "${keyword}"
-자연스러운 키워드: "${naturalKeyword}"
+핵심 키워드: "${keyword}"
+컬러 테마: "${selectedColorTheme}"
+${referenceContent ? `참조 내용: ${referenceContent}` : ''}
+${referenceSentence ? `참조 문장: ${referenceSentence}` : ''}
 
-=== 동적 생성된 소제목 정보 (40자 제한 적용) ===
-다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다 (각 40자 이내):
-${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.length}자) - ${h.content}`).join('\n')}
-=== 동적 소제목 정보 끝 ===
+다음 지침에 따라, 독자의 시선을 사로잡고 검색 엔진 상위 노출을 목표로 하는 완벽한 블로그 게시물을 작성해주세요.
 
-⚠️ 절대 지켜야 할 핵심 규칙:
+**📋 핵심 작성 요구사항 (절대 변경 금지)**:
 
-**🚨 블로그 글 구조 - 최우선 준수 사항 🚨**
+1. **출력 형식**: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식(\`\`\`html)을 포함하지 마세요.
 
-1. **주제 제목** (글 시작 부분에 반드시 포함):
-<h3 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; padding-bottom: 12px;">${topic}</h3>
+2. **콘텐츠 독창성**: 동일한 주제나 키워드로 이전에 글을 작성했을 수 있습니다. 하지만 이번에는 완전히 새로운 관점과 독창적인 접근 방식을 사용해야 합니다. 이전 글과 절대 중복되지 않는, 완전히 새로운 글을 생성해주세요. 예시, 비유, 스토리텔링을 다르게 구성하고, 글의 구조와 표현 방식에도 변화를 주어 독자에게 신선한 가치를 제공해야 합니다.
 
-2. **간단한 공감 박스** (주제 제목 바로 다음에 반드시 포함 - 테두리 제거):
-<div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
-  <p style="color: #333; line-height: 1.6; font-size: 16px; margin: 0;">
-    혹시 지금 이런 고민하고 계시나요? "${naturalKeyword}에 대해 정확한 정보를 찾고 있는데, 어디서부터 시작해야 할지 막막하네요..." 
-    많은 분들이 똑같은 고민을 하고 계세요. 하지만 걱정하지 마세요! 이 글 하나로 ${naturalKeyword}의 모든 것을 완벽하게 정리해드릴게요.
-  </p>
-</div>
+3. **독자 중심 글쓰기**: 글의 모든 내용은 독자가 '${topic}'에 대해 검색했을 때 가장 궁금해하고, 알고 싶어하는 정보를 중심으로 구성해야 합니다. 단순히 정보를 나열하는 것을 넘어, 독자의 문제를 해결해주고 실질적인 도움을 준다는 느낌을 주어야 합니다.
 
-3. **공감 후킹 문단** (공감 박스 바로 다음):
-독자의 공감을 이끌어내는 친근한 문장으로 시작하여 주제에 대한 관심을 유발하는 내용
+4. **🎯 제목 및 시작 구조**:
+   - 제목은 H1 태그로 작성하되, **밑줄이나 테두리는 절대 추가하지 마세요**
+   - 제목 바로 아래에는 주제를 요약한 **서술형 공감형 메타 설명**을 P 태그로 추가하세요 (2-3줄 정도)
+   - 이 메타 설명은 독자의 공감을 이끌어내고 글의 핵심 가치를 미리 보여주는 역할을 해야 합니다
 
-**🚨 글자수 제한 - 절대 준수 사항 🚨**
-**각 H2 섹션의 본문은 반드시 공백 포함 230자에서 270자 사이로 작성해야 합니다.**
-- 이 글자수 제한은 절대적이며, 270자를 초과하거나 230자 미만이 되어서는 안 됩니다
-- **140자를 초과하면 두 번째 문장의 마침표(.) 부분에서 반드시 줄바꿈을 하고 공백 줄 하나를 추가하세요**
-- **모든 문단은 반드시 <p> 태그로 감싸서 작성하세요**
-- **각 <p> 태그 사이에는 공백 줄바꿈을 추가하여 가독성을 높이세요**
-- 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 230-270자 범위 내인지 확인하세요
+5. **📝 소제목 최적화**: H2 소제목은 절대로 주제 "${topic}"를 그대로 반복하지 마세요. 대신 독자가 해당 주제와 관련하여 꼬리를 물고 궁금해할 만한 연관 검색어나 실질적인 질문들로 구성하세요. **각 소제목 끝에 내용과 어울리는 이모지 1개를 추가하세요.**
 
-**🚨 각 H2 섹션별 핵심 키워드 강조 - 필수 적용 🚨**
-**모든 H2 소제목 아래 본문에서 핵심 키워드 '${keyword}'는 문맥에 맞게 자연스럽게 사용하되, 정확히 1번만 <strong>${keyword}</strong> 와 같이 <strong> 태그로 강조해주세요.**
-- 이 규칙은 모든 H2 섹션에 예외 없이 엄격하게 적용됩니다
-- 각 섹션당 정확히 1개의 키워드만 강조하세요
-- 키워드 강조는 문맥상 자연스러운 위치에 배치하세요
+6. **🎨 시각적 요소 강화**:
+   - **핵심 내용을 강조하는 시각화 요약 카드**를 중간중간 삽입하세요
+   - **주의사항이나 팁을 위한 주의 카드**도 적절히 배치하세요
+   - 카드들은 선택된 컬러 테마(${selectedColorTheme})를 반영해야 합니다
 
-**예시 구조:**
-<p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
+7. **💝 감정적 연결과 공감**: 독자가 이 주제를 검색한 이유는 정보 습득뿐만 아니라 마음의 위로, 용기, 동기부여를 얻고 싶어서입니다. 글 전반에 독자의 마음에 공감하는 표현과 격려의 메시지를 자연스럽게 녹여내세요.
 
-<p style="height: 20px;">&nbsp;</p>
+8. **🗓️ 시의성**: 글의 내용이 최신 정보를 반영해야 할 경우, 현재 년도(${currentYear}년)를 자연스럽게 언급하여 정보의 신뢰도를 높일 수 있습니다.
 
-<p>세 번째 문장과 <strong>${keyword}</strong>을(를) 포함한 네 번째 문장입니다.</p>
+9. **📏 콘텐츠 분량**: 전체 글자 수는 반드시 **1400자에서 1900자 사이**여야 합니다. 이 분량 제한을 엄격하게 지켜주세요.
 
-**🚨 PC와 모바일 SEO 가독성 최적화 🚨**
-- **문장 길이**: 각 문장은 25-35자 이내로 제한
-- **문단 구조**: 최대 3문장으로 구성, 필요시 별도 문단으로 분리
-- **키워드 밀도**: 자연스럽게 1.5-2.5% 유지
-- **내부 링크**: 관련 정보로 연결되는 링크 최소 3개 포함
-- **모바일 최적화**: 짧은 문장, 명확한 구조, 충분한 여백
-- **스캔 가능성**: 중요 정보는 굵게 표시, 리스트 활용
+10. **🔑 키워드 활용**: 핵심 키워드 '${keyword}'를 글 전체에 자연스럽게 녹여내세요. 목표 키워드 밀도는 1.5% ~ 2.5%를 지향하지만, 가장 중요한 것은 글의 가독성과 자연스러움입니다. **각 H2 섹션별로 핵심 키워드를 문맥에 맞게 자연스럽게 사용하되, 정확히 1번만 <strong>${keyword}</strong>와 같이 강조해주세요.**
 
-**🚨 컬러테마 엄격 적용 - 최우선 준수 사항 🚨**
-**선택된 컬러테마 "${selectedColorTheme}"를 반드시 모든 스타일에 정확히 적용해야 합니다.**
-- Primary Color: ${colors.primary}
-- Secondary Color: ${colors.secondary}  
-- Text Highlight Color: ${colors.textHighlight}
-- Highlight Color: ${colors.highlight}
-- Link Color: ${colors.link}
-**모든 H2, H3 소제목도 반드시 다음 스타일을 적용하세요 (번호 없이):**
-- H2 태그: <h2 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px;">
-- H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em;">
+11. **✍️ 문체**: 전체 글의 어조를 일관되게 유지해주세요. 독자에게 말을 거는 듯한 인간적이고 **친근한 구어체('~해요', '~죠' 체)**를 사용해주세요. **'~입니다', '~습니다'와 같은 격식체는 절대 사용하지 마세요.**
 
-**🚨 티스토리 호환 시각화 요약 카드 필수 삽입 🚨**
-- 6번째 섹션의 내용 끝에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요:
-- ⚠️ **티스토리 호환성**: script 태그나 복잡한 JavaScript 사용 금지, 인라인 스타일만 사용
+12. **📖 가독성 향상**: 각 단락은 최대 3개의 문장으로 구성하는 것을 원칙으로 합니다. 만약 한 단락에 3개 이상의 문장이 포함될 경우, 의미 단위에 맞게 자연스럽게 별도의 단락으로 나눠주세요.
 
-<div style="font-family: 'Noto Sans KR', sans-serif; display: flex; justify-content: center; align-items: center; padding: 25px 15px; background-color: ${colors.secondary}; margin: 25px 0;">
-    <div style="width: 100%; max-width: 700px; background-color: #ffffff; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 30px; display: flex; flex-direction: column; overflow: hidden; border: 3px solid ${colors.primary}; box-sizing: border-box;">
-        <div style="display: flex; align-items: center; border-bottom: 2px solid ${colors.primary}; padding-bottom: 15px; margin-bottom: 15px;">
-            <span style="font-size: 38px; color: ${colors.primary}; margin-right: 16px;">💡</span>
-            <h3 style="font-size: 28px; color: ${colors.primary}; margin: 0; line-height: 1.3; font-weight: 700; background: linear-gradient(45deg, ${colors.textHighlight}, ${colors.secondary}); padding: 8px 16px; border-radius: 15px; border: 1px solid ${colors.primary};">${topic} 핵심 요약</h3>
-        </div>
-        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 18px; line-height: 1.7; color: #333;">
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">지원 대상:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[구체적인 대상과 자격 조건]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">지원 금액:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[지원 금액과 혜택 내용]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">신청 방법:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[온라인 또는 오프라인 신청 방법]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">필요 서류:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[신청에 필요한 서류 목록]</span></div>
-            <div style="margin-bottom: 0; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">신청 기간:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[신청 기간과 중요 일정]</span></div>
-        </div>
-        <div style="font-size: 15px; color: #777; text-align: center; padding-top: 15px; border-top: 1px dashed ${colors.primary}; margin-top: auto;">💡 성공적인 신청을 위한 필수 체크리스트!</div>
-    </div>
-</div>
+13. **🔗 내부/외부 링크**: 글의 신뢰도를 높이기 위해, 본문 내용과 관련된 권위 있는 외부 사이트나 통계 자료로 연결되는 링크를 **최소 2개 이상** 자연스럽게 포함해주세요.
+링크 작성 형식: <a href="https://www.example.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">링크텍스트</a>
 
-**🚨 외부 참조 링크 스타일 적용 🚨**
-${referenceLink ? `
-- 글 하단에 다음과 같은 스타일로 참조 링크를 포함하고 바로 아래에 태그 7개를 추가하세요:
-
-<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
-  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
-  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
-    <b>${refText}</b>
-  </a>
+14. **🏷️ 태그 생성**: 글의 마지막에 태그를 생성할 때, **'태그:' 라는 접두사를 절대 포함하지 말고**, 다음 형식으로 글 끝에 추가:
+<p style="text-align: center; font-size: 14px; color: #666; margin-top: 40px;" data-ke-size="size16">
+#태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7
 </p>
 
-<p style="height: 40px;">&nbsp;</p>
-
-<p style="height: 20px;">&nbsp;</p>
-
-<p style="text-align: center; font-size: 16px; color: #666; line-height: 1.8;">
-[각 소제목의 핵심 키워드 기반 태그 7개를 여기에 쉼표로 구분하여 배치]
-</p>` : ''}
-
-**🚨 주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리) 🚨**
-- 4번째 섹션의 내용 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
-<div style="background: linear-gradient(135deg, ${colors.secondary}, ${colors.highlight}); border: 3px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-  <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
-  <ul style="color: ${colors.primary}; line-height: 1.6; margin: 0; padding-left: 20px;">
-    <li style="margin-bottom: 8px;">정확한 정보는 반드시 공식 사이트에서 확인하세요</li>
-    <li style="margin-bottom: 8px;">신청 기한과 자격 요건을 미리 확인하시기 바랍니다</li>
-    <li>개인정보 보호를 위해 안전한 사이트에서만 신청하세요</li>
-  </ul>
+15. **💡 시각화 요약 카드 형식** (반드시 사용):
+<div style="background: linear-gradient(135deg, ${colors.highlight}, ${colors.secondary}); border-left: 5px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+<h4 style="color: ${colors.primary}; margin-bottom: 15px;">💡 핵심 포인트</h4>
+<ul style="margin: 0; padding-left: 20px;">
+<li style="margin-bottom: 8px; color: #333;">요점 1</li>
+<li style="margin-bottom: 8px; color: #333;">요점 2</li>
+<li style="margin-bottom: 8px; color: #333;">요점 3</li>
+</ul>
 </div>
 
-**🚨 테이블 자동 삽입 - 스마트 배치 🚨**
-- 2-3번째 섹션 중 내용상 가장 적합한 위치에 고퀄리티 테이블 자동 삽입
-- 테이블은 단계별 정보, 비교 정보, 또는 체크리스트 형태로 구성
-- 반드시 다음과 같은 고급 스타일로 작성:
-<div style="overflow-x: auto; margin: 25px 0;">
-  <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <thead>
-      <tr style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});">
-        <th style="padding: 15px; color: white; font-weight: bold; text-align: left; border-bottom: 2px solid ${colors.primary};">항목</th>
-        <th style="padding: 15px; color: white; font-weight: bold; text-align: left; border-bottom: 2px solid ${colors.primary};">내용</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px 15px; font-weight: 600; color: ${colors.primary};">[항목1]</td>
-        <td style="padding: 12px 15px; color: #4a5568;">[내용1]</td>
-      </tr>
-      [추가 행들...]
-    </tbody>
-  </table>
+16. **⚠️ 주의 카드 형식** (적절히 사용):
+<div style="background: linear-gradient(135deg, ${colors.warnBg}, #fff8e1); border-left: 5px solid ${colors.warnBorder}; padding: 20px; margin: 25px 0; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+<h4 style="color: ${colors.warnBorder}; margin-bottom: 15px;">⚠️ 주의사항</h4>
+<p style="margin: 0; color: #333; line-height: 1.6;">주의할 내용을 여기에 작성</p>
 </div>
 
-**🚨 외부 참조 링크 및 문장 필수 적용 🚨**
-${referenceSentence ? `
-**참조 문장 적용**: 제공된 참조 문장 "${referenceSentence}"을 글의 맥락에 맞게 자연스럽게 포함하세요.` : ''}
+${referenceContent ? `
+17. **📚 참조 내용 활용**: 참조 내용을 자연스럽게 글에 녹여서 활용하세요.
+` : ''}
 
-**🚨 주제와 내용 일치성 - 최우선 준수 사항 🚨**
-**글의 모든 내용은 반드시 주제 "${topic}"와 정확히 일치해야 합니다.**
+${referenceLink ? `
+18. **🔗 외부 링크 처리**: 외부 링크 "${referenceLink}" 사용하여 글 하단에 참조 링크 삽입하세요.
+` : ''}
 
-**🚨 6개 H2 섹션으로 구성 (번호 넘버링 금지) 🚨**
-기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
-**모든 H2 소제목에는 절대로 번호(1., 2., 3. 등)를 넣지 마세요.**
-
-**🚨 공식 사이트 자동 링크 연결 🚨**
-본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
-**반드시 다음 형식으로 작성하세요:**
-- 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
-- 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
-
-**🚨 각 소제목별 핵심 키워드 기반 태그 생성 🚨**
-생성된 5개의 동적 소제목에서 각각 핵심 키워드를 추출하여 7개의 태그를 만들어주세요:
-- 동적 소제목들: ${selectedHeadings.map(h => h.title).join(', ')}
-- 이 소제목들에서 핵심 키워드를 추출하여 "${naturalKeyword}, [소제목1 키워드], [소제목2 키워드], [소제목3 키워드], [소제목4 키워드], [소제목5 키워드], [주제 관련 키워드]" 형태로 7개 태그 생성
-
-다음 지침에 따라 작성해주세요:
-- 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요
-- 대상 독자: 한국어 사용자
-- **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
-- 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
-- **가독성 최우선**: 공백 포함 230-270자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
-
-사용할 변수:
+**🎨 사용할 컬러 변수**:
 - Primary Color: ${colors.primary}
 - Secondary Color: ${colors.secondary}
 - Text Highlight Color: ${colors.textHighlight}
@@ -251,117 +159,19 @@ ${referenceSentence ? `
 - Reference Link: ${refLink}
 - Reference Text: ${refText}
 - Topic: ${topic}
-- Original Keyword: ${keyword}
-- Natural Keyword: ${naturalKeyword}
+- Main Keyword: ${keyword}
 
-아래는 반드시 따라야 할 HTML 템플릿입니다 (6개 동적 소제목 포함).
-
---- HTML TEMPLATE START ---
+**📄 HTML 템플릿**:
 ${htmlTemplate}
---- HTML TEMPLATE END ---
 
-⚠️ 재확인 사항:
-- **모든 내용이 주제 "${topic}"와 정확히 일치해야 합니다**
-- **각 섹션은 정확히 공백 포함 230자에서 270자 사이의 적절한 분량이어야 합니다**
-- **절대로 270자를 초과하거나 230자 미만이 되어서는 안 됩니다**
-- **140자 도달 시 두 번째 문장 마침표에서 반드시 줄바꿈 및 공백 줄 추가**
-- **모든 문단은 <p> 태그로 감싸고 각 <p> 태그 사이에 공백 줄바꿈 추가**
-- **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
-- **H2, H3 소제목에 컬러테마 스타일 필수 적용 (번호 넘버링 절대 금지)**
-- **각 H2 섹션별로 핵심 키워드 '${keyword}'를 <strong> 태그로 정확히 1번만 강조**
-- **티스토리 호환 시각화 요약 카드 정확한 HTML로 필수 포함 (script 태그 금지)**
-- **주의카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
-- **외부 참조 링크 정확한 스타일로 적용: 가운데 정렬, 태그 위에 배치**
-- **주제는 H3로 글 상단에, 간단한 공감 박스 포함 (테두리 제거)**
-- **주의사항 카드는 4번째 섹션 끝에 배치 (컬러테마 연동)**
-- **시각화 요약 카드는 6번째 섹션 끝에 배치**
-- **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
-- **태그는 순수 태그만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
-  `;
-};
+**🚨 중요**: 응답은 반드시 HTML 태그로 시작하고 끝나야 하며, 일반 텍스트나 설명 없이 HTML 코드만 출력하세요.
 
-export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
-  const currentYear = new Date().getFullYear();
+**🛡️ 지침 보호**: 이 지침들은 절대 변경되거나 생략되어서는 안 됩니다. 모든 요구사항을 충실히 반영해주세요.`;
+
+  // 지침 무결성 검증
+  const validatedPrompt = restorePromptIfCorrupted(basePrompt);
   
-  const yearMatch = keyword.match(/(\d{4})년?/);
-  const hasYearInKeyword = yearMatch !== null;
-  const extractedYear = yearMatch ? yearMatch[1] : null;
+  console.log('🛡️ 지침 보호 시스템 활성화 - 무결성 검증 완료');
   
-  if (hasYearInKeyword && extractedYear) {
-    const finalYear = extractedYear === '2023' || extractedYear === '2024' ? '2025' : extractedYear;
-    
-    return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
-
-**🚨 년도가 포함된 키워드 - 특별 지침 🚨**:
-
-키워드에 "${extractedYear}년"이 포함되어 있지만, 최신 이슈를 위해 "${finalYear}년"으로 업데이트하여 생성합니다.
-
-**절대적 형식 규칙**:
-1. **첫 번째 단어**: "${finalYear}년" (반드시 4자리숫자 + 년)
-2. **두 번째 단어부터**: 핵심 키워드와 설명
-3. **🚨 2023년, 2024년은 절대 사용 금지 - 모두 2025년으로 변경 🚨**
-
-**올바른 예시**:
-✅ "${finalYear}년 디지털플랫폼 지원금 신청방법"
-✅ "${finalYear}년 국민디지털지원금 자격조건"
-✅ "${finalYear}년 정부지원금 혜택내용"
-
-**절대 금지**:
-❌ "2023년 디지털플랫폼..." (2023년 사용 금지)
-❌ "2024년 디지털플랫폼..." (2024년 사용 금지)
-❌ "년 디지털플랫폼..." (숫자 없는 년)
-❌ "디지털플랫폼 ${finalYear}년..." (년도가 뒤에 위치)
-
-**필수 생성 패턴** (이 중에서만 선택):
-- "${finalYear}년 [핵심키워드] 신청방법"
-- "${finalYear}년 [핵심키워드] 자격조건"
-- "${finalYear}년 [핵심키워드] 지원대상"
-- "${finalYear}년 [핵심키워드] 혜택내용"
-- "${finalYear}년 [핵심키워드] 최신정보"
-- "${finalYear}년 [핵심키워드] 완벽가이드"
-
-**최종 검증**:
-각 제목 생성 후 반드시 확인:
-1. "${finalYear}년"으로 시작하는가?
-2. 2023년, 2024년이 포함되지 않았는가?
-3. 핵심 키워드가 포함되었는가?
-4. 의미있는 설명이 추가되었는가?
-
-지금 즉시 위 규칙을 엄격히 따라 ${count}개의 제목을 생성해주세요.`;
-  } else {
-    return `'${keyword}'를(을) 주제로 블로그 포스팅 제목 ${count}개를 생성해 주세요.
-
-**일반 키워드 생성 지침**:
-
-키워드에 년도가 포함되어 있지 않으므로, 자연스러운 블로그 제목을 생성해주세요.
-
-**생성 원칙**:
-1. **키워드 포함**: '${keyword}' 관련 내용이 반드시 포함되어야 합니다
-2. **실용성**: 독자에게 도움이 되는 실용적인 정보 제목
-3. **SEO 최적화**: 검색에 최적화된 구체적인 제목
-4. **다양성**: 다양한 관점에서 접근한 제목들
-5. **최신성**: 필요시 2025년을 자연스럽게 포함
-
-**추천 제목 패턴**:
-- "[키워드] 완벽 가이드"
-- "[키워드] 초보자를 위한 시작 방법"
-- "[키워드] 노하우 및 팁"
-- "[키워드] 추천 방법"
-- "[키워드] 장단점 비교"
-- "[키워드] 효과적인 활용법"
-- "[키워드] 주의사항과 해결책"
-- "2025년 [키워드] 최신 동향"
-
-**제목 예시** (${keyword} 기준):
-- "${keyword} 초보자도 쉽게 시작하는 방법"
-- "${keyword} 효과적인 활용을 위한 완벽 가이드"
-- "2025년 ${keyword} 성공을 위한 필수 노하우"
-
-**최종 출력 규칙**:
-- 번호나 불릿 포인트 없이 제목만 출력
-- 각 제목은 줄바꿈으로 구분
-- 다른 설명이나 주석 절대 금지
-
-지금 즉시 위 지침에 따라 ${count}개의 자연스러운 제목을 생성해주세요.`;
-  }
+  return validatedPrompt;
 };
