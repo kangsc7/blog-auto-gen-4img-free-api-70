@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,33 +27,64 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleConfirm = async (e: React.MouseEvent) => {
+  // useCallback으로 함수 메모화 - 불필요한 리렌더링 방지
+  const handleConfirm = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (isProcessing) return; // 이미 처리 중이면 무시
+    // 이미 처리 중이거나 다이얼로그가 닫혀있으면 무시
+    if (isProcessing || !isOpen) {
+      console.log('handleConfirm 무시됨:', { isProcessing, isOpen });
+      return;
+    }
     
     setIsProcessing(true);
-    console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
+    console.log('TopicConfirmDialog handleConfirm 시작:', topic);
     
     try {
-      await onConfirm();
-    } finally {
+      // 즉시 다이얼로그 닫기 위해 onCancel 먼저 호출
+      onCancel();
+      
+      // 약간의 지연 후 onConfirm 실행 (UI 업데이트 보장)
+      setTimeout(() => {
+        onConfirm();
+      }, 50);
+      
+    } catch (error) {
+      console.error('handleConfirm 오류:', error);
       setIsProcessing(false);
     }
-  };
+  }, [isProcessing, isOpen, topic, onConfirm, onCancel]);
 
-  const handleCancel = (e?: React.MouseEvent) => {
+  const handleCancel = useCallback((e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
+    
+    if (isProcessing) {
+      console.log('handleCancel 무시됨 - 처리 중');
+      return;
+    }
+    
     console.log('TopicConfirmDialog handleCancel 호출됨');
+    setIsProcessing(false);
     onCancel();
-  };
+  }, [isProcessing, onCancel]);
+
+  // 다이얼로그 상태 변경 시 처리 상태 초기화
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsProcessing(false);
+    }
+  }, [isOpen]);
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={() => {}}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isProcessing) {
+        handleCancel();
+      }
+    }}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader className="text-center">
           <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
@@ -87,7 +118,7 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleConfirm}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isProcessing}
           >
             {isProcessing ? '처리 중...' : '네, 작성하겠습니다'}

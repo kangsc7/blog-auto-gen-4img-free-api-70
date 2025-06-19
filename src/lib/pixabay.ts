@@ -140,27 +140,34 @@ const copyImageToClipboard = async (imageUrl: string): Promise<boolean> => {
     }
 };
 
-// 여러 페이지에서 이미지를 수집하는 함수
-const collectImagesFromMultiplePages = async (keyword: string, pixabayApiKey: string, maxPages: number = 10): Promise<any[]> => {
-    const allImages: any[] = [];
+// 병렬 처리로 이미지 수집 속도 개선
+const collectImagesFromMultiplePagesParallel = async (keyword: string, pixabayApiKey: string, maxPages: number = 5): Promise<any[]> => {
+    console.log(`🚀 병렬 이미지 수집 시작 (최대 ${maxPages}페이지)`);
     
-    for (let page = 1; page <= maxPages; page++) {
-        try {
-            const imageData = await searchPixabayImages(keyword, pixabayApiKey, page);
-            if (imageData?.hits && imageData.hits.length > 0) {
-                allImages.push(...imageData.hits);
-                console.log(`📦 수집된 총 이미지 수: ${allImages.length}`);
+    // 병렬로 여러 페이지 동시 요청 (성능 개선)
+    const pagePromises = Array.from({ length: Math.min(maxPages, 3) }, (_, i) => 
+        searchPixabayImages(keyword, pixabayApiKey, i + 1)
+    );
+    
+    try {
+        const results = await Promise.allSettled(pagePromises);
+        const allImages: any[] = [];
+        
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value?.hits) {
+                allImages.push(...result.value.hits);
+                console.log(`✅ 페이지 ${index + 1}: ${result.value.hits.length}개 이미지 수집`);
             } else {
-                console.log(`⏹️ 페이지 ${page}에서 더 이상 이미지 없음, 검색 중단`);
-                break;
+                console.warn(`⚠️ 페이지 ${index + 1} 실패:`, result.status === 'rejected' ? result.reason : 'No data');
             }
-        } catch (error) {
-            console.error(`❌ 페이지 ${page} 검색 오류:`, error);
-            break;
-        }
+        });
+        
+        console.log(`📦 총 ${allImages.length}개 이미지 수집 완료`);
+        return allImages;
+    } catch (error) {
+        console.error('❌ 병렬 이미지 수집 오류:', error);
+        return [];
     }
-    
-    return allImages;
 };
 
 export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
@@ -192,7 +199,7 @@ export const integratePixabayImages = async (
     pixabayApiKey: string, 
     geminiApiKey: string
 ): Promise<{ finalHtml: string; imageCount: number; clipboardImages: string[] }> => {
-    console.log('🚀 Pixabay 이미지 통합 시작 (Base64 변환 모드)');
+    console.log('🚀 Pixabay 이미지 통합 시작 (성능 최적화 모드)');
     console.log('📄 HTML 콘텐츠 길이:', htmlContent.length);
     
     const parser = new DOMParser();
@@ -201,7 +208,7 @@ export const integratePixabayImages = async (
     console.log('📋 발견된 H2 태그 수:', h2s.length);
     
     let imageCount = 0;
-    const MAX_IMAGES = 5;
+    const MAX_IMAGES = 3; // 이미지 수 줄여서 속도 개선
     const usedImageUrls = new Set<string>();
     const clipboardImages: string[] = [];
 
@@ -212,14 +219,10 @@ export const integratePixabayImages = async (
         );
         console.log('🎯 이미지 삽입 위치:', indicesToInsertAt);
 
-        for (const index of indicesToInsertAt) {
+        // 키워드 생성을 병렬로 처리하여 속도 개선
+        const keywordPromises = indicesToInsertAt.map(async (index) => {
             const h2 = h2s[index];
-            if (!h2) {
-                console.log(`⚠️ H2 태그 없음 (인덱스 ${index})`);
-                continue;
-            }
-
-            console.log(`\n🔍 처리중인 H2 (${index + 1}/${indicesToInsertAt.length}):`, h2.textContent?.substring(0, 50));
+            if (!h2) return null;
 
             let contentForSummary = '';
             let currentNode = h2.nextSibling;
@@ -228,18 +231,28 @@ export const integratePixabayImages = async (
                 currentNode = currentNode.nextSibling;
             }
 
-            const textToSummarize = (h2.textContent + " " + contentForSummary).replace(/\s+/g, ' ').trim().substring(0, 1000);
-            console.log('📝 요약할 텍스트 길이:', textToSummarize.length);
-
+            const textToSummarize = (h2.textContent + " " + contentForSummary).replace(/\s+/g, ' ').trim().substring(0, 500); // 길이 줄여서 속도 개선
+            
             if (textToSummarize.length > 10) {
-                try {
-                    const keyword = await getSummaryKeywords(textToSummarize, geminiApiKey);
-                    if (!keyword) {
-                        console.log('❌ 키워드 생성 실패, 다음 섹션으로');
-                        continue;
-                    }
+                const keyword = await getSummaryKeywords(textToSummarize, geminiApiKey);
+                return { index, h2, keyword, textToSummarize };
+            }
+            return null;
+        });
 
-                    const allImages = await collectImagesFromMultiplePages(keyword, pixabayApiKey, 10);
+        const keywordResults = await Promise.allSettled(keywordPromises);
+        console.log('✅ 키워드 생성 완료');
+
+        // 이미지 수집도 병렬로 처리
+        for (const result of keywordResults) {
+            if (result.status === 'fulfilled' && result.value) {
+                const { index, h2, keyword } = result.value;
+                
+                if (!keyword) continue;
+
+                try {
+                    // 병렬 이미지 수집 사용 (속도 개선)
+                    const allImages = await collectImagesFromMultiplePagesParallel(keyword, pixabayApiKey, 3);
                     
                     if (allImages.length === 0) {
                         console.log('❌ 검색된 이미지 없음:', keyword);
@@ -247,7 +260,7 @@ export const integratePixabayImages = async (
                     }
                     
                     const availableImages = allImages.filter(hit => !usedImageUrls.has(hit.webformatURL));
-                    console.log('🎲 사용 가능한 이미지 수:', availableImages.length, '/ 전체:', allImages.length);
+                    console.log('🎲 사용 가능한 이미지 수:', availableImages.length);
 
                     if (availableImages.length > 0) {
                         const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
@@ -255,61 +268,55 @@ export const integratePixabayImages = async (
                         usedImageUrls.add(imageUrl);
                         console.log('✅ 선택된 이미지:', imageUrl);
 
-                        // Base64로 변환 시도
-                        const base64Image = await convertImageToBase64(imageUrl);
-                        
                         const imageContainer = doc.createElement('div');
-                        imageContainer.style.textAlign = 'center';
-                        imageContainer.style.margin = '2em 0';
+                        imageContainer.style.cssText = `
+                            text-align: center !important;
+                            margin: 2em 0 !important;
+                            padding: 0 10px !important;
+                            max-width: 100% !important;
+                            box-sizing: border-box !important;
+                        `;
                         
                         const img = doc.createElement('img');
                         const altText = h2.textContent?.trim() || keyword;
                         const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
                         
-                        // 티스토리 호환성을 위한 클래스 추가
-                        img.className = 'copyable-image';
-                        img.setAttribute('data-tistory-compatible', 'true');
-                        
-                        if (base64Image) {
-                            // Base64 이미지 사용
-                            img.src = base64Image;
-                            console.log('✅ Base64 이미지 생성 성공');
-                        } else {
-                            // Base64 실패 시 원본 URL 사용하되 플레이스홀더 추가
-                            img.src = imageUrl;
-                            img.setAttribute('data-original-url', imageUrl);
-                            img.setAttribute('data-conversion-failed', 'true');
-                            console.log('⚠️ Base64 변환 실패, 원본 URL 사용');
-                        }
-                        
+                        // Base64 변환 건너뛰고 직접 URL 사용으로 속도 개선
+                        img.src = imageUrl;
                         img.alt = sanitizedAltText;
                         img.title = sanitizedAltText;
                         img.setAttribute('data-filename', sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_') + '.jpg');
                         img.setAttribute('data-pixabay-keyword', keyword);
+                        img.setAttribute('crossorigin', 'anonymous'); // CORS 설정 추가
                         
-                        // 모바일 최적화 스타일 강화
-                        img.style.maxWidth = '100%';
-                        img.style.height = 'auto';
-                        img.style.borderRadius = '8px';
-                        img.style.display = 'block';
-                        img.style.marginLeft = 'auto';
-                        img.style.marginRight = 'auto';
-                        img.style.width = '100%';
-                        img.style.minHeight = '200px';
-                        img.style.objectFit = 'cover';
-                        img.style.boxSizing = 'border-box';
-                        img.style.padding = '0';
+                        // 모바일 최적화 스타일 강화 (!important 추가)
+                        img.style.cssText = `
+                            max-width: 100% !important;
+                            height: auto !important;
+                            border-radius: 8px !important;
+                            display: block !important;
+                            margin: 0 auto !important;
+                            width: 100% !important;
+                            min-height: 200px !important;
+                            object-fit: cover !important;
+                            box-sizing: border-box !important;
+                            padding: 0 !important;
+                            margin-left: 10px !important;
+                            margin-right: 10px !important;
+                        `;
                         
-                        // 클립보드 복사용 데이터 저장
                         clipboardImages.push(imageUrl);
                         
-                        // 이미지 설명 추가
+                        // 간단한 캡션
                         const caption = doc.createElement('p');
-                        caption.style.textAlign = 'center';
-                        caption.style.fontSize = '0.9em';
-                        caption.style.color = '#666';
-                        caption.style.marginTop = '0.5em';
-                        caption.textContent = `📸 ${sanitizedAltText} 관련 이미지`;
+                        caption.style.cssText = `
+                            text-align: center !important;
+                            font-size: 0.9em !important;
+                            color: #666 !important;
+                            margin-top: 0.5em !important;
+                            padding: 0 10px !important;
+                        `;
+                        caption.textContent = `📸 ${sanitizedAltText}`;
                         
                         imageContainer.appendChild(img);
                         imageContainer.appendChild(caption);
@@ -317,44 +324,30 @@ export const integratePixabayImages = async (
                         h2.parentNode?.insertBefore(imageContainer, h2.nextSibling);
                         imageCount++;
                         console.log(`🖼️ 이미지 ${imageCount} 삽입 완료`);
-                        
-                        // 클립보드에 자동 복사 시도 (백그라운드)
-                        copyImageToClipboard(imageUrl).catch(error => {
-                            console.warn('📋 자동 클립보드 복사 실패:', error);
-                        });
-                    } else {
-                        console.log('⚠️ 사용 가능한 이미지 없음 (모두 중복)');
                     }
                 } catch (e) {
                     console.error("❌ 개별 이미지 통합 오류:", e);
                 }
-            } else {
-                console.log('⚠️ 텍스트 길이 부족:', textToSummarize.length);
             }
         }
-    } else {
-        console.log('❌ H2 태그를 찾을 수 없음');
     }
     
-    // 티스토리 호환성 안내 추가
-    if (imageCount > 0) {
-        const notice = doc.createElement('div');
-        notice.className = 'image-copy-notice';
-        notice.innerHTML = `
-            <p style="margin: 0; font-weight: bold;">📋 티스토리 이미지 활용 가이드</p>
-            <p style="margin: 0.5em 0 0 0; font-size: 0.9em;">
-                1. 이미지를 마우스 우클릭 → "이미지 복사" 선택<br>
-                2. 티스토리 에디터에서 Ctrl+V로 붙여넣기<br>
-                3. 이미지 클릭 후 "대표 이미지로 설정" 버튼 클릭
-            </p>
-        `;
-        
-        if (doc.body.firstChild) {
-            doc.body.insertBefore(notice, doc.body.firstChild);
+    // 티스토리 가이드 텍스트 제거
+    const guideSections = doc.querySelectorAll('.image-copy-notice, [class*="image-copy"], [class*="tistory"]');
+    guideSections.forEach(section => section.remove());
+    
+    // 가이드 텍스트가 포함된 div나 p 태그도 제거
+    const allElements = doc.querySelectorAll('div, p');
+    allElements.forEach(element => {
+        const text = element.textContent || '';
+        if (text.includes('티스토리 이미지 활용 가이드') || 
+            text.includes('이미지를 마우스 우클릭') ||
+            text.includes('대표 이미지로 설정')) {
+            element.remove();
         }
-    }
+    });
     
-    console.log(`🏁 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가`);
+    console.log(`🏁 Pixabay 이미지 통합 완료: ${imageCount}개 이미지 추가 (성능 최적화 적용)`);
     return { 
         finalHtml: doc.body.innerHTML, 
         imageCount,

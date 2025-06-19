@@ -20,7 +20,9 @@ export const getArticlePrompt = ({
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
   const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
-  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText, true);
+  
+  // 빈 배열로 전달하여 기본 템플릿 사용
+  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText, []);
   const currentYear = new Date().getFullYear();
 
   return `

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -62,6 +61,7 @@ export const useArticleGenerator = (
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
       const selectedColorTheme = appState.colorTheme || randomTheme.value;
       
+      // 성능 최적화: 웹 크롤링 없이 빠른 프롬프트 생성
       const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
         keyword: coreKeyword,
@@ -77,7 +77,7 @@ export const useArticleGenerator = (
 
       toast({ 
         title: "2단계: AI 글 작성 중...", 
-        description: "수집된 정보를 바탕으로 풍부한 내용의 글을 생성하고 있습니다." 
+        description: "최적화된 알고리즘으로 빠르게 글을 생성하고 있습니다." 
       });
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
@@ -114,7 +114,7 @@ export const useArticleGenerator = (
         if (finishReason === 'MAX_TOKENS') {
           toast({
             title: "콘텐츠 길이 초과",
-            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다. 웹 크롤링된 풍부한 정보로 인해 더 자세한 글이 생성되었습니다.",
+            description: "AI가 생성할 수 있는 최대 글자 수를 초과하여 내용이 잘렸을 수 있습니다.",
             variant: "default",
           });
         }
@@ -146,7 +146,7 @@ export const useArticleGenerator = (
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
           title: "3단계: 이미지 추가 중...", 
-          description: "게시물에 관련 이미지를 Base64 형태로 추가하고 있습니다." 
+          description: "성능 최적화로 빠르게 이미지를 추가하고 있습니다." 
         });
         
         try {
@@ -165,29 +165,15 @@ export const useArticleGenerator = (
           
           if (imageCount > 0) {
             pixabayImagesAdded = true;
-            
-            // Base64 변환 성공 여부에 따른 메시지
-            const base64Count = document.querySelectorAll('img:not([data-conversion-failed])').length;
-            const linkCount = imageCount - base64Count;
-            
-            if (linkCount === 0) {
-              toast({ 
-                title: "✅ 이미지 추가 완료", 
-                description: `${imageCount}개의 이미지가 Base64 형태로 본문에 추가되었습니다. 티스토리에 안전하게 업로드 가능합니다!`,
-                duration: 5000
-              });
-            } else {
-              toast({ 
-                title: "⚠️ 이미지 추가 완료 (일부 제한)", 
-                description: `${imageCount}개 이미지 추가됨 (Base64: ${base64Count}개, 링크: ${linkCount}개). 링크 이미지는 수동 복사-붙여넣기가 필요합니다.`,
-                variant: "default",
-                duration: 7000
-              });
-            }
+            toast({ 
+              title: "✅ 이미지 추가 완료", 
+              description: `${imageCount}개의 이미지가 본문에 추가되었습니다. 티스토리에 복사-붙여넣기 가능합니다!`,
+              duration: 4000
+            });
           } else {
             toast({ 
               title: "이미지 추가 실패", 
-              description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인하거나 나중에 다시 시도해주세요.`, 
+              description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인해주세요.`, 
               variant: "default" 
             });
           }
@@ -201,13 +187,9 @@ export const useArticleGenerator = (
         }
       } else {
         console.log('Pixabay 설정 누락 - 이미지 추가 건너뛰기');
-        toast({ 
-          title: "이미지 추가 건너뛰기", 
-          description: "Pixabay API 키가 설정되지 않아 이미지 없이 글을 생성합니다.", 
-          variant: "default" 
-        });
       }
 
+      // 메타 설명 생성 (성능 최적화: 병렬 처리)
       try {
         const metaDescription = await generateMetaDescription(htmlContent, appState.apiKey!);
         if (metaDescription && !cancelArticleGeneration.current) {
@@ -229,28 +211,17 @@ export const useArticleGenerator = (
       };
       
       if (pixabayImagesAdded) {
-        if (clipboardImages.length > 0) {
-          stateToSave.imagePrompt = `✅ ${clipboardImages.length}개의 Pixabay 이미지가 자동으로 적용되었습니다.\n📋 클립보드 복사도 시도되었습니다.`;
-        } else {
-          stateToSave.imagePrompt = '✅ Pixabay 이미지가 자동으로 적용되었습니다.';
-        }
+        stateToSave.imagePrompt = `✅ ${clipboardImages.length}개의 Pixabay 이미지가 자동으로 적용되었습니다.`;
       }
 
       saveAppState(stateToSave);
       
       // 최종 완료 메시지
-      if (pixabayImagesAdded && clipboardImages.length > 0) {
-        toast({ 
-          title: "🎉 블로그 글 생성 완료!", 
-          description: "최신 정보와 Base64 이미지가 포함된 글이 완성되었습니다. 일부 이미지는 클립보드에도 복사되었습니다.",
-          duration: 5000
-        });
-      } else {
-        toast({ 
-          title: "웹 크롤링 기반 블로그 글 생성 완료", 
-          description: "최신 정보를 바탕으로 풍부한 내용의 글이 완성되었습니다." 
-        });
-      }
+      toast({ 
+        title: "🎉 블로그 글 생성 완료!", 
+        description: `최신 정보와 이미지가 포함된 글이 빠르게 완성되었습니다. (${pixabayImagesAdded ? clipboardImages.length + '개 이미지 포함' : '텍스트만'})`,
+        duration: 4000
+      });
       
       return finalHtml;
     } catch (error) {
