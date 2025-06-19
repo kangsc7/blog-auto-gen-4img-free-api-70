@@ -52,26 +52,32 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 - 간단한 관리
+  // 주제 확인 다이얼로그 상태 - 중복 실행 방지 개선
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
+  const isConfirming = useRef(false); // 중복 실행 방지
 
   // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelect = (topic: string) => {
     console.log('주제 선택됨:', topic);
+    if (isConfirming.current) {
+      console.log('이미 처리 중 - 무시');
+      return;
+    }
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 단순화
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 실행 방지
   const handleTopicConfirm = () => {
-    console.log('주제 확인 버튼 클릭:', pendingTopic);
+    console.log('주제 확인 버튼 클릭:', pendingTopic, '처리중:', isConfirming.current);
     
-    if (!pendingTopic) {
-      console.log('주제 없음 - 무시');
+    if (!pendingTopic || isConfirming.current) {
+      console.log('처리 조건 불만족 - 무시');
       return;
     }
     
+    isConfirming.current = true;
     console.log('주제 확인 처리 시작:', pendingTopic);
     
     // 1. 즉시 다이얼로그 닫기
@@ -81,12 +87,14 @@ export const useRefactoredAppController = () => {
     topicControls.selectTopic(pendingTopic);
     
     // 3. 상태 초기화
+    const currentTopic = pendingTopic;
     setPendingTopic('');
     
     // 4. 글 생성 시작 (약간의 딜레이)
     setTimeout(() => {
-      console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
-      generateArticle({ topic: pendingTopic, keyword: appState.keyword });
+      console.log('자동 글 생성 시작:', { topic: currentTopic, keyword: appState.keyword });
+      generateArticle({ topic: currentTopic, keyword: appState.keyword });
+      isConfirming.current = false; // 처리 완료
     }, 100);
   };
 
@@ -95,6 +103,7 @@ export const useRefactoredAppController = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
+    isConfirming.current = false;
   };
 
   const convertToMarkdown = () => {

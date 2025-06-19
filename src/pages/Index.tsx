@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -257,7 +258,7 @@ const Index = () => {
         deleteReferenceData={deleteReferenceData}
       />
 
-      {/* 주제 확인 다이얼로그 - onClose 속성 추가 */}
+      {/* 주제 확인 다이얼로그 - 중복 실행 방지 개선 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
@@ -272,7 +273,6 @@ const Index = () => {
         onClose={() => {
           console.log('TopicConfirmDialog onClose 호출됨');
           setShowTopicConfirmDialog(false);
-          setPendingTopic('');
         }}
       />
 
