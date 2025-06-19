@@ -1,279 +1,251 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
-import { AuthForm } from '@/components/auth/AuthForm';
-import { AppHeader } from '@/components/layout/AppHeader';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
-import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
-import { OneClickSection } from '@/components/sections/OneClickSection';
-import { MainContentSection } from '@/components/sections/MainContentSection';
-import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
-import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
-import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
-import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
-import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useRefactoredAppController } from '@/hooks/useRefactoredAppController';
-import { useUserAccess } from '@/hooks/useUserAccess';
+import { LeftSidebar } from '@/components/layout/LeftSidebar';
+import { RightContent } from '@/components/layout/RightContent';
+import { useAppState } from '@/hooks/useAppState';
+import { useTopicGenerator } from '@/hooks/useTopicGenerator';
+import { useArticleGenerator } from '@/hooks/useArticleGenerator';
+import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
+import { useApiKeys } from '@/hooks/useApiKeys';
+import { DeleteReferenceDialog } from '@/components/dialogs/DeleteReferenceDialog';
+import { ResetDialog } from '@/components/dialogs/ResetDialog';
+import { useToast } from '@/hooks/use-toast';
+import { checkSubscription } from '@/lib/subscription';
 
 const Index = () => {
+  const { toast } = useToast();
+  const [isDeleteReferenceOpen, setIsDeleteReferenceOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [preventDuplicates, setPreventDuplicates] = useState(true);
+  const [canUseFeatures, setCanUseFeatures] = useState(false);
+
+  // API 키 관리 훅
   const {
-    appState,
-    saveAppState,
-    session,
-    profile,
-    authLoading,
-    handleLogin,
-    handleSignUp,
-    handleLogout,
-    isAdmin,
     geminiManager,
     pixabayManager,
     huggingFaceManager,
-    preventDuplicates,
-    setPreventDuplicates,
-    handleResetApp,
-    isOneClickGenerating,
-    handleLatestIssueOneClick,
-    handleEvergreenKeywordOneClick,
-    handleStopOneClick,
-    generationStatus,
-    generationFunctions,
-    topicControls,
-    utilityFunctions,
-    handleTopicConfirm,
-    showTopicSelectionDialog,
-    setShowTopicSelectionDialog,
-    showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog,
-    showTopicConfirmDialog,
-    pendingTopic,
-    handleTopicCancel,
-    convertToMarkdown,
-  } = useRefactoredAppController();
+  } = useApiKeys();
 
-  const { hasAccess, isCheckingAccess } = useUserAccess();
+  // 앱 상태 관리 훅
+  const { appState, saveAppState, resetAppState } = useAppState();
+  const { selectedTopic, manualTopic } = appState;
 
-  console.log('Index 컴포넌트 렌더링 상태:', {
-    session: !!session,
-    isAdmin,
-    hasAccess,
-    preventDuplicates,
-    profile: !!profile,
-    authLoading,
-    isCheckingAccess,
-    showTopicConfirmDialog,
-    pendingTopic
-  });
+  // 토픽 생성 훅
+  const {
+    isGeneratingTopics,
+    generateTopicsFromKeyword
+  } = useTopicGenerator(appState, saveAppState);
 
-  if (authLoading || isCheckingAccess) {
-    console.log('인증 또는 접근 권한 확인 중...');
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg font-semibold text-gray-700">로딩 중...</p>
-      </div>
-    );
-  }
+  // 글 생성 훅
+  const {
+    isGeneratingContent,
+    generateArticleContent,
+    stopArticleGeneration
+  } = useArticleGenerator(appState, saveAppState, geminiManager.geminiApiKey);
 
-  if (!session) {
-    console.log('세션 없음 - 로그인 폼 표시');
-    return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
-  }
+  // 이미지 프롬프트 생성 훅
+  const {
+    isGeneratingImage,
+    createImagePrompt,
+    isDirectlyGenerating,
+    generateDirectImage
+  } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, canUseFeatures);
 
-  // 접근 권한이 없는 경우 (승인 대기, 거절, 만료)
-  if (!hasAccess && !isAdmin) {
-    const getStatusMessage = () => {
-      if (!profile) return { title: "프로필 로딩 중", description: "잠시만 기다려주세요." };
-      
-      switch (profile.status) {
-        case 'pending':
-          return { 
-            title: "승인 대기", 
-            description: "관리자의 승인을 기다리고 있습니다. 승인 후 서비스를 이용하실 수 있습니다.",
-            icon: <Clock className="h-8 w-8 text-yellow-600" />
-          };
-        case 'rejected':
-          return { 
-            title: "접근 거부", 
-            description: "계정이 거절되었거나 이용 기간이 만료되었습니다. 관리자에게 문의하세요.",
-            icon: <AlertTriangle className="h-8 w-8 text-red-600" />
-          };
-        default:
-          return { 
-            title: "접근 제한", 
-            description: "서비스 이용 권한이 없습니다.",
-            icon: <AlertTriangle className="h-8 w-8 text-red-600" />
-          };
-      }
+  // 토픽 관련 상태 및 핸들러
+  const [manualTopicInput, setManualTopicInput] = useState('');
+  const setManualTopic = (topic: string) => {
+    setManualTopicInput(topic);
+  };
+
+  const handleManualTopicAdd = () => {
+    if (manualTopicInput.trim() !== '') {
+      saveAppState({
+        topics: preventDuplicates ? [...new Set([...appState.topics, manualTopicInput.trim()])] : [...appState.topics, manualTopicInput.trim()],
+        manualTopic: manualTopicInput.trim()
+      });
+      setManualTopicInput('');
+    }
+  };
+
+  const selectTopic = (topic: string) => {
+    saveAppState({ selectedTopic: topic });
+  };
+
+  // 클립보드 복사 기능
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast({
+          title: `${type} 복사 완료`,
+          description: `${type}이(가) 클립보드에 복사되었습니다.`,
+        });
+      })
+      .catch(err => {
+        toast({
+          title: "복사 실패",
+          description: "클립보드 복사에 실패했습니다.",
+          variant: "destructive"
+        });
+        console.error("클립보드 복사 실패:", err);
+      });
+  };
+
+  // Whisk 열기 기능
+  const openWhisk = () => {
+    if (appState.imagePrompt) {
+      const encodedPrompt = encodeURIComponent(appState.imagePrompt);
+      window.open(`https://www.whisk.com/search?q=${encodedPrompt}`, '_blank');
+    } else {
+      toast({
+        title: "프롬프트 오류",
+        description: "생성된 이미지 프롬프트가 없습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // HTML 다운로드 기능
+  const downloadHTML = () => {
+    if (appState.generatedContent) {
+      const blob = new Blob([appState.generatedContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedTopic ? selectedTopic.replace(/[^a-zA-Z0-9가-힣]/g, '_') : 'article'}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "다운로드 완료",
+        description: "HTML 파일이 다운로드되었습니다.",
+      });
+    } else {
+      toast({
+        title: "다운로드 오류",
+        description: "다운로드할 콘텐츠가 없습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // 참조 데이터 삭제
+  const deleteReferenceData = () => {
+    setIsDeleteReferenceOpen(true);
+  };
+
+  const confirmDeleteReference = () => {
+    saveAppState({ referenceText: '', referenceLinks: [] });
+    setIsDeleteReferenceOpen(false);
+    toast({
+      title: "참조 데이터 삭제 완료",
+      description: "참조 데이터가 성공적으로 삭제되었습니다.",
+    });
+  };
+
+  const cancelDeleteReference = () => {
+    setIsDeleteReferenceOpen(false);
+  };
+
+  // 앱 초기화
+  const resetAppStateHandler = () => {
+    setIsResetOpen(true);
+  };
+
+  const confirmReset = () => {
+    resetAppState();
+    setIsResetOpen(false);
+    const resetEvent = new Event('app-reset');
+    window.dispatchEvent(resetEvent);
+    toast({
+      title: "앱 초기화 완료",
+      description: "앱 상태가 초기화되었습니다.",
+    });
+  };
+
+  const cancelReset = () => {
+    setIsResetOpen(false);
+  };
+
+  useEffect(() => {
+    const checkUsage = async () => {
+      const isPro = await checkSubscription();
+      setCanUseFeatures(isPro);
     };
 
-    const { title, description, icon } = getStatusMessage();
+    checkUsage();
+  }, []);
 
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <TopNavigation />
-        <AppHeader
-          currentUser={profile?.email || appState.currentUser}
-          handleLogout={handleLogout}
-        />
-        <div className="flex items-center justify-center min-h-[calc(100vh-120px)] p-4">
-          <Card className="w-full max-w-md text-center shadow-lg">
-            <CardHeader>
-              <div className="mx-auto bg-gray-100 rounded-full p-3 w-fit">
-                {icon}
-              </div>
-              <CardTitle className="mt-4 text-2xl font-bold">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="mb-6 text-base">
-                {description}
-              </CardDescription>
-              <Button onClick={handleLogout} variant="outline" className="font-semibold">
-                로그아웃
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  console.log('메인 화면 렌더링 시작');
-  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <TopNavigation />
-      <AppHeader
-        currentUser={profile?.email || appState.currentUser}
-        handleLogout={handleLogout}
-      />
-      
-      <RefactoredApiKeysSection 
-        geminiManager={geminiManager}
-        pixabayManager={pixabayManager}
-        huggingFaceManager={huggingFaceManager}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <TopNavigation
+        resetAppState={resetAppStateHandler}
+        preventDuplicates={preventDuplicates}
+        setPreventDuplicates={setPreventDuplicates}
+        canUseFeatures={canUseFeatures}
       />
 
-      {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
-      <div className="container mx-auto mt-4 mb-3">
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-          <div className="flex items-center justify-between flex-wrap gap-6">
-            
-            {/* 사용자 현황 링크 - 모든 로그인한 사용자에게 표시 */}
-            <div className="flex-shrink-0">
-              <Link
-                to="/admin/users"
-                className="inline-flex items-center gap-3 bg-blue-50 p-4 rounded-xl shadow-sm hover:bg-blue-100 transition-colors border border-blue-300 hover:shadow-md"
-              >
-                <Shield className="h-6 w-6 text-blue-600" />
-                <span className="font-bold text-blue-700 text-lg">
-                  {isAdmin ? '사용자 관리 페이지' : '사용자 현황 페이지'}
-                </span>
-              </Link>
-            </div>
-            
-            {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
-            <div className="text-center">
-              <div className="mb-3">
-                <span className="text-lg font-bold text-gray-800">중복 주제 설정</span>
-              </div>
-              <ToggleGroup
-                type="single"
-                value={preventDuplicates ? 'forbid' : 'allow'}
-                onValueChange={(value) => {
-                  if (value) {
-                    const newPreventDuplicates = value === 'forbid';
-                    setPreventDuplicates(newPreventDuplicates);
-                    console.log('중복 설정 변경:', newPreventDuplicates ? '금지' : '허용');
-                  }
-                }}
-                className="inline-flex rounded-lg bg-gray-100 p-1"
-              >
-                <ToggleGroupItem
-                  value="forbid"
-                  className="px-5 py-3 text-sm font-bold data-[state=on]:bg-red-500 data-[state=on]:text-white rounded-md flex items-center gap-2 transition-all"
-                >
-                  <Ban className="h-4 w-4" />
-                  중복 금지
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="allow"
-                  className="px-5 py-3 text-sm font-bold data-[state=on]:bg-green-500 data-[state=on]:text-white rounded-md flex items-center gap-2 transition-all"
-                >
-                  <Check className="h-4 w-4" />
-                  중복 허용
-                </ToggleGroupItem>
-              </ToggleGroup>
-              <p className="text-sm text-gray-600 mt-2 font-semibold">
-                현재: {preventDuplicates ? '중복 금지' : '중복 허용'}
-              </p>
-            </div>
-            
-            {/* 초기화 버튼 - 크기 조정 */}
-            <div className="text-center">
-              <Button
-                onClick={handleResetApp}
-                variant="outline"
-                size="lg"
-                className="bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors px-8 py-6 h-auto shadow-lg hover:shadow-xl"
-              >
-                <RefreshCw className="h-6 w-6 mr-2" />
-                <span className="font-bold text-lg">초기화</span>
-              </Button>
-              <p className="text-sm text-gray-600 mt-2 font-semibold">모든 데이터 초기화</p>
-            </div>
-          </div>
+      <div className="container mx-auto p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* 좌측 사이드바 */}
+          <LeftSidebar
+            appState={appState}
+            saveAppState={saveAppState}
+            generationStatus={{
+              isGeneratingTopics,
+              isGeneratingContent,
+              isGeneratingImage,
+              isDirectlyGenerating,
+            }}
+            generationFunctions={{
+              generateTopics: generateTopicsFromKeyword,
+              generateArticle: generateArticleContent,
+              createImagePrompt,
+              generateDirectImage,
+              stopArticleGeneration,
+            }}
+            topicControls={{
+              manualTopic: manualTopicInput,
+              setManualTopic: setManualTopic,
+              handleManualTopicAdd: handleManualTopicAdd,
+              selectTopic: selectTopic,
+            }}
+            utilityFunctions={{
+              copyToClipboard,
+              openWhisk,
+              downloadHTML,
+            }}
+            preventDuplicates={preventDuplicates}
+            deleteReferenceData={deleteReferenceData}
+            huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+            isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+          />
+
+          {/* 우측 컨텐츠 */}
+          <RightContent
+            appState={appState}
+            saveAppState={saveAppState}
+            isGeneratingContent={isGeneratingContent}
+            selectedTopic={selectedTopic}
+            resetAppState={resetAppState}
+            canUseFeatures={canUseFeatures}
+          />
         </div>
       </div>
 
-      <OneClickSection
-        handleLatestIssueOneClick={handleLatestIssueOneClick}
-        handleEvergreenKeywordOneClick={handleEvergreenKeywordOneClick}
-        isOneClickGenerating={isOneClickGenerating}
-        handleStopOneClick={handleStopOneClick}
-        appState={appState}
-        isGeneratingContent={generationStatus.isGeneratingContent}
-      />
-      
-      <MainContentSection
-        appState={appState}
-        saveAppState={saveAppState}
-        generationStatus={generationStatus}
-        generationFunctions={generationFunctions}
-        topicControls={topicControls}
-        utilityFunctions={utilityFunctions}
-        preventDuplicates={preventDuplicates}
-        handleTopicConfirm={handleTopicConfirm}
+      {/* 참조 데이터 삭제 확인 다이얼로그 */}
+      <DeleteReferenceDialog
+        isOpen={isDeleteReferenceOpen}
+        onConfirm={confirmDeleteReference}
+        onCancel={cancelDeleteReference}
       />
 
-      {/* 주제 확인 다이얼로그 - 파라미터 제거하여 올바른 호출 */}
-      <TopicConfirmDialog
-        isOpen={showTopicConfirmDialog}
-        topic={pendingTopic}
-        onConfirm={() => {
-          console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
-          handleTopicConfirm(); // 파라미터 제거
-        }}
-        onCancel={() => {
-          console.log('TopicConfirmDialog onCancel 호출됨');
-          handleTopicCancel();
-        }}
+      {/* 앱 초기화 확인 다이얼로그 */}
+      <ResetDialog
+        isOpen={isResetOpen}
+        onConfirm={confirmReset}
+        onCancel={cancelReset}
       />
-
-      {/* 주제 선택 알림 팝업 */}
-      <TopicSelectionNotification
-        open={showTopicSelectionDialog}
-        onOpenChange={setShowTopicSelectionDialog}
-      />
-
-      {/* 중복 오류 다이얼로그 */}
-      <DuplicateErrorDialog
-        open={showDuplicateErrorDialog}
-        onOpenChange={setShowDuplicateErrorDialog}
-      />
-      
-      <ScrollToTopButton />
     </div>
   );
 };

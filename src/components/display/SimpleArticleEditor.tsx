@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,6 +116,52 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return false;
     }
   }, []);
+  
+  // 이미지 붙여넣기 처리 함수 추가
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    // 이미지 파일 찾기
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault(); // 기본 붙여넣기 동작 방지
+        
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64String = event.target?.result as string;
+            
+            // 현재 에디터 내용 가져오기
+            const currentContent = editorRef.current?.innerHTML || '';
+            
+            // 이미지 태그 생성 (Base64 임베딩)
+            const imgTag = `<img src="${base64String}" alt="Pasted Image" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />`;
+            
+            // 새로운 내용 생성
+            const newContent = currentContent + '<br>' + imgTag + '<br>';
+            
+            // 에디터 업데이트
+            if (editorRef.current) {
+              editorRef.current.innerHTML = newContent;
+              setEditorContent(newContent);
+              performAutoSave(newContent);
+              
+              toast({
+                title: "이미지 삽입 완료",
+                description: "이미지가 블로그 글에 성공적으로 삽입되었습니다.",
+                duration: 3000
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+        break;
+      }
+    }
+  }, [performAutoSave, toast]);
   
   // 초기 로드 시 localStorage에서 복원
   useEffect(() => {
@@ -430,7 +475,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (강화된 렌더링 보장)
+              블로그 글 편집기 (이미지 붙여넣기 지원)
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
               {!isContentVisible && editorContent && <span className="ml-2 text-xs text-blue-500">🔄 렌더링 중</span>}
               {showDebugInfo && (
@@ -492,8 +537,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (강화된 렌더링 보장)</p>
-                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 렌더링 문제가 발생하면 새로고침 버튼을 클릭하세요.</p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (이미지 붙여넣기 지원)</p>
+                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 Ctrl+V로 이미지를 붙여넣을 수 있습니다.</p>
+                <p className="text-xs text-purple-600 mt-1">🖼️ 이미지는 Base64로 임베딩되어 티스토리에서도 안전하게 사용됩니다.</p>
                 {isUserEditing && (
                   <p className="text-xs text-orange-600 mt-1">⌨️ 편집 중: 안전하게 보호됩니다</p>
                 )}
@@ -506,6 +552,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 contentEditable={true}
                 className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none editor-transition"
                 onInput={handleInput}
+                onPaste={handlePaste}
                 suppressContentEditableWarning={true}
                 style={{
                   lineHeight: '1.6',

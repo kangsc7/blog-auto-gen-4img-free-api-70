@@ -3,6 +3,7 @@ import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
+import { HuggingFaceImageGenerator } from '@/components/control/HuggingFaceImageGenerator';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { AppState } from '@/types';
 
@@ -35,6 +36,8 @@ interface LeftSidebarProps {
   };
   preventDuplicates: boolean;
   deleteReferenceData?: () => void;
+  huggingFaceApiKey: string;
+  isHuggingFaceApiKeyValidated: boolean;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -46,6 +49,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   utilityFunctions,
   preventDuplicates,
   deleteReferenceData,
+  huggingFaceApiKey,
+  isHuggingFaceApiKeyValidated,
 }) => {
   return (
     <div className="lg:col-span-5 space-y-6">
@@ -82,7 +87,13 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         openWhisk={utilityFunctions.openWhisk}
       />
 
-      {/* 외부 링크 및 문장 참조 입력 - 이미지 생성 섹션 아래로 이동 */}
+      {/* Hugging Face 이미지 생성 */}
+      <HuggingFaceImageGenerator
+        huggingFaceApiKey={huggingFaceApiKey}
+        isHuggingFaceApiKeyValidated={isHuggingFaceApiKeyValidated}
+      />
+
+      {/* 외부 링크 및 문장 참조 입력 */}
       <ExternalReferenceInput 
         appState={appState}
         saveAppState={saveAppState}
