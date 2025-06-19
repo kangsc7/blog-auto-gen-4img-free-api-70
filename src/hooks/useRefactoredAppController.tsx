@@ -68,8 +68,8 @@ export const useRefactoredAppController = () => {
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 실행 방지
-  const handleTopicConfirm = () => {
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 실행 방지 강화
+  const handleTopicConfirm = async () => {
     console.log('주제 확인 버튼 클릭:', pendingTopic, '처리중:', isConfirming.current);
     
     if (!pendingTopic || isConfirming.current) {
@@ -80,22 +80,25 @@ export const useRefactoredAppController = () => {
     isConfirming.current = true;
     console.log('주제 확인 처리 시작:', pendingTopic);
     
-    // 1. 즉시 다이얼로그 닫기
-    setShowTopicConfirmDialog(false);
-    
-    // 2. 주제 선택
-    topicControls.selectTopic(pendingTopic);
-    
-    // 3. 상태 초기화
-    const currentTopic = pendingTopic;
-    setPendingTopic('');
-    
-    // 4. 글 생성 시작 (약간의 딜레이)
-    setTimeout(() => {
+    try {
+      // 1. 즉시 다이얼로그 닫기
+      setShowTopicConfirmDialog(false);
+      
+      // 2. 주제 선택
+      topicControls.selectTopic(pendingTopic);
+      
+      // 3. 상태 초기화
+      const currentTopic = pendingTopic;
+      setPendingTopic('');
+      
+      // 4. 글 생성 시작
       console.log('자동 글 생성 시작:', { topic: currentTopic, keyword: appState.keyword });
-      generateArticle({ topic: currentTopic, keyword: appState.keyword });
+      await generateArticle({ topic: currentTopic, keyword: appState.keyword });
+    } catch (error) {
+      console.error('주제 확인 처리 오류:', error);
+    } finally {
       isConfirming.current = false; // 처리 완료
-    }, 100);
+    }
   };
 
   // 주제 확인 다이얼로그 취소

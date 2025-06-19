@@ -16,8 +16,8 @@ interface ExternalReferenceInputProps {
 
 // 영구 저장을 위한 localStorage 키
 const REFERENCE_STORAGE_KEYS = {
-  LINK: 'blog_reference_link_permanent_v3',
-  SENTENCE: 'blog_reference_sentence_permanent_v3'
+  LINK: 'blog_reference_link_permanent_v4',
+  SENTENCE: 'blog_reference_sentence_permanent_v4'
 };
 
 export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
@@ -40,20 +40,18 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
           sentence: storedSentence.substring(0, 50) + '...'
         });
         
-        // 저장된 데이터가 현재 앱 상태와 다르면 동기화
-        if (storedLink !== appState.referenceLink || storedSentence !== appState.referenceSentence) {
-          saveAppState({
-            referenceLink: storedLink,
-            referenceSentence: storedSentence
-          });
-        }
+        // 저장된 데이터를 앱 상태에 동기화
+        saveAppState({
+          referenceLink: storedLink,
+          referenceSentence: storedSentence
+        });
       } catch (error) {
         console.error('영구 저장된 데이터 로드 실패:', error);
       }
     };
 
     loadStoredData();
-  }, []);
+  }, [saveAppState]);
 
   const handleReferenceLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -61,6 +59,9 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     
     // localStorage에 즉시 저장
     localStorage.setItem(REFERENCE_STORAGE_KEYS.LINK, value);
+    
+    // sessionStorage에도 백업 저장
+    sessionStorage.setItem('backup_reference_link_v4', value);
     
     // 앱 상태 업데이트
     saveAppState({ referenceLink: value });
@@ -73,6 +74,9 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     // localStorage에 즉시 저장
     localStorage.setItem(REFERENCE_STORAGE_KEYS.SENTENCE, value);
     
+    // sessionStorage에도 백업 저장
+    sessionStorage.setItem('backup_reference_sentence_v4', value);
+    
     // 앱 상태 업데이트
     saveAppState({ referenceSentence: value });
   };
@@ -82,16 +86,28 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     const currentLink = appState.referenceLink || '';
     const currentSentence = appState.referenceSentence || '';
     
+    // 다중 저장소에 저장
     localStorage.setItem(REFERENCE_STORAGE_KEYS.LINK, currentLink);
     localStorage.setItem(REFERENCE_STORAGE_KEYS.SENTENCE, currentSentence);
+    sessionStorage.setItem('backup_reference_link_v4', currentLink);
+    sessionStorage.setItem('backup_reference_sentence_v4', currentSentence);
     
-    // sessionStorage에도 추가 저장 (이중 보장)
-    sessionStorage.setItem('backup_reference_link', currentLink);
-    sessionStorage.setItem('backup_reference_sentence', currentSentence);
+    // 추가 안전장치 - 인덱스드DB 스타일 저장
+    try {
+      const backupData = {
+        link: currentLink,
+        sentence: currentSentence,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('reference_data_backup_v4', JSON.stringify(backupData));
+    } catch (error) {
+      console.error('백업 데이터 저장 실패:', error);
+    }
     
     toast({
       title: "✅ 영구 저장 완료",
-      description: "참조 링크와 문장이 영구 저장되었습니다. 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.",
+      description: "참조 링크와 문장이 다중 저장소에 영구 저장되었습니다. 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.",
+      duration: 3000
     });
     console.log('참조 정보 영구 저장 확인:', {
       referenceLink: currentLink,
@@ -102,13 +118,12 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   const handleDelete = () => {
     console.log('참조 정보 영구 삭제 시작');
     
-    // localStorage에서 완전 삭제
+    // 모든 저장소에서 완전 삭제
     localStorage.removeItem(REFERENCE_STORAGE_KEYS.LINK);
     localStorage.removeItem(REFERENCE_STORAGE_KEYS.SENTENCE);
-    
-    // sessionStorage에서도 삭제
-    sessionStorage.removeItem('backup_reference_link');
-    sessionStorage.removeItem('backup_reference_sentence');
+    sessionStorage.removeItem('backup_reference_link_v4');
+    sessionStorage.removeItem('backup_reference_sentence_v4');
+    localStorage.removeItem('reference_data_backup_v4');
     
     // 앱 상태 초기화
     saveAppState({ 
@@ -123,7 +138,8 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     
     toast({
       title: "🗑️ 영구 삭제 완료",
-      description: "참조 링크와 문장이 완전히 삭제되었습니다.",
+      description: "참조 링크와 문장이 모든 저장소에서 완전히 삭제되었습니다.",
+      duration: 3000
     });
     console.log('참조 정보 영구 삭제 완료');
   };
@@ -207,7 +223,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
             💡 참조 링크와 문장은 AI가 글을 작성할 때 추가적인 맥락과 정보로 활용되며, 
             저장된 참조 링크는 블로그 글 본문 끝에 "이 글과 관련된 다른 정보가 궁금하다면?" 스타일로 자동 추가됩니다.
             <br />
-            🔒 <strong>실시간 영구 저장</strong>: 입력과 동시에 저장되며, 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.
+            🔒 <strong>실시간 영구 저장</strong>: 입력과 동시에 다중 저장소에 저장되며, 재로그인, 새로고침, 창전환, 로그아웃해도 절대 삭제되지 않습니다.
           </div>
 
           {(appState.referenceLink || appState.referenceSentence) && (

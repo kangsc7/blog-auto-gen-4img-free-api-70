@@ -78,7 +78,13 @@ export const createBlogHtmlTemplate = async (
   referenceSentence?: string,
   geminiApiKey?: string
 ): Promise<string> => {
-  console.log('📄 블로그 HTML 템플릿 생성 시작:', { title, hasReferenceLink: !!referenceLink });
+  console.log('📄 블로그 HTML 템플릿 생성 시작:', { 
+    title, 
+    hasReferenceLink: !!referenceLink,
+    hasReferenceSentence: !!referenceSentence,
+    referenceLink,
+    referenceSentence: referenceSentence?.substring(0, 50) + '...'
+  });
   
   // 메타 설명 생성
   let metaDescription = '';
@@ -100,12 +106,22 @@ export const createBlogHtmlTemplate = async (
     processedContent = firstLine + '\n<p data-ke-size="size16">&nbsp;</p>\n' + restContent;
   }
 
-  // 외부 링크를 태그 바로 위에 추가 (새로운 스타일로 적용)
+  // 외부 링크를 태그 바로 위에 추가 - 강화된 버전
   let finalContent = processedContent;
+  
+  console.log('🔗 외부링크 처리 시작:', {
+    hasReferenceLink: !!referenceLink,
+    hasReferenceSentence: !!referenceSentence,
+    referenceLink,
+    referenceSentence
+  });
+
   if (referenceLink && referenceLink.trim()) {
     // 태그들을 찾아서 그 위에 외부 링크 삽입
-    const tagPattern = /<p[^>]*style="text-align: center[^"]*"[^>]*>(?!.*<a)[^<]*<\/p>\s*$/i;
+    const tagPattern = /<p[^>]*style="text-align:\s*center[^"]*"[^>]*>[^<]*#[^<]*<\/p>\s*$/i;
     const tagMatch = finalContent.match(tagPattern);
+    
+    console.log('🏷️ 태그 패턴 매칭 결과:', { found: !!tagMatch });
     
     if (tagMatch) {
       const tagStartIndex = finalContent.lastIndexOf(tagMatch[0]);
@@ -113,9 +129,13 @@ export const createBlogHtmlTemplate = async (
       const tagsSection = finalContent.substring(tagStartIndex);
       
       // 참조문장 가져오기 (기본값 설정)
-      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
+      const displayText = referenceSentence && referenceSentence.trim() 
+        ? referenceSentence 
+        : '👉 워드프레스 꿀팁 더 보러가기';
       
       const referenceLinkHtml = `
+<p data-ke-size="size16">&nbsp;</p>
+
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
   <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
   <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
@@ -123,13 +143,17 @@ export const createBlogHtmlTemplate = async (
   </a>
 </p>
 
-<p data-ke-size="size16">&nbsp;</p>`;
+<p data-ke-size="size16">&nbsp;</p>
+
+`;
       
       finalContent = beforeTags + referenceLinkHtml + tagsSection;
-      console.log('🔗 외부 링크가 태그 위에 추가됨:', referenceLink);
+      console.log('✅ 외부 링크가 태그 위에 추가됨:', { link: referenceLink, text: displayText });
     } else {
       // 태그가 없는 경우 콘텐츠 끝에 추가
-      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
+      const displayText = referenceSentence && referenceSentence.trim() 
+        ? referenceSentence 
+        : '👉 워드프레스 꿀팁 더 보러가기';
       
       const referenceLinkHtml = `
 <p data-ke-size="size16">&nbsp;</p>
@@ -144,8 +168,10 @@ export const createBlogHtmlTemplate = async (
 <p data-ke-size="size16">&nbsp;</p>`;
       
       finalContent = finalContent + referenceLinkHtml;
-      console.log('🔗 외부 링크가 콘텐츠 끝에 추가됨:', referenceLink);
+      console.log('✅ 외부 링크가 콘텐츠 끝에 추가됨:', { link: referenceLink, text: displayText });
     }
+  } else {
+    console.log('⚠️ 외부 링크 없음 - 외부링크 추가 건너뛰기');
   }
 
   const currentDate = new Date().toLocaleDateString('ko-KR');
