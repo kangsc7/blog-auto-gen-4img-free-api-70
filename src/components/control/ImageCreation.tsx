@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Image, Copy, Info } from 'lucide-react';
+import { Image, Copy } from 'lucide-react';
 import { AppState } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -40,48 +40,43 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
     setGeneratedImage(image);
   };
 
-  const handleCopyImageForTistory = async () => {
+  const handleCopyImageHtml = async () => {
     if (!generatedImage) return;
 
     const altText = appState.selectedTopic || appState.keyword || 'generated_image_from_prompt';
     const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
     
+    // 티스토리 대표 이미지 설정을 위한 메타데이터 포함
+    const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" title="${sanitizedAltText}" data-filename="${sanitizedAltText.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.png" style="max-width: 90%; height: auto; display: block; margin-left: auto; margin-right: auto; border-radius: 8px; width: 100%;">`;
+
     try {
-        // 1. 이미지를 파일로 복사 (대표이미지 설정용)
         const response = await fetch(generatedImage);
         const imageBlob = await response.blob();
         
         const clipboardItem = new ClipboardItem({
-            [imageBlob.type]: imageBlob
+            [imageBlob.type]: imageBlob,
+            'text/html': new Blob([imgTag], { type: 'text/html' }),
+            'text/plain': new Blob([imgTag], { type: 'text/plain' }),
         });
 
         await navigator.clipboard.write([clipboardItem]);
-        
         toast({ 
-          title: "✅ 티스토리 대표이미지용 복사 완료", 
-          description: "1️⃣ 티스토리에 Ctrl+V로 붙여넣기 → 2️⃣ 이미지 클릭 → 3️⃣ '대표 이미지로 설정' 버튼 클릭",
-          duration: 8000
+          title: "이미지 복사 완료", 
+          description: "이미지와 HTML 태그가 복사되었습니다. 티스토리에 붙여넣기 후 '대표 이미지로 설정' 버튼을 클릭하세요.",
+          duration: 5000
         });
-        
     } catch (error) {
-        console.error('Failed to copy image: ', error);
-        
-        // 폴백: HTML 태그만 복사
+        console.error('Failed to copy image and HTML: ', error);
         try {
-            const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" style="max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px;">`;
             await navigator.clipboard.writeText(imgTag);
-            
             toast({ 
               title: "HTML 태그 복사 완료", 
-              description: "티스토리 HTML 모드에서 붙여넣으세요. (대표이미지 설정은 수동으로 해야 합니다)",
+              description: "HTML 코드가 복사되었습니다. 티스토리 에디터에서 HTML 모드로 붙여넣으세요.",
               duration: 5000
             });
         } catch (copyError) {
-            toast({ 
-              title: "복사 실패", 
-              description: "클립보드 복사에 실패했습니다. 우클릭으로 이미지를 저장해서 사용하세요.", 
-              variant: "destructive" 
-            });
+            console.error('Failed to copy HTML as text: ', copyError);
+            toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
         }
     }
   };
@@ -156,28 +151,18 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
               {isDirectlyGenerating ? (
                 <Skeleton className="w-full h-64 rounded-lg" />
               ) : generatedImage ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <img src={generatedImage} alt="Generated from prompt" className="rounded-lg w-full" />
-                  
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                    <div className="flex items-start space-x-2">
-                      <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div className="text-xs text-blue-700">
-                        <p className="font-semibold mb-1">💡 티스토리 대표이미지 설정 방법:</p>
-                        <p>1️⃣ 아래 버튼으로 이미지 복사</p>
-                        <p>2️⃣ 티스토리에 Ctrl+V로 붙여넣기</p>
-                        <p>3️⃣ 붙여넣은 이미지 클릭 후 '대표 이미지로 설정' 버튼 클릭</p>
-                      </div>
-                    </div>
-                  </div>
-                  
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700 text-primary-foreground"
-                    onClick={handleCopyImageForTistory}
+                    onClick={handleCopyImageHtml}
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     티스토리용 이미지 복사 (대표이미지 설정 가능)
                   </Button>
+                  <p className="text-xs text-gray-600 mt-1">
+                    💡 팁: 티스토리에 붙여넣기 후 이미지를 클릭하고 '대표 이미지로 설정' 버튼을 눌러주세요.
+                  </p>
                 </div>
               ) : null}
             </div>

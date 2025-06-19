@@ -172,6 +172,13 @@ export const HuggingFaceImageGenerator: React.FC<HuggingFaceImageGeneratorProps>
     }
   };
 
+  const examplePrompts = [
+    "A modern office workspace with natural lighting, clean design, 4k photorealistic style",
+    "Fresh vegetables and fruits arranged beautifully on a wooden table, bright natural lighting",
+    "A cozy coffee shop interior with warm lighting and comfortable seating, realistic style",
+    "Modern kitchen with sleek appliances and marble countertops, professional photography style"
+  ];
+
   return (
     <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
       <CardHeader>
@@ -197,6 +204,25 @@ export const HuggingFaceImageGenerator: React.FC<HuggingFaceImageGeneratorProps>
               className="min-h-[100px] resize-none"
               disabled={isGenerating}
             />
+          </div>
+
+          {/* 예시 프롬프트 */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">예시 프롬프트:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {examplePrompts.map((example, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="text-left justify-start h-auto p-2 text-xs"
+                  onClick={() => setPrompt(example)}
+                  disabled={isGenerating}
+                >
+                  {example}
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* 생성 버튼 */}
