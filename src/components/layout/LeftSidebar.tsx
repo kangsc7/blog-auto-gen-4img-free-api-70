@@ -34,7 +34,6 @@ interface LeftSidebarProps {
     downloadHTML: () => void;
   };
   preventDuplicates: boolean;
-  deleteReferenceData?: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -45,7 +44,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   topicControls,
   utilityFunctions,
   preventDuplicates,
-  deleteReferenceData,
 }) => {
   return (
     <div className="lg:col-span-5 space-y-6">
@@ -53,12 +51,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
-        generateTopicsFromKeyword={generationFunctions.generateTopics}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
-        manualTopic={topicControls.manualTopic}
-        setManualTopic={topicControls.setManualTopic}
-        handleManualTopicAdd={topicControls.handleManualTopicAdd}
-        preventDuplicates={preventDuplicates}
+        generateTopics={() => generationFunctions.generateTopics()}
+        selectTopic={topicControls.selectTopic}
       />
 
       {/* 블로그 글 생성 */}
@@ -82,11 +77,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         openWhisk={utilityFunctions.openWhisk}
       />
 
-      {/* 외부 링크 및 문장 참조 입력 - 이미지 생성 섹션 아래로 이동 */}
+      {/* 외부 링크 및 문장 참조 입력 */}
       <ExternalReferenceInput 
         appState={appState}
         saveAppState={saveAppState}
-        deleteReferenceData={deleteReferenceData}
       />
     </div>
   );

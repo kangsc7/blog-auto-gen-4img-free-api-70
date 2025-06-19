@@ -34,7 +34,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const threshold = 300; // 300px 스크롤 시 sticky 모드 활성화
+      const threshold = 300;
       setIsSticky(scrollY > threshold);
     };
 
@@ -43,7 +43,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
   }, []);
 
   const stickyClasses = isSticky 
-    ? 'fixed top-4 right-4 z-50 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl' 
+    ? 'fixed top-4 right-4 z-50 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl' 
     : 'relative w-full';
 
   return (
@@ -83,6 +83,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
           
           <HuggingFaceImageGenerator
             huggingFaceApiKey={huggingFaceApiKey}
+            isApiKeyValidated={!!huggingFaceApiKey}
             hasAccess={hasAccess}
           />
         </div>
