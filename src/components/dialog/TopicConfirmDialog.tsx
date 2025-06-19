@@ -6,6 +6,7 @@ interface TopicConfirmDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  onCancel?: () => void; // onCancel 속성 추가
   topic: string;
 }
 
@@ -13,11 +14,19 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  onCancel,
   topic,
 }) => {
   const handleConfirm = () => {
     onConfirm();
     onClose(); // 팝업 즉시 닫기
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+    onClose();
   };
 
   return (
