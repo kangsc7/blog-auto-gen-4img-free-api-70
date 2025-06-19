@@ -136,7 +136,7 @@ export const useArticleGenerator = (
         throw new Error("사용자에 의해 중단되었습니다.");
       }
 
-      // 픽사베이 이미지 추가 기능 - 강화된 버전
+      // 픽사베이 이미지 추가 기능 - 10페이지 포괄 검색 방식
       const pixabayApiKey = appState.pixabayApiKey;
       const isPixabayValidated = appState.isPixabayApiKeyValidated;
       
@@ -149,7 +149,7 @@ export const useArticleGenerator = (
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
           title: "🖼️ 2단계: 이미지 추가 중", 
-          description: "소제목별로 페이지별 순차 검색하여 최적의 이미지를 삽입 중입니다." 
+          description: "10페이지 포괄 검색으로 중복 없는 최적의 이미지를 삽입 중입니다." 
         });
         
         try {
@@ -170,7 +170,7 @@ export const useArticleGenerator = (
             pixabayImagesAdded = true;
             toast({ 
               title: "✅ 이미지 추가 완료", 
-              description: `${imageCount}개의 이미지가 소제목별로 페이지별 순차 검색으로 삽입되었습니다. 클릭 시 티스토리 복사 가능!`,
+              description: `${imageCount}개의 고품질 이미지가 10페이지 포괄 검색으로 중복 없이 삽입되었습니다!`,
               duration: 4000
             });
           } else {
@@ -234,7 +234,7 @@ export const useArticleGenerator = (
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `랜덤 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 이미지 포함)` : '(텍스트만)'}`,
+        description: `랜덤 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 고품질 이미지 포함)` : '(텍스트만)'}`,
         duration: 5000
       });
       
