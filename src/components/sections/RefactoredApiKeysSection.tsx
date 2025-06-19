@@ -40,24 +40,26 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
         className={`cursor-pointer transition-all duration-500 ease-in-out transform ${
           isExpanded 
             ? 'opacity-100 max-h-[600px] scale-100' 
-            : 'opacity-70 max-h-12 scale-95 overflow-hidden'
+            : 'opacity-100 max-h-20 scale-100 overflow-hidden'
         }`}
       >
         {/* 통합된 API 키 설정 창 */}
         <div className={`bg-white rounded-lg shadow-lg border-2 border-gray-200 p-4 transition-all duration-300 ${
           isExpanded ? 'border-blue-300' : 'border-gray-200'
         }`}>
-          {!isExpanded ? (
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-700 mb-1">🔑 API 키 설정</h3>
+          {/* 항상 보이는 제목 */}
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-blue-700 mb-2">🔑 API 키 통합 설정</h3>
+            {!isExpanded && (
               <p className="text-sm text-gray-600">
                 💡 더블클릭해서 API 키 설정 보기
               </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-center text-blue-700 mb-4">🔑 API 키 통합 설정</h3>
-              
+            )}
+          </div>
+          
+          {/* 확장된 상태에서만 보이는 설정 폼들 */}
+          {isExpanded && (
+            <div className="mt-4 space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="relative z-[200]">
                   <GeminiApiKeyManager
