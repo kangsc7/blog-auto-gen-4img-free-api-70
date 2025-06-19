@@ -195,6 +195,15 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
     font-weight: bold;
     color: ${colors.primary};
 }
+.single-summary-card .card-content .formula {
+    background-color: ${colors.highlight};
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    text-align: center;
+    margin-top: 8px;
+    color: ${colors.primary};
+}
 .single-summary-card .card-footer {
     font-size: 15px;
     color: #777;
@@ -226,6 +235,17 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
         margin-bottom: 10px;
         line-height: 1.6;
     }
+    .single-summary-card .card-content .highlight {
+        padding: 2px 5px;
+    }
+    .single-summary-card .card-content .formula {
+        padding: 7px 10px;
+        font-size: 0.9em;
+    }
+    .single-summary-card .card-footer {
+        font-size: 14px;
+        padding-top: 12px;
+    }
 }
 @media (max-width: 480px) {
     .single-summary-card {
@@ -246,6 +266,14 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
     .single-summary-card .card-content .section {
         margin-bottom: 8px;
         line-height: 1.5;
+    }
+    .single-summary-card .card-content .formula {
+        padding: 6px 8px;
+        font-size: 0.85em;
+    }
+    .single-summary-card .card-footer {
+        font-size: 13px;
+        padding-top: 10px;
     }
 }
 </style>

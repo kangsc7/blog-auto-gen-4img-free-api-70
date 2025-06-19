@@ -59,10 +59,11 @@ export const useArticleGenerator = (
         description: "컬러테마, 시각카드, 외부링크 연동하여 고품질 글 작성 중입니다." 
       });
 
+      // 매번 랜덤으로 컬러테마 선택
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
-      const selectedColorTheme = appState.colorTheme || randomTheme.value;
+      const selectedColorTheme = randomTheme.value;
       
-      console.log('🎨 선택된 컬러테마:', selectedColorTheme);
+      console.log('🎨 랜덤 선택된 컬러테마:', selectedColorTheme);
       console.log('🔗 외부 참조 링크:', appState.referenceLink);
       console.log('📝 외부 참조 문장:', appState.referenceSentence);
 
@@ -233,7 +234,7 @@ export const useArticleGenerator = (
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `컬러테마, 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 이미지 포함)` : '(텍스트만)'}`,
+        description: `랜덤 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 이미지 포함)` : '(텍스트만)'}`,
         duration: 5000
       });
       

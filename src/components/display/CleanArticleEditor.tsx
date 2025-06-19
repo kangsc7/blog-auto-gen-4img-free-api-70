@@ -60,7 +60,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     setEditorContent(content);
     
-    if (editorRef.current && editorRef.current.innerHTML !== content) {
+    if (editorRef.current) {
       editorRef.current.innerHTML = content;
       setTimeout(() => addImageClickHandlers(), 100);
     }
@@ -287,13 +287,13 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
               <p className="font-semibold text-lg text-blue-600 mb-2">
                 <span 
-                  className="text-purple-600 font-bold text-xl animate-pulse"
+                  className="text-purple-600 font-bold text-xl"
                   style={{
                     background: 'linear-gradient(45deg, #8B5CF6, #EC4899, #06B6D4)',
                     backgroundSize: '200% 200%',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    animation: 'wave 2s ease-in-out infinite, gradient 3s ease-in-out infinite'
+                    animation: 'wave 1.5s ease-in-out infinite, gradient 2s ease-in-out infinite'
                   }}
                 >
                   파코월드
@@ -303,8 +303,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <p className="text-sm">잠시만 기다려주세요.</p>
               <style>{`
                 @keyframes wave {
-                  0%, 100% { transform: translateY(0px); }
-                  50% { transform: translateY(-10px); }
+                  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+                  25% { transform: translateY(-8px) rotate(-2deg) scale(1.05); }
+                  50% { transform: translateY(-5px) rotate(1deg) scale(1.1); }
+                  75% { transform: translateY(-12px) rotate(-1deg) scale(1.05); }
                 }
                 @keyframes gradient {
                   0% { background-position: 0% 50%; }
