@@ -5,6 +5,7 @@ import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
+import { EvergreenKeywordCounter } from '@/components/display/EvergreenKeywordCounter';
 import { AppState } from '@/types';
 
 interface LeftSidebarProps {
@@ -53,8 +54,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      // 스크롤 임계값을 800으로 증가하여 더 늦게 따라다니게 함
-      const shouldBeSticky = scrollPosition > 800;
+      // 스크롤 임계값을 1000으로 증가하여 더 늦게 따라다니게 함
+      const shouldBeSticky = scrollPosition > 1000;
       setIsSticky(shouldBeSticky);
     };
 
@@ -81,6 +82,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         generateArticle={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
       />
+
+      <EvergreenKeywordCounter />
 
       {/* 이미지 생성 창들 - 원래 위치에서 늦은 스크롤시 따라다니기 */}
       <div className={`space-y-4 transition-all duration-500 ${
