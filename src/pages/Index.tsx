@@ -121,7 +121,7 @@ const Index = () => {
     const { title, description, icon } = getStatusMessage();
 
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 w-full">
         <TopNavigation />
         <AppHeader
           currentUser={profile?.email || appState.currentUser}
@@ -165,8 +165,8 @@ const Index = () => {
         huggingFaceManager={huggingFaceManager}
       />
 
-      {/* 컨트롤 섹션 - 안정화된 레이아웃 */}
-      <div className="w-full max-w-[1400px] mx-auto mt-4 mb-3 px-4">
+      {/* 컨트롤 섹션 - 전체 width 사용 */}
+      <div className="content-container mt-4 mb-3">
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="flex items-center justify-between flex-wrap gap-6">
             

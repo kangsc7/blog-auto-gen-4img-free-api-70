@@ -48,7 +48,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   deleteReferenceData,
 }) => {
   return (
-    <div className="w-full max-w-[1400px] mx-auto px-4 py-6">
+    <div className="content-container py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
         <div className="lg:col-span-4 w-full min-w-0">
           <LeftSidebar
