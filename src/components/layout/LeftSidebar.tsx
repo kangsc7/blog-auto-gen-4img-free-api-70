@@ -53,7 +53,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      const shouldBeSticky = scrollPosition > 300;
+      const shouldBeSticky = scrollPosition > 4000;
       setIsSticky(shouldBeSticky);
     };
 
@@ -67,7 +67,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         appState={appState}
         saveAppState={saveAppState}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
-        generateTopics={generationFunctions.generateTopics}
+        generateTopicsFromKeyword={generationFunctions.generateTopics}
         manualTopic={topicControls.manualTopic}
         setManualTopic={topicControls.setManualTopic}
         handleManualTopicAdd={topicControls.handleManualTopicAdd}
@@ -76,9 +76,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
       <ArticleGenerator
         appState={appState}
+        saveAppState={saveAppState}
         isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticle={generationFunctions.generateArticle}
+        generateArticleContent={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
+        selectTopic={topicControls.selectTopic}
       />
 
       {/* 이미지 생성 창들 - 원래 위치에서 스크롤시 따라다니기 */}
