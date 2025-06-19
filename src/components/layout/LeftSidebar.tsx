@@ -49,51 +49,65 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   deleteReferenceData,
 }) => {
   return (
-    <div className="w-full h-full">
-      <div className="space-y-6 p-1">
-        <TopicGenerator
-          appState={appState}
-          saveAppState={saveAppState}
-          isGeneratingTopics={generationStatus.isGeneratingTopics}
-          generateTopicsFromKeyword={generationFunctions.generateTopics}
-          manualTopic={topicControls.manualTopic}
-          setManualTopic={topicControls.setManualTopic}
-          handleManualTopicAdd={topicControls.handleManualTopicAdd}
-          preventDuplicates={preventDuplicates}
-        />
-
-        <ArticleGenerator
-          appState={appState}
-          saveAppState={saveAppState}
-          isGeneratingContent={generationStatus.isGeneratingContent}
-          generateArticleContent={generationFunctions.generateArticle}
-          stopArticleGeneration={generationFunctions.stopArticleGeneration}
-          selectTopic={topicControls.selectTopic}
-        />
-
-        <div className="space-y-4">
-          <ImageCreation
+    <div 
+      className="h-full"
+      style={{
+        width: '420px',
+        minWidth: '420px',
+        maxWidth: '420px'
+      }}
+    >
+      <div 
+        className="h-full overflow-y-auto pr-2"
+        style={{
+          maxHeight: 'calc(100vh - 8rem)'
+        }}
+      >
+        <div className="space-y-6 p-1">
+          <TopicGenerator
             appState={appState}
-            isGeneratingImage={generationStatus.isGeneratingImage}
-            isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-            createImagePrompt={generationFunctions.createImagePrompt}
-            generateDirectImage={generationFunctions.generateDirectImage}
-            copyToClipboard={utilityFunctions.copyToClipboard}
-            openWhisk={utilityFunctions.openWhisk}
+            saveAppState={saveAppState}
+            isGeneratingTopics={generationStatus.isGeneratingTopics}
+            generateTopicsFromKeyword={generationFunctions.generateTopics}
+            manualTopic={topicControls.manualTopic}
+            setManualTopic={topicControls.setManualTopic}
+            handleManualTopicAdd={topicControls.handleManualTopicAdd}
+            preventDuplicates={preventDuplicates}
           />
 
-          <HuggingFaceImageGenerator
-            huggingFaceApiKey={appState.huggingFaceApiKey}
-            isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
-            hasAccess={true}
+          <ArticleGenerator
+            appState={appState}
+            saveAppState={saveAppState}
+            isGeneratingContent={generationStatus.isGeneratingContent}
+            generateArticleContent={generationFunctions.generateArticle}
+            stopArticleGeneration={generationFunctions.stopArticleGeneration}
+            selectTopic={topicControls.selectTopic}
+          />
+
+          <div className="space-y-4">
+            <ImageCreation
+              appState={appState}
+              isGeneratingImage={generationStatus.isGeneratingImage}
+              isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+              createImagePrompt={generationFunctions.createImagePrompt}
+              generateDirectImage={generationFunctions.generateDirectImage}
+              copyToClipboard={utilityFunctions.copyToClipboard}
+              openWhisk={utilityFunctions.openWhisk}
+            />
+
+            <HuggingFaceImageGenerator
+              huggingFaceApiKey={appState.huggingFaceApiKey}
+              isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
+              hasAccess={true}
+            />
+          </div>
+
+          <ExternalReferenceInput
+            appState={appState}
+            saveAppState={saveAppState}
+            deleteReferenceData={deleteReferenceData}
           />
         </div>
-
-        <ExternalReferenceInput
-          appState={appState}
-          saveAppState={saveAppState}
-          deleteReferenceData={deleteReferenceData}
-        />
       </div>
     </div>
   );

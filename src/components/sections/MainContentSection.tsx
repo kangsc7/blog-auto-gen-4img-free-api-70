@@ -38,38 +38,58 @@ interface MainContentSectionProps {
 
 export const MainContentSection: React.FC<MainContentSectionProps> = (props) => {
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* 개선된 레이아웃 - 고정 비율과 안정적인 플렉스 시스템 */}
-      <div className="flex flex-col lg:flex-row gap-8 min-h-screen w-full">
-        
-        {/* 왼쪽 사이드바 - 고정 너비와 최적화된 스크롤 */}
-        <div className="lg:w-[400px] xl:w-[450px] 2xl:w-[500px] flex-shrink-0">
-          <div className="h-full max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-            <LeftSidebar
-              appState={props.appState}
-              saveAppState={props.saveAppState}
-              generationStatus={props.generationStatus}
-              generationFunctions={props.generationFunctions}
-              topicControls={props.topicControls}
-              utilityFunctions={props.utilityFunctions}
-              preventDuplicates={props.preventDuplicates}
-              deleteReferenceData={props.deleteReferenceData}
-            />
+    <div className="w-full max-w-none px-4 py-6">
+      {/* 완전히 안정적인 레이아웃 - 절대 크기와 고정 구조 */}
+      <div className="w-full min-h-screen">
+        <div 
+          className="w-full flex gap-6"
+          style={{
+            minHeight: 'calc(100vh - 12rem)',
+            maxWidth: '100vw'
+          }}
+        >
+          {/* 왼쪽 사이드바 - 절대 고정 크기 */}
+          <div 
+            className="flex-shrink-0 flex-grow-0"
+            style={{ 
+              width: '420px',
+              minWidth: '420px',
+              maxWidth: '420px'
+            }}
+          >
+            <div className="h-full w-full">
+              <LeftSidebar
+                appState={props.appState}
+                saveAppState={props.saveAppState}
+                generationStatus={props.generationStatus}
+                generationFunctions={props.generationFunctions}
+                topicControls={props.topicControls}
+                utilityFunctions={props.utilityFunctions}
+                preventDuplicates={props.preventDuplicates}
+                deleteReferenceData={props.deleteReferenceData}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* 오른쪽 콘텐츠 영역 - 남은 공간 활용 */}
-        <div className="flex-1 min-w-0">
-          <div className="h-full w-full">
-            <RightContent
-              appState={props.appState}
-              saveAppState={props.saveAppState}
-              selectTopic={props.topicControls.selectTopic}
-              copyToClipboard={props.utilityFunctions.copyToClipboard}
-              downloadHTML={props.utilityFunctions.downloadHTML}
-              isGeneratingContent={props.generationStatus.isGeneratingContent}
-              onTopicConfirm={props.handleTopicConfirm}
-            />
+          {/* 오른쪽 콘텐츠 영역 - 남은 공간 완전 활용 */}
+          <div 
+            className="flex-1 min-w-0"
+            style={{
+              minWidth: 'calc(100vw - 460px)', // 420px + 40px gap/padding
+              width: 'calc(100vw - 460px)'
+            }}
+          >
+            <div className="h-full w-full">
+              <RightContent
+                appState={props.appState}
+                saveAppState={props.saveAppState}
+                selectTopic={props.topicControls.selectTopic}
+                copyToClipboard={props.utilityFunctions.copyToClipboard}
+                downloadHTML={props.utilityFunctions.downloadHTML}
+                isGeneratingContent={props.generationStatus.isGeneratingContent}
+                onTopicConfirm={props.handleTopicConfirm}
+              />
+            </div>
           </div>
         </div>
       </div>
