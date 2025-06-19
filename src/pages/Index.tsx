@@ -53,7 +53,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <TopNavigation />
+      <TopNavigation 
+        resetAppState={handleResetApp}
+        preventDuplicates={preventDuplicates}
+        setPreventDuplicates={setPreventDuplicates}
+        canUseFeatures={true}
+      />
 
       {/* API 키 설정 섹션 */}
       <RefactoredApiKeysSection
