@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -204,14 +203,14 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사 - SCRIPT 태그 제거
+  // HTML 복사 - 복사할 때만 SCRIPT 태그 제거 (편집기 표시에는 영향 없음)
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    // SCRIPT 태그와 JavaScript 코드 제거
+    // 복사할 때만 SCRIPT 태그와 JavaScript 코드 제거
     const cleanedContent = editorContent
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/on\w+="[^"]*"/gi, '')
