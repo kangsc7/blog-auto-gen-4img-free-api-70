@@ -1,5 +1,74 @@
-
 import { generateMetaDescription } from './pixabay';
+
+export const getHtmlTemplate = (
+  topic: string,
+  content: string,
+  section1: string,
+  section2: string,
+  section3: string
+): string => {
+  return `
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${topic}</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fafafa;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            font-size: 1.6em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        p {
+            margin-bottom: 16px;
+            text-align: justify;
+        }
+        p[data-ke-size="size16"] {
+            margin: 16px 0;
+            line-height: 16px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        ${content}
+    </div>
+</body>
+</html>`;
+};
 
 export const createBlogHtmlTemplate = async (
   title: string,
