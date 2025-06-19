@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -89,6 +88,77 @@ const generateNaturalContext = (naturalKeyword: string, originalKeyword: string)
     REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
     GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
   };
+};
+
+// 블로그 글 생성 프롬프트 - 절대 삭제/변경 금지
+export const createBlogPostPrompt = (
+  topic: string, 
+  keyword: string,
+  colorTheme: string,
+  referenceLink?: string,
+  referenceSentence?: string
+) => {
+  console.log('🎯 블로그 글 프롬프트 생성:', { topic, keyword, colorTheme, hasReferenceLink: !!referenceLink, hasReferenceSentence: !!referenceSentence });
+  
+  const prompt = `다음 조건으로 블로그 글을 작성해주세요:
+
+🎯 **주제**: ${topic}
+🔑 **핵심 키워드**: ${keyword}
+🎨 **컬러테마**: ${colorTheme}
+${referenceLink ? `🔗 **참조 링크**: ${referenceLink}` : ''}
+${referenceSentence ? `📝 **참조 문장**: ${referenceSentence}` : ''}
+
+📋 **필수 작성 지침 (절대 변경 금지)**:
+
+1. **글자수**: 각 소제목별 내용은 190자에서 250자 사이로 작성
+2. **키워드 강조**: "${keyword}" 키워드를 <strong> 태그로 정확히 1번만 강조
+3. **컬러테마**: 선택된 컬러테마 "${colorTheme}"를 모든 디자인 요소에 정확히 적용
+4. **HTML 구조**: 완전한 HTML 문서로 작성 (DOCTYPE, head, body 포함)
+5. **반응형 디자인**: 모바일과 데스크톱 모두 호환되는 CSS 적용
+
+🎨 **HTML 템플릿 구조**:
+- DOCTYPE html5 선언
+- UTF-8 인코딩 및 viewport 메타태그
+- 반응형 CSS 스타일 포함
+- 티스토리 호환 HTML 구조
+
+📝 **본문 구성**:
+1. **주제 제목**: <h1> 태그로 시작, 밑줄 없이, 검은색으로 표시
+2. **메타 설명**: 주제 바로 아래에 내용을 요약한 서술형, 공감형 메타 방식 한 문단 추가
+3. **시각화 요약 카드**: 티스토리 호환 시각화 요약 카드 필수 삽입
+4. **외부 링크 섹션**: ${referenceLink ? `시각화 카드 바로 아래에 다음 형식으로 삽입:
+   <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
+     <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
+     <a style="color: ${colorTheme}; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
+       <b>👉 ${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</b>
+     </a>
+   </p>` : '외부 링크 정보가 없으므로 생략'}
+5. **소제목들**: 각각 190-250자 내용으로 구성
+6. **주의사항 카드**: 필수 삽입
+
+🎯 **태그 생성 규칙**:
+- 접두사 없이 핵심 키워드만 포함
+- 쉼표로 구분하여 5-8개 생성
+- 예: "프로그래밍, 웹개발, 자바스크립트, 리액트, 개발자"
+
+⚠️ **주의사항**:
+- 모든 스타일은 인라인 CSS로 적용
+- 외부 CSS/JS 파일 참조 금지
+- 티스토리 에디터 호환성 우선
+
+📊 **품질 검증 항목**:
+✅ 키워드 "${keyword}" <strong> 태그로 1회 강조
+✅ 각 소제목별 190-250자 준수
+✅ 컬러테마 "${colorTheme}" 일관성 있게 적용
+✅ 시각화 요약 카드 포함
+✅ 주의사항 카드 포함
+✅ 완전한 HTML 구조
+${referenceLink ? '✅ 외부 링크 섹션 포함' : ''}
+
+지금 바로 위 조건을 모두 충족하는 완전한 HTML 블로그 글을 작성해주세요.`;
+
+  console.log('✅ 블로그 글 프롬프트 생성 완료:', prompt.length + '자');
+  return prompt;
 };
 
 export const getEnhancedArticlePrompt = async ({
@@ -384,7 +454,7 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 
 **절대 금지**:
 ❌ "2023년 디지털플랫폼..." (2023년 사용 금지)
-❌ "2024년 디지털플랫폼..." (2024년 사용 금지)
+❌ "2024년 �지털플랫폼..." (2024년 사용 금지)
 ❌ "년 디지털플랫폼..." (숫자 없는 년)
 ❌ "디지털플랫폼 ${finalYear}년..." (년도가 뒤에 위치)
 

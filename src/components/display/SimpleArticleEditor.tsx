@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,9 @@ const removeScriptTags = (htmlContent: string): string => {
   console.log('✅ Script 태그 제거 완료');
   return cleanedContent;
 };
+
+// 스크롤 위치 저장/복원을 위한 키
+const SCROLL_POSITION_KEY = 'blog_editor_scroll_position';
 
 export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   generatedContent,
@@ -60,6 +64,31 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     } catch (error) {
       console.error('localStorage 저장 실패:', error);
       return false;
+    }
+  }, []);
+
+  // 스크롤 위치 저장
+  const saveScrollPosition = useCallback(() => {
+    try {
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      localStorage.setItem(SCROLL_POSITION_KEY, scrollPosition.toString());
+      console.log('📍 스크롤 위치 저장:', scrollPosition);
+    } catch (error) {
+      console.error('스크롤 위치 저장 실패:', error);
+    }
+  }, []);
+
+  // 스크롤 위치 복원
+  const restoreScrollPosition = useCallback(() => {
+    try {
+      const savedPosition = localStorage.getItem(SCROLL_POSITION_KEY);
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        window.scrollTo(0, position);
+        console.log('📍 스크롤 위치 복원:', position);
+      }
+    } catch (error) {
+      console.error('스크롤 위치 복원 실패:', error);
     }
   }, []);
   
@@ -204,6 +233,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       
       setTimeout(() => forceDOMSync(savedContent), 100);
     }
+
+    // 페이지 로드 시 스크롤 위치 복원
+    setTimeout(restoreScrollPosition, 100);
   }, []);
   
   useEffect(() => {
@@ -258,7 +290,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         if (finalSuccess) {
           toast({
             title: "✅ 블로그 글 로드 완료",
-            description: "새로 생성된 글이 편집기에 성공적으로 적용되었습니다. 이미지 클릭 시 티스토리용 복사가 됩니다.",
+            description: "새로 생성된 글이 편집기에 성공적으로 적용되었습니다.",
             duration: 3000
           });
         } else {
@@ -326,6 +358,60 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       }, 2000);
     }
   }, [isGeneratingContent, performAutoSave]);
+
+  // 붙여넣기 이벤트 처리 (이미지 포함)
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    
+    // 이미지 파일이 있는지 확인
+    const items = Array.from(clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    
+    if (imageItem) {
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (file) {
+        console.log('📎 이미지 붙여넣기 감지:', file.name || 'clipboard-image');
+        
+        // 이미지를 Data URL로 변환하여 편집기에 삽입
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const dataUrl = event.target?.result as string;
+          if (dataUrl && editorRef.current) {
+            // 현재 커서 위치에 이미지 삽입
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const img = document.createElement('img');
+              img.src = dataUrl;
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              img.style.cursor = 'pointer';
+              img.title = '클릭하면 이미지가 클립보드에 복사됩니다';
+              
+              range.deleteContents();
+              range.insertNode(img);
+              
+              // 이미지 클릭 이벤트 추가
+              img.addEventListener('click', () => {
+                handleImageClick(dataUrl, 'Pasted image');
+              });
+              
+              // 편집 내용 업데이트
+              handleInput();
+              
+              toast({
+                title: "📎 이미지 붙여넣기 완료",
+                description: "이미지가 편집기에 추가되었습니다. 클릭하면 복사할 수 있습니다.",
+                duration: 3000
+              });
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  }, [handleImageClick, handleInput, toast]);
   
   useEffect(() => {
     const handleWindowFocus = () => {
@@ -339,6 +425,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         setContentVersion(savedVersion);
         forceDOMSync(savedContent);
       }
+
+      // 스크롤 위치 복원
+      restoreScrollPosition();
     };
 
     const handleWindowBlur = () => {
@@ -349,16 +438,21 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         safeLocalStorageSet(STORAGE_KEY, editorContent);
         safeLocalStorageSet(VERSION_KEY, newVersion.toString());
       }
+
+      // 스크롤 위치 저장
+      saveScrollPosition();
     };
 
     window.addEventListener('focus', handleWindowFocus);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('scroll', saveScrollPosition);
     
     return () => {
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('scroll', saveScrollPosition);
     };
-  }, [editorContent, safeLocalStorageGet, safeLocalStorageSet, forceDOMSync, contentVersion]);
+  }, [editorContent, safeLocalStorageGet, safeLocalStorageSet, forceDOMSync, contentVersion, saveScrollPosition, restoreScrollPosition]);
   
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -367,6 +461,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         safeLocalStorageSet(STORAGE_KEY, editorContent);
         safeLocalStorageSet(VERSION_KEY, (contentVersion + 1).toString());
       }
+      saveScrollPosition();
     };
     
     const handleVisibilityChange = () => {
@@ -376,6 +471,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         setContentVersion(newVersion);
         safeLocalStorageSet(STORAGE_KEY, editorContent);
         safeLocalStorageSet(VERSION_KEY, newVersion.toString());
+        saveScrollPosition();
       }
     };
     
@@ -390,7 +486,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         if (ref.current) clearTimeout(ref.current);
       });
     };
-  }, [editorContent, safeLocalStorageSet, contentVersion]);
+  }, [editorContent, safeLocalStorageSet, contentVersion, saveScrollPosition]);
   
   useEffect(() => {
     const handleReset = () => {
@@ -427,8 +523,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     
     navigator.clipboard.writeText(cleanedContent).then(() => {
       toast({ 
-        title: "HTML 복사 완료 (Script 태그 제거됨)", 
-        description: "Script 태그가 제거된 HTML 코드가 클립보드에 복사되었습니다. 티스토리 코드 편집창에 안전하게 붙여넣으세요." 
+        title: "HTML 복사 완료", 
+        description: "Script 태그가 제거된 HTML 코드가 클립보드에 복사되었습니다." 
       });
       console.log('✅ Script 태그 제거된 HTML 복사 완료');
     }).catch(() => {
@@ -457,7 +553,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast({ title: "다운로드 완료 (Script 태그 제거됨)", description: "Script 태그가 제거된 HTML 파일이 다운로드되었습니다." });
+    toast({ title: "다운로드 완료", description: "Script 태그가 제거된 HTML 파일이 다운로드되었습니다." });
     console.log('✅ Script 태그 제거된 HTML 다운로드 완료');
   }, [editorContent, selectedTopic, toast]);
 
@@ -504,7 +600,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (티스토리 이미지 복사 지원)
+              블로그 글 편집기
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
               {!isContentVisible && editorContent && <span className="ml-2 text-xs text-blue-500">🔄 렌더링 중</span>}
               {showDebugInfo && (
@@ -532,7 +628,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     className="text-green-600 border-green-600 hover:bg-green-50"
                   >
                     <ClipboardCopy className="h-4 w-4 mr-1" />
-                    HTML 복사 (Script 제거)
+                    HTML 복사
                   </Button>
                   <Button 
                     onClick={handleDownloadHTML}
@@ -541,7 +637,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     className="text-blue-600 border-blue-600 hover:bg-blue-50"
                   >
                     <Download className="h-4 w-4 mr-1" />
-                    다운로드 (Script 제거)
+                    다운로드
                   </Button>
                 </>
               )}
@@ -566,11 +662,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (Script 태그 제거 지원)</p>
-                <p>아래 내용을 자유롭게 수정하세요. <strong>편집기에는 원본이 표시되지만, HTML 복사/다운로드 시 Script 태그가 자동 제거됩니다.</strong></p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
+                <p>아래 내용을 자유롭게 수정하세요. 이미지를 복사하여 붙여넣을 수도 있습니다.</p>
                 <div className="mt-2 text-xs bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
                   <p className="font-bold text-yellow-800">🎯 티스토리 사용법:</p>
-                  <p>1. HTML 복사 → 티스토리 코드 편집창 붙여넣기 (Script 태그 자동 제거됨)</p>
+                  <p>1. HTML 복사 → 티스토리 코드 편집창 붙여넣기</p>
                   <p>2. 일반 모드로 전환 → 이미지 클릭 → Ctrl+V로 실제 이미지 파일 붙여넣기</p>
                 </div>
                 {isUserEditing && (
@@ -585,6 +681,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                 contentEditable={true}
                 className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent prose max-w-none editor-transition editor-content"
                 onInput={handleInput}
+                onPaste={handlePaste}
                 suppressContentEditableWarning={true}
                 style={{
                   lineHeight: '1.6',
