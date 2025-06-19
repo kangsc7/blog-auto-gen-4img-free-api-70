@@ -103,135 +103,162 @@ export const getEnhancedArticlePrompt = async ({
         - 모든 문단은 <p> 태그로 감싸기
         - 각 <p> 태그 사이에는 공백 줄바꿈 추가
 
-        **🚨 시각화 요약 카드 필수 삽입 - 정확한 HTML 적용 🚨**
-        - 1번째 섹션 끝에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요 (컬러테마 연동):
+        **🚨 첨부 이미지와 동일한 시각화 요약 카드 필수 삽입 🚨**
+        - 4번째와 5번째 섹션 사이에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요:
         
         <style>
-        .single-summary-card-container {
+        .visual-summary-card {
+            max-width: 600px;
+            margin: 30px auto;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 3px solid ${colors.primary};
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             font-family: 'Noto Sans KR', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 25px 15px;
-            background-color: ${colors.secondary};
-            margin: 25px 0;
         }
-        .single-summary-card {
-            width: 100%;
-            max-width: 700px;
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid ${colors.primary};
-            box-sizing: border-box;
-        }
-        .single-summary-card .card-header {
+        .visual-summary-card .card-title {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid ${colors.primary};
+            margin-bottom: 20px;
             padding-bottom: 15px;
+            border-bottom: 2px solid ${colors.primary};
+        }
+        .visual-summary-card .card-title .icon {
+            font-size: 32px;
+            margin-right: 15px;
+            background: ${colors.primary};
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .visual-summary-card .card-title h3 {
+            color: ${colors.primary};
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            background: linear-gradient(45deg, #d4bb8a, #f4e5c1);
+            padding: 8px 16px;
+            border-radius: 15px;
+            border: 1px solid #c4975a;
+        }
+        .visual-summary-card .card-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 15px;
         }
-        .single-summary-card .card-header-icon {
-            font-size: 38px;
-            color: ${colors.primary};
-            margin-right: 16px;
-        }
-        .single-summary-card .card-header h3 {
-            font-size: 28px;
-            color: ${colors.primary};
-            margin: 0;
-            line-height: 1.3;
-            font-weight: 700;
-        }
-        .single-summary-card .card-content {
-            flex-grow: 1;
+        .visual-summary-card .info-row {
             display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            font-size: 18px;
-            line-height: 1.7;
-            color: #333;
-        }
-        .single-summary-card .card-content .section {
             margin-bottom: 12px;
-            line-height: 1.7;
+            align-items: flex-start;
         }
-        .single-summary-card .card-content .section:last-child {
+        .visual-summary-card .info-row:last-child {
             margin-bottom: 0;
         }
-        .single-summary-card .card-content strong {
-            color: ${colors.primary};
-            font-weight: 600;
-        }
-        .single-summary-card .card-content .highlight {
-            background-color: ${colors.textHighlight};
-            padding: 3px 8px;
-            border-radius: 4px;
+        .visual-summary-card .info-label {
             font-weight: bold;
+            color: #333;
+            min-width: 80px;
+            margin-right: 10px;
+            font-size: 14px;
         }
-        .single-summary-card .card-content .formula {
-            background-color: ${colors.highlight};
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.95em;
+        .visual-summary-card .info-value {
+            color: #555;
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .visual-summary-card .highlight-box {
+            background: ${colors.textHighlight};
+            padding: 10px 15px;
+            border-radius: 8px;
             text-align: center;
-            margin-top: 8px;
+            font-weight: bold;
             color: ${colors.primary};
+            margin-top: 15px;
+            border: 2px solid ${colors.primary};
         }
-        .single-summary-card .card-footer {
-            font-size: 15px;
-            color: #777;
+        .visual-summary-card .footer-text {
             text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 15px;
             padding-top: 15px;
             border-top: 1px dashed ${colors.primary};
-            margin-top: auto;
         }
         @media (max-width: 768px) {
-            .single-summary-card-container { padding: 20px 10px; }
-            .single-summary-card { padding: 22px; border-radius: 10px; }
-            .single-summary-card .card-header-icon { font-size: 32px; margin-right: 12px; }
-            .single-summary-card .card-header h3 { font-size: 24px; }
-            .single-summary-card .card-content { font-size: 16px; line-height: 1.6; }
-            .single-summary-card .card-content .section { margin-bottom: 10px; line-height: 1.6; }
-            .single-summary-card .card-content .highlight { padding: 2px 5px; }
-            .single-summary-card .card-content .formula { padding: 7px 10px; font-size: 0.9em; }
-            .single-summary-card .card-footer { font-size: 14px; padding-top: 12px; }
-        }
-        @media (max-width: 480px) {
-            .single-summary-card { padding: 18px; border-radius: 8px; }
-            .single-summary-card .card-header-icon { font-size: 28px; margin-right: 10px; }
-            .single-summary-card .card-header h3 { font-size: 20px; }
-            .single-summary-card .card-content { font-size: 15px; line-height: 1.5; }
-            .single-summary-card .card-content .section { margin-bottom: 8px; line-height: 1.5; }
-            .single-summary-card .card-content .formula { padding: 6px 8px; font-size: 0.85em; }
-            .single-summary-card .card-footer { font-size: 13px; padding-top: 10px; }
+            .visual-summary-card {
+                margin: 20px 10px;
+                padding: 20px;
+            }
+            .visual-summary-card .card-title .icon {
+                font-size: 28px;
+                width: 45px;
+                height: 45px;
+            }
+            .visual-summary-card .card-title h3 {
+                font-size: 18px;
+            }
+            .visual-summary-card .info-label {
+                min-width: 70px;
+                font-size: 13px;
+            }
+            .visual-summary-card .info-value {
+                font-size: 13px;
+            }
         }
         </style>
         
-        <div class="single-summary-card-container">
-            <div class="single-summary-card">
-                <div class="card-header"><span class="card-header-icon">💡</span>
-                    <h3 data-ke-size="size23">${topic} 핵심 요약</h3>
-                </div>
-                <div class="card-content">
-                    <div class="section"><b>대상:</b> <span class="highlight">[구체적인 대상]</span></div>
-                    <div class="section"><b>혜택:</b> <span class="highlight">[핵심 혜택]</span></div>
-                    <div class="section"><b>신청방법:</b>
-                        <div class="formula">[간단한 신청 절차]</div>
-                    </div>
-                    <div class="section"><b>주의사항:</b> <span class="highlight">[중요한 주의사항]</span></div>
-                </div>
-                <div class="card-footer">💡 더 자세한 정보는 아래 내용을 확인하세요</div>
+        <div class="visual-summary-card">
+            <div class="card-title">
+                <div class="icon">💡</div>
+                <h3>${topic} 핵심 요약</h3>
             </div>
+            <div class="card-content">
+                <div class="info-row">
+                    <div class="info-label">지원 대상:</div>
+                    <div class="info-value">[구체적인 대상과 자격 조건]</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">지원 금액:</div>
+                    <div class="info-value">[지원 금액과 혜택 내용]</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">신청 방법:</div>
+                    <div class="info-value">[온라인 또는 오프라인 신청 방법]</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">필요 서류:</div>
+                    <div class="info-value">[신청에 필요한 서류 목록]</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">신청 기간:</div>
+                    <div class="info-value">[신청 기간과 중요 일정]</div>
+                </div>
+                <div class="highlight-box">
+                    성공적인 신청을 위한 필수 체크리스트!
+                </div>
+            </div>
+            <div class="footer-text">💡 더 자세한 정보는 아래 내용을 확인하세요</div>
         </div>
 
+        **🚨 "더 많은 정보" 참조 링크 스타일 🚨**
+        ${referenceLink ? `
+        - 글 하단에 다음과 같은 스타일로 참조 링크를 포함하세요:
+        <div style="text-align: center; margin: 40px 0; padding: 25px; background: linear-gradient(135deg, ${colors.secondary}, #ffffff); border-radius: 15px; border: 2px solid ${colors.primary};">
+          <h4 style="color: ${colors.primary}; margin-bottom: 15px; font-size: 18px;">더 많은 정보를 원하시나요?</h4>
+          <a href="${referenceLink}" target="_blank" rel="noopener" style="display: inline-block; background: ${colors.primary}; color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; transition: all 0.3s ease;">
+            👉 워드프레스 꿀팁 더 보러가기
+          </a>
+        </div>` : ''}
+
         **🚨 주의사항 카드 필수 삽입 🚨**
-        - 4번째 섹션 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
+        - 마지막 섹션 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
         <div style="background: linear-gradient(135deg, ${colors.warnBg}, #fff3cd); border: 2px solid ${colors.warnBorder}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
           <h4 style="color: ${colors.warnBorder}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
           <ul style="color: #856404; line-height: 1.6; margin: 0; padding-left: 20px;">
@@ -318,7 +345,7 @@ ${htmlTemplate}
         - **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
         - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
         - **H2, H3 소제목에 컬러테마 스타일 필수 적용**
-        - **시각화 요약 카드 정확한 HTML로 필수 포함**
+        - **첨부 이미지와 동일한 시각화 요약 카드 정확한 HTML로 필수 포함**
         - **주의카드, 테이블 필수 포함**
         - **외부 참조 링크와 문장 필수 적용**
         - **150자 초과 시 마침표에서 줄바꿈 및 공백 줄 추가 필수**
