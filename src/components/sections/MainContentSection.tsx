@@ -57,6 +57,8 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             topicControls={topicControls}
             utilityFunctions={utilityFunctions}
             preventDuplicates={preventDuplicates}
+            huggingFaceApiKey={appState.huggingFaceApiKey}
+            isHuggingFaceApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
           />
         </div>
         <div className="lg:col-span-8">
