@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy, RefreshCw } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CleanArticleEditorProps {
@@ -24,6 +24,30 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [contentSyncKey, setContentSyncKey] = useState(0);
+
+  // 콘텐츠 강제 동기화 함수
+  const forceSyncContent = (content: string) => {
+    console.log('🔄 콘텐츠 강제 동기화 시작:', content.length + '자');
+    
+    setEditorContent(content);
+    
+    if (editorRef.current) {
+      editorRef.current.innerHTML = content;
+      setTimeout(() => addImageClickHandlers(), 300);
+    }
+    
+    // 영구 저장
+    try {
+      localStorage.setItem(UNIFIED_EDITOR_KEY, content);
+      console.log('✅ 강제 동기화 저장 완료:', content.length + '자');
+    } catch (error) {
+      console.error('❌ 강제 동기화 저장 실패:', error);
+    }
+    
+    onContentChange(content);
+    setContentSyncKey(prev => prev + 1);
+  };
 
   // 통합된 콘텐츠 로드 함수
   const loadUnifiedContent = () => {
@@ -33,14 +57,22 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         hasLocal: !!savedContent, 
         hasGenerated: !!generatedContent,
         localLength: savedContent?.length || 0,
-        generatedLength: generatedContent?.length || 0
+        generatedLength: generatedContent?.length || 0,
+        isGenerating: isGeneratingContent
       });
       
-      // 우선순위: 생성된 새 콘텐츠 > 저장된 콘텐츠
-      const finalContent = generatedContent || savedContent || '';
+      // 생성 중이 아니고 새로운 콘텐츠가 있으면 우선 적용
+      if (!isGeneratingContent && generatedContent && generatedContent.length > 100) {
+        console.log('🆕 새 생성 콘텐츠 우선 적용');
+        forceSyncContent(generatedContent);
+        return true;
+      }
+      
+      // 기존 저장된 콘텐츠 로드
+      const finalContent = savedContent || '';
       
       if (finalContent && finalContent !== editorContent) {
-        console.log('✅ 편집기 콘텐츠 업데이트:', finalContent.length + '자');
+        console.log('💾 기존 저장 콘텐츠 로드:', finalContent.length + '자');
         setEditorContent(finalContent);
         
         if (editorRef.current) {
@@ -67,23 +99,18 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 새 생성 콘텐츠 감지 및 적용
+  // 새 생성 콘텐츠 감지 및 즉시 적용 - 생성 완료 시점 감지
   useEffect(() => {
-    if (generatedContent && !isGeneratingContent && generatedContent !== editorContent) {
-      console.log('📝 새 생성 콘텐츠 감지 및 적용:', generatedContent.length + '자');
+    // 생성이 완료되고 새로운 콘텐츠가 있을 때
+    if (!isGeneratingContent && generatedContent && generatedContent.length > 100) {
+      console.log('🎯 생성 완료 감지 - 새 콘텐츠 즉시 적용:', generatedContent.length + '자');
       
-      setEditorContent(generatedContent);
-      
-      if (editorRef.current) {
-        editorRef.current.innerHTML = generatedContent;
-        setTimeout(() => addImageClickHandlers(), 300);
-      }
-      
-      // 통합 저장
-      savePermanently(generatedContent);
-      onContentChange(generatedContent);
+      // 즉시 강제 동기화
+      setTimeout(() => {
+        forceSyncContent(generatedContent);
+      }, 100);
     }
-  }, [generatedContent, isGeneratingContent]);
+  }, [isGeneratingContent, generatedContent]);
 
   // 편집기 콘텐츠 업데이트 이벤트 리스너
   useEffect(() => {
@@ -92,14 +119,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       console.log('📢 편집기 콘텐츠 업데이트 이벤트 수신:', newContent.length + '자');
       
       if (newContent && newContent !== editorContent) {
-        setEditorContent(newContent);
-        
-        if (editorRef.current) {
-          editorRef.current.innerHTML = newContent;
-          setTimeout(() => addImageClickHandlers(), 300);
-        }
-        
-        onContentChange(newContent);
+        forceSyncContent(newContent);
       }
     };
     
@@ -107,7 +127,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     return () => {
       window.removeEventListener('editor-content-updated', handleContentUpdate as EventListener);
     };
-  }, [editorContent, onContentChange]);
+  }, [editorContent]);
 
   // 통합 영구 저장 함수
   const savePermanently = (content: string) => {
@@ -372,8 +392,33 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           {isGeneratingContent ? (
             <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
               <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
-              <p className="font-semibold text-lg text-blue-600">컬러테마 + 시각카드 + 이미지 추가하여 글을 생성하고 있습니다...</p>
+              <p className="font-semibold text-lg text-blue-600 mb-2">
+                <span 
+                  className="text-purple-600 font-bold text-xl animate-pulse"
+                  style={{
+                    background: 'linear-gradient(45deg, #8B5CF6, #EC4899, #06B6D4)',
+                    backgroundSize: '200% 200%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    animation: 'wave 2s ease-in-out infinite, gradient 3s ease-in-out infinite'
+                  }}
+                >
+                  파코월드
+                </span>
+                가 매력적인 블로그 글을 생성 중입니다...
+              </p>
               <p className="text-sm">잠시만 기다려주세요.</p>
+              <style jsx>{`
+                @keyframes wave {
+                  0%, 100% { transform: translateY(0px); }
+                  50% { transform: translateY(-10px); }
+                }
+                @keyframes gradient {
+                  0% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+                  100% { background-position: 0% 50%; }
+                }
+              `}</style>
             </div>
           ) : editorContent ? (
             <div className="space-y-4 w-full">
@@ -401,6 +446,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                   overflowWrap: 'break-word',
                   minWidth: '0'
                 }}
+                key={contentSyncKey}
               />
             </div>
           ) : (
