@@ -42,13 +42,16 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
     console.log('TopicConfirmDialog handleConfirm 시작:', topic);
     
     try {
-      // 즉시 다이얼로그 닫기 위해 onCancel 먼저 호출
+      // 즉시 다이얼로그 닫기
       onCancel();
+      
+      // 처리 상태 초기화
+      setIsProcessing(false);
       
       // 약간의 지연 후 onConfirm 실행 (UI 업데이트 보장)
       setTimeout(() => {
         onConfirm();
-      }, 50);
+      }, 100);
       
     } catch (error) {
       console.error('handleConfirm 오류:', error);
@@ -85,7 +88,7 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
         handleCancel();
       }
     }}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md" onClick={(e) => e.stopPropagation()}>
         <AlertDialogHeader className="text-center">
           <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
             <FileText className="h-8 w-8 text-blue-600" />

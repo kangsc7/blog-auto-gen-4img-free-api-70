@@ -56,10 +56,11 @@ export const useTopicGenerator = (
     setIsGeneratingTopics(true);
     try {
       const currentDate = new Date();
-      const currentYear = currentDate.getFullYear(); // 2025
+      const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1;
+      const requestedCount = appState.topicCount || 10;
 
-      const prompt = `"${keyword}"를 키워드로 하여 ${currentYear}년 ${currentMonth}월 현재 기준으로 블로그 포스팅에 적합한 주제 10개를 생성해주세요.
+      const prompt = `"${keyword}"를 키워드로 하여 ${currentYear}년 ${currentMonth}월 현재 기준으로 블로그 포스팅에 적합한 주제를 정확히 ${requestedCount}개만 생성해주세요.
 
 생성 규칙:
 1. 각 주제는 완전한 문장 형태로 15-25자 내외
@@ -67,9 +68,11 @@ export const useTopicGenerator = (
 3. ${currentYear}년 최신 트렌드와 정보를 반영
 4. 실용적이고 검색 가치가 높은 내용
 5. 독자의 관심을 끌 수 있는 매력적인 제목
+6. **중요: 정확히 ${requestedCount}개의 주제만 생성해야 함**
 
 형식:
 각 주제는 번호나 기호 없이 제목만 작성하고, 한 줄에 하나씩 작성해주세요.
+절대로 ${requestedCount}개를 초과하거나 미달하지 마세요.
 
 예시 형태:
 "${keyword} 완벽 가이드: ${currentYear}년 최신 정보 총정리"
@@ -78,7 +81,8 @@ export const useTopicGenerator = (
 주의사항:
 - 정치적, 종교적, 논란의 여지가 있는 주제 제외
 - 과도한 상업적 표현 자제
-- 각 주제가 서로 다른 관점에서 접근하도록 구성`;
+- 각 주제가 서로 다른 관점에서 접근하도록 구성
+- 반드시 ${requestedCount}개 이하로 생성`;
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
@@ -107,13 +111,14 @@ export const useTopicGenerator = (
       
       const rawTopics = data.candidates[0].content.parts[0].text;
       
-      // 주제 파싱 및 정리
+      // 주제 파싱 및 정리 - 정확한 개수만 반환
       const topics = rawTopics
         .split('\n')
         .map(line => cleanTopic(line))
         .filter(topic => topic.length > 0 && isValidTopic(topic))
-        .slice(0, 10);
+        .slice(0, requestedCount); // 요청된 개수만큼만 자르기
 
+      console.log(`요청된 주제 수: ${requestedCount}, 생성된 주제 수: ${topics.length}`);
       console.log('정리된 주제들:', topics);
 
       if (topics.length === 0) {

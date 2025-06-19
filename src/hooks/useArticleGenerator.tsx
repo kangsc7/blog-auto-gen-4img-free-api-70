@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -54,8 +55,8 @@ export const useArticleGenerator = (
       }
 
       toast({ 
-        title: "1단계: 웹 정보 수집 중...", 
-        description: "키워드 관련 최신 정보를 크롤링하고 있습니다." 
+        title: "1단계: AI 글 작성 중...", 
+        description: "최적화된 알고리즘으로 빠르게 글을 생성하고 있습니다." 
       });
 
       const randomTheme = colorThemes[Math.floor(Math.random() * colorThemes.length)];
@@ -74,11 +75,6 @@ export const useArticleGenerator = (
       if (cancelArticleGeneration.current) {
         throw new Error("사용자에 의해 중단되었습니다.");
       }
-
-      toast({ 
-        title: "2단계: AI 글 작성 중...", 
-        description: "최적화된 알고리즘으로 빠르게 글을 생성하고 있습니다." 
-      });
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
 
@@ -145,8 +141,8 @@ export const useArticleGenerator = (
 
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
-          title: "3단계: 이미지 추가 중...", 
-          description: "성능 최적화로 빠르게 이미지를 추가하고 있습니다." 
+          title: "2단계: 이미지 추가 중...", 
+          description: "5개의 이미지를 각 섹션에 추가하고 있습니다." 
         });
         
         try {

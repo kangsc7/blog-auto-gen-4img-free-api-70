@@ -1,7 +1,7 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
-import { WebCrawlerService } from './webCrawler';
 
 interface EnhancedArticlePromptParams {
   topic: string;
@@ -64,17 +64,11 @@ export const getEnhancedArticlePrompt = async ({
   const htmlTemplate = getHtmlTemplate(colors, topic, naturalKeyword, refLink, referenceSentence, selectedHeadings);
   const currentYear = new Date().getFullYear();
 
-  const crawledInfo = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
-
   return `
         당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
         주제: "${topic}"
         입력 키워드: "${keyword}"
         자연스러운 키워드: "${naturalKeyword}"
-
-        === 최신 웹 크롤링 정보 ===
-        ${crawledInfo}
-        === 크롤링 정보 끝 ===
 
         === 동적 생성된 소제목 정보 (40자 제한 적용) ===
         다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다 (각 40자 이내):
@@ -85,6 +79,8 @@ export const getEnhancedArticlePrompt = async ({
 
         **🚨 각 섹션 글자수와 가독성 - 최우선 준수 사항 🚨**
         **각 H2 섹션의 본문은 반드시 220자에서 270자 사이로 작성해야 합니다.**
+        - 이 글자수 제한은 절대적이며, 270자를 초과하거나 220자 미만이 되어서는 안 됩니다
+        - 각 섹션 작성 후 글자수를 카운트하여 정확히 220-270자 범위 내인지 확인하세요
         - 150자를 넘어서면 2문장의 마침표(.) 부분에서 반드시 줄바꿈
         - 줄바꿈 후에는 반드시 공백 줄 하나 추가: <p style="height: 20px;">&nbsp;</p>
         - 모든 문단은 <p> 태그로 감싸기
@@ -118,13 +114,10 @@ export const getEnhancedArticlePrompt = async ({
         - 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
         - 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
 
-        위의 크롤링된 최신 정보와 동적 생성된 소제목을 반드시 활용하여, 독자에게 실질적인 도움을 주는 완벽한 블로그 게시물을 작성해주세요.
-
         다음 지침에 따라 작성해주세요:
         - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요
-        - **크롤링 정보 우선 활용**: 위에서 제공된 최신 웹 정보를 글의 근거로 최우선 활용해주세요
         - 대상 독자: 한국어 사용자
-        - **시의성**: 크롤링된 최신 정보를 반영하여 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
+        - **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
         - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
         - 가독성: 220-270자 범위 내에서 150자마다 2-3문장 끝에서 </p> 태그로 닫고 새로운 <p> 태그로 시작하며, 각 <p> 태그 사이에는 공백 줄바꿈을 넣어주세요
 
@@ -150,12 +143,12 @@ ${htmlTemplate}
 
         ⚠️ 재확인 사항:
         - **모든 내용이 주제 "${topic}"와 정확히 일치해야 합니다**
-        - **각 섹션은 220자에서 270자 사이의 적절한 분량이어야 합니다**
+        - **각 섹션은 정확히 220자에서 270자 사이의 적절한 분량이어야 합니다**
+        - **절대로 270자를 초과하거나 220자 미만이 되어서는 안 됩니다**
         - **150자 초과 시 마침표에서 줄바꿈 및 공백 줄 추가 필수**
         - **테이블은 2-4번째 섹션 중 최적 위치에 자동 배치**
         - **FAQ 소제목과 4개 Q&A 세트 필수 포함**
         - **모든 문단은 <p> 태그로 감싸기**
-        - **크롤링된 정보를 최대한 활용해야 합니다**
       `;
 };
 
