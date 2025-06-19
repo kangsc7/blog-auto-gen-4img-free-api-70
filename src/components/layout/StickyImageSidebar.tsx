@@ -84,6 +84,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
           <HuggingFaceImageGenerator
             huggingFaceApiKey={huggingFaceApiKey}
             hasAccess={hasAccess}
+            isApiKeyValidated={appState.isApiKeyValidated}
           />
         </div>
       )}
