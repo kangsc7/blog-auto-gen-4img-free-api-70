@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -82,48 +83,88 @@ export const getEnhancedArticlePrompt = async ({
 
         ⚠️ 절대 지켜야 할 핵심 규칙:
 
+        **🚨 컬러테마 엄격 적용 - 최우선 준수 사항 🚨**
+        **선택된 컬러테마 "${selectedColorTheme}"를 반드시 모든 스타일에 정확히 적용해야 합니다.**
+        - Primary Color: ${colors.primary}
+        - Secondary Color: ${colors.secondary}  
+        - Text Highlight Color: ${colors.textHighlight}
+        - Highlight Color: ${colors.highlight}
+        - Link Color: ${colors.link}
+        모든 버튼, 카드, 링크, 강조 텍스트에 위 색상을 정확히 사용하세요.
+
         **🚨 각 섹션 글자수와 가독성 - 최우선 준수 사항 🚨**
-        **각 H2 섹션의 본문은 반드시 190자에서 240자 사이로 작성해야 합니다.**
-        - 이 글자수 제한은 절대적이며, 240자를 초과하거나 190자 미만이 되어서는 안 됩니다
-        - 각 섹션 작성 후 글자수를 카운트하여 정확히 190-240자 범위 내인지 확인하세요
+        **각 H2 섹션의 본문은 반드시 190자에서 250자 사이로 작성해야 합니다.**
+        - 이 글자수 제한은 절대적이며, 250자를 초과하거나 190자 미만이 되어서는 안 됩니다
+        - 각 섹션 작성 후 글자수를 카운트하여 정확히 190-250자 범위 내인지 확인하세요
         - 150자를 넘어서면 2문장의 마침표(.) 부분에서 반드시 줄바꿈
         - 줄바꿈 후에는 반드시 공백 줄 하나 추가: <p style="height: 20px;">&nbsp;</p>
         - 모든 문단은 <p> 태그로 감싸기
         - 각 <p> 태그 사이에는 공백 줄바꿈 추가
 
-        **🚨 이미지 캡션 절대 금지 🚨**
-        - 이미지 태그 아래에 절대로 캡션, 설명, 대체 텍스트를 추가하지 마세요
-        - 이미지는 단독으로만 사용하고 추가 설명 없이 배치하세요
+        **🚨 시각요약 카드 필수 삽입 🚨**
+        - 1번째 섹션 끝에 반드시 다음과 같은 시각요약 카드를 삽입하세요:
+        <div style="background: linear-gradient(135deg, ${colors.highlight}, ${colors.secondary}); border-left: 5px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">📋 ${topic} 핵심 요약</h4>
+          <ul style="color: #2d3748; line-height: 1.6; margin: 0; padding-left: 20px;">
+            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">대상:</strong> [구체적인 대상]</li>
+            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">혜택:</strong> [핵심 혜택]</li>
+            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">방법:</strong> [간단한 방법]</li>
+            <li><strong style="color: ${colors.primary};">기한:</strong> [중요한 기한 정보]</li>
+          </ul>
+        </div>
+
+        **🚨 주의사항 카드 필수 삽입 🚨**
+        - 4번째 섹션 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
+        <div style="background: linear-gradient(135deg, ${colors.warnBg}, #fff3cd); border: 2px solid ${colors.warnBorder}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h4 style="color: ${colors.warnBorder}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
+          <ul style="color: #856404; line-height: 1.6; margin: 0; padding-left: 20px;">
+            <li style="margin-bottom: 8px;">정확한 정보는 반드시 공식 사이트에서 확인하세요</li>
+            <li style="margin-bottom: 8px;">신청 기한과 자격 요건을 미리 확인하시기 바랍니다</li>
+            <li>개인정보 보호를 위해 안전한 사이트에서만 신청하세요</li>
+          </ul>
+        </div>
 
         **🚨 테이블 자동 삽입 - 스마트 배치 🚨**
-        - 2-4번째 섹션 중 내용상 가장 적합한 위치에 고퀄리티 테이블 자동 삽입
+        - 2-3번째 섹션 중 내용상 가장 적합한 위치에 고퀄리티 테이블 자동 삽입
         - 테이블은 단계별 정보, 비교 정보, 또는 체크리스트 형태로 구성
-        - 반드시 content-table 클래스 사용
-        - 테이블 내용은 주제와 직접 관련된 실용적 정보여야 함
+        - 반드시 다음과 같은 고급 스타일로 작성:
+        <div style="overflow-x: auto; margin: 25px 0;">
+          <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <thead>
+              <tr style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});">
+                <th style="padding: 15px; color: white; font-weight: bold; text-align: left; border-bottom: 2px solid ${colors.primary};">항목</th>
+                <th style="padding: 15px; color: white; font-weight: bold; text-align: left; border-bottom: 2px solid ${colors.primary};">내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px 15px; font-weight: 600; color: ${colors.primary};">[항목1]</td>
+                <td style="padding: 12px 15px; color: #4a5568;">[내용1]</td>
+              </tr>
+              [추가 행들...]
+            </tbody>
+          </table>
+        </div>
 
         **🚨 FAQ 소제목 필수 추가 🚨**
         - 5번째 섹션에 반드시 "💬 자주 묻는 질문 (FAQ)" 소제목을 H3로 추가
-        - FAQ 하위에 다음과 같은 실용적인 Q&A 세트 포함:
+        - FAQ 하위에 주제와 관련된 실용적인 Q&A 세트 포함
+
+        **🚨 외부 참조 링크 및 문장 필수 적용 🚨**
+        ${referenceLink ? `
+        **참조 링크 적용**: 제공된 참조 링크 "${referenceLink}"를 글 하단에 다음 형식으로 반드시 포함하세요:
+        <p style="text-align: center; margin: 30px 0; padding: 20px; background: ${colors.secondary}; border-radius: 8px;">
+          <a href="${referenceLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; font-weight: bold; text-decoration: underline;">📎 참조 링크: 더 자세한 정보 보기</a>
+        </p>` : ''}
         
-        Q: 가족월 건강 관리에 가장 중요한 것은 무엇인가요?
-        A: 면역력 강화입니다. 충분한 수면, 균형 잡힌 영양 섭취, 규칙적인 운동을 통해 면역력을 높이는 것이 중요합니다.
-
-        Q: 가족월 건강관을 예방하려면 어떻게 해야 하나요?
-        A: 충분한 수분 섭취와 보습 관리가 중요합니다. 물을 충분히 마시고, 보습제를 사용하여 피부와 호흡기 점막을 촉촉하게 유지하세요.
-
-        Q: 가족월 건강에 검침을 때 어떻게 대처해야 하나요?
-        A: 충분한 휴식과 수분 섭취가 중요합니다. 증상이 심하거나 오래 지속되면 병원을 방문하여 진료를 받으세요.
+        ${referenceSentence ? `
+        **참조 문장 적용**: 제공된 참조 문장 "${referenceSentence}"을 글의 맥락에 맞게 자연스럽게 포함하세요.` : ''}
 
         **🚨 주제와 내용 일치성 - 최우선 준수 사항 🚨**
         **글의 모든 내용은 반드시 주제 "${topic}"와 정확히 일치해야 합니다.**
-        - 주제가 "금리인하 전망 분석"이면 금리인하에 대한 내용만 작성
-        - 주제가 "투자 전략"이면 투자에 대한 내용만 작성
-        - 주제가 "2025년 정부지원금"이면 해당 지원금에 대한 내용만 작성
-        - 절대로 다른 주제의 내용을 억지로 끼워넣지 마세요
 
         **🚨 6개 H2 섹션으로 구성 🚨**
         기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
-        모든 섹션은 선택된 주제 "${topic}"에 대한 내용만 포함해야 합니다.
 
         **🚨 공식 사이트 자동 링크 연결 🚨**
         본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
@@ -136,7 +177,7 @@ export const getEnhancedArticlePrompt = async ({
         - 대상 독자: 한국어 사용자
         - **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
         - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
-        - 가독성: 190-240자 범위 내에서 150자마다 2-3문장 끝에서 </p> 태그로 닫고 새로운 <p> 태그로 시작하며, 각 <p> 태그 사이에는 공백 줄바꿈을 넣어주세요
+        - 가독성: 190-250자 범위 내에서 150자마다 2-3문장 끝에서 </p> 태그로 닫고 새로운 <p> 태그로 시작하며, 각 <p> 태그 사이에는 공백 줄바꿈을 넣어주세요
 
         사용할 변수:
         - Primary Color: ${colors.primary}
@@ -160,13 +201,13 @@ ${htmlTemplate}
 
         ⚠️ 재확인 사항:
         - **모든 내용이 주제 "${topic}"와 정확히 일치해야 합니다**
-        - **각 섹션은 정확히 190자에서 240자 사이의 적절한 분량이어야 합니다**
-        - **절대로 240자를 초과하거나 190자 미만이 되어서는 안 됩니다**
+        - **각 섹션은 정확히 190자에서 250자 사이의 적절한 분량이어야 합니다**
+        - **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
+        - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
+        - **시각요약 카드, 주의카드, 테이블 필수 포함**
+        - **외부 참조 링크와 문장 필수 적용**
         - **150자 초과 시 마침표에서 줄바꿈 및 공백 줄 추가 필수**
-        - **테이블은 2-4번째 섹션 중 최적 위치에 자동 배치**
-        - **FAQ 소제목과 Q&A 세트 필수 포함**
         - **모든 문단은 <p> 태그로 감싸기**
-        - **이미지 아래 캡션 절대 금지**
       `;
 };
 
