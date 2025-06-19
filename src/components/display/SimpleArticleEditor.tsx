@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,6 +63,71 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     } catch (error) {
       console.error('localStorage 저장 실패:', error);
       return false;
+    }
+  }, []);
+
+  // 커서 위치 저장 및 복원 함수
+  const saveCursorPosition = useCallback(() => {
+    if (!editorRef.current) return null;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+    
+    try {
+      const range = selection.getRangeAt(0);
+      const preSelectionRange = range.cloneRange();
+      preSelectionRange.selectNodeContents(editorRef.current);
+      preSelectionRange.setEnd(range.startContainer, range.startOffset);
+      const start = preSelectionRange.toString().length;
+      
+      return {
+        start,
+        end: start + range.toString().length
+      };
+    } catch (error) {
+      console.error('커서 위치 저장 실패:', error);
+      return null;
+    }
+  }, []);
+
+  const restoreCursorPosition = useCallback((position: { start: number; end: number } | null) => {
+    if (!position || !editorRef.current) return;
+    
+    try {
+      const selection = window.getSelection();
+      if (!selection) return;
+      
+      const range = document.createRange();
+      let charIndex = 0;
+      let nodeStack = [editorRef.current];
+      let node;
+      let foundStart = false;
+      let stop = false;
+      
+      while (!stop && (node = nodeStack.pop())) {
+        if (node.nodeType === 3) { // Text node
+          const nextCharIndex = charIndex + (node.textContent?.length || 0);
+          if (!foundStart && position.start >= charIndex && position.start <= nextCharIndex) {
+            range.setStart(node, position.start - charIndex);
+            foundStart = true;
+          }
+          if (foundStart && position.end >= charIndex && position.end <= nextCharIndex) {
+            range.setEnd(node, position.end - charIndex);
+            stop = true;
+          }
+          charIndex = nextCharIndex;
+        } else {
+          let i = node.childNodes.length;
+          while (i--) {
+            nodeStack.push(node.childNodes[i]);
+          }
+        }
+      }
+      
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (error) {
+      console.error('커서 위치 복원 실패:', error);
     }
   }, []);
 
@@ -340,6 +404,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   const handleInput = useCallback(() => {
     if (editorRef.current && !isGeneratingContent) {
+      // 커서 위치 저장
+      const cursorPosition = saveCursorPosition();
+      
       const newContent = editorRef.current.innerHTML;
       console.log('✏️ 사용자 편집 감지:', newContent.length + '자');
       
@@ -347,6 +414,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       performAutoSave(newContent);
       
       setIsUserEditing(true);
+      
+      // 커서 위치 복원
+      setTimeout(() => {
+        restoreCursorPosition(cursorPosition);
+      }, 0);
       
       if (userEditTimeoutRef.current) {
         clearTimeout(userEditTimeoutRef.current);
@@ -357,7 +429,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         console.log('⏹️ 사용자 편집 완료');
       }, 2000);
     }
-  }, [isGeneratingContent, performAutoSave]);
+  }, [isGeneratingContent, performAutoSave, saveCursorPosition, restoreCursorPosition]);
 
   // 붙여넣기 이벤트 처리 (이미지 포함)
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -372,6 +444,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       const file = imageItem.getAsFile();
       if (file) {
         console.log('📎 이미지 붙여넣기 감지:', file.name || 'clipboard-image');
+        
+        // 커서 위치 저장
+        const cursorPosition = saveCursorPosition();
         
         // 이미지를 Data URL로 변환하여 편집기에 삽입
         const reader = new FileReader();
@@ -411,7 +486,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         reader.readAsDataURL(file);
       }
     }
-  }, [handleImageClick, handleInput, toast]);
+  }, [handleImageClick, handleInput, toast, saveCursorPosition]);
   
   useEffect(() => {
     const handleWindowFocus = () => {
