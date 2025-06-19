@@ -1,3 +1,4 @@
+
 import { colorThemes } from '@/data/constants';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -23,7 +24,14 @@ export const getEnhancedArticlePrompt = async (options: EnhancedArticlePromptOpt
   } = options;
 
   const colorTheme = colorThemes.find(theme => theme.value === selectedColorTheme) || colorThemes[0];
-  const template = getHtmlTemplate(colorTheme);
+  const template = getHtmlTemplate(
+    colorTheme.label,
+    topic,
+    keyword,
+    '',
+    '',
+    ''
+  );
 
   const basePrompt = `
 당신은 전문 블로그 콘텐츠 작성자입니다. 다음 조건에 따라 SEO 최적화된 블로그 글을 작성해주세요:
@@ -31,7 +39,7 @@ export const getEnhancedArticlePrompt = async (options: EnhancedArticlePromptOpt
 **주제**: ${topic}
 **핵심 키워드**: ${keyword}
 **섹션당 글자수**: ${sectionWordCount}자
-**색상 테마**: ${colorTheme.name}
+**색상 테마**: ${colorTheme.label}
 
 ${referenceLink ? `**참고 링크**: ${referenceLink}` : ''}
 ${referenceSentence ? `**참고 문장**: ${referenceSentence}` : ''}

@@ -53,7 +53,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      const shouldBeSticky = scrollPosition > 4000;
+      const shouldBeSticky = scrollPosition > 3700;
       setIsSticky(shouldBeSticky);
     };
 
@@ -83,7 +83,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         selectTopic={topicControls.selectTopic}
       />
 
-      {/* 이미지 생성 창들 - 원래 위치에서 스크롤시 따라다니기 */}
+      {/* 이미지 생성 창들 - 스크롤시 따라다니기 (임계값: 3700) */}
       <div className={`space-y-4 transition-all duration-300 ${
         isSticky 
           ? 'fixed top-4 left-4 z-50 w-[380px] max-h-[calc(100vh-2rem)] overflow-y-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 p-4' 
