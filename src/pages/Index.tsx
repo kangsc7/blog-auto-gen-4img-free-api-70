@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
@@ -56,27 +56,34 @@ const Index = () => {
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
 
-  // 참조 데이터 삭제 함수
-  const deleteReferenceData = () => {
+  // 참조 데이터 삭제 함수를 메모이제이션
+  const deleteReferenceData = useMemo(() => () => {
     saveAppState({ 
       referenceLink: '', 
       referenceSentence: '' 
     });
-  };
+  }, [saveAppState]);
+
+  // 접근 권한 상태를 메모이제이션하여 불필요한 리렌더링 방지
+  const accessStatus = useMemo(() => {
+    if (authLoading || isCheckingAccess) return 'loading';
+    if (!session) return 'no-session';
+    if (!hasAccess && !isAdmin) return 'no-access';
+    return 'has-access';
+  }, [authLoading, isCheckingAccess, session, hasAccess, isAdmin]);
 
   console.log('Index 컴포넌트 렌더링 상태:', {
+    accessStatus,
     session: !!session,
     isAdmin,
     hasAccess,
     preventDuplicates,
     profile: !!profile,
-    authLoading,
-    isCheckingAccess,
     showTopicConfirmDialog,
     pendingTopic
   });
 
-  if (authLoading || isCheckingAccess) {
+  if (accessStatus === 'loading') {
     console.log('인증 또는 접근 권한 확인 중...');
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -85,13 +92,13 @@ const Index = () => {
     );
   }
 
-  if (!session) {
+  if (accessStatus === 'no-session') {
     console.log('세션 없음 - 로그인 폼 표시');
     return <AuthForm handleLogin={handleLogin} handleSignUp={handleSignUp} />;
   }
 
   // 접근 권한이 없는 경우 (승인 대기, 거절, 만료)
-  if (!hasAccess && !isAdmin) {
+  if (accessStatus === 'no-access') {
     const getStatusMessage = () => {
       if (!profile) return { title: "프로필 로딩 중", description: "잠시만 기다려주세요." };
       

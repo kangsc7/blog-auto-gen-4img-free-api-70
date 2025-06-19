@@ -39,12 +39,12 @@ interface MainContentSectionProps {
 export const MainContentSection: React.FC<MainContentSectionProps> = (props) => {
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* 개선된 레이아웃 컨테이너 - 안정적인 그리드 시스템 */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 min-h-screen">
+      {/* 개선된 레이아웃 - 고정 비율과 안정적인 플렉스 시스템 */}
+      <div className="flex flex-col lg:flex-row gap-8 min-h-screen w-full">
         
-        {/* 왼쪽 사이드바 - 고정 너비와 스크롤 */}
-        <div className="xl:col-span-4 2xl:col-span-3">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+        {/* 왼쪽 사이드바 - 고정 너비와 최적화된 스크롤 */}
+        <div className="lg:w-[400px] xl:w-[450px] 2xl:w-[500px] flex-shrink-0">
+          <div className="h-full max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
             <LeftSidebar
               appState={props.appState}
               saveAppState={props.saveAppState}
@@ -58,17 +58,19 @@ export const MainContentSection: React.FC<MainContentSectionProps> = (props) => 
           </div>
         </div>
 
-        {/* 오른쪽 콘텐츠 영역 - 유연한 너비 */}
-        <div className="xl:col-span-8 2xl:col-span-9">
-          <RightContent
-            appState={props.appState}
-            saveAppState={props.saveAppState}
-            selectTopic={props.topicControls.selectTopic}
-            copyToClipboard={props.utilityFunctions.copyToClipboard}
-            downloadHTML={props.utilityFunctions.downloadHTML}
-            isGeneratingContent={props.generationStatus.isGeneratingContent}
-            onTopicConfirm={props.handleTopicConfirm}
-          />
+        {/* 오른쪽 콘텐츠 영역 - 남은 공간 활용 */}
+        <div className="flex-1 min-w-0">
+          <div className="h-full w-full">
+            <RightContent
+              appState={props.appState}
+              saveAppState={props.saveAppState}
+              selectTopic={props.topicControls.selectTopic}
+              copyToClipboard={props.utilityFunctions.copyToClipboard}
+              downloadHTML={props.utilityFunctions.downloadHTML}
+              isGeneratingContent={props.generationStatus.isGeneratingContent}
+              onTopicConfirm={props.handleTopicConfirm}
+            />
+          </div>
         </div>
       </div>
     </div>
