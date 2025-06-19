@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -150,7 +149,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [editorContent]);
 
-  // 이미지 클릭 핸들러
+  // 향상된 이미지 클릭 핸들러 - 불필요한 정보 제거
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -287,13 +286,13 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
               <p className="font-semibold text-lg text-blue-600 mb-2">
                 <span 
-                  className="text-purple-600 font-bold text-xl"
+                  className="text-purple-600 font-bold text-xl inline-block"
                   style={{
                     background: 'linear-gradient(45deg, #8B5CF6, #EC4899, #06B6D4)',
                     backgroundSize: '200% 200%',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    animation: 'wave 1.5s ease-in-out infinite, gradient 2s ease-in-out infinite'
+                    animation: 'waveFloat 2s ease-in-out infinite, gradientShift 3s ease-in-out infinite'
                   }}
                 >
                   파코월드
@@ -302,16 +301,37 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               </p>
               <p className="text-sm">잠시만 기다려주세요.</p>
               <style>{`
-                @keyframes wave {
-                  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
-                  25% { transform: translateY(-8px) rotate(-2deg) scale(1.05); }
-                  50% { transform: translateY(-5px) rotate(1deg) scale(1.1); }
-                  75% { transform: translateY(-12px) rotate(-1deg) scale(1.05); }
+                @keyframes waveFloat {
+                  0%, 100% { 
+                    transform: translateY(0px) rotate(0deg) scale(1);
+                  }
+                  25% { 
+                    transform: translateY(-12px) rotate(-3deg) scale(1.05);
+                  }
+                  50% { 
+                    transform: translateY(-8px) rotate(2deg) scale(1.1);
+                  }
+                  75% { 
+                    transform: translateY(-15px) rotate(-2deg) scale(1.05);
+                  }
                 }
-                @keyframes gradient {
-                  0% { background-position: 0% 50%; }
-                  50% { background-position: 100% 50%; }
-                  100% { background-position: 0% 50%; }
+                @keyframes gradientShift {
+                  0% { 
+                    background-position: 0% 50%;
+                    filter: hue-rotate(0deg);
+                  }
+                  33% { 
+                    background-position: 100% 50%;
+                    filter: hue-rotate(120deg);
+                  }
+                  66% { 
+                    background-position: 50% 100%;
+                    filter: hue-rotate(240deg);
+                  }
+                  100% { 
+                    background-position: 0% 50%;
+                    filter: hue-rotate(360deg);
+                  }
                 }
               `}</style>
             </div>
