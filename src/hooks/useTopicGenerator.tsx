@@ -22,7 +22,7 @@ const calculateSimilarity = (str1: string, str2: string): number => {
   return (matches / maxLength) * 100;
 };
 
-// 주제 유효성 검사 함수
+// 주제 유효성 검사 함수 - 개선된 버전
 const isValidTopic = (topic: string): boolean => {
   const cleanTopic = topic.trim();
   
@@ -31,13 +31,11 @@ const isValidTopic = (topic: string): boolean => {
     return false;
   }
   
-  // 비정상적인 시작 패턴 체크
+  // 완전히 이상한 패턴만 제외 (월 관련 제한 완화)
   const invalidStartPatterns = [
-    /^[0-9]+\s*[월일년]/,  // "1월", "15일", "2024년" 등으로 시작
-    /^[월화수목금토일]\s/,  // 요일로 시작
-    /^[가-힣]{1}\s+/,      // 한 글자 + 공백으로 시작 (예: "월 가을철")
-    /^\d+\./,               // 숫자+점으로 시작 (예: "1.", "2.")
-    /^[-•*]\s/,             // 불릿 포인트로 시작
+    /^[0-9]+\s*[.]/, // "1." 등 번호로 시작
+    /^[-•*]\s/,      // 불릿 포인트로 시작
+    /^[가-힣]{1}\s+[가-힣]{1}\s/, // "월 가" 같은 단일 글자 연속
   ];
   
   // 비정상적인 내용 패턴 체크
@@ -66,11 +64,12 @@ const isValidTopic = (topic: string): boolean => {
   return true;
 };
 
-// 주제 정리 함수
+// 주제 정리 함수 - 개선된 버전
 const cleanTopic = (rawTopic: string): string => {
   return rawTopic
     .replace(/^[0-9-."'•*\s]+/, '') // 앞쪽 번호, 기호, 공백 제거
     .replace(/["\n\r]+/g, '') // 따옴표, 줄바꿈 제거
+    .replace(/^\s*월\s+/, '') // 문장 앞의 "월 " 패턴 제거
     .trim();
 };
 
@@ -123,26 +122,27 @@ export const useTopicGenerator = (
     try {
       const count = appState.topicCount;
       
-      // 향상된 프롬프트로 주제 생성 품질 개선
+      // 개선된 프롬프트 - 월 관련 제한 완화
       const enhancedPrompt = `"${cleanedKeyword}"를 핵심 키워드로 하여 블로그 주제 ${count}개를 생성해주세요.
 
 **중요한 형식 규칙:**
 1. 각 주제는 새로운 줄에 하나씩만 작성
 2. 번호, 불릿 포인트, 기호 등을 절대 사용하지 마세요
 3. 주제는 완전한 문장 형태로 작성 (예: "가을철 건강관리 필수 팁 5가지")
-4. 5자 이상 50자 이하로 작성
+4. 10자 이상 80자 이하로 작성
 5. "${cleanedKeyword}" 키워드가 자연스럽게 포함되도록 작성
+6. 실제 블로그 제목처럼 매력적이고 클릭하고 싶게 작성
 
 **주제 특성:**
 - 실용적이고 검색 가치가 있는 내용
 - 독자들이 클릭하고 싶은 흥미로운 제목
 - SEO에 최적화된 키워드 포함
-- 계절이나 시기에 맞는 내용
+- 월, 계절, 시기 관련 내용도 자연스럽게 포함 가능
 
 **예시 형식:**
-가을철 ${cleanedKeyword} 관리법 완벽 가이드
-${cleanedKeyword} 초보자를 위한 시작 가이드
-전문가가 추천하는 ${cleanedKeyword} 베스트 방법
+2024년 최신 ${cleanedKeyword} 트렌드 완벽 분석
+초보자를 위한 ${cleanedKeyword} 시작 가이드 A to Z
+전문가가 추천하는 ${cleanedKeyword} 베스트 방법 10가지
 
 각 주제를 한 줄씩 작성해주세요:`;
 
@@ -159,7 +159,7 @@ ${cleanedKeyword} 초보자를 위한 시작 가이드
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: enhancedPrompt }] }],
           generationConfig: {
-            temperature: 0.3, // 더 낮은 온도로 일관성 있는 결과
+            temperature: 0.4, // 약간 높여서 창의성 증가
             maxOutputTokens: 2048,
             topP: 0.9,
             topK: 40,

@@ -41,9 +41,9 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
     onCancel();
   };
 
-  // onOpenChange는 사용하지 않고 명시적인 버튼 클릭만 처리
+  // onOpenChange 제거하여 명시적인 버튼 클릭만 처리
   return (
-    <AlertDialog open={isOpen}>
+    <AlertDialog open={isOpen} onOpenChange={() => {}}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader className="text-center">
           <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
