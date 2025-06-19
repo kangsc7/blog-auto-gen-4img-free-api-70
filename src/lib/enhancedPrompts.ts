@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -83,19 +82,21 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 
 **🚨 블로그 글 구조 - 최우선 준수 사항 🚨**
 
-1. **서두 메타 정보 박스** (글 시작 부분에 반드시 포함):
-<div style="background: linear-gradient(135deg, ${colors.secondary} 0%, #ffffff 100%); border: 2px solid ${colors.primary}; border-radius: 12px; padding: 20px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-  <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">💡 ${topic} 핵심 정보</h4>
-  <div style="color: #555; line-height: 1.6;">
-    <p><strong>지원 대상:</strong> [구체적인 대상과 자격 조건]</p>
-    <p><strong>지원 금액:</strong> [지원 금액과 혜택 내용]</p>
-    <p><strong>신청 방법:</strong> [온라인 또는 오프라인 신청 방법]</p>
-    <p><strong>필요 서류:</strong> [신청에 필요한 서류 목록]</p>
-    <p><strong>신청 기간:</strong> [신청 기간과 중요 일정]</p>
+1. **서두 공감 박스** (글 시작 부분에 반드시 포함):
+<div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border: 3px solid ${colors.primary}; border-radius: 15px; padding: 25px; margin: 25px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+  <div style="display: flex; align-items: center; margin-bottom: 15px;">
+    <span style="font-size: 38px; color: ${colors.primary}; margin-right: 16px;">💡</span>
+    <h3 style="color: ${colors.primary}; font-weight: 700; margin: 0; font-size: 28px; background: linear-gradient(45deg, ${colors.textHighlight}, ${colors.secondary}); padding: 8px 16px; border-radius: 15px; border: 1px solid ${colors.primary};">${topic} 핵심 요약</h3>
+  </div>
+  <div style="color: #333; line-height: 1.7; font-size: 18px;">
+    <p style="margin-bottom: 15px; font-weight: 600;">혹시 지금 이런 고민하고 계시나요?</p>
+    <p style="margin-bottom: 15px;">"${naturalKeyword}에 대해 정확한 정보를 찾고 있는데, 어디서부터 시작해야 할지 막막하네요..."</p>
+    <p style="margin-bottom: 15px;">많은 분들이 똑같은 고민을 하고 계세요. 복잡한 신청 과정, 까다로운 자격 조건, 놓치기 쉬운 신청 기한까지... 하나하나 챙기기가 정말 어렵죠.</p>
+    <p style="margin-bottom: 0; color: ${colors.primary}; font-weight: bold;">하지만 걱정하지 마세요! 이 글 하나로 ${naturalKeyword}의 모든 것을 완벽하게 정리해드릴게요. 신청부터 승인까지, 놓치면 안 되는 핵심 포인트들을 차근차근 알려드리겠습니다.</p>
   </div>
 </div>
 
-2. **공감 후킹 문단** (메타 정보 박스 바로 다음):
+2. **공감 후킹 문단** (공감 박스 바로 다음):
 독자의 공감을 이끌어내는 친근한 문장으로 시작하여 주제에 대한 관심을 유발하는 내용
 
 **🚨 컬러테마 엄격 적용 - 최우선 준수 사항 🚨**
@@ -128,6 +129,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
     justify-content: center;
     align-items: center;
     padding: 25px 15px;
+    background-color: ${colors.secondary};
     margin: 25px 0;
 }
 .single-summary-card {
@@ -362,7 +364,7 @@ ${htmlTemplate}
 - **외부 참조 링크와 문장 필수 적용**
 - **150자 초과 시 마침표에서 줄바꿈 및 공백 줄 추가 필수**
 - **모든 문단은 <p> 태그로 감싸기**
-- **서두 메타 정보 박스와 공감 후킹 문단 필수 포함**
+- **서두 공감 박스와 공감 후킹 문단 필수 포함**
 - **주의사항 카드는 4번째 섹션 끝에 배치**
   `;
 };
