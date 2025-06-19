@@ -25,6 +25,11 @@ const getScoreTextColor = (score: number) => {
   return 'text-red-600';
 };
 
+// Helper function to escape regex special characters
+const escapeRegex = (string: string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyword, selectedTopic }) => {
   const [scores, setScores] = useState<Record<string, number>>({
     wordCount: 0,
@@ -107,50 +112,61 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     let keywordDensityScore = 0;
     let actualDensity = 0;
     if (keyword && wordCount > 0) {
-      // 정확한 키워드 매칭과 부분 매칭 모두 고려
-      const exactMatches = (textContent.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
-      
-      // 키워드의 핵심 부분들도 카운트
-      const keywordParts = keyword.toLowerCase().split(/\s+/).filter(part => 
-        part.length > 2 && !['지급', '신청', '방법', '조건', '자격', '혜택', '정보', '안내'].includes(part)
-      );
-      
-      let partialMatches = 0;
-      keywordParts.forEach(part => {
-        const matches = (textContent.toLowerCase().match(new RegExp(part, 'g')) || []).length;
-        partialMatches += matches;
-      });
+      try {
+        // 정확한 키워드 매칭과 부분 매칭 모두 고려
+        const escapedKeyword = escapeRegex(keyword.toLowerCase());
+        const exactMatches = (textContent.toLowerCase().match(new RegExp(escapedKeyword, 'g')) || []).length;
+        
+        // 키워드의 핵심 부분들도 카운트
+        const keywordParts = keyword.toLowerCase().split(/\s+/).filter(part => 
+          part.length > 2 && !['지급', '신청', '방법', '조건', '자격', '혜택', '정보', '안내'].includes(part)
+        );
+        
+        let partialMatches = 0;
+        keywordParts.forEach(part => {
+          try {
+            const escapedPart = escapeRegex(part);
+            const matches = (textContent.toLowerCase().match(new RegExp(escapedPart, 'g')) || []).length;
+            partialMatches += matches;
+          } catch (error) {
+            console.warn('정규식 생성 오류 (부분 매칭):', error, 'for part:', part);
+          }
+        });
 
-      // 전체 키워드 출현 횟수 (정확한 매칭 + 부분 매칭의 일부)
-      const totalKeywordCount = exactMatches + Math.floor(partialMatches * 0.3);
-      actualDensity = (totalKeywordCount / wordCount) * 100;
-      
-      console.log('정확한 키워드 매칭 수:', exactMatches);
-      console.log('부분 키워드 매칭 수:', partialMatches);
-      console.log('총 키워드 카운트:', totalKeywordCount);
-      console.log('실제 키워드 밀도:', actualDensity.toFixed(2) + '%');
-      
-      // 더 관대한 키워드 밀도 기준
-      if (actualDensity >= 1.0 && actualDensity <= 3.0) {
-        keywordDensityScore = 100;
-      } 
-      else if (actualDensity >= 0.7 && actualDensity < 1.0) {
-        keywordDensityScore = 85;
-      }
-      else if (actualDensity >= 0.5 && actualDensity < 0.7) {
-        keywordDensityScore = 70;
-      }
-      else if (actualDensity >= 0.3 && actualDensity < 0.5) {
-        keywordDensityScore = 50;
-      }
-      else if (actualDensity > 3.0 && actualDensity <= 4.0) {
-        keywordDensityScore = 80;
-      }
-      else if (actualDensity > 4.0 && actualDensity <= 5.0) {
-        keywordDensityScore = 60;
-      }
-      else {
-        keywordDensityScore = 20;
+        // 전체 키워드 출현 횟수 (정확한 매칭 + 부분 매칭의 일부)
+        const totalKeywordCount = exactMatches + Math.floor(partialMatches * 0.3);
+        actualDensity = (totalKeywordCount / wordCount) * 100;
+        
+        console.log('정확한 키워드 매칭 수:', exactMatches);
+        console.log('부분 키워드 매칭 수:', partialMatches);
+        console.log('총 키워드 카운트:', totalKeywordCount);
+        console.log('실제 키워드 밀도:', actualDensity.toFixed(2) + '%');
+        
+        // 더 관대한 키워드 밀도 기준
+        if (actualDensity >= 1.0 && actualDensity <= 3.0) {
+          keywordDensityScore = 100;
+        } 
+        else if (actualDensity >= 0.7 && actualDensity < 1.0) {
+          keywordDensityScore = 85;
+        }
+        else if (actualDensity >= 0.5 && actualDensity < 0.7) {
+          keywordDensityScore = 70;
+        }
+        else if (actualDensity >= 0.3 && actualDensity < 0.5) {
+          keywordDensityScore = 50;
+        }
+        else if (actualDensity > 3.0 && actualDensity <= 4.0) {
+          keywordDensityScore = 80;
+        }
+        else if (actualDensity > 4.0 && actualDensity <= 5.0) {
+          keywordDensityScore = 60;
+        }
+        else {
+          keywordDensityScore = 20;
+        }
+      } catch (error) {
+        console.warn('키워드 밀도 계산 중 정규식 오류:', error);
+        keywordDensityScore = 20; // 기본값
       }
     }
 
