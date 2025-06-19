@@ -150,18 +150,18 @@ export const useAppStateManager = () => {
     
     const allKeys = getAllApiKeysFromStorage();
     
-    // 기본값과 저장된 값 비교하여 올바른 값 선택 - API 키는 항상 보존
+    // API 키가 없으면 기본값으로 설정하고 검증 상태를 true로 설정
     const finalState = {
       apiKey: allKeys.geminiKey || DEFAULT_API_KEYS.GEMINI,
       pixabayApiKey: allKeys.pixabayKey || DEFAULT_API_KEYS.PIXABAY,
       huggingFaceApiKey: allKeys.huggingFaceKey || DEFAULT_API_KEYS.HUGGING_FACE,
-      // 저장된 키가 있으면 검증 상태를 사용, 없으면 기본값은 true
-      isApiKeyValidated: allKeys.geminiKey ? allKeys.geminiValidated : true,
-      isPixabayApiKeyValidated: allKeys.pixabayKey ? allKeys.pixabayValidated : true,
-      isHuggingFaceApiKeyValidated: allKeys.huggingFaceKey ? allKeys.huggingFaceValidated : true,
+      // 모든 API 키는 기본적으로 연결된 상태로 설정
+      isApiKeyValidated: true,
+      isPixabayApiKeyValidated: true,
+      isHuggingFaceApiKeyValidated: true,
     };
 
-    console.log('✅ 최종 로드된 API 키 상태 (영구 보존):', {
+    console.log('✅ 최종 로드된 API 키 상태 (모든 키 기본 연결):', {
       gemini: { hasKey: !!finalState.apiKey, validated: finalState.isApiKeyValidated },
       pixaby: { hasKey: !!finalState.pixabayApiKey, validated: finalState.isPixabayApiKeyValidated },
       huggingface: { hasKey: !!finalState.huggingFaceApiKey, validated: finalState.isHuggingFaceApiKeyValidated }
@@ -170,10 +170,10 @@ export const useAppStateManager = () => {
     return finalState;
   }, []);
 
-  // 앱 상태 초기화 - 고급 설정 포함하여 즉시 로드
+  // 앱 상태 초기화 - API 키는 항상 연결된 상태로 설정
   useEffect(() => {
     if (!hasInitialized.current && !initializationLock.current) {
-      console.log('🚀 useAppStateManager 즉시 초기화 시작 (고급 설정 포함)');
+      console.log('🚀 useAppStateManager 즉시 초기화 시작 (모든 API 키 기본 연결)');
       initializationLock.current = true;
       
       // 동기적으로 모든 데이터 로드
@@ -181,9 +181,10 @@ export const useAppStateManager = () => {
         apiKey: getApiKeyFromStorage('GEMINI') || DEFAULT_API_KEYS.GEMINI,
         pixabayApiKey: getApiKeyFromStorage('PIXABAY') || DEFAULT_API_KEYS.PIXABAY,
         huggingFaceApiKey: getApiKeyFromStorage('HUGGING_FACE') || DEFAULT_API_KEYS.HUGGING_FACE,
-        isApiKeyValidated: getValidationStatusFromStorage('GEMINI') ?? true,
-        isPixabayApiKeyValidated: getValidationStatusFromStorage('PIXABAY') ?? true,
-        isHuggingFaceApiKeyValidated: getValidationStatusFromStorage('HUGGING_FACE') ?? true,
+        // 모든 API 키는 기본적으로 연결된 상태
+        isApiKeyValidated: true,
+        isPixabayApiKeyValidated: true,
+        isHuggingFaceApiKeyValidated: true,
       };
       
       const storedBlogData = loadBlogDataFromStorage();
@@ -198,15 +199,15 @@ export const useAppStateManager = () => {
           ...storedBlogData,
           preventDuplicates: true // 기본값 유지
         };
-        console.log('✅ 앱 상태 즉시 초기화 완료 (고급 설정 포함)');
+        console.log('✅ 앱 상태 즉시 초기화 완료 (모든 API 키 기본 연결)');
         return newState;
       });
       
       // 모든 검증 상태를 localStorage에 즉시 저장하여 동기화
       setTimeout(() => {
-        saveValidationStatusToStorage('GEMINI', storedApiKeys.isApiKeyValidated);
-        saveValidationStatusToStorage('PIXABAY', storedApiKeys.isPixabayApiKeyValidated);
-        saveValidationStatusToStorage('HUGGING_FACE', storedApiKeys.isHuggingFaceApiKeyValidated);
+        saveValidationStatusToStorage('GEMINI', true);
+        saveValidationStatusToStorage('PIXABAY', true);
+        saveValidationStatusToStorage('HUGGING_FACE', true);
       }, 100);
     }
   }, [loadApiKeysFromStorage, loadBlogDataFromStorage]);
@@ -253,22 +254,22 @@ export const useAppStateManager = () => {
   }, [saveBlogDataToStorage]);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
-    console.log(`🗑️ ${keyType} API 키를 기본값으로 복원`);
+    console.log(`🗑️ ${keyType} API 키 입력창 삭제 및 기본값 복원`);
     switch (keyType) {
       case 'gemini':
         removeApiKeyFromStorage('GEMINI');
-        saveAppState({ apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true });
+        saveAppState({ apiKey: '', isApiKeyValidated: false });
         break;
       case 'pixabay':
         removeApiKeyFromStorage('PIXABAY');
-        saveAppState({ pixabayApiKey: DEFAULT_API_KEYS.PIXABAY, isPixabayApiKeyValidated: true });
+        saveAppState({ pixabayApiKey: '', isPixabayApiKeyValidated: false });
         break;
       case 'huggingface':
         removeApiKeyFromStorage('HUGGING_FACE');
-        saveAppState({ huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE, isHuggingFaceApiKeyValidated: true });
+        saveAppState({ huggingFaceApiKey: '', isHuggingFaceApiKeyValidated: false });
         break;
     }
-    toast({ title: "기본값으로 복원", description: `${keyType} API 키가 기본값으로 복원되었습니다.` });
+    toast({ title: "키 삭제 완료", description: `${keyType} API 키가 입력창에서 삭제되었습니다.` });
   }, [saveAppState, toast]);
 
   // 참조 링크와 문장을 영구적으로 삭제하는 함수 추가
@@ -301,16 +302,16 @@ export const useAppStateManager = () => {
     // 편집기 초기화 이벤트 발송
     window.dispatchEvent(new CustomEvent('app-reset'));
     
-    // 즉시 상태 초기화
+    // 즉시 상태 초기화 - API 키는 항상 연결된 상태로 유지
     setAppState({
       ...defaultState,
-      // API 키와 검증 상태는 보존
+      // API 키와 검증 상태는 보존하되 항상 연결된 상태로 설정
       apiKey: preservedKeys.geminiKey || DEFAULT_API_KEYS.GEMINI,
       pixabayApiKey: preservedKeys.pixabayKey || DEFAULT_API_KEYS.PIXABAY,
       huggingFaceApiKey: preservedKeys.huggingFaceKey || DEFAULT_API_KEYS.HUGGING_FACE,
-      isApiKeyValidated: preservedKeys.geminiValidated ?? true,
-      isPixabayApiKeyValidated: preservedKeys.pixabayValidated ?? true,
-      isHuggingFaceApiKeyValidated: preservedKeys.huggingFaceValidated ?? true,
+      isApiKeyValidated: true, // 항상 연결된 상태
+      isPixabayApiKeyValidated: true, // 항상 연결된 상태
+      isHuggingFaceApiKeyValidated: true, // 항상 연결된 상태
       // 참조 링크와 문장, 고급 설정도 보존
       referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
       referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
