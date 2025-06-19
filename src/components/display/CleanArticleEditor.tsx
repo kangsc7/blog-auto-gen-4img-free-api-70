@@ -23,23 +23,20 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const { toast } = useToast();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [autoSaveInterval, setAutoSaveInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // 영구 저장된 콘텐츠 로드 (최우선 실행)
+  // 영구 저장된 콘텐츠 로드 (API 키와 동일한 방식)
   useEffect(() => {
     const loadPermanentContent = () => {
       try {
         const savedContent = localStorage.getItem(STORAGE_KEY);
         if (savedContent && !generatedContent && !isGeneratingContent) {
-          console.log('💾 영구 저장된 편집기 내용 복원:', savedContent.length + '자');
+          console.log('💾 영구 저장된 편집기 내용 복원 (API 키와 동일한 방식):', savedContent.length + '자');
           setEditorContent(savedContent);
           if (editorRef.current) {
             editorRef.current.innerHTML = savedContent;
             setTimeout(() => addImageClickHandlers(), 300);
           }
           onContentChange(savedContent);
-          setLastSaved(new Date());
         }
       } catch (error) {
         console.error('❌ 영구 저장 콘텐츠 로드 실패:', error);
@@ -49,30 +46,24 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     loadPermanentContent();
   }, []);
 
-  // 실시간 자동 저장 (3초마다 - 더 빠른 저장)
-  useEffect(() => {
-    if (editorContent && !isGeneratingContent) {
-      if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-      }
-
-      const interval = setInterval(() => {
-        savePermanently(editorContent);
-      }, 3000); // 3초마다 자동 저장
-
-      setAutoSaveInterval(interval);
-
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
+  // API 키와 동일한 영구 저장 방식 - 즉시 저장
+  const savePermanently = (content: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, content);
+      console.log('💾 편집기 내용 영구 저장 (API 키와 동일한 방식):', content.length + '자');
+    } catch (error) {
+      console.error('❌ 편집기 내용 영구 저장 실패:', error);
+      toast({
+        title: "저장 실패",
+        description: "저장 공간이 부족할 수 있습니다.",
+        variant: "destructive"
+      });
     }
-  }, [editorContent, isGeneratingContent]);
+  };
 
-  // 페이지 이벤트에서 즉시 저장
+  // 페이지 이벤트에서 즉시 저장 (API 키와 동일한 방식)
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       if (editorContent) {
         savePermanently(editorContent);
       }
@@ -84,28 +75,12 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       }
     };
 
-    const handleFocus = () => {
-      if (editorContent) {
-        savePermanently(editorContent);
-      }
-    };
-
-    const handleBlur = () => {
-      if (editorContent) {
-        savePermanently(editorContent);
-      }
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
     };
   }, [editorContent]);
 
@@ -121,22 +96,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       window.removeEventListener('app-reset', handleAppReset);
     };
   }, []);
-
-  // 영구 저장 함수 (API 키 저장 방식과 동일)
-  const savePermanently = (content: string) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, content);
-      setLastSaved(new Date());
-      console.log('💾 편집기 내용 영구 저장:', content.length + '자');
-    } catch (error) {
-      console.error('❌ 편집기 내용 영구 저장 실패:', error);
-      toast({
-        title: "저장 실패",
-        description: "저장 공간이 부족할 수 있습니다.",
-        variant: "destructive"
-      });
-    }
-  };
 
   // 글로벌 이미지 클릭 핸들러 함수 등록
   useEffect(() => {
@@ -246,10 +205,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 새로운 콘텐츠가 생성되면 편집기에 반영 및 즉시 영구 저장
+  // 새로운 콘텐츠가 생성되면 편집기에 반영 및 즉시 영구 저장 (API 키와 동일한 방식)
   useEffect(() => {
     if (generatedContent && !isGeneratingContent && generatedContent !== editorContent) {
-      console.log('📝 새 콘텐츠 적용 및 즉시 영구 저장:', generatedContent.length + '자');
+      console.log('📝 새 콘텐츠 적용 및 즉시 영구 저장 (API 키와 동일한 방식):', generatedContent.length + '자');
       setEditorContent(generatedContent);
       
       if (editorRef.current) {
@@ -257,20 +216,20 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         setTimeout(() => addImageClickHandlers(), 300);
       }
       
-      // 즉시 영구 저장
+      // 즉시 영구 저장 (API 키와 동일한 방식)
       savePermanently(generatedContent);
       onContentChange(generatedContent);
     }
   }, [generatedContent, isGeneratingContent, editorContent, onContentChange]);
 
-  // 사용자 편집 처리 및 즉시 저장
+  // 사용자 편집 처리 및 즉시 저장 (API 키와 동일한 방식)
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
       setEditorContent(newContent);
       onContentChange(newContent);
       
-      // 편집 중 즉시 저장
+      // 편집 중 즉시 저장 (API 키와 동일한 방식)
       savePermanently(newContent);
       
       // 이미지 클릭 핸들러 다시 추가
@@ -278,20 +237,13 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 편집기 내용 영구 삭제 (API 키 삭제 방식과 동일)
+  // 편집기 내용 영구 삭제 (API 키 삭제와 동일한 방식)
   const permanentClearEditor = () => {
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
       setEditorContent('');
       localStorage.removeItem(STORAGE_KEY);
       onContentChange('');
-      setLastSaved(null);
-      
-      // 자동 저장 인터벌 정리
-      if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-        setAutoSaveInterval(null);
-      }
       
       toast({ 
         title: "🗑️ 편집기 영구 초기화", 
@@ -342,20 +294,11 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between flex-wrap gap-2">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (영구 보존 + 실시간 저장)
+              블로그 글 편집기 (API 키와 동일한 영구 보존)
             </span>
             <div className="flex flex-wrap gap-2">
               {editorContent && !isGeneratingContent && (
                 <>
-                  <Button 
-                    onClick={permanentClearEditor}
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    영구 초기화
-                  </Button>
                   <Button 
                     onClick={handleCopyToClipboard}
                     size="sm"
@@ -390,18 +333,8 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <div className="space-y-4 w-full">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
-                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존 방식)</p>
+                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존)</p>
                   <p>자유롭게 수정하세요. 이미지 클릭시 티스토리용 복사, 창 전환/새로고침해도 내용 영구 보존됨</p>
-                </div>
-                <div className="text-xs">
-                  {lastSaved && (
-                    <div className="text-green-600">
-                      💾 마지막 저장: {lastSaved.toLocaleTimeString()}
-                    </div>
-                  )}
-                  <div className="text-blue-600 mt-1">
-                    🔄 실시간 저장: 3초마다 + 즉시저장
-                  </div>
                 </div>
               </div>
               <div
