@@ -11,21 +11,15 @@ interface AppHeaderProps {
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout }) => {
   const scrollToPreview = () => {
-    // 편집기를 찾아서 스크롤
-    const editorElement = document.querySelector('[contenteditable="true"]');
-    if (editorElement) {
-      const headerOffset = 120;
-      const elementPosition = editorElement.getBoundingClientRect().top;
+    const previewElement = document.getElementById('article-preview');
+    if (previewElement) {
+      // 헤더 높이와 여백을 더 정확하게 계산
+      const headerOffset = 150; // 헤더와 여백을 고려한 오프셋 증가
+      const elementPosition = previewElement.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
-      });
-    } else {
-      // 편집기가 없으면 페이지 하단으로 스크롤
-      window.scrollTo({
-        top: document.body.scrollHeight - window.innerHeight,
         behavior: 'smooth'
       });
     }
@@ -38,6 +32,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
           <Bot className="h-8 w-8 text-blue-600 mr-3" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</h1>
+            <p className="text-sm text-gray-600">GenSpark 기반 자동화 콘텐츠 시스템 도구</p>
           </div>
         </Link>
         
