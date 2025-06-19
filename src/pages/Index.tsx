@@ -51,12 +51,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <TopNavigation
-        resetAppState={handleResetApp}
-        preventDuplicates={preventDuplicates}
-        setPreventDuplicates={setPreventDuplicates}
-        canUseFeatures={true}
-      />
+      <TopNavigation />
 
       <MainContentSection
         appState={appState}
