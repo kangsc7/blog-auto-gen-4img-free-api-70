@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
@@ -48,21 +48,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   preventDuplicates,
   deleteReferenceData,
 }) => {
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const shouldBeSticky = scrollPosition > 3700;
-      setIsSticky(shouldBeSticky);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-md space-y-6">
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
