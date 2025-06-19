@@ -241,22 +241,21 @@ const Index = () => {
       <MainContentSection
         appState={appState}
         saveAppState={saveAppState}
-        generationStatus={generationStatus}
-        generationFunctions={generationFunctions}
-        topicControls={topicControls}
-        utilityFunctions={utilityFunctions}
-        preventDuplicates={preventDuplicates}
-        handleTopicConfirm={handleTopicConfirm}
+        isGeneratingTopics={generationStatus.isGeneratingTopics}
+        generateTopics={generationFunctions.generateTopics}
+        isGeneratingContent={generationStatus.isGeneratingContent}
+        generateArticle={generationFunctions.generateArticle}
+        stopArticleGeneration={generationFunctions.stopArticleGeneration}
+        selectTopic={topicControls.selectTopic}
+        isGeneratingImage={generationStatus.isGeneratingImage}
+        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+        createImagePrompt={generationFunctions.createImagePrompt}
+        generateDirectImage={generationFunctions.generateDirectImage}
+        copyToClipboard={utilityFunctions.copyToClipboard}
+        openWhisk={utilityFunctions.openWhisk}
+        huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+        hasAccess={hasAccess || isAdmin}
       />
-
-      {/* Hugging Face 이미지 생성기 */}
-      <div className="container mx-auto px-4 py-6">
-        <HuggingFaceImageGenerator
-          huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
-          isApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
-          hasAccess={hasAccess || isAdmin}
-        />
-      </div>
 
       {/* 주제 확인 다이얼로그 - 간단한 버전으로 수정 */}
       <TopicConfirmDialog

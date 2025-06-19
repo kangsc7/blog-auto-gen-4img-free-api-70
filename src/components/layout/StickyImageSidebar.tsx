@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { AppState } from '@/types';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Image } from 'lucide-react';
 
 interface StickyImageSidebarProps {
   appState: AppState;
@@ -34,7 +34,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const threshold = 300; // 300px 스크롤 시 sticky 모드 활성화
+      const threshold = 400; // 400px 스크롤 시 sticky 모드 활성화
       setIsSticky(scrollY > threshold);
     };
 
@@ -43,26 +43,30 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
   }, []);
 
   const stickyClasses = isSticky 
-    ? 'fixed top-4 right-4 z-50 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl' 
+    ? 'fixed top-4 right-4 z-50 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl bg-white rounded-lg border' 
     : 'relative w-full';
 
   return (
     <div className={`transition-all duration-300 ${stickyClasses}`}>
       {isSticky && (
-        <div className="mb-2 flex justify-end">
+        <div className="mb-2 flex justify-between items-center p-3 bg-blue-50 rounded-t-lg border-b">
+          <div className="flex items-center text-blue-700 font-semibold">
+            <Image className="h-4 w-4 mr-2" />
+            <span>이미지 도구</span>
+          </div>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm flex items-center space-x-1 transition-colors"
           >
             {isCollapsed ? (
               <>
                 <ChevronDown className="h-4 w-4" />
-                <span>이미지 도구 열기</span>
+                <span>펼치기</span>
               </>
             ) : (
               <>
                 <ChevronUp className="h-4 w-4" />
-                <span>이미지 도구 접기</span>
+                <span>접기</span>
               </>
             )}
           </button>
@@ -70,7 +74,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
       )}
       
       {(!isSticky || !isCollapsed) && (
-        <div className="space-y-4">
+        <div className={`space-y-4 ${isSticky ? 'p-3' : ''}`}>
           <ImageCreation
             appState={appState}
             isGeneratingImage={isGeneratingImage}
