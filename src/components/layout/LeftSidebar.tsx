@@ -62,11 +62,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   }, []);
 
   return (
-    <div className={`space-y-6 transition-all duration-300 ${
-      isSticky 
-        ? 'fixed top-4 left-4 w-80 z-50 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 p-4' 
-        : 'relative'
-    }`}>
+    <div className="space-y-6">
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
@@ -85,6 +81,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
       />
 
+      {/* 이미지 생성 창들 - 스크롤시 따라다니기 */}
       <div className={`space-y-4 transition-all duration-300 ${
         isSticky 
           ? 'fixed top-4 right-4 w-80 z-50 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 p-4' 
@@ -101,8 +98,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         />
 
         <HuggingFaceImageGenerator
-          appState={appState}
-          saveAppState={saveAppState}
+          huggingFaceApiKey={appState.huggingFaceApiKey}
+          isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
+          hasAccess={true}
         />
       </div>
 

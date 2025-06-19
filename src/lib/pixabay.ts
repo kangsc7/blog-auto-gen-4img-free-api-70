@@ -1,4 +1,3 @@
-
 interface PixabayImage {
   id: number;
   webformatURL: string;
@@ -91,7 +90,7 @@ export const integratePixabayImages = async (
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // CORS 프록시를 통한 이미지 로드
+        // 이미지 로드를 위한 새로운 Image 객체 생성
         const proxyImg = new Image();
         proxyImg.crossOrigin = 'anonymous';
         
@@ -154,11 +153,11 @@ export const integratePixabayImages = async (
         };
         
         proxyImg.onerror = function() {
-          console.log('CORS 이미지 로드 실패, 직접 복사 시도');
+          console.log('이미지 로드 실패, 직접 복사 시도');
           fallbackCopy(imgElement, originalBorder);
         };
         
-        // 프록시를 통한 이미지 로드 시도
+        // 이미지 로드 시도
         const imageUrl = imgElement.src;
         proxyImg.src = imageUrl;
         
@@ -171,13 +170,10 @@ export const integratePixabayImages = async (
     // 대체 복사 방법
     async function fallbackCopy(imgElement, originalBorder) {
       try {
-        // URL을 텍스트로 복사
-        await navigator.clipboard.writeText(imgElement.src);
-        
         imgElement.style.border = '3px solid #f59e0b';
         imgElement.style.filter = 'brightness(1.1)';
         
-        showCopyMessage('⚠️ 이미지 URL이 복사되었습니다.\\n티스토리에서 이미지 버튼을 클릭하고 URL을 붙여넣으세요.', 'warning');
+        showCopyMessage('⚠️ 이미지를 우클릭하여 복사하거나 다운로드하세요.', 'warning');
         
         setTimeout(() => {
           imgElement.style.border = originalBorder;
@@ -206,7 +202,7 @@ export const integratePixabayImages = async (
       };
       
       const notification = document.createElement('div');
-      notification.innerHTML = message.replace(/\\n/g, '<br>');
+      notification.innerHTML = message.replace(/\\\\n/g, '<br>');
       notification.style.cssText = \`
         position: fixed;
         top: 20px;
