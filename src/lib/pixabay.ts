@@ -17,11 +17,14 @@ interface PixabayResponse {
   totalHits: number;
 }
 
-// H2 섹션에서 키워드 추출 및 최적화 - 완전히 새로운 방식
-const extractOptimizedKeywords = (htmlContent: string): string[] => {
-  console.log('🔍 H2 섹션에서 핵심 키워드 추출 시작');
+// AI를 통한 소제목 내용 분석 및 픽사베이 최적화 키워드 생성
+const generatePixabayOptimizedKeywords = async (
+  htmlContent: string,
+  geminiApiKey: string
+): Promise<string[]> => {
+  console.log('🤖 AI 기반 픽사베이 최적화 키워드 생성 시작');
   
-  const h2Sections = htmlContent.match(/<h2[^>]*>.*?<\/h2>/gi);
+  const h2Sections = htmlContent.match(/<h2[^>]*>.*?<\/h2>[\s\S]*?(?=<h2|$)/gi);
   if (!h2Sections || h2Sections.length === 0) {
     console.log('❌ H2 섹션을 찾을 수 없습니다.');
     return [];
@@ -29,126 +32,194 @@ const extractOptimizedKeywords = (htmlContent: string): string[] => {
 
   const optimizedKeywords: string[] = [];
   
-  for (const section of h2Sections.slice(0, 5)) {
+  // 최대 5개 섹션 처리
+  for (let i = 0; i < Math.min(h2Sections.length, 5); i++) {
+    const section = h2Sections[i];
+    
+    // 섹션에서 제목과 내용 추출
     const titleMatch = section.match(/<h2[^>]*>(.*?)<\/h2>/i);
-    if (titleMatch) {
-      let title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/[💰📝🤔📌💯✨🎯⚡🔥💡]/g, '').trim();
+    const contentText = section.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    
+    if (titleMatch && contentText.length > 50) {
+      const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
+      const sectionContent = contentText.substring(0, 800); // 800자로 제한
       
-      // 더 정확한 한글-영어 키워드 매핑 시스템
-      const koreanToEnglishMapping: { [key: string]: string } = {
-        // 정부 지원금 관련
-        '지원금': 'government subsidy financial support',
-        '디지털플랫폼': 'digital platform technology',
-        '신청방법': 'application process procedure',
-        '자격조건': 'eligibility requirements criteria',
-        '혜택': 'benefits welfare assistance',
-        '정부지원': 'government support aid',
-        '복지': 'social welfare benefits',
-        '생계급여': 'basic livelihood allowance',
-        '주거급여': 'housing allowance rent support',
-        '의료급여': 'medical assistance healthcare',
-        '교육급여': 'education support scholarship',
+      try {
+        console.log(`🔍 ${i+1}번째 섹션 AI 분석 시작: "${title}"`);
         
-        // 해수욕장/관광 관련
-        '해수욕장': 'beach seaside ocean resort',
-        '혼잡도': 'crowd density busy beach',
-        '여행': 'travel vacation tourism',
-        '휴가': 'vacation holiday leisure',
-        '관광': 'tourism sightseeing travel',
-        '숙박': 'accommodation hotel lodging',
-        '맛집': 'restaurant food dining',
+        const prompt = `다음 블로그 글 섹션의 내용을 분석하여 Pixabay 이미지 검색에 최적화된 영어 키워드를 생성해주세요.
+
+제목: ${title}
+내용: ${sectionContent}
+
+요구사항:
+1. 섹션의 핵심 주제를 정확히 파악
+2. Pixabay에서 관련 이미지를 찾을 수 있는 구체적인 영어 키워드 조합 생성
+3. 3-5개의 핵심 영어 단어로 구성
+4. 한국어 고유 개념은 영어로 의역하여 표현
+
+예시:
+- 해수욕장 혼잡도 → "crowded beach summer vacation people"
+- 정부 지원금 신청 → "government financial support application documents"
+- 디지털 플랫폼 사용법 → "digital platform computer interface technology"
+
+키워드만 출력하세요:`;
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
         
-        // 비즈니스/직장 관련
-        '직장': 'office workplace business',
-        '회사': 'company corporation office',
-        '업무': 'work business professional',
-        '회의': 'meeting conference business',
-        '문서': 'documents paperwork office',
-        '계약': 'contract agreement business',
-        '투자': 'investment finance money',
-        '창업': 'startup business entrepreneurship',
-        
-        // 건강/의료 관련
-        '건강': 'health wellness medical',
-        '병원': 'hospital medical healthcare',
-        '치료': 'treatment medical therapy',
-        '운동': 'exercise fitness workout',
-        '다이어트': 'diet fitness health',
-        
-        // 교육/학습 관련
-        '교육': 'education learning study',
-        '학습': 'learning education study',
-        '강의': 'lecture education teaching',
-        '시험': 'exam test study',
-        '자격증': 'certificate qualification education'
-      };
-      
-      // 제목에서 핵심 키워드 추출 및 영어 변환
-      let englishKeyword = '';
-      let found = false;
-      
-      // 정확한 매칭 우선
-      for (const [korean, english] of Object.entries(koreanToEnglishMapping)) {
-        if (title.includes(korean)) {
-          englishKeyword = english;
-          found = true;
-          console.log(`✅ 정확한 매칭: "${korean}" → "${english}"`);
-          break;
-        }
-      }
-      
-      // 매칭되지 않은 경우 컨텍스트 기반 추론
-      if (!found) {
-        if (title.includes('신청') || title.includes('방법') || title.includes('절차')) {
-          englishKeyword = 'application process documents';
-        } else if (title.includes('조건') || title.includes('자격') || title.includes('요건')) {
-          englishKeyword = 'requirements criteria eligibility';
-        } else if (title.includes('지원') || title.includes('도움') || title.includes('혜택')) {
-          englishKeyword = 'support assistance benefits';
-        } else if (title.includes('온라인') || title.includes('인터넷') || title.includes('웹사이트')) {
-          englishKeyword = 'online internet website computer';
-        } else if (title.includes('문서') || title.includes('서류') || title.includes('양식')) {
-          englishKeyword = 'documents paperwork forms office';
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              maxOutputTokens: 100,
+              temperature: 0.3,
+            },
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const aiKeyword = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+          
+          if (aiKeyword && aiKeyword.length > 5) {
+            // AI 키워드 정제 (큰따옴표, 불필요한 문자 제거)
+            const cleanKeyword = aiKeyword
+              .replace(/["""'']/g, '')
+              .replace(/^키워드:|keyword:|Keywords?:/i, '')
+              .replace(/\n/g, ' ')
+              .trim();
+            
+            optimizedKeywords.push(cleanKeyword);
+            console.log(`✅ ${i+1}번째 섹션 AI 키워드 생성 성공: "${cleanKeyword}"`);
+          } else {
+            throw new Error('AI 키워드 생성 실패');
+          }
         } else {
-          // 기본 비즈니스 이미지
-          englishKeyword = 'business professional office meeting';
+          throw new Error('AI API 호출 실패');
         }
-        console.log(`🔄 컨텍스트 추론: "${title}" → "${englishKeyword}"`);
+        
+        // API 호출 간격
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+      } catch (error) {
+        console.error(`❌ ${i+1}번째 섹션 AI 분석 실패:`, error);
+        
+        // 폴백: 기존 방식으로 키워드 생성
+        const fallbackKeyword = generateFallbackKeyword(title);
+        optimizedKeywords.push(fallbackKeyword);
+        console.log(`🔄 ${i+1}번째 섹션 폴백 키워드: "${fallbackKeyword}"`);
       }
-      
-      optimizedKeywords.push(englishKeyword);
-      console.log(`✅ 최종 키워드: "${title}" → "${englishKeyword}"`);
     }
   }
 
+  console.log('🎯 AI 기반 키워드 생성 완료:', optimizedKeywords);
   return optimizedKeywords;
 };
 
-// 10페이지까지 검색하여 중복되지 않는 이미지 수집
+// 폴백 키워드 생성 (AI 실패 시)
+const generateFallbackKeyword = (title: string): string => {
+  const koreanToEnglishMapping: { [key: string]: string } = {
+    // 해수욕장/여행 관련
+    '해수욕장': 'beach seaside ocean summer vacation',
+    '혼잡도': 'crowded busy people crowd density',
+    '여행': 'travel vacation tourism holiday',
+    '관광': 'tourism sightseeing travel destination',
+    '숙박': 'hotel accommodation lodging resort',
+    '맛집': 'restaurant food dining cuisine',
+    
+    // 정부지원/복지 관련
+    '지원금': 'government financial support subsidy',
+    '신청방법': 'application process procedure documents',
+    '자격조건': 'eligibility requirements criteria qualification',
+    '디지털플랫폼': 'digital platform computer technology',
+    '정부지원': 'government assistance aid support',
+    '복지': 'welfare social benefits assistance',
+    '생계급여': 'basic livelihood allowance support',
+    '주거급여': 'housing allowance rent assistance',
+    '의료급여': 'medical assistance healthcare support',
+    '교육급여': 'education support scholarship assistance',
+    
+    // 비즈니스/업무 관련
+    '직장': 'office workplace business professional',
+    '회사': 'company corporation business office',
+    '업무': 'work business professional meeting',
+    '회의': 'meeting conference business discussion',
+    '문서': 'documents paperwork office business',
+    '계약': 'contract agreement business legal',
+    '투자': 'investment finance money business',
+    '창업': 'startup business entrepreneurship innovation',
+    
+    // 건강/의료 관련
+    '건강': 'health wellness medical fitness',
+    '병원': 'hospital medical healthcare clinic',
+    '치료': 'treatment medical therapy healthcare',
+    '운동': 'exercise fitness workout health',
+    '다이어트': 'diet fitness health nutrition',
+    
+    // 교육/학습 관련
+    '교육': 'education learning study school',
+    '학습': 'learning education study training',
+    '강의': 'lecture education teaching classroom',
+    '시험': 'exam test study education',
+    '자격증': 'certificate qualification education training'
+  };
+  
+  // 정확한 매칭 시도
+  for (const [korean, english] of Object.entries(koreanToEnglishMapping)) {
+    if (title.includes(korean)) {
+      return english;
+    }
+  }
+  
+  // 컨텍스트 기반 추론
+  if (title.includes('신청') || title.includes('방법') || title.includes('절차')) {
+    return 'application process documents procedure';
+  } else if (title.includes('조건') || title.includes('자격') || title.includes('요건')) {
+    return 'requirements criteria eligibility qualification';
+  } else if (title.includes('지원') || title.includes('도움') || title.includes('혜택')) {
+    return 'support assistance benefits aid';
+  } else if (title.includes('온라인') || title.includes('인터넷') || title.includes('웹사이트')) {
+    return 'online internet website computer technology';
+  } else if (title.includes('문서') || title.includes('서류') || title.includes('양식')) {
+    return 'documents paperwork forms office business';
+  } else {
+    return 'business professional office meeting documents';
+  }
+};
+
+// 10페이지까지 검색하여 중복되지 않는 이미지 수집 (재시도 로직 강화)
 export const searchPixabayImages10Pages = async (
   query: string,
   apiKey: string,
-  maxImages: number = 5
+  maxImages: number = 5,
+  usedImageIds: Set<number> = new Set()
 ): Promise<PixabayImage[]> => {
-  console.log(`🔍 10페이지 포괄 검색 시작: "${query}" (최대 ${maxImages}개)`);
+  console.log(`🔍 10페이지 포괄 검색 시작: "${query}" (최대 ${maxImages}개, 제외 이미지: ${usedImageIds.size}개)`);
   
   const validImages: PixabayImage[] = [];
-  const usedImageIds = new Set<number>(); // 중복 방지
   const encodedQuery = encodeURIComponent(query);
+  let retryCount = 0;
+  const maxRetries = 3;
   
-  // 10페이지까지 순차 검색
+  // 10페이지까지 순차 검색 (재시도 로직 포함)
   for (let page = 1; page <= 10 && validImages.length < maxImages; page++) {
     try {
       const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=20&page=${page}&safesearch=true&order=popular`;
       
-      console.log(`📡 ${page}페이지 검색: ${url.substring(0, 100)}...`);
+      console.log(`📡 ${page}페이지 검색 (재시도: ${retryCount}): ${url.substring(0, 100)}...`);
       
       const response = await fetch(url);
       
       if (response.status === 429) {
-        console.warn(`⚠️ ${page}페이지 - API 한도 초과, 1초 대기 후 재시도`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        continue;
+        console.warn(`⚠️ ${page}페이지 - API 한도 초과, 2초 대기 후 재시도`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (retryCount < maxRetries) {
+          retryCount++;
+          page--; // 같은 페이지 재시도
+          continue;
+        }
       }
       
       if (!response.ok) {
@@ -162,7 +233,7 @@ export const searchPixabayImages10Pages = async (
       if (data.hits && data.hits.length > 0) {
         // 품질 좋고 중복되지 않는 이미지만 선별
         const qualityImages = data.hits.filter(img => 
-          !usedImageIds.has(img.id) && // 중복 방지
+          !usedImageIds.has(img.id) && // 전역 중복 방지
           img.views > 1000 && 
           img.downloads > 100 && 
           img.webformatURL.includes('pixabay.com')
@@ -173,10 +244,10 @@ export const searchPixabayImages10Pages = async (
         
         imagesToAdd.forEach(img => {
           validImages.push(img);
-          usedImageIds.add(img.id);
+          usedImageIds.add(img.id); // 전역 중복 방지 세트에 추가
         });
         
-        console.log(`🎯 ${page}페이지에서 ${imagesToAdd.length}개 고품질 이미지 추가 (중복 제거됨)`);
+        console.log(`🎯 ${page}페이지에서 ${imagesToAdd.length}개 고품질 이미지 추가 (전역 중복 제거됨)`);
         
         if (validImages.length >= maxImages) {
           console.log(`🏁 목표 이미지 수 달성: ${validImages.length}개`);
@@ -184,12 +255,23 @@ export const searchPixabayImages10Pages = async (
         }
       }
       
+      retryCount = 0; // 성공 시 재시도 카운트 리셋
       // API 호출 간격
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 600));
       
     } catch (error) {
-      console.error(`❌ ${page}페이지 검색 실패:`, error);
-      continue;
+      console.error(`❌ ${page}페이지 검색 실패 (재시도: ${retryCount}):`, error);
+      
+      // 재시도 로직
+      if (retryCount < maxRetries) {
+        retryCount++;
+        page--; // 같은 페이지 재시도
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        continue;
+      } else {
+        retryCount = 0;
+        continue; // 다음 페이지로
+      }
     }
   }
   
@@ -203,7 +285,6 @@ export const searchPixabayByPage = async (
   apiKey: string,
   targetPage: number
 ): Promise<PixabayImage | null> => {
-  // 이 함수는 더 이상 사용하지 않지만 호환성을 위해 유지
   const images = await searchPixabayImages10Pages(query, apiKey, 1);
   return images.length > 0 ? images[0] : null;
 };
@@ -229,19 +310,19 @@ export const integratePixabayImages = async (
   pixabayApiKey: string,
   geminiApiKey: string
 ): Promise<{ finalHtml: string; imageCount: number; clipboardImages: string[] }> => {
-  console.log('🔥 새로운 10페이지 포괄 Pixabay 이미지 통합 시작:', { 
+  console.log('🔥 AI 기반 픽사베이 이미지 통합 시작:', { 
     htmlLength: htmlContent.length,
     hasPixabayKey: !!pixabayApiKey,
     hasGeminiKey: !!geminiApiKey
   });
 
   try {
-    // 1. 최적화된 키워드 추출 (개선된 매핑 시스템 사용)
-    const optimizedKeywords = extractOptimizedKeywords(htmlContent);
-    console.log('✅ 최적화된 영어 키워드들:', optimizedKeywords);
+    // 1. AI를 통한 픽사베이 최적화 키워드 생성
+    const optimizedKeywords = await generatePixabayOptimizedKeywords(htmlContent, geminiApiKey);
+    console.log('✅ AI 기반 픽사베이 최적화 키워드들:', optimizedKeywords);
 
     if (optimizedKeywords.length === 0) {
-      console.log('❌ 추출된 키워드가 없습니다.');
+      console.log('❌ 생성된 키워드가 없습니다.');
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
@@ -252,65 +333,68 @@ export const integratePixabayImages = async (
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 3. 각 키워드별로 10페이지 포괄 검색 (중복 방지)
+    // 3. 전역 중복 방지를 위한 Set
+    const globalUsedImageIds = new Set<number>();
     const validImages: PixabayImage[] = [];
-    const allUsedImageIds = new Set<number>(); // 전체 중복 방지
     
+    // 4. 각 키워드별로 10페이지 포괄 검색 (중복 방지 강화)
     for (let i = 0; i < Math.min(optimizedKeywords.length, 5); i++) {
       const keyword = optimizedKeywords[i];
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      try {
-        console.log(`🔍 ${i+1}번째 소제목 - 10페이지 포괄 검색:`, keyword);
-        
-        // 10페이지 포괄 검색으로 1개 이미지 획득
-        const images = await searchPixabayImages10Pages(keyword, pixabayApiKey, 1);
-        
-        if (images.length > 0) {
-          const newImage = images.find(img => !allUsedImageIds.has(img.id));
-          if (newImage) {
-            validImages.push(newImage);
-            allUsedImageIds.add(newImage.id);
-            console.log(`✅ ${i+1}번째 소제목 - 10페이지 검색 성공:`, newImage.webformatURL);
+      while (attempts < maxAttempts && validImages.filter((_, idx) => idx === i).length === 0) {
+        try {
+          console.log(`🔍 ${i+1}번째 소제목 - AI 키워드 검색 (시도 ${attempts + 1}): "${keyword}"`);
+          
+          // 10페이지 포괄 검색으로 1개 이미지 획득 (전역 중복 방지)
+          const images = await searchPixabayImages10Pages(keyword, pixabayApiKey, 1, globalUsedImageIds);
+          
+          if (images.length > 0) {
+            validImages.push(images[0]);
+            console.log(`✅ ${i+1}번째 소제목 - AI 키워드 검색 성공 (시도 ${attempts + 1}):`, images[0].webformatURL);
+            break;
           } else {
-            console.log(`⚠️ ${i+1}번째 소제목 - 중복 이미지, 폴백 검색 시도`);
+            attempts++;
+            console.log(`⚠️ ${i+1}번째 소제목 - 이미지 없음 (시도 ${attempts}), 재시도 중...`);
             
-            // 폴백: 일반적인 키워드로 10페이지 검색
-            const fallbackImages = await searchPixabayImages10Pages('business office professional', pixabayApiKey, 1);
-            const fallbackImage = fallbackImages.find(img => !allUsedImageIds.has(img.id));
-            if (fallbackImage) {
-              validImages.push(fallbackImage);
-              allUsedImageIds.add(fallbackImage.id);
-              console.log(`✅ ${i+1}번째 소제목 - 폴백 이미지 성공:`, fallbackImage.webformatURL);
+            if (attempts < maxAttempts) {
+              // 키워드 변형 시도
+              const fallbackKeyword = attempts === 1 
+                ? `business professional office ${keyword}` 
+                : `modern technology digital ${keyword}`;
+              
+              console.log(`🔄 ${i+1}번째 소제목 - 폴백 키워드 시도: "${fallbackKeyword}"`);
+              const fallbackImages = await searchPixabayImages10Pages(fallbackKeyword, pixabayApiKey, 1, globalUsedImageIds);
+              
+              if (fallbackImages.length > 0) {
+                validImages.push(fallbackImages[0]);
+                console.log(`✅ ${i+1}번째 소제목 - 폴백 키워드 성공:`, fallbackImages[0].webformatURL);
+                break;
+              }
             }
           }
-        } else {
-          console.log(`❌ ${i+1}번째 소제목 - 10페이지 검색 실패, 폴백 시도`);
           
-          // 폴백 검색
-          const fallbackImages = await searchPixabayImages10Pages('business meeting documents', pixabayApiKey, 1);
-          const fallbackImage = fallbackImages.find(img => !allUsedImageIds.has(img.id));
-          if (fallbackImage) {
-            validImages.push(fallbackImage);
-            allUsedImageIds.add(fallbackImage.id);
-            console.log(`✅ ${i+1}번째 소제목 - 폴백 이미지 성공:`, fallbackImage.webformatURL);
-          }
+          // 재시도 간격
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`❌ ${i+1}번째 소제목 검색 실패 (시도 ${attempts + 1}):`, error);
+          attempts++;
         }
-        
-        // API 호출 간격
-        await new Promise(resolve => setTimeout(resolve, 600));
-      } catch (error) {
-        console.error(`❌ ${i+1}번째 소제목 검색 실패:`, error);
       }
+      
+      // API 호출 간격
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
 
-    console.log('🎯 10페이지 포괄 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
+    console.log('🎯 AI 기반 픽사베이 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
 
     if (validImages.length === 0) {
       console.log('❌ 사용 가능한 이미지가 없습니다.');
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 4. HTML에 이미지 삽입 (개선된 템플릿)
+    // 5. HTML에 이미지 삽입
     let updatedHtml = htmlContent;
     const clipboardImages: string[] = [];
 
@@ -320,7 +404,7 @@ export const integratePixabayImages = async (
       
       const altText = sectionTitle.replace(/<[^>]*>/g, '').replace(/[^\w\s가-힣]/g, ' ').trim() || '블로그 이미지';
       
-      // 티스토리 최적화 이미지 태그 (텍스트 정보 제거)
+      // 티스토리 최적화 이미지 태그 (텍스트 정보 완전 제거)
       const imageHtml = `
         <div class="pixabay-image-container" style="text-align: center; margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 15px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);">
           <img 
@@ -341,11 +425,11 @@ export const integratePixabayImages = async (
       if (sectionEndIndex > 4) {
         updatedHtml = updatedHtml.slice(0, sectionEndIndex) + imageHtml + updatedHtml.slice(sectionEndIndex);
         clipboardImages.push(image.webformatURL);
-        console.log(`✅ ${i+1}번째 이미지 삽입 완료 (10페이지 검색)`);
+        console.log(`✅ ${i+1}번째 이미지 삽입 완료 (AI 키워드 기반)`);
       }
     }
 
-    // 5. 글로벌 이미지 복사 함수 (간소화된 버전)
+    // 6. 글로벌 이미지 복사 함수
     const imageScriptHtml = `
     <script>
       window.copyImageToClipboard = async function(imageUrl) {
@@ -396,7 +480,7 @@ export const integratePixabayImages = async (
     };
 
   } catch (error) {
-    console.error('❌ 10페이지 포괄 Pixabay 이미지 통합 중 전체 오류:', error);
+    console.error('❌ AI 기반 픽사베이 이미지 통합 중 전체 오류:', error);
     return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
   }
 };

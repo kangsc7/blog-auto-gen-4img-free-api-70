@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -136,7 +135,7 @@ export const useArticleGenerator = (
         throw new Error("사용자에 의해 중단되었습니다.");
       }
 
-      // 픽사베이 이미지 추가 기능 - 10페이지 포괄 검색 방식
+      // AI 기반 픽사베이 이미지 추가 기능
       const pixabayApiKey = appState.pixabayApiKey;
       const isPixabayValidated = appState.isPixabayApiKeyValidated;
       
@@ -148,8 +147,8 @@ export const useArticleGenerator = (
 
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
-          title: "🖼️ 2단계: 이미지 추가 중", 
-          description: "10페이지 포괄 검색으로 중복 없는 최적의 이미지를 삽입 중입니다." 
+          title: "🖼️ 2단계: AI 이미지 분석 및 추가", 
+          description: "AI가 소제목 내용을 분석하여 최적화된 키워드로 고품질 이미지를 검색 중입니다." 
         });
         
         try {
@@ -169,27 +168,27 @@ export const useArticleGenerator = (
           if (imageCount > 0) {
             pixabayImagesAdded = true;
             toast({ 
-              title: "✅ 이미지 추가 완료", 
-              description: `${imageCount}개의 고품질 이미지가 10페이지 포괄 검색으로 중복 없이 삽입되었습니다!`,
+              title: "✅ AI 이미지 분석 완료", 
+              description: `AI가 소제목 내용을 분석하여 ${imageCount}개의 최적화된 이미지를 중복 없이 삽입했습니다!`,
               duration: 4000
             });
           } else {
             toast({ 
               title: "⚠️ 이미지 추가 실패", 
-              description: `적합한 이미지를 찾지 못했습니다. 텍스트 콘텐츠는 정상 생성되었습니다.`, 
+              description: `AI 분석 후에도 적합한 이미지를 찾지 못했습니다. 텍스트 콘텐츠는 정상 생성되었습니다.`, 
               variant: "default" 
             });
           }
         } catch (imageError) {
-          console.error('❌ Pixabay 이미지 통합 오류:', imageError);
+          console.error('❌ AI 기반 Pixabay 이미지 통합 오류:', imageError);
           toast({ 
-            title: "⚠️ 이미지 추가 오류", 
-            description: "이미지 추가 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", 
+            title: "⚠️ AI 이미지 분석 오류", 
+            description: "AI 이미지 분석 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", 
             variant: "default" 
           });
         }
       } else {
-        console.log('⚠️ Pixabay 설정 누락 - 이미지 추가 건너뛰기');
+        console.log('⚠️ Pixabay 설정 누락 - AI 이미지 분석 건너뛰기');
       }
 
       // 메타 설명 생성
@@ -234,7 +233,7 @@ export const useArticleGenerator = (
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `랜덤 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 고품질 이미지 포함)` : '(텍스트만)'}`,
+        description: `AI 분석 기반 최적화된 컬러테마(${selectedColorTheme}), 시각카드(6번째 소제목 끝), 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 AI 최적화 이미지 포함)` : '(텍스트만)'}`,
         duration: 5000
       });
       
