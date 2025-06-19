@@ -55,7 +55,7 @@ export const useArticleGenerator = (
       }
 
       toast({ 
-        title: "1단계: AI 글 작성 중...", 
+        title: "AI 글 작성 중...", 
         description: "최적화된 알고리즘으로 빠르게 글을 생성하고 있습니다." 
       });
 
@@ -123,69 +123,15 @@ export const useArticleGenerator = (
       const rawContent = data.candidates[0].content.parts[0].text;
       const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
       let finalHtml = htmlContent;
-      let pixabayImagesAdded = false;
-      let clipboardImages: string[] = [];
 
       if (cancelArticleGeneration.current) {
         throw new Error("사용자에 의해 중단되었습니다.");
       }
 
-      const pixabayApiKey = appState.pixabayApiKey;
-      const isPixabayValidated = appState.isPixabayApiKeyValidated;
+      // 픽사베이 이미지 추가 기능 임시 비활성화
+      console.log('픽사베이 이미지 추가 기능이 임시로 비활성화되었습니다.');
       
-      console.log('Pixabay 설정 확인:', { 
-        hasKey: !!pixabayApiKey, 
-        isValidated: isPixabayValidated,
-        keyLength: pixabayApiKey?.length 
-      });
-
-      if (pixabayApiKey && isPixabayValidated) {
-        toast({ 
-          title: "2단계: 이미지 추가 중...", 
-          description: "5개의 이미지를 각 섹션에 추가하고 있습니다." 
-        });
-        
-        try {
-          const { finalHtml: htmlWithImages, imageCount, clipboardImages: clips } = await integratePixabayImages(
-            htmlContent,
-            pixabayApiKey,
-            appState.apiKey!
-          );
-
-          if (cancelArticleGeneration.current) {
-            throw new Error("사용자에 의해 중단되었습니다.");
-          }
-
-          finalHtml = htmlWithImages;
-          clipboardImages = clips;
-          
-          if (imageCount > 0) {
-            pixabayImagesAdded = true;
-            toast({ 
-              title: "✅ 이미지 추가 완료", 
-              description: `${imageCount}개의 이미지가 본문에 추가되었습니다. 티스토리에 복사-붙여넣기 가능합니다!`,
-              duration: 4000
-            });
-          } else {
-            toast({ 
-              title: "이미지 추가 실패", 
-              description: `게시글에 이미지를 추가하지 못했습니다. Pixabay API 키를 확인해주세요.`, 
-              variant: "default" 
-            });
-          }
-        } catch (imageError) {
-          console.error('Pixabay 이미지 통합 오류:', imageError);
-          toast({ 
-            title: "이미지 추가 오류", 
-            description: "이미지 추가 중 오류가 발생했습니다. 글 작성은 계속 진행됩니다.", 
-            variant: "default" 
-          });
-        }
-      } else {
-        console.log('Pixabay 설정 누락 - 이미지 추가 건너뛰기');
-      }
-
-      // 메타 설명 생성 (성능 최적화: 병렬 처리)
+      // 메타 설명 생성
       try {
         const metaDescription = await generateMetaDescription(htmlContent, appState.apiKey!);
         if (metaDescription && !cancelArticleGeneration.current) {
@@ -205,17 +151,13 @@ export const useArticleGenerator = (
         generatedContent: finalHtml, 
         colorTheme: selectedColorTheme 
       };
-      
-      if (pixabayImagesAdded) {
-        stateToSave.imagePrompt = `✅ ${clipboardImages.length}개의 Pixabay 이미지가 자동으로 적용되었습니다.`;
-      }
 
       saveAppState(stateToSave);
       
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `최신 정보와 이미지가 포함된 글이 빠르게 완성되었습니다. (${pixabayImagesAdded ? clipboardImages.length + '개 이미지 포함' : '텍스트만'})`,
+        description: "텍스트 콘텐츠가 성공적으로 생성되었습니다. (이미지 추가 기능은 임시 비활성화됨)",
         duration: 4000
       });
       
