@@ -6,6 +6,7 @@ import { ImageCreation } from '@/components/control/ImageCreation';
 import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { EvergreenKeywordCounter } from '@/components/display/EvergreenKeywordCounter';
+import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { AppState } from '@/types';
 
 interface LeftSidebarProps {
@@ -69,6 +70,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   return (
     <div className="space-y-6">
+      <RefactoredApiKeysSection appState={appState} saveAppState={saveAppState} />
+
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
