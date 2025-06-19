@@ -25,7 +25,6 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
     <div className="content-container mt-6 mb-4">
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         {!isExpanded ? (
-          // 접힌 상태 - 제목만 표시
           <div 
             className="p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors"
             onDoubleClick={handleDoubleClick}
@@ -36,7 +35,6 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
             <p className="text-sm text-gray-500 mt-2">더블클릭하여 설정창 열기</p>
           </div>
         ) : (
-          // 펼쳐진 상태 - 전체 내용 표시
           <div>
             <div 
               className="p-4 bg-gray-50 text-center cursor-pointer hover:bg-gray-100 transition-colors border-b"
@@ -52,10 +50,10 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
               <GeminiApiKeyManager 
                 geminiApiKey={geminiManager.geminiApiKey}
                 setGeminiApiKey={geminiManager.setGeminiApiKey}
-                isApiKeyValidated={geminiManager.isApiKeyValidated}
-                setIsApiKeyValidated={geminiManager.setIsApiKeyValidated}
-                testApiKey={geminiManager.testApiKey}
-                isTesting={geminiManager.isTesting}
+                isGeminiValidated={geminiManager.isApiKeyValidated}
+                setIsGeminiValidated={geminiManager.setIsApiKeyValidated}
+                testGeminiKey={geminiManager.testApiKey}
+                isGeminiTesting={geminiManager.isTesting}
               />
               
               <PixabayApiKeyManager 
@@ -63,7 +61,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
                 setPixabayApiKey={pixabayManager.setPixabayApiKey}
                 isPixabayApiKeyValidated={pixabayManager.isPixabayValidating}
                 setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayValidated}
-                testPixabayKey={pixabayManager.testPixabayKey}
+                testPixabayApiKey={pixabayManager.testPixabayKey}
                 isPixabayTesting={pixabayManager.isPixabayTesting}
               />
               
@@ -72,7 +70,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
                 setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
                 isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceValidating}
                 setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceValidated}
-                testHuggingFaceKey={huggingFaceManager.testHuggingFaceKey}
+                testHuggingFaceApiKey={huggingFaceManager.testHuggingFaceKey}
                 isHuggingFaceTesting={huggingFaceManager.isHuggingFaceTesting}
               />
             </div>

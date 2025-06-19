@@ -197,7 +197,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       const editor = editorRef.current;
       
-      // 주제 스타일을 H4 크기, 검은색으로 적용
+      // 주제 스타일을 H4 크기, 검은색으로 적용하고 제목 뒤에 10px 공백 추가
       let processedContent = content.replace(
         /<h3([^>]*style="[^"]*color:\s*[^;]*;[^"]*")([^>]*)>/gi,
         '<h4 style="color: #000000; font-weight: bold; font-size: 1.2em; margin: 20px 0 15px 0; line-height: 1.4;">$2>'
@@ -212,10 +212,10 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       // H3 종료 태그를 H4로 변경
       processedContent = processedContent.replace(/<\/h3>/gi, '</h4>');
       
-      // 주제 뒤에 공백 줄 추가
+      // 주제(첫 번째 H4) 뒤에 10px 공백 추가
       processedContent = processedContent.replace(
-        /(<h4[^>]*>[^<]*<\/h4>)/gi,
-        '$1\n<p style="height: 20px;">&nbsp;</p>'
+        /(<h4[^>]*>[^<]*<\/h4>)/i,
+        '$1\n<p style="height: 10px;">&nbsp;</p>'
       );
       
       editor.innerHTML = processedContent;
@@ -738,7 +738,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
-                <p>아래 내용을 자유롭게 수정하세요. 이미지를 복사하여 붙여넣을 수도 있습니다.</p>
+                <p>자유롭게 수정하세요.</p>
                 <div className="mt-2 text-xs bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
                   <p className="font-bold text-yellow-800">🎯 티스토리 사용법:</p>
                   <p>1. HTML 복사 → 티스토리 코드 편집창 붙여넣기</p>

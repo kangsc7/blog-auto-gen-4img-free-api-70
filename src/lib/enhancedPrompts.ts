@@ -1,164 +1,54 @@
-import { getColors } from './promptUtils';
-import { getHtmlTemplate } from './htmlTemplate';
-import { generateDynamicHeadings } from './dynamicHeadings';
+import { AppState } from '@/types';
+import { getRandomColorTheme, getColors } from './promptUtils';
 
-interface EnhancedArticlePromptParams {
-  topic: string;
-  keyword: string;
-  selectedColorTheme: string;
-  referenceLink?: string;
-  referenceSentence?: string;
-  apiKey: string;
-}
+export const createBlogPrompt = (
+  appState: AppState,
+  websiteContent?: string
+): string => {
+  const selectedTheme = appState.colorTheme || getRandomColorTheme();
+  const colors = getColors(selectedTheme);
 
-// 블로그 글 지침 방어 시스템 - 절대 삭제/변경 금지
-const PROTECTED_GUIDELINES = {
-  // 글자수 제한 - 절대 변경 금지
-  WORD_COUNT_LIMIT: "190자에서 250자 사이",
-  
-  // 키워드 강조 규칙 - 절대 변경 금지
-  KEYWORD_EMPHASIS: "각 H2 섹션별로 핵심 키워드를 정확히 1번만 <strong> 태그로 강조",
-  
-  // 컬러테마 적용 - 절대 변경 금지
-  COLOR_THEME_MANDATORY: "선택된 컬러테마를 반드시 모든 스타일에 정확히 적용",
-  
-  // 시각화 요약 카드 - 절대 삭제 금지
-  VISUALIZATION_CARD_REQUIRED: "티스토리 호환 시각화 요약 카드 필수 삽입",
-  
-  // 주의사항 카드 - 절대 삭제 금지
-  WARNING_CARD_REQUIRED: "주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리)",
-  
-  // 태그 생성 - 절대 변경 금지
-  TAG_GENERATION: "글 마지막에 태그 생성 시 '태그:' 접두사 절대 포함하지 말고 쉼표로 구분된 키워드만",
-  
-  // 외부 링크 연동 - 절대 삭제 금지
-  EXTERNAL_LINK_INTEGRATION: "외부 참조 링크 스타일 적용",
-  
-  // 주제 스타일 - 절대 변경 금지
-  TOPIC_STYLE: "주제 제목은 H3 태그로 글 시작 부분에 반드시 포함, 컬러테마 적용",
-  
-  // 공감 박스 - 절대 삭제 금지
-  EMPATHY_BOX: "간단한 공감 박스 (주제 제목 바로 다음에 반드시 포함 - 테두리 제거)"
-};
+  const basePrompt = `
+다음 요구사항에 따라 SEO 최적화된 블로그 글을 작성해주세요:
 
-// 지침 무결성 검증 함수
-const validateGuidelines = (): boolean => {
-  console.log('🛡️ 블로그 글 지침 무결성 검증 시작');
-  
-  const requiredElements = [
-    PROTECTED_GUIDELINES.WORD_COUNT_LIMIT,
-    PROTECTED_GUIDELINES.KEYWORD_EMPHASIS,
-    PROTECTED_GUIDELINES.COLOR_THEME_MANDATORY,
-    PROTECTED_GUIDELINES.VISUALIZATION_CARD_REQUIRED,
-    PROTECTED_GUIDELINES.WARNING_CARD_REQUIRED,
-    PROTECTED_GUIDELINES.TAG_GENERATION,
-    PROTECTED_GUIDELINES.EXTERNAL_LINK_INTEGRATION,
-    PROTECTED_GUIDELINES.TOPIC_STYLE,
-    PROTECTED_GUIDELINES.EMPATHY_BOX
-  ];
-  
-  const isValid = requiredElements.every(element => element && element.length > 0);
-  console.log(`🛡️ 지침 무결성 검증 ${isValid ? '성공' : '실패'}:`, requiredElements.length, '개 요소 확인');
-  
-  return isValid;
-};
+**주제**: ${appState.selectedTopic}
+**키워드**: ${appState.keyword || '없음'}
+**컬러 테마**: ${selectedTheme} (메인: ${colors.primary}, 보조: ${colors.secondary})
 
-// 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 절대 보존)
-const extractNaturalKeyword = (topic: string): string => {
-  return topic
-    .replace(/지급|신청|방법|조건|자격|혜택|정보|안내|가이드|완벽|최신|최대한|확실하게|업법/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
+**블로그 글 작성 지침**:
+1. 글 제목을 H3 태그로 작성 (이 제목은 화면에서 H4로 스타일 적용됨)
+2. 주제를 나타내는 시각적 요약 카드 추가 (동적 색상 적용)
+3. 시각화 요약카드 다음 줄에 공백 한줄 추가
+4. 외부 링크 HTML 코드 추가:
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />👉 <a style="color: #1a73e8; text-decoration: underline; font-weight: bold;" href="${appState.referenceLink || 'https://worldpis.com'}" target="_blank" rel="noopener"><b>${appState.referenceSentence || '워드프레스 꿀팁 더 보러가기'}</b></a></p>
+5. 실용적이고 구체적인 내용으로 구성
+6. 각 섹션별로 190-250자 내외로 작성
+7. 픽사베이 이미지 3-4개를 적절히 배치 (관련 키워드로)
+8. 글 하단에 관련 태그 5-7개를 중앙 정렬로 배치
 
-// 더 자연스러운 관련 용어 생성 함수
-const generateNaturalContext = (naturalKeyword: string, originalKeyword: string): { [key: string]: string } => {
-  const baseTerms = ['지원금', '혜택', '제도', '프로그램', '서비스'];
-  const contextTerms = ['관련 지원', '이런 혜택', '해당 제도', '이 프로그램', '지원 서비스'];
-  
-  return {
-    INTRO_KEYWORD_CONTEXT: `${naturalKeyword} 관련 혜택`,
-    CONTENT_KEYWORD_1: `${naturalKeyword} ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_1: `이 ${baseTerms[Math.floor(Math.random() * baseTerms.length)]}`,
-    SECTION_CONTENT_2: `${naturalKeyword} 관련`,
-    SECTION_CONTENT_3: `디지털플랫폼 활용`,
-    SECTION_CONTENT_4: `이 지원금`,
-    SECTION_CONTENT_5: `${naturalKeyword} 지원`,
-    SUMMARY_TITLE: naturalKeyword,
-    REFERENCE_TEXT: '워드프레스 꿀팁 더 보러가기',
-    GENERATED_TAGS: `${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여`
-  };
-};
+**시각적 요약 카드 스타일**:
+- 배경색: ${colors.secondary}
+- 테두리색: ${colors.primary}
+- 텍스트색: ${colors.primary}
+- 글꼴: 굵게, 중앙 정렬
+- 여백: 상하 20px
 
-// 블로그 글 생성 프롬프트 - 절대 삭제/변경 금지
-export const createBlogPostPrompt = (
-  topic: string, 
-  keyword: string,
-  colorTheme: string,
-  referenceLink?: string,
-  referenceSentence?: string
-) => {
-  console.log('🎯 블로그 글 프롬프트 생성:', { topic, keyword, colorTheme, hasReferenceLink: !!referenceLink, hasReferenceSentence: !!referenceSentence });
-  
-  const prompt = `다음 조건으로 블로그 글을 작성해주세요:
+**구조**:
+1. H3 제목
+2. 시각적 요약 카드
+3. 외부 링크 HTML
+4. 도입부 (문제 제기 또는 흥미 유발)
+5. 핵심 내용 3-4개 섹션 (각각 소제목과 상세 설명)
+6. 픽사베이 이미지 포함
+7. 실용적인 팁 또는 결론
+8. 관련 태그
 
-🎯 **주제**: ${topic}
-🔑 **핵심 키워드**: ${keyword}
-🎨 **컬러테마**: ${colorTheme}
-${referenceLink ? `🔗 **참조 링크**: ${referenceLink}` : ''}
-${referenceSentence ? `📝 **참조 문장**: ${referenceSentence}` : ''}
+${websiteContent ? `\n**참고 자료**:\n${websiteContent.substring(0, 1000)}...` : ''}
 
-📋 **필수 작성 지침 (절대 변경 금지)**:
+**중요**: 모든 HTML은 완성된 형태로 제공하고, 픽사베이 이미지는 실제 검색 가능한 키워드를 사용하여 요청하세요.
+`;
 
-1. **글자수**: 각 소제목별 내용은 190자에서 250자 사이로 작성
-2. **키워드 강조**: "${keyword}" 키워드를 <strong> 태그로 정확히 1번만 강조
-3. **컬러테마**: 선택된 컬러테마 "${colorTheme}"를 모든 디자인 요소에 정확히 적용
-4. **HTML 구조**: 완전한 HTML 문서로 작성 (DOCTYPE, head, body 포함)
-5. **반응형 디자인**: 모바일과 데스크톱 모두 호환되는 CSS 적용
-
-🎨 **HTML 템플릿 구조**:
-- DOCTYPE html5 선언
-- UTF-8 인코딩 및 viewport 메타태그
-- 반응형 CSS 스타일 포함
-- 티스토리 호환 HTML 구조
-
-📝 **본문 구성**:
-1. **주제 제목**: <h1> 태그로 시작, 밑줄 없이, 검은색으로 표시
-2. **메타 설명**: 주제 바로 아래에 내용을 요약한 서술형, 공감형 메타 방식 한 문단 추가
-3. **시각화 요약 카드**: 티스토리 호환 시각화 요약 카드 필수 삽입
-4. **외부 링크 섹션**: ${referenceLink ? `시각화 카드 바로 아래에 다음 형식으로 삽입:
-   <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
-     <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
-     <a style="color: ${colorTheme}; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
-       <b>👉 ${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</b>
-     </a>
-   </p>` : '외부 링크 정보가 없으므로 생략'}
-5. **소제목들**: 각각 190-250자 내용으로 구성
-6. **주의사항 카드**: 필수 삽입
-
-🎯 **태그 생성 규칙**:
-- 접두사 없이 핵심 키워드만 포함
-- 쉼표로 구분하여 5-8개 생성
-- 예: "프로그래밍, 웹개발, 자바스크립트, 리액트, 개발자"
-
-⚠️ **주의사항**:
-- 모든 스타일은 인라인 CSS로 적용
-- 외부 CSS/JS 파일 참조 금지
-- 티스토리 에디터 호환성 우선
-
-📊 **품질 검증 항목**:
-✅ 키워드 "${keyword}" <strong> 태그로 1회 강조
-✅ 각 소제목별 190-250자 준수
-✅ 컬러테마 "${colorTheme}" 일관성 있게 적용
-✅ 시각화 요약 카드 포함
-✅ 주의사항 카드 포함
-✅ 완전한 HTML 구조
-${referenceLink ? '✅ 외부 링크 섹션 포함' : ''}
-
-지금 바로 위 조건을 모두 충족하는 완전한 HTML 블로그 글을 작성해주세요.`;
-
-  console.log('✅ 블로그 글 프롬프트 생성 완료:', prompt.length + '자');
-  return prompt;
+  return basePrompt;
 };
 
 export const getEnhancedArticlePrompt = async ({
