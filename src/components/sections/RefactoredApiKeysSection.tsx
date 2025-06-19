@@ -52,8 +52,8 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
               <GeminiApiKeyManager 
                 geminiApiKey={geminiManager.geminiApiKey}
                 setGeminiApiKey={geminiManager.setGeminiApiKey}
-                isValidated={geminiManager.isApiKeyValidated}
-                setIsValidated={geminiManager.setIsApiKeyValidated}
+                isApiKeyValidated={geminiManager.isApiKeyValidated}
+                setIsApiKeyValidated={geminiManager.setIsApiKeyValidated}
                 testApiKey={geminiManager.testApiKey}
                 isTesting={geminiManager.isTesting}
               />
@@ -61,8 +61,8 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
               <PixabayApiKeyManager 
                 pixabayApiKey={pixabayManager.pixabayApiKey}
                 setPixabayApiKey={pixabayManager.setPixabayApiKey}
-                isPixabayValidating={pixabayManager.isPixabayValidated}
-                setIsPixabayValidated={pixabayManager.setIsPixabayValidated}
+                isPixabayApiKeyValidated={pixabayManager.isPixabayValidating}
+                setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayValidated}
                 testPixabayKey={pixabayManager.testPixabayKey}
                 isPixabayTesting={pixabayManager.isPixabayTesting}
               />
@@ -70,8 +70,8 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
               <HuggingFaceApiKeyManager 
                 huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
                 setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
-                isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidated}
-                setIsHuggingFaceValidated={huggingFaceManager.setIsHuggingFaceValidated}
+                isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceValidating}
+                setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceValidated}
                 testHuggingFaceKey={huggingFaceManager.testHuggingFaceKey}
                 isHuggingFaceTesting={huggingFaceManager.isHuggingFaceTesting}
               />

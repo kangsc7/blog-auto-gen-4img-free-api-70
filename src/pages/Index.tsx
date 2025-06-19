@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -231,7 +230,7 @@ const Index = () => {
                 <RefreshCw className="h-6 w-6 mr-2" />
                 <span className="font-bold text-lg">초기화</span>
               </Button>
-              <p className="text-sm text-gray-600 mt-2 font-semibold">모든 데이터 초기화</p>
+              <p className="text-sm text-gray-600 mt-2 font-semibold">블로그 글 초기화</p>
             </div>
           </div>
         </div>

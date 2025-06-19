@@ -123,7 +123,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">섹션별 글자 수</span>
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">200-270자</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">190-250자</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -168,14 +168,6 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
               중단
             </Button>
           )}
-        </div>
-
-        <div className="text-xs text-gray-500 text-center">
-          선택한 주제를 바탕으로 SEO 최적화된 블로그 글을 생성합니다
-          {appState.isPixabayApiKeyValidated && (
-            <div className="mt-1 text-blue-600">✓ Pixabay 이미지 자동 첨부 활성화</div>
-          )}
-          <div className="mt-1 text-green-600">✓ 컬러테마, 시각요약카드, 섹션글자수 제한 적용</div>
         </div>
       </CardContent>
     </Card>
