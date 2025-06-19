@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,7 +54,44 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [onContentChange]);
 
-  // 이미지 클릭 핸들러 - 안정화된 버전
+  // 글로벌 이미지 클릭 핸들러 함수 등록
+  useEffect(() => {
+    (window as any).handleImageClick = async (imageUrl: string) => {
+      try {
+        console.log('티스토리용 이미지 복사 시도:', imageUrl);
+        
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        
+        const clipboardItem = new ClipboardItem({
+          [blob.type]: blob
+        });
+        
+        await navigator.clipboard.write([clipboardItem]);
+        
+        toast({
+          title: "✅ 티스토리용 이미지 복사 완료!",
+          description: "티스토리에서 Ctrl+V로 붙여넣으세요. 대표이미지 설정도 가능합니다.",
+          duration: 4000
+        });
+        
+      } catch (error) {
+        console.error('이미지 복사 실패:', error);
+        toast({
+          title: "⚠️ 이미지 복사 실패",
+          description: "이미지 우클릭 → '이미지 복사'를 시도해보세요.",
+          variant: "default",
+          duration: 3000
+        });
+      }
+    };
+
+    return () => {
+      delete (window as any).handleImageClick;
+    };
+  }, [toast]);
+
+  // 이미지 클릭 핸들러 - 개선된 버전
   const handleImageClick = async (imageUrl: string) => {
     try {
       console.log('이미지 클릭 복사 시도:', imageUrl);
@@ -86,7 +122,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 이미지에 클릭 이벤트 추가 - 안정화된 방식
+  // 이미지에 클릭 이벤트 추가 - 개선된 방식
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -94,13 +130,28 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         img.style.cursor = 'pointer';
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
-        img.title = '클릭하면 이미지가 클립보드에 복사됩니다';
+        img.style.transition = 'transform 0.2s ease';
+        img.title = '클릭하면 티스토리용으로 이미지가 복사됩니다';
         
+        // 기존 이벤트 리스너 제거
+        img.onclick = null;
+        img.onmouseover = null;
+        img.onmouseout = null;
+        
+        // 새로운 이벤트 리스너 추가
         img.onclick = () => {
           const src = img.getAttribute('src');
           if (src) {
             handleImageClick(src);
           }
+        };
+        
+        img.onmouseover = () => {
+          img.style.transform = 'scale(1.02)';
+        };
+        
+        img.onmouseout = () => {
+          img.style.transform = 'scale(1)';
         };
       });
     }
@@ -114,7 +165,8 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
-        addImageClickHandlers();
+        // 이미지 클릭 핸들러를 약간의 지연 후 추가
+        setTimeout(() => addImageClickHandlers(), 100);
       }
       
       // 자동 저장

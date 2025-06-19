@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 
 interface PixabayImage {
@@ -98,7 +99,7 @@ export const integratePixabayImages = async (
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 4. HTML에 이미지 삽입 (alt 태그 포함, 캡션 없음)
+    // 4. HTML에 이미지 삽입 (티스토리 복사-붙여넣기 최적화)
     let updatedHtml = htmlContent;
     const clipboardImages: string[] = [];
 
@@ -109,10 +110,18 @@ export const integratePixabayImages = async (
       // alt 태그용 텍스트 생성 (HTML 태그 제거)
       const altText = sectionTitle.replace(/<[^>]*>/g, '').replace(/[^\w\s가-힣]/g, ' ').trim() || '블로그 이미지';
       
-      // 이미지 태그 생성 (alt 태그 포함, 캡션 없음)
+      // 티스토리 최적화 이미지 태그 생성 (클릭 핸들러 포함)
       const imageHtml = `
-        <div class="image-container" style="text-align: center; margin: 30px 0;">
-          <img src="${image.webformatURL}" alt="${altText}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <div class="image-container" style="text-align: center; margin: 30px 0; padding: 20px;">
+          <img 
+            src="${image.webformatURL}" 
+            alt="${altText}" 
+            style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer; transition: transform 0.2s ease;" 
+            onclick="handleImageClick('${image.webformatURL}')"
+            onmouseover="this.style.transform='scale(1.02)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="클릭하면 티스토리용으로 복사됩니다"
+          >
         </div>`;
 
       // 해당 H2 섹션 다음에 이미지 삽입
