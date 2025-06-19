@@ -217,13 +217,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       return;
     }
     
-    // HTML 복사 시에만 SCRIPT 태그 제거
-    const cleanedContent = editorContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-    
-    navigator.clipboard.writeText(cleanedContent).then(() => {
+    navigator.clipboard.writeText(editorContent).then(() => {
       toast({ 
         title: "✅ HTML 복사 완료", 
-        description: "티스토리 코드 편집창에 붙여넣으세요. (SCRIPT 태그 제거됨)" 
+        description: "티스토리 코드 편집창에 붙여넣으세요." 
       });
     });
   };
