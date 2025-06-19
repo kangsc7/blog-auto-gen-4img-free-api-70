@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
@@ -66,6 +67,7 @@ export const useArticleGenerator = (
       console.log('🔗 외부 참조 링크:', appState.referenceLink);
       console.log('📝 외부 참조 문장:', appState.referenceSentence);
 
+      // 모든 글 생성에서 enhancedPrompts 사용
       const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
         keyword: coreKeyword,
@@ -233,7 +235,7 @@ export const useArticleGenerator = (
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `AI 분석 기반 최적화된 컬러테마(${selectedColorTheme}), 시각카드(6번째 소제목 끝), 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 AI 최적화 이미지 포함)` : '(텍스트만)'}`,
+        description: `AI 분석 기반 최적화된 컬러테마(${selectedColorTheme}), 시각카드(6번째 소제목 끝), 외부링크, 태그가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 AI 최적화 이미지 포함)` : '(텍스트만)'}`,
         duration: 5000
       });
       
