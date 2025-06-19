@@ -12,7 +12,6 @@ import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
 import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
 import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
-import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,6 +55,14 @@ const Index = () => {
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
+
+  // 참조 데이터 삭제 함수
+  const deleteReferenceData = () => {
+    saveAppState({ 
+      referenceLink: '', 
+      referenceSentence: '' 
+    });
+  };
 
   console.log('Index 컴포넌트 렌더링 상태:', {
     session: !!session,
@@ -247,16 +254,8 @@ const Index = () => {
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
+        deleteReferenceData={deleteReferenceData}
       />
-
-      {/* Hugging Face 이미지 생성기 */}
-      <div className="container mx-auto px-4 py-6">
-        <HuggingFaceImageGenerator
-          huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
-          isApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
-          hasAccess={hasAccess || isAdmin}
-        />
-      </div>
 
       {/* 주제 확인 다이얼로그 - 간단한 버전으로 수정 */}
       <TopicConfirmDialog

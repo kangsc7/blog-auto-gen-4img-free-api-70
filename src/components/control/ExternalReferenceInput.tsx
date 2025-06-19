@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Quote, Save, Trash2 } from 'lucide-react';
+import { ExternalLink, Quote, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { AppState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +20,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   deleteReferenceData,
 }) => {
   const { toast } = useToast();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleReferenceLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -62,13 +63,21 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     console.log('참조 정보 삭제됨');
   };
 
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
     <Card className="shadow-md">
-      <CardHeader>
+      <CardHeader 
+        className="cursor-pointer" 
+        onDoubleClick={handleToggleCollapse}
+      >
         <CardTitle className="flex items-center justify-between text-purple-700">
           <span className="flex items-center">
             <ExternalLink className="h-5 w-5 mr-2" />
             외부 링크 설정
+            {isCollapsed ? <ChevronDown className="h-4 w-4 ml-2" /> : <ChevronUp className="h-4 w-4 ml-2" />}
           </span>
           <div className="flex space-x-2">
             <Button
@@ -89,64 +98,70 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
             </Button>
           </div>
         </CardTitle>
+        <p className="text-xs text-gray-500 mt-1">
+          💡 헤더를 더블클릭하면 창을 접거나 펼칠 수 있습니다
+        </p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            참조 링크 (영구 보존)
-          </label>
-          <Input
-            type="url"
-            placeholder="https://example.com"
-            value={appState.referenceLink || ''}
-            onChange={handleReferenceLinkChange}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            참조할 웹페이지 URL을 입력하면 해당 내용을 분석하여 글에 반영합니다
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-            <Quote className="h-4 w-4 mr-1" />
-            참조 문장 (영구 보존)
-          </label>
-          <Textarea
-            placeholder="참조하고 싶은 특정 문장이나 내용을 입력하세요..."
-            value={appState.referenceSentence || ''}
-            onChange={handleReferenceSentenceChange}
-            className="w-full min-h-[80px] resize-none"
-            rows={3}
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            특정 문장이나 내용을 참조하여 관련된 글을 작성합니다
-          </p>
-        </div>
-
-        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border">
-          💡 참조 링크와 문장은 AI가 글을 작성할 때 추가적인 맥락과 정보로 활용되며, 
-          저장된 참조 링크는 블로그 글 하단에 자동으로 하이퍼링크로 연결됩니다.
-          <br />
-          🔒 <strong>영구 보존</strong>: 초기화, 재로그인, 새로고침해도 삭제되지 않습니다.
-        </div>
-
-        {(appState.referenceLink || appState.referenceSentence) && (
-          <div className="text-xs text-green-600 bg-green-50 p-2 rounded border">
-            ✅ 현재 영구 저장된 참조 정보:
-            {appState.referenceLink && (
-              <div className="mt-1">
-                <strong>링크:</strong> {appState.referenceLink}
-              </div>
-            )}
-            {appState.referenceSentence && (
-              <div className="mt-1">
-                <strong>문장:</strong> {appState.referenceSentence.substring(0, 50)}...
-              </div>
-            )}
+      
+      {!isCollapsed && (
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              참조 링크 (영구 보존)
+            </label>
+            <Input
+              type="url"
+              placeholder="https://example.com"
+              value={appState.referenceLink || ''}
+              onChange={handleReferenceLinkChange}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              참조할 웹페이지 URL을 입력하면 해당 내용을 분석하여 글에 반영합니다
+            </p>
           </div>
-        )}
-      </CardContent>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <Quote className="h-4 w-4 mr-1" />
+              참조 문장 (영구 보존)
+            </label>
+            <Textarea
+              placeholder="참조하고 싶은 특정 문장이나 내용을 입력하세요..."
+              value={appState.referenceSentence || ''}
+              onChange={handleReferenceSentenceChange}
+              className="w-full min-h-[80px] resize-none"
+              rows={3}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              특정 문장이나 내용을 참조하여 관련된 글을 작성합니다
+            </p>
+          </div>
+
+          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border">
+            💡 참조 링크와 문장은 AI가 글을 작성할 때 추가적인 맥락과 정보로 활용되며, 
+            저장된 참조 링크는 블로그 글 하단에 자동으로 하이퍼링크로 연결됩니다.
+            <br />
+            🔒 <strong>영구 보존</strong>: 초기화, 재로그인, 새로고침해도 삭제되지 않습니다.
+          </div>
+
+          {(appState.referenceLink || appState.referenceSentence) && (
+            <div className="text-xs text-green-600 bg-green-50 p-2 rounded border">
+              ✅ 현재 영구 저장된 참조 정보:
+              {appState.referenceLink && (
+                <div className="mt-1">
+                  <strong>링크:</strong> {appState.referenceLink}
+                </div>
+              )}
+              {appState.referenceSentence && (
+                <div className="mt-1">
+                  <strong>문장:</strong> {appState.referenceSentence.substring(0, 50)}...
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 };

@@ -33,6 +33,7 @@ interface MainContentSectionProps {
   };
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
+  deleteReferenceData?: () => void;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
@@ -44,6 +45,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   utilityFunctions,
   preventDuplicates,
   handleTopicConfirm,
+  deleteReferenceData,
 }) => {
   return (
     <div className="container mx-auto px-4 py-6">
@@ -57,6 +59,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             topicControls={topicControls}
             utilityFunctions={utilityFunctions}
             preventDuplicates={preventDuplicates}
+            deleteReferenceData={deleteReferenceData}
           />
         </div>
         <div className="lg:col-span-8">
