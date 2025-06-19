@@ -53,7 +53,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      const shouldBeSticky = scrollPosition > 300; // 300px 스크롤 후 고정
+      const shouldBeSticky = scrollPosition > 300;
       setIsSticky(shouldBeSticky);
     };
 
@@ -85,20 +85,26 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
       />
 
-      <ImageCreation
-        appState={appState}
-        isGeneratingImage={generationStatus.isGeneratingImage}
-        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-        createImagePrompt={generationFunctions.createImagePrompt}
-        generateDirectImage={generationFunctions.generateDirectImage}
-        copyToClipboard={utilityFunctions.copyToClipboard}
-        openWhisk={utilityFunctions.openWhisk}
-      />
+      <div className={`space-y-4 transition-all duration-300 ${
+        isSticky 
+          ? 'fixed top-4 right-4 w-80 z-50 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 p-4' 
+          : 'relative'
+      }`}>
+        <ImageCreation
+          appState={appState}
+          isGeneratingImage={generationStatus.isGeneratingImage}
+          isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+          createImagePrompt={generationFunctions.createImagePrompt}
+          generateDirectImage={generationFunctions.generateDirectImage}
+          copyToClipboard={utilityFunctions.copyToClipboard}
+          openWhisk={utilityFunctions.openWhisk}
+        />
 
-      <HuggingFaceImageGenerator
-        appState={appState}
-        saveAppState={saveAppState}
-      />
+        <HuggingFaceImageGenerator
+          appState={appState}
+          saveAppState={saveAppState}
+        />
+      </div>
 
       <ExternalReferenceInput
         appState={appState}

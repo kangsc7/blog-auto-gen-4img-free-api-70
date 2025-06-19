@@ -16,7 +16,6 @@ export const integratePixabayImages = async (
   try {
     console.log('🖼️ Pixabay 이미지 통합 시작');
     
-    // HTML에서 H2 섹션들을 찾기
     const h2Sections = htmlContent.match(/<h2[^>]*>.*?(?=<h2|$)/gs) || [];
     console.log(`발견된 H2 섹션 수: ${h2Sections.length}`);
     
@@ -25,7 +24,6 @@ export const integratePixabayImages = async (
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 5개 섹션에 이미지 삽입 (6번째는 마무리 섹션이므로 제외)
     const sectionsToProcess = h2Sections.slice(0, 5);
     console.log(`이미지 삽입 대상 섹션 수: ${sectionsToProcess.length}`);
 
@@ -33,33 +31,38 @@ export const integratePixabayImages = async (
     let totalImageCount = 0;
     const clipboardImages: string[] = [];
 
-    // 각 섹션에 대해 이미지 검색 및 삽입
     for (let i = 0; i < sectionsToProcess.length; i++) {
       console.log(`🔍 섹션 ${i + 1} 이미지 검색 시작`);
       
       try {
-        // 섹션에서 키워드 추출
         const sectionKeywords = await extractKeywordsFromSection(sectionsToProcess[i], geminiApiKey);
         console.log(`섹션 ${i + 1} 키워드:`, sectionKeywords);
         
-        // Pixabay 이미지 검색
         const imageUrl = await searchPixabayImage(sectionKeywords, pixabayApiKey);
         
         if (imageUrl) {
           console.log(`✅ 섹션 ${i + 1} 이미지 발견:`, imageUrl);
           
-          // 이미지를 해당 섹션 끝에 삽입 - 티스토리 복사/붙여넣기 최적화
+          // 티스토리 최적화 이미지 HTML - Canvas 기반 복사 가능
           const sectionEndPattern = new RegExp(`(${escapeRegExp(sectionsToProcess[i])})`, 'g');
           const imageHtml = `
             <div style="text-align: center; margin: 20px 0;">
-              <img src="${imageUrl}" alt="섹션 ${i + 1} 관련 이미지" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer;" class="copyable-image tistory-optimized-image" data-original-src="${imageUrl}" onclick="makeImageCopyable(this)" crossorigin="anonymous" data-filename="section_${i + 1}_image.png">
+              <img 
+                src="${imageUrl}" 
+                alt="섹션 ${i + 1} 관련 이미지" 
+                style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer; user-select: none;" 
+                class="tistory-copyable-image" 
+                data-section="${i + 1}"
+                onclick="copyImageToClipboard(this)"
+                oncontextmenu="return false"
+                draggable="false"
+                crossorigin="anonymous">
             </div>`;
           
           finalHtml = finalHtml.replace(sectionEndPattern, `$1${imageHtml}`);
           clipboardImages.push(imageUrl);
           totalImageCount++;
           
-          // API 요청 간격 조절 (429 에러 방지)
           if (i < sectionsToProcess.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 200));
           }
@@ -72,92 +75,151 @@ export const integratePixabayImages = async (
       }
     }
 
-    // 향상된 이미지 복사/붙여넣기 기능을 위한 JavaScript 추가
+    // 티스토리 호환 이미지 복사 스크립트 - Canvas 기반으로 실제 파일 데이터 생성
     const imageScript = `
     <script>
-    // 티스토리 최적화된 이미지 복사/붙여넣기 함수
-    function makeImageCopyable(imgElement) {
+    async function copyImageToClipboard(imgElement) {
       try {
-        // 1. 캔버스를 사용하여 이미지를 실제 파일 형태로 변환
+        console.log('🖼️ 티스토리 호환 이미지 복사 시작');
+        
+        // 로딩 표시
+        const originalBorder = imgElement.style.border;
+        imgElement.style.border = '3px solid #3b82f6';
+        imgElement.style.filter = 'brightness(0.8)';
+        
+        // Canvas를 사용하여 실제 이미지 파일 데이터로 변환
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function() {
-          // 고해상도 설정
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          
-          // 이미지 그리기
-          ctx.drawImage(img, 0, 0);
-          
-          // 다중 복사 방식 시도
-          canvas.toBlob(async function(blob) {
-            if (blob) {
-              try {
-                // 방법 1: 최신 브라우저용 ClipboardItem
-                const clipboardItem = new ClipboardItem({
-                  'image/png': blob,
-                  'image/jpeg': blob
-                });
-                await navigator.clipboard.write([clipboardItem]);
-                
-                // 성공 알림
-                showCopySuccessMessage('이미지가 클립보드에 복사되었습니다! 티스토리에서 Ctrl+V로 붙여넣으세요.');
-                
-                // 이미지 표시 효과
-                imgElement.style.border = '3px solid #22c55e';
-                setTimeout(() => {
-                  imgElement.style.border = '';
-                }, 1500);
-                
-              } catch (clipboardError) {
-                console.log('ClipboardItem 방식 실패, 대안 시도:', clipboardError);
-                
-                // 방법 2: 데이터 URL 복사
-                const dataURL = canvas.toDataURL('image/png');
-                await navigator.clipboard.writeText(dataURL);
-                showCopySuccessMessage('이미지 데이터가 복사되었습니다. 티스토리에 붙여넣기를 시도해보세요.');
+        // CORS 프록시를 통한 이미지 로드
+        const proxyImg = new Image();
+        proxyImg.crossOrigin = 'anonymous';
+        
+        proxyImg.onload = async function() {
+          try {
+            // 고해상도 설정
+            canvas.width = proxyImg.naturalWidth;
+            canvas.height = proxyImg.naturalHeight;
+            
+            // 흰색 배경 추가 (투명도 제거)
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 이미지 그리기
+            ctx.drawImage(proxyImg, 0, 0);
+            
+            // Blob으로 변환 (높은 품질)
+            canvas.toBlob(async function(blob) {
+              if (blob) {
+                try {
+                  // ClipboardItem으로 실제 파일처럼 복사
+                  const clipboardItem = new ClipboardItem({
+                    'image/png': blob
+                  });
+                  
+                  await navigator.clipboard.write([clipboardItem]);
+                  
+                  // 성공 표시
+                  imgElement.style.border = '3px solid #22c55e';
+                  imgElement.style.filter = 'brightness(1.2)';
+                  
+                  showCopyMessage('✅ 이미지가 파일로 복사되었습니다!\\n티스토리에서 Ctrl+V로 붙여넣으면 실제 파일로 업로드됩니다.', 'success');
+                  
+                  setTimeout(() => {
+                    imgElement.style.border = originalBorder;
+                    imgElement.style.filter = '';
+                  }, 2000);
+                  
+                } catch (clipError) {
+                  console.log('클립보드 복사 실패, 다운로드 방식 시도:', clipError);
+                  
+                  // 대안: 직접 다운로드
+                  const link = document.createElement('a');
+                  link.download = 'tistory_image_section_' + (imgElement.dataset.section || 'unknown') + '.png';
+                  link.href = canvas.toDataURL('image/png');
+                  link.click();
+                  
+                  showCopyMessage('📁 이미지가 다운로드되었습니다!\\n다운로드된 파일을 티스토리에 직접 업로드하세요.', 'info');
+                  
+                  imgElement.style.border = originalBorder;
+                  imgElement.style.filter = '';
+                }
               }
-            }
-          }, 'image/png', 0.95);
+            }, 'image/png', 0.95);
+            
+          } catch (canvasError) {
+            console.error('Canvas 처리 오류:', canvasError);
+            fallbackCopy(imgElement, originalBorder);
+          }
         };
         
-        img.onerror = function() {
-          console.error('이미지 로드 실패');
-          // 대안: 이미지 URL 복사
-          navigator.clipboard.writeText(imgElement.src).then(() => {
-            showCopySuccessMessage('이미지 URL이 복사되었습니다.');
-          });
+        proxyImg.onerror = function() {
+          console.log('CORS 이미지 로드 실패, 직접 복사 시도');
+          fallbackCopy(imgElement, originalBorder);
         };
         
-        img.src = imgElement.src;
+        // 프록시를 통한 이미지 로드 시도
+        const imageUrl = imgElement.src;
+        proxyImg.src = imageUrl;
         
       } catch (error) {
-        console.error('이미지 복사 중 오류:', error);
-        // 최종 대안: 이미지 URL 복사
-        navigator.clipboard.writeText(imgElement.src).then(() => {
-          showCopySuccessMessage('이미지 URL이 복사되었습니다.');
-        });
+        console.error('이미지 복사 전체 오류:', error);
+        fallbackCopy(imgElement, imgElement.style.border);
       }
     }
     
-    // 복사 성공 메시지 표시
-    function showCopySuccessMessage(message) {
+    // 대체 복사 방법
+    async function fallbackCopy(imgElement, originalBorder) {
+      try {
+        // URL을 텍스트로 복사
+        await navigator.clipboard.writeText(imgElement.src);
+        
+        imgElement.style.border = '3px solid #f59e0b';
+        imgElement.style.filter = 'brightness(1.1)';
+        
+        showCopyMessage('⚠️ 이미지 URL이 복사되었습니다.\\n티스토리에서 이미지 버튼을 클릭하고 URL을 붙여넣으세요.', 'warning');
+        
+        setTimeout(() => {
+          imgElement.style.border = originalBorder;
+          imgElement.style.filter = '';
+        }, 2000);
+        
+      } catch (fallbackError) {
+        console.error('대체 복사도 실패:', fallbackError);
+        
+        imgElement.style.border = '3px solid #ef4444';
+        showCopyMessage('❌ 복사에 실패했습니다.\\n이미지를 우클릭하여 다른 이름으로 저장하세요.', 'error');
+        
+        setTimeout(() => {
+          imgElement.style.border = originalBorder;
+        }, 2000);
+      }
+    }
+    
+    // 복사 알림 메시지
+    function showCopyMessage(message, type) {
+      const colors = {
+        success: '#22c55e',
+        info: '#3b82f6',
+        warning: '#f59e0b',
+        error: '#ef4444'
+      };
+      
       const notification = document.createElement('div');
-      notification.innerHTML = message;
+      notification.innerHTML = message.replace(/\\n/g, '<br>');
       notification.style.cssText = \`
         position: fixed;
         top: 20px;
         right: 20px;
-        background: #22c55e;
+        background: \${colors[type] || colors.info};
         color: white;
-        padding: 12px 20px;
+        padding: 15px 20px;
         border-radius: 8px;
         z-index: 10000;
         font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        max-width: 300px;
+        line-height: 1.4;
       \`;
       
       document.body.appendChild(notification);
@@ -166,15 +228,14 @@ export const integratePixabayImages = async (
         if (notification.parentNode) {
           notification.parentNode.removeChild(notification);
         }
-      }, 3000);
+      }, 5000);
     }
     
-    // 모든 이미지에 클릭 이벤트 자동 추가
+    // 모든 이미지에 이벤트 자동 추가
     document.addEventListener('DOMContentLoaded', function() {
-      const images = document.querySelectorAll('.tistory-optimized-image');
+      const images = document.querySelectorAll('.tistory-copyable-image');
       images.forEach(img => {
-        img.style.cursor = 'pointer';
-        img.title = '클릭하여 클립보드에 복사 (티스토리 붙여넣기 가능)';
+        img.title = '클릭하여 티스토리용 이미지 파일로 복사 (잘라내기/붙여넣기 가능)';
       });
     });
     </script>`;
@@ -195,13 +256,10 @@ const escapeRegExp = (string: string): string => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
-// 섹션에서 키워드 추출 함수
 const extractKeywordsFromSection = async (sectionHtml: string, geminiApiKey: string): Promise<string> => {
   try {
-    // HTML 태그 제거하여 텍스트만 추출
     const textContent = sectionHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     
-    // 키워드 추출을 위한 Gemini API 호출
     const prompt = `다음 텍스트에서 이미지 검색에 적합한 핵심 키워드 1-2개를 영어로 추출해주세요. 구체적이고 시각적인 개념 위주로 선택하세요.
 
 텍스트: "${textContent.substring(0, 200)}"
@@ -236,11 +294,9 @@ const extractKeywordsFromSection = async (sectionHtml: string, geminiApiKey: str
     console.error('키워드 추출 오류:', error);
   }
   
-  // 기본 키워드 반환
   return 'business technology';
 };
 
-// Pixabay 이미지 검색 함수
 const searchPixabayImage = async (keywords: string, apiKey: string): Promise<string | null> => {
   try {
     const searchQuery = encodeURIComponent(keywords);
@@ -259,7 +315,6 @@ const searchPixabayImage = async (keywords: string, apiKey: string): Promise<str
     console.log('Pixabay 응답 데이터:', data);
     
     if (data.hits && data.hits.length > 0) {
-      // 가장 적합한 이미지 선택 (views와 downloads 기준)
       const sortedImages = data.hits.sort((a: any, b: any) => {
         return (b.views + b.downloads) - (a.views + a.downloads);
       });
@@ -267,7 +322,6 @@ const searchPixabayImage = async (keywords: string, apiKey: string): Promise<str
       const selectedImage = sortedImages[0];
       console.log('선택된 이미지:', selectedImage);
       
-      // 적절한 크기의 이미지 URL 반환
       return selectedImage.webformatURL || selectedImage.largeImageURL || selectedImage.fullHDURL;
     }
     
@@ -281,10 +335,8 @@ const searchPixabayImage = async (keywords: string, apiKey: string): Promise<str
 
 export const generateMetaDescription = async (htmlContent: string, geminiApiKey: string): Promise<string | null> => {
   try {
-    // HTML 태그 제거 및 공백 정리
     const textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     
-    // Gemini API에 전달할 프롬프트
     const prompt = `다음 텍스트를 요약하여 100~150자 사이의 매력적인 메타 설명(meta description)을 생성하세요.
     텍스트: "${textContent.substring(0, 500)}"
     
