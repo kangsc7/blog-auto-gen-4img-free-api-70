@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 
 interface PixabayImage {
@@ -189,28 +188,44 @@ const generateFallbackKeyword = (title: string): string => {
   }
 };
 
-// 10페이지까지 검색하여 중복되지 않는 이미지 수집 (재시도 로직 강화)
+// 10페이지까지 검색하여 중복되지 않는 이미지 수집 (강화된 디버깅)
 export const searchPixabayImages10Pages = async (
   query: string,
   apiKey: string,
   maxImages: number = 5,
   usedImageIds: Set<number> = new Set()
 ): Promise<PixabayImage[]> => {
-  console.log(`🔍 10페이지 포괄 검색 시작: "${query}" (최대 ${maxImages}개, 제외 이미지: ${usedImageIds.size}개)`);
+  console.log(`🔍 픽사베이 10페이지 검색 시작: "${query}" (최대 ${maxImages}개, 제외 이미지: ${usedImageIds.size}개)`);
+  console.log(`🔑 픽사베이 API 키 확인: ${apiKey ? '✅ 존재 (' + apiKey.substring(0, 10) + '...)' : '❌ 없음'}`);
+  
+  if (!apiKey || apiKey.trim() === '') {
+    console.error('❌ 픽사베이 API 키가 없습니다.');
+    return [];
+  }
   
   const validImages: PixabayImage[] = [];
   const encodedQuery = encodeURIComponent(query);
   let retryCount = 0;
   const maxRetries = 3;
   
-  // 10페이지까지 순차 검색 (재시도 로직 포함)
+  // 10페이지까지 순차 검색 (강화된 로깅)
   for (let page = 1; page <= 10 && validImages.length < maxImages; page++) {
     try {
       const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=20&page=${page}&safesearch=true&order=popular`;
       
-      console.log(`📡 ${page}페이지 검색 (재시도: ${retryCount}): ${url.substring(0, 100)}...`);
+      console.log(`📡 ${page}페이지 검색 시작 (재시도: ${retryCount})`);
+      console.log(`🌐 요청 URL: ${url.replace(apiKey, 'API_KEY_HIDDEN')}`);
       
       const response = await fetch(url);
+      
+      console.log(`📊 ${page}페이지 응답 상태: ${response.status} ${response.statusText}`);
+      
+      if (response.status === 400) {
+        console.error(`❌ ${page}페이지 - 잘못된 요청 (API 키 오류 가능성)`);
+        const errorText = await response.text();
+        console.error('오류 상세:', errorText);
+        return []; // API 키 문제인 경우 즉시 중단
+      }
       
       if (response.status === 429) {
         console.warn(`⚠️ ${page}페이지 - API 한도 초과, 2초 대기 후 재시도`);
@@ -223,21 +238,28 @@ export const searchPixabayImages10Pages = async (
       }
       
       if (!response.ok) {
-        console.error(`❌ ${page}페이지 - API 오류: ${response.status}`);
+        console.error(`❌ ${page}페이지 - API 오류: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('오류 응답:', errorText);
         continue;
       }
 
       const data: PixabayResponse = await response.json();
-      console.log(`✅ ${page}페이지 - ${data.hits.length}개 이미지 발견`);
+      console.log(`✅ ${page}페이지 - ${data.hits?.length || 0}개 이미지 발견 (전체: ${data.total || 0})`);
       
       if (data.hits && data.hits.length > 0) {
         // 품질 좋고 중복되지 않는 이미지만 선별
-        const qualityImages = data.hits.filter(img => 
-          !usedImageIds.has(img.id) && // 전역 중복 방지
-          img.views > 1000 && 
-          img.downloads > 100 && 
-          img.webformatURL.includes('pixabay.com')
-        );
+        const qualityImages = data.hits.filter(img => {
+          const isNotDuplicate = !usedImageIds.has(img.id);
+          const hasGoodQuality = img.views > 1000 && img.downloads > 100;
+          const hasValidUrl = img.webformatURL && img.webformatURL.includes('pixabay.com');
+          
+          console.log(`🖼️ 이미지 ${img.id} 품질 체크: 중복없음=${isNotDuplicate}, 고품질=${hasGoodQuality}, 유효URL=${hasValidUrl}`);
+          
+          return isNotDuplicate && hasGoodQuality && hasValidUrl;
+        });
+        
+        console.log(`🎯 ${page}페이지에서 ${qualityImages.length}개 고품질 이미지 필터링됨`);
         
         // 필요한 만큼만 추가
         const imagesToAdd = qualityImages.slice(0, maxImages - validImages.length);
@@ -245,14 +267,17 @@ export const searchPixabayImages10Pages = async (
         imagesToAdd.forEach(img => {
           validImages.push(img);
           usedImageIds.add(img.id); // 전역 중복 방지 세트에 추가
+          console.log(`➕ 이미지 추가: ${img.id} (${img.webformatURL})`);
         });
         
-        console.log(`🎯 ${page}페이지에서 ${imagesToAdd.length}개 고품질 이미지 추가 (전역 중복 제거됨)`);
+        console.log(`🎯 ${page}페이지에서 ${imagesToAdd.length}개 이미지 추가됨 (현재 총 ${validImages.length}개)`);
         
         if (validImages.length >= maxImages) {
           console.log(`🏁 목표 이미지 수 달성: ${validImages.length}개`);
           break;
         }
+      } else {
+        console.warn(`⚠️ ${page}페이지 - 이미지 없음`);
       }
       
       retryCount = 0; // 성공 시 재시도 카운트 리셋
@@ -275,7 +300,16 @@ export const searchPixabayImages10Pages = async (
     }
   }
   
-  console.log(`🏁 10페이지 검색 완료 - 최종 결과: ${validImages.length}개 고품질 중복 없는 이미지`);
+  console.log(`🏁 픽사베이 10페이지 검색 완료 - 최종 결과: ${validImages.length}개 이미지`);
+  
+  if (validImages.length === 0) {
+    console.error('❌ 픽사베이 검색 결과 없음 - 가능한 원인:');
+    console.error('1. API 키가 유효하지 않음');
+    console.error('2. 검색 키워드에 대한 이미지가 없음');
+    console.error('3. 네트워크 연결 문제');
+    console.error('4. Pixabay 서비스 장애');
+  }
+  
   return validImages;
 };
 

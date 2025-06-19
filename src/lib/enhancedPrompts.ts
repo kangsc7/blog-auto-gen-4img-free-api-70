@@ -41,7 +41,7 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
 
 ### 글 구조 및 스타일
 1. **제목 (H1)**: 매력적이고 클릭을 유도하는 제목
-2. **주제 표시 (H3)**: 제목 바로 아래에 주제를 별도 H3로 표시
+2. **주제 표시 (H3)**: 제목 바로 아래에 주제를 별도 H3로 표시 (밑줄 없음)
 3. **공감 박스**: 다음 이미지 형식으로 단순화된 구조로 작성
    - 배경색: 연한 회색 (#f8f9fa)
    - 테두리: 1px solid #dee2e6
@@ -49,9 +49,10 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
    - 둥근 모서리: 8px
    - 내용: 독자와의 공감대 형성하는 2-3줄 문장
 4. **본문 소제목 (H2)**: 5-6개의 소제목으로 구성
-5. **각 섹션**: 200-270자 내외로 구체적이고 실용적인 내용
+5. **각 섹션**: 140자 도달 시 2번째 문장 끝 마침표에서 줄바꿈 후 공백줄 추가
 6. **시각화 요약카드**: 6번째 소제목의 내용 끝에 위치
 7. **참조 링크**: 글 끝에 테두리 없이 하이퍼링크와 문장만 표시
+8. **태그**: 참조 링크 다음에 공백줄 2개 후 태그 7개를 쉼표로 구분하여 나열
 
 ### 내용 요구사항
 - 실용적이고 유용한 정보 제공
@@ -77,14 +78,14 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
 <h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; border-bottom: 2px solid ${colors.secondary}; padding-bottom: 8px;">
 🔍 1. [첫 번째 소제목]
 </h2>
-[200-270자 내외의 구체적인 내용]
+[140자 도달 시 2번째 문장 끝에서 줄바꿈 + 공백줄]
 
 <!-- 2-5번째 소제목들도 동일한 패턴 -->
 
 <h2 style="color: ${colors.primary}; font-size: 22px; font-weight: bold; margin: 25px 0 15px 0; border-bottom: 2px solid ${colors.secondary}; padding-bottom: 8px;">
 💡 6. [여섯 번째 소제목]
 </h2>
-[200-270자 내외의 구체적인 내용]
+[140자 도달 시 2번째 문장 끝에서 줄바꿈 + 공백줄]
 
 <!-- 6번째 소제목 내용 끝에 시각화 요약카드 배치 -->
 <div style="background: linear-gradient(135deg, ${colors.secondary}, ${colors.background}); border: 2px solid ${colors.primary}; border-radius: 15px; padding: 25px; margin: 30px 0; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
@@ -120,12 +121,18 @@ ${referenceLink && referenceSentence ? `### 🔗 외부 참조 정보 활용
 글 마지막에 다음과 같이 추가:
 <div style="margin-top: 30px; color: #6c757d; font-size: 14px;">
 ${referenceSentence} <a href="${referenceLink}" target="_blank" style="color: ${colors.primary}; text-decoration: none;">자세히 보기</a>
-</div>` : ''}
+</div>
+
+공백줄 2개 추가 후 태그 7개 나열:
+
+
+${keyword.split(' ').slice(0, 3).join(', ')}, 요리법, 간편식, 가성비, 레시피` : ''}
 
 **중요 지침:**
-- 각 소제목별로 200-270자 내외의 충실한 내용 작성
+- 각 소제목별로 140자 도달 시 2번째 문장 끝에서 줄바꿈 + 공백줄
+- H3 주제 표시에는 밑줄 스타일 없음
 - 시각화 요약카드는 반드시 6번째 소제목 내용 끝에 배치
-- 참조 링크는 글 끝에 테두리 없이 표시
+- 참조 링크 다음 공백줄 2개 후 태그 7개 추가
 - 이모지를 적절히 활용하여 가독성 향상
 - 실용적이고 구체적인 정보 위주로 작성
 - HTML 태그를 정확히 사용하여 구조화된 글 작성
@@ -143,6 +150,7 @@ export const getColors = (theme: string) => {
         background: '#f5f9ff'
       };
     case 'forest-green':
+    case 'nature-green':
       return {
         primary: '#2e7d32',
         secondary: '#e8f5e9',
