@@ -42,21 +42,21 @@ export const useTopicGenerator = (
       .trim();
   };
 
-  const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
+  const generateTopics = async (keywordOverride?: string): Promise<void> => {
     const keyword = keywordOverride || appState.keyword;
     if (!keyword) {
       toast({ title: "키워드 입력 오류", description: "먼저 키워드를 입력해주세요.", variant: "destructive" });
-      return null;
+      return;
     }
     if (!appState.isApiKeyValidated) {
       toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
-      return null;
+      return;
     }
 
     setIsGeneratingTopics(true);
     try {
       const currentDate = new Date();
-      const currentYear = currentDate.getFullYear(); // 2025
+      const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1;
 
       const prompt = `"${keyword}"를 키워드로 하여 ${currentYear}년 ${currentMonth}월 현재 기준으로 블로그 포스팅에 적합한 주제 10개를 생성해주세요.
@@ -128,11 +128,9 @@ export const useTopicGenerator = (
       
       saveAppState(stateUpdate);
       toast({ title: "주제 생성 완료", description: `${topics.length}개의 주제가 생성되었습니다.` });
-      return topics;
     } catch (error) {
       console.error('주제 생성 오류:', error);
       toast({ title: "주제 생성 실패", description: error instanceof Error ? error.message : "주제 생성 중 오류가 발생했습니다.", variant: "destructive" });
-      return null;
     } finally {
       setIsGeneratingTopics(false);
     }

@@ -242,7 +242,9 @@ const Index = () => {
         appState={appState}
         saveAppState={saveAppState}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
-        generateTopics={generationFunctions.generateTopics}
+        generateTopics={async () => {
+          await generationFunctions.generateTopics();
+        }}
         isGeneratingContent={generationStatus.isGeneratingContent}
         generateArticle={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}

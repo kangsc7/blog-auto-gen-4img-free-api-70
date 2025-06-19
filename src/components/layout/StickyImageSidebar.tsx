@@ -34,7 +34,7 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const threshold = 400; // 400px 스크롤 시 sticky 모드 활성화
+      const threshold = 400;
       setIsSticky(scrollY > threshold);
     };
 
@@ -42,8 +42,9 @@ export const StickyImageSidebar: React.FC<StickyImageSidebarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // sticky 모드에서도 원래 크기 유지 - 더 넓은 너비 설정
   const stickyClasses = isSticky 
-    ? 'fixed top-4 right-4 z-50 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl bg-white rounded-lg border' 
+    ? 'fixed top-4 right-4 z-50 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl bg-white rounded-lg border' 
     : 'relative w-full';
 
   return (
