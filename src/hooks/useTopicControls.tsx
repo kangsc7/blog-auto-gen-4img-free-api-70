@@ -59,30 +59,18 @@ export const useTopicControls = (appState: AppState, saveAppState: (newState: Pa
 
     const trimmedTopic = manualTopic.trim();
 
-    // 중복 금지 설정이 활성화된 경우에만 유사도 검사 (appState.preventDuplicates 사용)
-    console.log('중복 검사 진행:', { 
-      preventDuplicates: appState.preventDuplicates, 
-      existingTopicsCount: appState.topics.length,
-      newTopic: trimmedTopic 
-    });
-
+    // 중복 금지 설정이 활성화된 경우에만 유사도 검사
     if (appState.preventDuplicates && appState.topics.length > 0) {
-      const duplicateCheck = appState.topics.map(existingTopic => {
+      const isDuplicate = appState.topics.some(existingTopic => {
         const similarity = calculateSimilarity(trimmedTopic, existingTopic);
-        return { existingTopic, similarity };
+        return similarity >= 70;
       });
 
-      const isDuplicate = duplicateCheck.some(check => check.similarity >= 70);
-      
-      console.log('중복 검사 결과:', duplicateCheck);
-
       if (isDuplicate) {
-        const duplicatedTopic = duplicateCheck.find(check => check.similarity >= 70);
         toast({
-          title: "중복 주제 감지 (70% 유사도)",
-          description: `"${duplicatedTopic?.existingTopic}"와 ${duplicatedTopic?.similarity.toFixed(1)}% 유사합니다.`,
-          variant: "destructive",
-          duration: 5000
+          title: "중복 주제 감지",
+          description: "70% 이상 유사한 주제가 이미 존재합니다.",
+          variant: "destructive"
         });
         return;
       }

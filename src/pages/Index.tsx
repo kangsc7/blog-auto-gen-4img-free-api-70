@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { TopNavigation } from '@/components/layout/TopNavigation';
 import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKeysSection';
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
@@ -120,6 +122,7 @@ const Index = () => {
 
     return (
       <div className="min-h-screen bg-gray-100 w-full">
+        <TopNavigation />
         <AppHeader
           currentUser={profile?.email || appState.currentUser}
           handleLogout={handleLogout}
@@ -150,6 +153,7 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 w-full">
+      <TopNavigation />
       <AppHeader
         currentUser={profile?.email || appState.currentUser}
         handleLogout={handleLogout}

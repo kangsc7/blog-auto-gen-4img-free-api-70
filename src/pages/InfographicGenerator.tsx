@@ -1,80 +1,50 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { AppHeader } from '@/components/layout/AppHeader';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { BarChart3, ArrowLeft } from 'lucide-react';
+import { TopNavigation } from '@/components/layout/TopNavigation';
 
 const InfographicGenerator = () => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [generatedInfographic, setGeneratedInfographic] = useState('');
-  const { session, handleLogout } = useAuth();
-
-  const handleGenerateInfographic = () => {
-    // 간단한 예시: 제목과 내용을 합쳐서 인포그래픽 내용 생성
-    setGeneratedInfographic(`
-      <h1>${title}</h1>
-      <p>${content}</p>
-      <img src="https://via.placeholder.com/350x150" alt="Placeholder Image" />
-    `);
-  };
-
-  if (!session) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg font-semibold text-gray-700">로그인이 필요합니다.</p>
-      </div>
-    );
-  }
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <AppHeader
-        currentUser={session?.user?.email || 'Guest'}
-        handleLogout={handleLogout}
-      />
-      <div className="container mx-auto py-8">
-        <Card className="max-w-2xl mx-auto shadow-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">인포그래픽 생성기</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">제목</label>
-              <Input
-                type="text"
-                placeholder="인포그래픽 제목을 입력하세요"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <TopNavigation />
+      <div className="container mx-auto p-6">
+        <Card className="max-w-2xl mx-auto text-center shadow-lg">
+          <CardHeader className="pb-6">
+            <div className="mx-auto bg-green-100 rounded-full p-4 w-fit mb-4">
+              <BarChart3 className="h-12 w-12 text-green-600" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">내용</label>
-              <Textarea
-                placeholder="인포그래픽 내용을 입력하세요"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="resize-none"
-              />
-            </div>
-            <Button onClick={handleGenerateInfographic} className="w-full">
+            <CardTitle className="text-3xl font-bold text-gray-800">
               인포그래픽 생성
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-gray-600 text-lg leading-relaxed">
+              복잡한 정보를 시각적으로 이해하기 쉬운 
+              인포그래픽으로 자동 변환해주는 서비스입니다.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <p className="text-yellow-700 font-semibold text-xl">
+                🚀 업데이트 예정~
+              </p>
+              <p className="text-yellow-600 mt-2">
+                더 나은 서비스를 위해 열심히 개발 중입니다!
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="outline" 
+              className="mt-6"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              홈으로 돌아가기
             </Button>
           </CardContent>
         </Card>
-
-        {generatedInfographic && (
-          <Card className="max-w-2xl mx-auto mt-8 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">생성된 인포그래픽</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div dangerouslySetInnerHTML={{ __html: generatedInfographic }} />
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

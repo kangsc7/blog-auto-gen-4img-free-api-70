@@ -2,9 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy, ExternalLink } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 interface ArticlePreviewProps {
   generatedContent: string;
@@ -20,7 +19,6 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   onContentChange,
 }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const editableDivRef = useRef<HTMLDivElement>(null);
   
   // 상태 관리 단순화
@@ -234,21 +232,6 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
   };
 
-  // 블로그 글 편집기로 이동하는 함수
-  const handleGoToEditor = () => {
-    console.log('블로그 글 편집기로 이동');
-    // 현재 편집된 내용을 localStorage에 저장
-    if (editableDivRef.current?.innerHTML) {
-      localStorage.setItem('blog_editor_content_permanent_v3', editableDivRef.current.innerHTML);
-    }
-    // 별도 편집기 페이지로 이동 (현재는 같은 페이지지만 향후 확장 가능)
-    toast({ 
-      title: "편집기 이동", 
-      description: "블로그 글 편집기는 현재 이 화면에서 제공됩니다. 위 편집 영역을 이용해주세요.",
-      duration: 3000
-    });
-  };
-
   return (
     <Card id="article-preview" className="shadow-md">
       <CardHeader>
@@ -260,14 +243,6 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
           <div className="flex space-x-2">
             {generatedContent && !isGeneratingContent && (
               <>
-                <Button 
-                  onClick={handleGoToEditor}
-                  size="sm"
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  편집기로 이동
-                </Button>
                 <Button 
                   onClick={handleCopyToClipboard}
                   size="sm"

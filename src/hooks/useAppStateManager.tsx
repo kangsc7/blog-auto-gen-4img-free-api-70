@@ -35,19 +35,18 @@ const defaultState: AppState = {
   preventDuplicates: true,
 };
 
-// localStorage 키 상수들 - 참조 링크 키 통일
+// localStorage 키 상수들
 const STORAGE_KEYS = {
   GENERATED_CONTENT: 'blog_generated_content',
-  EDITOR_CONTENT: 'blog_editor_content_permanent_v3',
-  REFERENCE_LINK: 'blog_reference_link_permanent', // 통일된 키
-  REFERENCE_SENTENCE: 'blog_reference_sentence_permanent', // 통일된 키
+  EDITOR_CONTENT: 'blog_editor_content_permanent_v3', // 편집기와 동일한 키 사용
+  REFERENCE_LINK: 'blog_reference_link_permanent',
+  REFERENCE_SENTENCE: 'blog_reference_sentence_permanent',
   SELECTED_TOPIC: 'blog_selected_topic',
   TOPICS: 'blog_topics',
   KEYWORD: 'blog_keyword',
   COLOR_THEME: 'blog_color_theme',
   VISUAL_SUMMARY_ENABLED: 'blog_visual_summary_enabled',
-  SECTION_WORD_LIMIT: 'blog_section_word_limit',
-  PREVENT_DUPLICATES: 'blog_prevent_duplicates' // 중복 금지 설정 저장
+  SECTION_WORD_LIMIT: 'blog_section_word_limit'
 };
 
 export const useAppStateManager = () => {
@@ -67,13 +66,9 @@ export const useAppStateManager = () => {
       // 편집기 내용이 있으면 우선, 없으면 생성된 내용 사용
       const finalContent = editorContent || generatedContent || '';
       
-      // 참조 링크와 문장은 영구 보존 키로 저장 (통일된 키 사용)
+      // 참조 링크와 문장은 영구 보존 키로 저장
       const referenceLink = localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '';
       const referenceSentence = localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '';
-      
-      // 중복 금지 설정 로드
-      const preventDuplicatesStored = localStorage.getItem(STORAGE_KEYS.PREVENT_DUPLICATES);
-      const preventDuplicatesValue = preventDuplicatesStored === null ? true : preventDuplicatesStored === 'true';
       
       // 고급 설정도 보존
       const visualSummaryEnabled = localStorage.getItem(STORAGE_KEYS.VISUAL_SUMMARY_ENABLED) === 'true';
@@ -85,7 +80,6 @@ export const useAppStateManager = () => {
         finalContentLength: finalContent.length,
         referenceLink,
         referenceSentence: referenceSentence.substring(0, 50) + '...',
-        preventDuplicates: preventDuplicatesValue,
         visualSummaryEnabled,
         sectionWordLimit
       });
@@ -98,7 +92,6 @@ export const useAppStateManager = () => {
         topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
         keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
         colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || '',
-        preventDuplicates: preventDuplicatesValue,
         // 고급 설정 복원
         visualSummaryEnabled,
         sectionWordLimit
@@ -120,11 +113,11 @@ export const useAppStateManager = () => {
       }
       if (data.referenceLink !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
-        console.log('앱 상태 관리자 - 참조 링크 영구 저장 (통일된 키):', data.referenceLink);
+        console.log('앱 상태 관리자 - 참조 링크 영구 저장:', data.referenceLink);
       }
       if (data.referenceSentence !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_SENTENCE, data.referenceSentence);
-        console.log('앱 상태 관리자 - 참조 문장 영구 저장 (통일된 키):', data.referenceSentence.substring(0, 50) + '...');
+        console.log('앱 상태 관리자 - 참조 문장 영구 저장:', data.referenceSentence.substring(0, 50) + '...');
       }
       if (data.selectedTopic !== undefined) {
         localStorage.setItem(STORAGE_KEYS.SELECTED_TOPIC, data.selectedTopic);
@@ -137,10 +130,6 @@ export const useAppStateManager = () => {
       }
       if (data.colorTheme !== undefined) {
         localStorage.setItem(STORAGE_KEYS.COLOR_THEME, data.colorTheme);
-      }
-      if (data.preventDuplicates !== undefined) {
-        localStorage.setItem(STORAGE_KEYS.PREVENT_DUPLICATES, String(data.preventDuplicates));
-        console.log('앱 상태 관리자 - 중복 금지 설정 저장:', data.preventDuplicates);
       }
       
       // 고급 설정 저장
@@ -202,19 +191,15 @@ export const useAppStateManager = () => {
       
       hasInitialized.current = true;
       
-      // preventDuplicates 상태 동기화
-      const preventDuplicatesFromStorage = storedBlogData.preventDuplicates !== undefined ? storedBlogData.preventDuplicates : true;
-      setPreventDuplicates(preventDuplicatesFromStorage);
-      
       // 즉시 상태 설정 - 배치 업데이트로 성능 개선
       setAppState(prev => {
         const newState = { 
           ...prev, 
           ...storedApiKeys, 
           ...storedBlogData,
-          preventDuplicates: preventDuplicatesFromStorage
+          preventDuplicates: true // 기본값 유지
         };
-        console.log('✅ 앱 상태 즉시 초기화 완료 (모든 API 키 기본 연결, 중복 금지 설정 동기화)');
+        console.log('✅ 앱 상태 즉시 초기화 완료 (모든 API 키 기본 연결)');
         return newState;
       });
       
@@ -227,15 +212,12 @@ export const useAppStateManager = () => {
     }
   }, [loadApiKeysFromStorage, loadBlogDataFromStorage]);
 
-  // preventDuplicates 상태 동기화 개선
+  // preventDuplicates 상태 동기화
   useEffect(() => {
-    console.log('중복 금지 설정 상태 동기화:', preventDuplicates);
     setAppState(prev => ({
       ...prev,
       preventDuplicates
     }));
-    // localStorage에도 저장
-    localStorage.setItem(STORAGE_KEYS.PREVENT_DUPLICATES, String(preventDuplicates));
   }, [preventDuplicates]);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
@@ -292,7 +274,7 @@ export const useAppStateManager = () => {
 
   // 참조 링크와 문장을 영구적으로 삭제하는 함수 추가
   const deleteReferenceData = useCallback(() => {
-    console.log('🗑️ 참조 링크와 문장을 영구 삭제 (통일된 키)');
+    console.log('🗑️ 참조 링크와 문장을 영구 삭제');
     localStorage.removeItem(STORAGE_KEYS.REFERENCE_LINK);
     localStorage.removeItem(STORAGE_KEYS.REFERENCE_SENTENCE);
     saveAppState({ 
@@ -315,7 +297,7 @@ export const useAppStateManager = () => {
     localStorage.removeItem(STORAGE_KEYS.TOPICS);
     localStorage.removeItem(STORAGE_KEYS.KEYWORD);
     localStorage.removeItem(STORAGE_KEYS.COLOR_THEME);
-    // 참조 링크와 문장, 고급 설정, 중복 금지 설정은 초기화하지 않음 (영구 보존)
+    // 참조 링크와 문장, 고급 설정은 초기화하지 않음 (영구 보존)
     
     // 편집기 초기화 이벤트 발송
     window.dispatchEvent(new CustomEvent('app-reset'));
@@ -334,15 +316,10 @@ export const useAppStateManager = () => {
       referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
       referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
       colorTheme: '', // 컬러 테마는 초기화
-      // 중복 금지 설정도 보존
-      preventDuplicates: localStorage.getItem(STORAGE_KEYS.PREVENT_DUPLICATES) === 'true'
     });
     
-    // preventDuplicates 상태도 보존된 값으로 설정
-    const preservedPreventDuplicates = localStorage.getItem(STORAGE_KEYS.PREVENT_DUPLICATES) === 'true';
-    setPreventDuplicates(preservedPreventDuplicates);
-    
-    toast({ title: "즉시 초기화 완료", description: "편집기가 완전 초기화되었습니다. (API 키와 참조 데이터, 중복 금지 설정은 보존됨)" });
+    setPreventDuplicates(true);
+    toast({ title: "즉시 초기화 완료", description: "편집기가 완전 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
   }, [toast]);
 
   return {
