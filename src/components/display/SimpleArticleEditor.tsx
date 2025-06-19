@@ -87,6 +87,22 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [toast]);
   
+  // SCRIPT 태그 제거 함수
+  const removeScriptTags = useCallback((htmlContent: string) => {
+    return htmlContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }, []);
+  
+  // 주제 스타일링 적용 함수
+  const applyTopicStyling = useCallback((content: string) => {
+    // H1 태그를 H4로 변경하고 검은색 스타일 적용
+    const styledContent = content.replace(
+      /<h1([^>]*)>(.*?)<\/h1>/gi,
+      '<h4 style="color: #000000; font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">$2</h4><p data-ke-size="size16">&nbsp;</p>'
+    );
+    
+    return styledContent;
+  }, []);
+  
   const forceDOMSync = useCallback((content: string) => {
     if (!editorRef.current || !content) {
       console.log('❌ DOM 동기화 조건 불충족:', { hasEditor: !!editorRef.current, hasContent: !!content });
@@ -98,7 +114,10 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       const editor = editorRef.current;
       
-      editor.innerHTML = content;
+      // 주제 스타일링 적용
+      const styledContent = applyTopicStyling(content);
+      
+      editor.innerHTML = styledContent;
       console.log('✅ 1차 innerHTML 설정 완료');
       
       // 이미지 클릭 이벤트 리스너 추가
@@ -123,18 +142,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       console.log('✅ 2차 강제 리플로우 완료');
       
       requestAnimationFrame(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== styledContent) {
           console.log('⚠️ 3차 검증 실패 - 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = styledContent;
         } else {
           console.log('✅ 3차 검증 성공');
         }
       });
       
       setTimeout(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== styledContent) {
           console.log('⚠️ 최종 검증 실패 - 최종 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = styledContent;
           
           editor.style.opacity = '0';
           setTimeout(() => {
@@ -152,7 +171,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       console.error('❌ DOM 동기화 중 오류:', error);
       return false;
     }
-  }, [handleImageClick]);
+  }, [handleImageClick, applyTopicStyling]);
   
   useEffect(() => {
     console.log('🔄 편집기 초기화 시작');
@@ -393,15 +412,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    navigator.clipboard.writeText(editorContent).then(() => {
+    // 복사 시에만 SCRIPT 태그 제거
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    navigator.clipboard.writeText(cleanedContent).then(() => {
       toast({ 
         title: "HTML 복사 완료", 
-        description: "HTML 코드가 클립보드에 복사되었습니다. 티스토리 코드 편집창에 붙여넣으세요. 이미지는 클릭해서 별도 복사하세요." 
+        description: "HTML 코드가 클립보드에 복사되었습니다. 스크립트 태그는 자동 제거되었습니다." 
       });
     }).catch(() => {
       toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
     });
-  }, [editorContent, toast]);
+  }, [editorContent, toast, removeScriptTags]);
   
   const handleDownloadHTML = useCallback(() => {
     if (!editorContent) {
@@ -409,7 +431,10 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    const blob = new Blob([editorContent], { type: 'text/html;charset=utf-8' });
+    // 다운로드 시에도 SCRIPT 태그 제거
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    const blob = new Blob([cleanedContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -420,7 +445,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
-  }, [editorContent, selectedTopic, toast]);
+  }, [editorContent, selectedTopic, toast, removeScriptTags]);
 
   const showDebugInfo = process.env.NODE_ENV === 'development';
 

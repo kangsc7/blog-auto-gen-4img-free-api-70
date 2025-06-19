@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -68,36 +67,38 @@ export const useRefactoredAppController = () => {
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 실행 방지 강화
-  const handleTopicConfirm = async () => {
-    console.log('주제 확인 버튼 클릭:', pendingTopic, '처리중:', isConfirming.current);
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 심플하게 재구현
+  const handleTopicConfirm = () => {
+    console.log('주제 확인 처리 시작:', pendingTopic);
     
     if (!pendingTopic || isConfirming.current) {
       console.log('처리 조건 불만족 - 무시');
       return;
     }
     
+    // 진행 중 플래그 설정
     isConfirming.current = true;
-    console.log('주제 확인 처리 시작:', pendingTopic);
     
+    // 다이얼로그 닫기
+    setShowTopicConfirmDialog(false);
+    
+    // 주제 선택
+    const selectedTopicCopy = pendingTopic;
+    setPendingTopic('');
+    
+    // 주제 선택 및 글 생성 시작
     try {
-      // 1. 즉시 다이얼로그 닫기
-      setShowTopicConfirmDialog(false);
+      topicControls.selectTopic(selectedTopicCopy);
       
-      // 2. 주제 선택
-      topicControls.selectTopic(pendingTopic);
-      
-      // 3. 상태 초기화
-      const currentTopic = pendingTopic;
-      setPendingTopic('');
-      
-      // 4. 글 생성 시작
-      console.log('자동 글 생성 시작:', { topic: currentTopic, keyword: appState.keyword });
-      await generateArticle({ topic: currentTopic, keyword: appState.keyword });
+      // 약간 지연 후 글 생성 시작
+      setTimeout(() => {
+        console.log('자동 글 생성 시작:', { topic: selectedTopicCopy, keyword: appState.keyword });
+        generateArticle({ topic: selectedTopicCopy, keyword: appState.keyword });
+        isConfirming.current = false; // 처리 완료
+      }, 100);
     } catch (error) {
       console.error('주제 확인 처리 오류:', error);
-    } finally {
-      isConfirming.current = false; // 처리 완료
+      isConfirming.current = false;
     }
   };
 

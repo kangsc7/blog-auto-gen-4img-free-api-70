@@ -35,23 +35,33 @@ export const TopNavigation: React.FC = () => {
   ];
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+    <nav className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center space-x-2 py-3 overflow-x-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
-                location.pathname === item.path 
-                  ? 'bg-white text-blue-600 shadow-md' 
-                  : 'text-white hover:bg-white/20'
-              }`}
-            >
-              {item.icon}
-              <span className="hidden sm:inline">{item.label}</span>
-            </Link>
-          ))}
+        <div className="flex items-center justify-center h-12">
+          <div className="flex items-center space-x-1 overflow-x-auto scrollbar-hide">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`
+                  px-3 py-2 rounded-lg text-sm font-medium 
+                  transition-all duration-200 
+                  flex items-center gap-2 
+                  whitespace-nowrap
+                  min-w-fit
+                  ${location.pathname === item.path 
+                    ? 'bg-white text-blue-600 shadow-md' 
+                    : 'text-white hover:bg-white/20'
+                  }
+                `}
+              >
+                {item.icon}
+                <span className="hidden sm:inline text-sm font-medium">
+                  {item.label}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </nav>

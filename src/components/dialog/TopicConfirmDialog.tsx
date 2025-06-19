@@ -19,18 +19,18 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (isProcessing) return; // 중복 클릭 방지
     
     setIsProcessing(true);
     console.log('주제 확인 버튼 클릭됨:', topic);
     
     try {
-      await onConfirm();
+      // 즉시 onConfirm 함수 호출 (async/await 사용하지 않음)
+      onConfirm();
       onClose();
     } catch (error) {
       console.error('주제 확인 처리 오류:', error);
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -44,14 +44,12 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
     onClose();
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open && !isProcessing) {
-      onClose();
-    }
-  };
-
   return (
-    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isProcessing) {
+        onClose();
+      }
+    }}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-bold text-blue-600">
