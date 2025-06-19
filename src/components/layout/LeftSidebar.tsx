@@ -50,11 +50,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   deleteReferenceData,
 }) => {
   const [isSticky, setIsSticky] = useState(false);
+  const [isHuggingFaceExpanded, setIsHuggingFaceExpanded] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      // 스크롤 임계값을 1000으로 증가하여 더 늦게 따라다니게 함
       const shouldBeSticky = scrollPosition > 1000;
       setIsSticky(shouldBeSticky);
     };
@@ -63,13 +63,16 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleHuggingFaceDoubleClick = () => {
+    setIsHuggingFaceExpanded(!isHuggingFaceExpanded);
+  };
+
   return (
     <div className="space-y-6">
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
-        generateTopics={generationFunctions.generateTopics}
         manualTopic={topicControls.manualTopic}
         setManualTopic={topicControls.setManualTopic}
         handleManualTopicAdd={topicControls.handleManualTopicAdd}
@@ -79,7 +82,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       <ArticleGenerator
         appState={appState}
         isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticle={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
       />
 
@@ -101,11 +103,28 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           openWhisk={utilityFunctions.openWhisk}
         />
 
-        <HuggingFaceImageGenerator
-          huggingFaceApiKey={appState.huggingFaceApiKey}
-          isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
-          hasAccess={true}
-        />
+        {/* Hugging Face 이미지 생성기 - 더블클릭으로 접기/펼치기 */}
+        <div 
+          onDoubleClick={handleHuggingFaceDoubleClick}
+          className={`cursor-pointer transition-all duration-300 ${
+            isHuggingFaceExpanded ? 'opacity-100' : 'opacity-70'
+          }`}
+        >
+          <div className={`transition-all duration-300 overflow-hidden ${
+            isHuggingFaceExpanded ? 'max-h-96' : 'max-h-16'
+          }`}>
+            <HuggingFaceImageGenerator
+              huggingFaceApiKey={appState.huggingFaceApiKey}
+              isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
+              hasAccess={true}
+            />
+          </div>
+          {!isHuggingFaceExpanded && (
+            <div className="text-center text-xs text-gray-500 bg-gray-50 rounded p-2 mt-1">
+              💡 더블클릭해서 Hugging Face 이미지 생성기 열기
+            </div>
+          )}
+        </div>
       </div>
 
       <ExternalReferenceInput
