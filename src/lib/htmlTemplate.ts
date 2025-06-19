@@ -15,6 +15,10 @@ const getCssStyles = (colors: any): string => `
   }
 }
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
+.content-table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 16px; }
+.content-table th { padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333; }
+.content-table td { padding: 14px; text-align: left; border: 1px solid #ddd; line-height: 1.6; }
+.content-table tr:nth-child(even) { background-color: #f9f9f9; }
 `;
 
 const getHeaderSection = (topic: string): string => `
@@ -39,36 +43,85 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 동적 섹션 생성 함수 (더 풍부한 내용을 위해 확장)
-const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => `
-<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>${heading.title} ${heading.emoji}</b></h2>
+const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => {
+  // 테이블을 삽입할 최적의 섹션 결정 (보통 2-4번째 섹션)
+  const shouldInsertTable = sectionNumber >= 2 && sectionNumber <= 4;
+  
+  // 주의사항 카드를 삽입할 섹션 결정 (3번째 섹션)
+  const shouldInsertWarning = sectionNumber === 3;
+  
+  // FAQ를 삽입할 섹션 결정 (5번째 섹션)
+  const shouldInsertFAQ = sectionNumber === 5;
+
+  return `
+<h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26">
+<b>${heading.title} ${heading.emoji}</b>
+</h2>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 [SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다.
+${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요. 실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊
+복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다. 특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
+실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊 마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡
 </p>
-${sectionNumber === 2 ? `
+
+${shouldInsertTable ? `
 <div style="overflow-x: auto; margin: 25px 0; padding: 0;">
-<table style="min-width: 100%; width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto;">
-<thead><tr><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">단계</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">신청 방법</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">필요 서류</th><th style="padding:14px;text-align:left;border:1px solid #ddd;background-color:#f5f5f5;font-weight:bold;color:#333;">소요 기간</th></tr></thead>
+<table class="content-table">
+<thead>
+<tr>
+<th>단계</th>
+<th>신청 방법</th>
+<th>필요 서류</th>
+<th>소요 기간</th>
+</tr>
+</thead>
 <tbody>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">자격 요건 확인 후 거주지 주민센터 방문 또는 온라인 신청 사이트 접속</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신분증, 가족관계증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">즉시</td></tr>
-<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">2단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">신청서 작성 및 소득·재산 관련 서류 제출</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">소득증명서, 재산세 납세증명서</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">1-2일</td></tr>
-<tr><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">접수 완료 후 심사 진행 (약 2주 소요)</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">통장 사본</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">14일</td></tr>
-<tr style="background-color: #f9f9f9;"><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">4단계</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">승인 시 바우처 카드 발급 및 충전</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">-</td><td style="padding:14px;text-align:left;border:1px solid #ddd;line-height:1.6;">3-5일</td></tr>
-</tbody></table></div>
+<tr>
+<td>1단계</td>
+<td>자격 요건 확인 후 거주지 주민센터 방문 또는 온라인 신청 사이트 접속</td>
+<td>신분증, 가족관계증명서</td>
+<td>즉시</td>
+</tr>
+<tr>
+<td>2단계</td>
+<td>신청서 작성 및 소득·재산 관련 서류 제출</td>
+<td>소득증명서, 재산세 납세증명서</td>
+<td>1-2일</td>
+</tr>
+<tr>
+<td>3단계</td>
+<td>접수 완료 후 심사 진행 (약 2주 소요)</td>
+<td>통장 사본</td>
+<td>14일</td>
+</tr>
+<tr>
+<td>4단계</td>
+<td>승인 시 바우처 카드 발급 및 충전</td>
+<td>-</td>
+<td>3-5일</td>
+</tr>
+</tbody>
+</table>
+</div>
 ` : ''}
-${sectionNumber === 3 ? `
+
+${shouldInsertWarning ? `
 <div style="background-color: ${colors.warnBg}; border-left: 5px solid ${colors.warnBorder}; padding: 18px; margin: 25px 0; border-radius: 0 10px 10px 0; font-size: 17px; line-height: 1.6;">
     <strong style="color: ${colors.warnBorder};">⚠️ 전문가 팁 - 꼭 확인하세요!</strong><br>
     <ul style="margin: 10px 0; padding-left: 20px;">
@@ -80,35 +133,50 @@ ${sectionNumber === 3 ? `
     </ul>
 </div>
 ` : ''}
-${sectionNumber === 5 ? `
+
+${shouldInsertFAQ ? `
+<h3 style="font-size: 22px; color: ${colors.primary}; margin: 30px 0 15px; font-weight: bold;" data-ke-size="size22">
+<b>💬 자주 묻는 질문 (FAQ)</b>
+</h3>
+
 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 신청 후 언제부터 사용 가능한가요?</strong><br>
 A: 승인 후 약 1-2주 내에 카드가 발급되며, 발급 즉시 사용 가능합니다. 카드 활성화는 자동으로 처리되니 별도 절차는 불필요해요.</p>
+
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 다른 가족이 대신 신청할 수 있나요?</strong><br>
 A: 세대주 또는 배우자만 신청 가능하며, 위임장과 함께 인감증명서가 있으면 대리 신청도 가능합니다. 단, 대리인은 성인이어야 해요.</p>
+
 <p style="margin-bottom: 15px; font-size: 16px; line-height: 1.6;"><strong>Q: 이사를 가면 어떻게 되나요?</strong><br>
 A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가능하며, 카드 재발급 없이 기존 카드로 이용할 수 있어요.</p>
+
 <p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
 A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
 </div>
 ` : ''}
+
 <p style="height: 20px;">&nbsp;</p>
 `;
+};
 
-// 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
 const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 여러분도 충분히 할 수 있어요! 많은 분들이 이미 성공적으로 혜택을 받고 계시니까 포기하지 마시고 도전해보세요. 💪 작은 한 걸음이 큰 변화를 만들어낼 거예요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
 <strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
 `;
 
@@ -132,13 +200,19 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 <p style="margin-bottom: 15px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 지금까지 [SECTION_CONTENT_5] 관련 정보에 대해 전문가 수준의 깊이 있는 내용으로 다뤄봤는데요, 실제로 도움이 되는 정보들을 얻으셨길 바라요. 에너지 비용 부담을 줄이는 것은 가계 경제에 정말 큰 도움이 되니까요.
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 신청 자격에 해당하신다면 꼭 신청해서 혜택을 받으시길 권해드려요! 위에서 알려드린 전문가 팁들을 활용하시면 더욱 원활하게 진행하실 수 있을 거예요. 😊
 </p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="height: 20px;">&nbsp;</p>
+
 <p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline; font-weight: bold;"><strong>${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</strong></a></p>
+
 <p style="height: 30px;">&nbsp;</p>
 `;
 
@@ -218,44 +292,44 @@ const getTagsSection = (topic: string, keyword: string): string => {
 export const getHtmlTemplate = (
   colors: any, 
   topic: string, 
-  keyword: string, 
+  naturalKeyword: string, 
   refLink: string, 
-  referenceSentence?: string,
-  dynamicHeadings?: Array<{ title: string; emoji: string; content: string }>
+  referenceSentence: string | undefined,
+  selectedHeadings: { title: string; emoji: string; content: string }[]
 ): string => {
-  const htmlParts = [
-    getHeaderSection(topic),
-    getIntroSection(colors, keyword),
-  ];
-
-  // 동적 소제목이 있으면 5개만 사용, 없으면 기본 5개 섹션 사용
-  if (dynamicHeadings && dynamicHeadings.length >= 5) {
-    dynamicHeadings.slice(0, 5).forEach((heading, index) => {
-      htmlParts.push(getDynamicSection(colors, heading, index + 1));
-    });
-  } else {
-    // 기본 5개 섹션들
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 핵심 정보와 완벽 분석`, emoji: '💡', content: '기본 정보를 전문가 수준으로 분석합니다' }, 1));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 신청 방법 완벽 가이드`, emoji: '📝', content: '신청 절차를 상세하게 안내합니다' }, 2));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 자격 요건과 전문가 팁`, emoji: '👥', content: '자격 요건과 숨겨진 팁을 공개합니다' }, 3));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} 혜택 분석과 활용법`, emoji: '💰', content: '혜택을 최대화하는 방법을 알려드립니다' }, 4));
-    htmlParts.push(getDynamicSection(colors, { title: `${keyword} FAQ와 실무 노하우`, emoji: '❓', content: '실무에서 필요한 모든 정보를 제공합니다' }, 5));
-  }
-
-  // 6번째 섹션 (격려 섹션) 추가 - refLink와 referenceSentence 전달
-  htmlParts.push(getEncouragementSection(colors, keyword, refLink, referenceSentence));
-  htmlParts.push(getSummaryCardSection(keyword));
-  htmlParts.push(getClosingSection(colors, refLink, referenceSentence));
-  htmlParts.push(getTagsSection(topic, keyword));
+  const cssStyles = getCssStyles(colors);
+  const headerSection = getHeaderSection(topic);
+  const introSection = getIntroSection(colors, naturalKeyword);
+  
+  const dynamicSections = selectedHeadings.map((heading, index) => 
+    getDynamicSection(colors, heading, index + 1)
+  ).join('');
+  
+  const encouragementSection = getEncouragementSection(colors, naturalKeyword, refLink, referenceSentence);
+  const summaryCardSection = getSummaryCardSection(naturalKeyword);
+  const closingSection = getClosingSection(colors, refLink, referenceSentence);
 
   return `
-<div style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; font-size: 17px; box-sizing: border-box; padding: 0 16px; word-break: keep-all; overflow-wrap: break-word;">
-  <style>
-    ${getCssStyles(colors)}
-  </style>
-  <div class="wrapper-div">
-    ${htmlParts.join('\n')}
-  </div>
-</div>
-`;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${topic}</title>
+    <style>
+        ${cssStyles}
+    </style>
+</head>
+<body>
+    <div class="wrapper-div" style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Noto Sans KR', sans-serif;">
+        ${headerSection}
+        ${introSection}
+        ${dynamicSections}
+        ${encouragementSection}
+        ${summaryCardSection}
+        ${closingSection}
+    </div>
+</body>
+</html>
+  `;
 };
