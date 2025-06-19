@@ -1,4 +1,3 @@
-
 import { colorThemes } from '@/data/constants';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -32,7 +31,7 @@ export const getEnhancedArticlePrompt = async (options: EnhancedArticlePromptOpt
 **주제**: ${topic}
 **핵심 키워드**: ${keyword}
 **섹션당 글자수**: ${sectionWordCount}자
-**색상 테마**: ${colorTheme.label}
+**색상 테마**: ${colorTheme.name}
 
 ${referenceLink ? `**참고 링크**: ${referenceLink}` : ''}
 ${referenceSentence ? `**참고 문장**: ${referenceSentence}` : ''}
