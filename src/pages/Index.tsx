@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -11,6 +12,7 @@ import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
 import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
 import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
 import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
+import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -247,13 +249,22 @@ const Index = () => {
         handleTopicConfirm={handleTopicConfirm}
       />
 
-      {/* 주제 확인 다이얼로그 - 파라미터 제거하여 올바른 호출 */}
+      {/* Hugging Face 이미지 생성기 */}
+      <div className="container mx-auto px-4 py-6">
+        <HuggingFaceImageGenerator
+          huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+          isApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+          hasAccess={hasAccess || isAdmin}
+        />
+      </div>
+
+      {/* 주제 확인 다이얼로그 - 간단한 버전으로 수정 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
         onConfirm={() => {
           console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
-          handleTopicConfirm(); // 파라미터 제거
+          handleTopicConfirm();
         }}
         onCancel={() => {
           console.log('TopicConfirmDialog onCancel 호출됨');

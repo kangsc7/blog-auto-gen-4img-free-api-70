@@ -52,27 +52,19 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 - 개선된 관리
+  // 주제 확인 다이얼로그 상태 - 간단한 관리
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
-  const isProcessingTopicConfirm = useRef(false);
 
   // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelect = (topic: string) => {
     console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
-    isProcessingTopicConfirm.current = false; // 초기화
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 처리 방지
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 단순화
   const handleTopicConfirm = () => {
-    // 이미 처리 중이면 무시
-    if (isProcessingTopicConfirm.current) {
-      console.log('이미 처리 중 - 중복 호출 무시');
-      return;
-    }
-    
     console.log('주제 확인 버튼 클릭:', pendingTopic);
     
     if (!pendingTopic) {
@@ -80,35 +72,22 @@ export const useRefactoredAppController = () => {
       return;
     }
     
-    // 처리 중 플래그 설정
-    isProcessingTopicConfirm.current = true;
+    console.log('주제 확인 처리 시작:', pendingTopic);
     
-    try {
-      console.log('주제 확인 처리 시작:', pendingTopic);
-      
-      // 1. 즉시 다이얼로그 닫기
-      setShowTopicConfirmDialog(false);
-      
-      // 2. 주제 선택
-      topicControls.selectTopic(pendingTopic);
-      
-      // 3. 글 생성 시작 (약간의 딜레이)
-      setTimeout(() => {
-        console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
-        generateArticle({ topic: pendingTopic, keyword: appState.keyword });
-        // 처리 완료 후 플래그 해제
-        isProcessingTopicConfirm.current = false;
-      }, 200);
-      
-      // 4. 상태 초기화
-      setPendingTopic('');
-      
-    } catch (error) {
-      console.error('주제 확인 처리 중 오류:', error);
-      // 오류 발생 시 플래그 해제 및 다이얼로그 다시 열기
-      isProcessingTopicConfirm.current = false;
-      setShowTopicConfirmDialog(true);
-    }
+    // 1. 즉시 다이얼로그 닫기
+    setShowTopicConfirmDialog(false);
+    
+    // 2. 주제 선택
+    topicControls.selectTopic(pendingTopic);
+    
+    // 3. 상태 초기화
+    setPendingTopic('');
+    
+    // 4. 글 생성 시작 (약간의 딜레이)
+    setTimeout(() => {
+      console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
+      generateArticle({ topic: pendingTopic, keyword: appState.keyword });
+    }, 100);
   };
 
   // 주제 확인 다이얼로그 취소
@@ -116,7 +95,6 @@ export const useRefactoredAppController = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
-    isProcessingTopicConfirm.current = false;
   };
 
   const convertToMarkdown = () => {
