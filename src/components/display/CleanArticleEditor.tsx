@@ -210,16 +210,19 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사
+  // HTML 복사 - SCRIPT 태그만 제거
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    navigator.clipboard.writeText(editorContent).then(() => {
+    // HTML 복사 시에만 SCRIPT 태그 제거
+    const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    
+    navigator.clipboard.writeText(cleanContent).then(() => {
       toast({ 
-        title: "✅ HTML 복사 완료", 
+        title: "✅ HTML 복사 완료 (SCRIPT 태그 제거됨)", 
         description: "티스토리 코드 편집창에 붙여넣으세요." 
       });
     });
@@ -340,7 +343,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존)</p>
-                  <p>자유롭게 수정하세요. 이미지 클릭시 티스토리용 복사, 창 전환/새로고침해도 내용 영구 보존됨</p>
+                  <p>자유롭게 수정하세요. HTML 복사시 SCRIPT 태그만 자동 제거, 창 전환/새로고침해도 내용 영구 보존됨</p>
                 </div>
               </div>
               <div

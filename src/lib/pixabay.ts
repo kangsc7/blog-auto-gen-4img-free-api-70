@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 
 interface PixabayImage {
@@ -300,7 +299,7 @@ export const integratePixabayImages = async (
       
       const altText = sectionTitle.replace(/<[^>]*>/g, '').replace(/[^\w\s가-힣]/g, ' ').trim() || '블로그 이미지';
       
-      // 티스토리 최적화 이미지 태그 (페이지 정보 포함)
+      // 티스토리 최적화 이미지 태그 (텍스트 제거)
       const imageHtml = `
         <div class="pixabay-image-container" style="text-align: center; margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 15px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);">
           <img 
@@ -315,8 +314,6 @@ export const integratePixabayImages = async (
             data-image-url="${image.webformatURL}"
             data-page-number="${pageNumber}"
           >
-          <p style="margin-top: 15px; color: #64748b; font-size: 13px; font-weight: 600;">💡 이미지 클릭 시 티스토리 복사 가능 (Ctrl+V로 붙여넣기) | 📄 ${pageNumber}페이지 검색</p>
-          <p style="margin-top: 8px; color: #94a3b8; font-size: 11px;">📊 조회수: ${image.views.toLocaleString()} | 다운로드: ${image.downloads.toLocaleString()}</p>
         </div>`;
 
       // H2 섹션 바로 다음에 이미지 삽입

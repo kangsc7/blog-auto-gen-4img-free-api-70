@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -83,7 +84,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 **🚨 블로그 글 구조 - 최우선 준수 사항 🚨**
 
 1. **주제 제목** (글 시작 부분에 반드시 포함):
-<h3 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; border-bottom: 3px solid ${colors.primary}; padding-bottom: 12px;">${topic}</h3>
+<h3 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; padding-bottom: 12px;">${topic}</h3>
 
 2. **간단한 공감 박스** (주제 제목 바로 다음에 반드시 포함):
 <div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border: 2px solid ${colors.primary}; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
@@ -105,7 +106,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 190-250자 범위 내인지 확인하세요
 
 **예시 구조:**
-<p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크)</p>
+<p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
 
 <p style="height: 20px;">&nbsp;</p>
 
@@ -131,7 +132,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em;">
 
 **🚨 티스토리 호환 시각화 요약 카드 필수 삽입 🚨**
-- 4번째와 5번째 섹션 사이에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요:
+- 6번째 섹션의 내용 끝에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요:
 - ⚠️ **티스토리 호환성**: script 태그나 복잡한 JavaScript 사용 금지, 인라인 스타일만 사용
 
 <div style="font-family: 'Noto Sans KR', sans-serif; display: flex; justify-content: center; align-items: center; padding: 25px 15px; background-color: ${colors.secondary}; margin: 25px 0;">
@@ -151,15 +152,21 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
     </div>
 </div>
 
-**🚨 "더 많은 정보" 참조 링크 스타일 (사각박스 제거) 🚨**
+**🚨 "더 많은 정보" 참조 링크 스타일 (사각박스 제거) + 태그 추가 🚨**
 ${referenceLink ? `
-- 글 하단에 다음과 같은 스타일로 참조 링크를 포함하세요 (테두리 없이):
+- 글 하단에 다음과 같은 스타일로 참조 링크를 포함하고 바로 아래에 태그 7개를 추가하세요 (테두리 없이):
 <div style="text-align: center; margin: 40px 0; padding: 25px;">
   <h4 style="color: ${colors.primary}; margin-bottom: 15px; font-size: 18px;">더 많은 정보를 원하시나요?</h4>
   <a href="${referenceLink}" target="_blank" rel="noopener" style="display: inline-block; background: ${colors.primary}; color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; transition: all 0.3s ease;">
     👉 워드프레스 꿀팁 더 보러가기
   </a>
-</div>` : ''}
+</div>
+
+<p style="height: 40px;">&nbsp;</p>
+
+<p style="text-align: center; font-size: 16px; color: #666; line-height: 1.8;">
+${naturalKeyword}, ${naturalKeyword} 신청방법, ${naturalKeyword} 자격, 디지털플랫폼 활용 지원금, 2025년 정부지원금, 복지혜택, 생계급여
+</p>` : ''}
 
 **🚨 주의사항 카드 필수 삽입 🚨**
 - 4번째 섹션의 내용 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
@@ -250,7 +257,8 @@ ${htmlTemplate}
 - **외부 참조 링크와 문장 필수 적용**
 - **주제는 H3로 글 상단에, 간단한 공감 박스 포함**
 - **주의사항 카드는 4번째 섹션 끝에 배치**
-- **본문 끝 참조 링크는 테두리 없이 작성**
+- **시각화 요약 카드는 6번째 섹션 끝에 배치**
+- **본문 끝 참조 링크는 테두리 없이 작성하고 바로 아래에 태그 7개 추가**
   `;
 };
 
