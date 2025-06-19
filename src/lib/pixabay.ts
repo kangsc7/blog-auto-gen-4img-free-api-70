@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 
 interface PixabayImage {
@@ -16,9 +17,159 @@ interface PixabayResponse {
   totalHits: number;
 }
 
-// H2 섹션에서 키워드 추출 및 최적화
-const extractOptimizedKeywords = (htmlContent: string): string[] => {
-  console.log('🔍 H2 섹션에서 키워드 추출 시작');
+// H2 섹션에서 영어 이미지 프롬프트 생성 함수
+const generateImagePromptFromSection = async (
+  sectionTitle: string,
+  geminiApiKey: string
+): Promise<string> => {
+  try {
+    const cleanTitle = sectionTitle.replace(/<[^>]*>/g, '').replace(/[💰📝🤔📌💯✨🎯⚡🔥💡]/g, '').trim();
+    
+    const prompt = `"${cleanTitle}"라는 한국어 소제목을 픽사베이에서 검색하기 위한 최적의 영어 키워드로 변환해주세요.
+
+🎯 변환 조건:
+- 3-5단어의 간결한 영어 표현
+- 픽사베이에서 실제로 찾을 수 있는 이미지 키워드
+- 정부지원금, 복지 관련 주제라면 business, government, support, money, application 등 관련 키워드 사용
+- 너무 구체적이지 않고 적절히 일반적인 표현
+
+예시:
+- "지원금 신청방법" → "government support application"
+- "자격조건 확인" → "eligibility requirements check"
+- "혜택 내용" → "financial benefits overview"
+
+다른 설명 없이 영어 키워드만 제공해주세요:`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 50,
+        },
+      }),
+    });
+
+    if (!response.ok) throw new Error('Gemini API 오류');
+
+    const data = await response.json();
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    
+    if (result) {
+      const cleanedResult = result.replace(/^["']|["']$/g, '').trim();
+      console.log(`✅ 이미지 프롬프트 생성: "${cleanTitle}" → "${cleanedResult}"`);
+      return cleanedResult;
+    }
+    
+    throw new Error('Gemini 응답 없음');
+    
+  } catch (error) {
+    console.error('이미지 프롬프트 생성 실패:', error);
+    
+    // 백업: 기본 키워드 매핑
+    const fallbackMap: { [key: string]: string } = {
+      '지원금': 'government financial support',
+      '신청': 'application process',
+      '방법': 'method guide',
+      '조건': 'requirements criteria',
+      '자격': 'eligibility qualification',
+      '혜택': 'benefits overview',
+      '정부': 'government services',
+      '복지': 'welfare support'
+    };
+    
+    for (const [korean, english] of Object.entries(fallbackMap)) {
+      if (sectionTitle.includes(korean)) {
+        console.log(`🔄 백업 키워드 사용: "${sectionTitle}" → "${english}"`);
+        return english;
+      }
+    }
+    
+    return 'business office documents';
+  }
+};
+
+// 10페이지 검색으로 중복 없는 이미지 수집
+export const searchPixabayAdvanced = async (
+  query: string,
+  apiKey: string,
+  usedImageIds: number[] = [],
+  maxPages: number = 10
+): Promise<PixabayImage | null> => {
+  console.log(`🔍 고급 검색 시작: "${query}" (최대 ${maxPages}페이지, 제외 ID: ${usedImageIds.length}개)`);
+  
+  const encodedQuery = encodeURIComponent(query);
+  
+  // 카테고리별 순환 검색 (공식 가이드 기준)
+  const categories = [
+    'business', 'backgrounds', 'education', 'people', 
+    'buildings', 'computer', 'industry', 'places'
+  ];
+  
+  for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex++) {
+    const category = categories[categoryIndex];
+    
+    for (let page = 1; page <= maxPages; page++) {
+      try {
+        // 픽사베이 공식 파라미터 사용
+        const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=${category}&min_width=800&min_height=600&per_page=20&page=${page}&safesearch=true&order=popular&editors_choice=false`;
+        
+        console.log(`📡 ${categoryIndex + 1}번째 카테고리(${category}) ${page}페이지 검색`);
+        
+        const response = await fetch(url);
+        
+        if (response.status === 429) {
+          console.warn(`⚠️ API 한도 초과, 1초 대기`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        
+        if (!response.ok) {
+          console.error(`❌ API 오류: ${response.status}`);
+          continue;
+        }
+
+        const data: PixabayResponse = await response.json();
+        console.log(`📊 ${category} ${page}페이지: ${data.hits.length}개 이미지 발견`);
+        
+        if (data.hits && data.hits.length > 0) {
+          // 중복 제거 및 품질 필터링
+          const filteredImages = data.hits.filter(img => 
+            !usedImageIds.includes(img.id) && // 중복 제거
+            img.views > 500 && // 최소 조회수
+            img.downloads > 100 && // 최소 다운로드수
+            img.webformatURL.includes('pixabay.com') // 유효한 URL
+          );
+          
+          if (filteredImages.length > 0) {
+            const selectedImage = filteredImages[0];
+            console.log(`🎯 중복 없는 이미지 발견: ID ${selectedImage.id} (${category} ${page}페이지)`);
+            return selectedImage;
+          }
+        }
+        
+        // API 호출 간격 (공식 가이드 권장)
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+      } catch (error) {
+        console.error(`❌ ${category} ${page}페이지 검색 실패:`, error);
+        continue;
+      }
+    }
+  }
+  
+  console.log(`❌ ${maxPages}페이지 모든 카테고리 검색 완료, 적합한 이미지 없음`);
+  return null;
+};
+
+// H2 섹션별 이미지 프롬프트 생성 및 추출
+const extractSectionImagePrompts = async (
+  htmlContent: string,
+  geminiApiKey: string
+): Promise<{ title: string; prompt: string }[]> => {
+  console.log('🔍 H2 섹션별 이미지 프롬프트 생성 시작');
   
   const h2Sections = htmlContent.match(/<h2[^>]*>.*?<\/h2>/gi);
   if (!h2Sections || h2Sections.length === 0) {
@@ -26,198 +177,25 @@ const extractOptimizedKeywords = (htmlContent: string): string[] => {
     return [];
   }
 
-  const optimizedKeywords: string[] = [];
+  const sectionPrompts: { title: string; prompt: string }[] = [];
   
-  for (const section of h2Sections.slice(0, 5)) {
+  for (let i = 0; i < Math.min(h2Sections.length, 5); i++) {
+    const section = h2Sections[i];
     const titleMatch = section.match(/<h2[^>]*>(.*?)<\/h2>/i);
+    
     if (titleMatch) {
-      let title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/[💰📝🤔📌💯✨🎯⚡🔥💡]/g, '').trim();
+      const title = titleMatch[1];
+      const prompt = await generateImagePromptFromSection(title, geminiApiKey);
       
-      // 픽사베이 최적화된 영어 키워드로 변환
-      const koreanToEnglish: { [key: string]: string } = {
-        '지원금': 'money support',
-        '신청': 'application',
-        '방법': 'method',
-        '조건': 'requirements',
-        '자격': 'eligibility',
-        '혜택': 'benefits',
-        '정부': 'government',
-        '디지털': 'digital',
-        '플랫폼': 'platform',
-        '온라인': 'online',
-        '서비스': 'service',
-        '복지': 'welfare',
-        '생계급여': 'basic livelihood',
-        '주거급여': 'housing allowance',
-        '의료급여': 'medical aid',
-        '교육급여': 'education support'
-      };
+      sectionPrompts.push({ title, prompt });
+      console.log(`✅ ${i + 1}번째 섹션 프롬프트: "${title}" → "${prompt}"`);
       
-      let englishKeyword = title;
-      Object.entries(koreanToEnglish).forEach(([korean, english]) => {
-        if (title.includes(korean)) {
-          englishKeyword = english;
-        }
-      });
-      
-      // 일반적인 배경 이미지 키워드로 보완
-      const backgroundKeywords = [
-        'business meeting',
-        'office work',
-        'documents',
-        'calculator money',
-        'government building',
-        'digital technology',
-        'people working',
-        'financial planning'
-      ];
-      
-      const finalKeyword = englishKeyword.length > 3 ? englishKeyword : backgroundKeywords[Math.floor(Math.random() * backgroundKeywords.length)];
-      optimizedKeywords.push(finalKeyword);
-      console.log(`✅ 키워드 최적화: "${title}" → "${finalKeyword}"`);
-    }
-  }
-
-  return optimizedKeywords;
-};
-
-// 페이지별 순차 검색 함수 - 소제목 순서대로 페이지 매칭
-export const searchPixabayByPage = async (
-  query: string,
-  apiKey: string,
-  targetPage: number
-): Promise<PixabayImage | null> => {
-  console.log(`🔍 페이지별 검색: "${query}" - 페이지 ${targetPage}`);
-  
-  try {
-    const encodedQuery = encodeURIComponent(query);
-    const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=20&page=${targetPage}&safesearch=true&order=popular`;
-    
-    console.log(`📡 ${targetPage}페이지 검색 요청: ${url.substring(0, 100)}...`);
-    
-    const response = await fetch(url);
-    
-    if (response.status === 429) {
-      console.warn(`⚠️ ${targetPage}페이지 - API 한도 초과, 0.5초 대기 후 재시도`);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return null;
-    }
-    
-    if (!response.ok) {
-      console.error(`❌ ${targetPage}페이지 - API 오류: ${response.status}`);
-      return null;
-    }
-
-    const data: PixabayResponse = await response.json();
-    console.log(`✅ ${targetPage}페이지 - ${data.hits.length}개 이미지 발견`);
-    
-    if (data.hits && data.hits.length > 0) {
-      // 품질 좋은 이미지만 선별하여 첫 번째 반환
-      const qualityImages = data.hits.filter(img => 
-        img.views > 1000 && 
-        img.downloads > 100 && 
-        img.webformatURL.includes('pixabay.com')
-      );
-      
-      if (qualityImages.length > 0) {
-        console.log(`🎯 ${targetPage}페이지에서 품질 이미지 발견:`, qualityImages[0].webformatURL);
-        return qualityImages[0];
-      } else if (data.hits.length > 0) {
-        // 품질 필터에 걸려도 기본 이미지는 반환
-        console.log(`⚠️ ${targetPage}페이지에서 기본 이미지 반환:`, data.hits[0].webformatURL);
-        return data.hits[0];
-      }
-    }
-    
-    return null;
-    
-  } catch (error) {
-    console.error(`❌ ${targetPage}페이지 검색 실패:`, error);
-    return null;
-  }
-};
-
-// 7페이지까지 검색하는 함수 (폴백용)
-export const searchPixabayImagesAdvanced = async (
-  query: string,
-  apiKey: string,
-  maxImages: number = 1
-): Promise<PixabayImage[]> => {
-  console.log(`🔍 고급 검색 시작: "${query}" (최대 ${maxImages}개)`);
-  
-  const validImages: PixabayImage[] = [];
-  const encodedQuery = encodeURIComponent(query);
-  
-  // 7페이지까지 검색
-  for (let page = 1; page <= 7 && validImages.length < maxImages; page++) {
-    try {
-      const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=20&page=${page}&safesearch=true&order=popular`;
-      
-      console.log(`📡 ${page}페이지 검색: ${url.substring(0, 100)}...`);
-      
-      const response = await fetch(url);
-      
-      if (response.status === 429) {
-        console.warn(`⚠️ ${page}페이지 - API 한도 초과, 0.5초 대기 후 재시도`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        continue;
-      }
-      
-      if (!response.ok) {
-        console.error(`❌ ${page}페이지 - API 오류: ${response.status}`);
-        continue;
-      }
-
-      const data: PixabayResponse = await response.json();
-      console.log(`✅ ${page}페이지 - ${data.hits.length}개 이미지 발견`);
-      
-      if (data.hits && data.hits.length > 0) {
-        // 품질 좋은 이미지만 선별
-        const qualityImages = data.hits.filter(img => 
-          img.views > 1000 && 
-          img.downloads > 100 && 
-          img.webformatURL.includes('pixabay.com')
-        );
-        
-        validImages.push(...qualityImages.slice(0, maxImages - validImages.length));
-        console.log(`🎯 ${page}페이지에서 ${qualityImages.length}개 품질 이미지 추가`);
-        
-        if (validImages.length >= maxImages) break;
-      }
-      
-      // API 호출 간격
+      // Gemini API 호출 간격
       await new Promise(resolve => setTimeout(resolve, 300));
-      
-    } catch (error) {
-      console.error(`❌ ${page}페이지 검색 실패:`, error);
-      continue;
     }
   }
   
-  console.log(`🏁 최종 결과: ${validImages.length}개 이미지 발견`);
-  return validImages;
-};
-
-export const searchPixabayImages = async (
-  query: string,
-  apiKey: string,
-  count: number = 5
-): Promise<PixabayImage[]> => {
-  const encodedQuery = encodeURIComponent(query);
-  const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=${count}&safesearch=true`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Pixabay API 오류: ${response.status}`);
-    }
-
-    const data: PixabayResponse = await response.json();
-    return data.hits || [];
-  } catch (error) {
-    console.error('Pixabay 이미지 검색 오류:', error);
-    return [];
-  }
+  return sectionPrompts;
 };
 
 export const integratePixabayImages = async (
@@ -225,19 +203,14 @@ export const integratePixabayImages = async (
   pixabayApiKey: string,
   geminiApiKey: string
 ): Promise<{ finalHtml: string; imageCount: number; clipboardImages: string[] }> => {
-  console.log('🔥 페이지별 순차 Pixabay 이미지 통합 시작:', { 
-    htmlLength: htmlContent.length,
-    hasPixabayKey: !!pixabayApiKey,
-    hasGeminiKey: !!geminiApiKey
-  });
+  console.log('🔥 픽사베이 고급 이미지 통합 시작 (10페이지 검색, 중복 방지)');
 
   try {
-    // 1. 최적화된 키워드 추출
-    const optimizedKeywords = extractOptimizedKeywords(htmlContent);
-    console.log('✅ 최적화된 키워드들:', optimizedKeywords);
-
-    if (optimizedKeywords.length === 0) {
-      console.log('❌ 추출된 키워드가 없습니다.');
+    // 1. H2 섹션별 이미지 프롬프트 생성
+    const sectionPrompts = await extractSectionImagePrompts(htmlContent, geminiApiKey);
+    
+    if (sectionPrompts.length === 0) {
+      console.log('❌ 생성된 이미지 프롬프트가 없습니다.');
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
@@ -248,58 +221,61 @@ export const integratePixabayImages = async (
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 3. 각 소제목별로 순차 페이지 검색 (1페이지→2페이지→3페이지→4페이지→5페이지)
+    // 3. 중복 방지를 위한 사용된 이미지 ID 추적
+    const usedImageIds: number[] = [];
     const validImages: PixabayImage[] = [];
-    for (let i = 0; i < Math.min(optimizedKeywords.length, 5); i++) {
-      const keyword = optimizedKeywords[i];
-      const targetPage = i + 1; // 1페이지부터 5페이지까지 순차
+
+    // 4. 각 섹션별로 10페이지 검색하여 중복 없는 이미지 수집
+    for (let i = 0; i < sectionPrompts.length; i++) {
+      const { title, prompt } = sectionPrompts[i];
       
       try {
-        console.log(`🔍 ${i+1}번째 소제목 - ${targetPage}페이지 순차 검색:`, keyword);
+        console.log(`🔍 ${i + 1}번째 섹션 고급 검색: "${prompt}"`);
         
-        // 페이지별 순차 검색
-        const image = await searchPixabayByPage(keyword, pixabayApiKey, targetPage);
+        const image = await searchPixabayAdvanced(prompt, pixabayApiKey, usedImageIds, 10);
         
         if (image) {
           validImages.push(image);
-          console.log(`✅ ${i+1}번째 소제목 - ${targetPage}페이지 이미지 성공:`, image.webformatURL);
+          usedImageIds.push(image.id);
+          console.log(`✅ ${i + 1}번째 섹션 이미지 성공: ID ${image.id}`);
         } else {
-          console.log(`❌ ${i+1}번째 소제목 - ${targetPage}페이지 이미지 실패, 폴백 검색 시도`);
+          console.log(`❌ ${i + 1}번째 섹션 이미지 실패, 백업 검색`);
           
-          // 폴백: 일반적인 키워드로 해당 페이지 검색
-          const fallbackImage = await searchPixabayByPage('business meeting office', pixabayApiKey, targetPage);
-          if (fallbackImage) {
+          // 백업: 일반적인 비즈니스 이미지 검색
+          const fallbackImage = await searchPixabayAdvanced('business office meeting', pixabayApiKey, usedImageIds, 5);
+          if (fallbackImage && !usedImageIds.includes(fallbackImage.id)) {
             validImages.push(fallbackImage);
-            console.log(`✅ ${i+1}번째 소제목 - ${targetPage}페이지 폴백 이미지 성공:`, fallbackImage.webformatURL);
+            usedImageIds.push(fallbackImage.id);
+            console.log(`✅ ${i + 1}번째 섹션 백업 이미지 성공: ID ${fallbackImage.id}`);
           }
         }
         
         // API 호출 간격
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
-        console.error(`❌ ${i+1}번째 소제목 - ${targetPage}페이지 검색 실패:`, error);
+        console.error(`❌ ${i + 1}번째 섹션 검색 실패:`, error);
       }
     }
 
-    console.log('🎯 페이지별 순차 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
+    console.log('🎯 고급 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
+    console.log('📊 사용된 이미지 ID들:', usedImageIds);
 
     if (validImages.length === 0) {
       console.log('❌ 사용 가능한 이미지가 없습니다.');
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
 
-    // 4. HTML에 이미지 삽입
+    // 5. HTML에 이미지 삽입
     let updatedHtml = htmlContent;
     const clipboardImages: string[] = [];
 
     for (let i = 0; i < Math.min(validImages.length, h2Sections.length); i++) {
       const image = validImages[i];
       const sectionTitle = h2Sections[i];
-      const pageNumber = i + 1;
       
       const altText = sectionTitle.replace(/<[^>]*>/g, '').replace(/[^\w\s가-힣]/g, ' ').trim() || '블로그 이미지';
       
-      // 티스토리 최적화 이미지 태그 (텍스트 제거)
+      // 티스토리 최적화 이미지 태그
       const imageHtml = `
         <div class="pixabay-image-container" style="text-align: center; margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 15px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);">
           <img 
@@ -312,7 +288,8 @@ export const integratePixabayImages = async (
             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.2)';"
             title="🖱️ 클릭하면 티스토리용으로 이미지가 복사됩니다"
             data-image-url="${image.webformatURL}"
-            data-page-number="${pageNumber}"
+            data-image-id="${image.id}"
+            data-section-index="${i + 1}"
           >
         </div>`;
 
@@ -321,11 +298,11 @@ export const integratePixabayImages = async (
       if (sectionEndIndex > 4) {
         updatedHtml = updatedHtml.slice(0, sectionEndIndex) + imageHtml + updatedHtml.slice(sectionEndIndex);
         clipboardImages.push(image.webformatURL);
-        console.log(`✅ ${i+1}번째 이미지 삽입 완료 (${pageNumber}페이지 검색)`);
+        console.log(`✅ ${i + 1}번째 이미지 삽입 완료 (ID: ${image.id})`);
       }
     }
 
-    // 5. 글로벌 이미지 복사 함수 (강화된 버전)
+    // 6. 이미지 복사 스크립트 (개선된 버전)
     const imageScriptHtml = `
     <script>
       window.copyImageToClipboard = async function(imageUrl) {
@@ -343,7 +320,7 @@ export const integratePixabayImages = async (
           
           // 성공 알림
           const toast = document.createElement('div');
-          toast.innerHTML = '✅ 티스토리용 이미지 복사 완료! Ctrl+V로 붙여넣으세요';
+          toast.innerHTML = '✅ 중복 없는 고품질 이미지 복사 완료! Ctrl+V로 붙여넣으세요';
           toast.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 25px; border-radius: 10px; font-weight: bold; z-index: 10000; box-shadow: 0 6px 20px rgba(0,0,0,0.3); animation: slideIn 0.3s ease;';
           document.body.appendChild(toast);
           setTimeout(() => {
@@ -376,7 +353,7 @@ export const integratePixabayImages = async (
     };
 
   } catch (error) {
-    console.error('❌ 페이지별 순차 Pixabay 이미지 통합 중 전체 오류:', error);
+    console.error('❌ 픽사베이 고급 이미지 통합 중 전체 오류:', error);
     return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
   }
 };
@@ -418,5 +395,28 @@ ${htmlContent.substring(0, 1000)}...
   } catch (error) {
     console.error('메타 설명 생성 오류:', error);
     return '';
+  }
+};
+
+// 기존 함수들도 유지 (하위 호환성)
+export const searchPixabayImages = async (
+  query: string,
+  apiKey: string,
+  count: number = 5
+): Promise<PixabayImage[]> => {
+  const encodedQuery = encodeURIComponent(query);
+  const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=${count}&safesearch=true`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Pixabay API 오류: ${response.status}`);
+    }
+
+    const data: PixabayResponse = await response.json();
+    return data.hits || [];
+  } catch (error) {
+    console.error('Pixabay 이미지 검색 오류:', error);
+    return [];
   }
 };
