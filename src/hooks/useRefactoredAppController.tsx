@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
 import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
@@ -51,54 +52,41 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 - 중복 실행 방지 개선
+  // 주제 확인 다이얼로그 상태 - 단순화된 구현
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
-  const isConfirming = useRef(false); // 중복 실행 방지
 
   // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelect = (topic: string) => {
     console.log('주제 선택됨:', topic);
-    if (isConfirming.current) {
-      console.log('이미 처리 중 - 무시');
-      return;
-    }
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 심플하게 재구현
-  const handleTopicConfirm = () => {
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시
+  const handleTopicConfirm = async () => {
     console.log('주제 확인 처리 시작:', pendingTopic);
     
-    if (!pendingTopic || isConfirming.current) {
-      console.log('처리 조건 불만족 - 무시');
+    if (!pendingTopic) {
+      console.log('처리할 주제가 없음 - 무시');
       return;
     }
     
-    // 진행 중 플래그 설정
-    isConfirming.current = true;
-    
-    // 다이얼로그 닫기
-    setShowTopicConfirmDialog(false);
-    
-    // 주제 선택
-    const selectedTopicCopy = pendingTopic;
-    setPendingTopic('');
-    
-    // 주제 선택 및 글 생성 시작
     try {
-      topicControls.selectTopic(selectedTopicCopy);
+      // 주제 선택
+      topicControls.selectTopic(pendingTopic);
       
       // 약간 지연 후 글 생성 시작
       setTimeout(() => {
-        console.log('자동 글 생성 시작:', { topic: selectedTopicCopy, keyword: appState.keyword });
-        generateArticle({ topic: selectedTopicCopy, keyword: appState.keyword });
-        isConfirming.current = false; // 처리 완료
-      }, 100);
+        console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
+        generateArticle({ topic: pendingTopic, keyword: appState.keyword });
+      }, 200);
+      
+      // 상태 초기화
+      setPendingTopic('');
     } catch (error) {
       console.error('주제 확인 처리 오류:', error);
-      isConfirming.current = false;
+      throw error; // TopicConfirmDialog에서 처리하도록 다시 throw
     }
   };
 
@@ -107,7 +95,6 @@ export const useRefactoredAppController = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
-    isConfirming.current = false;
   };
 
   const convertToMarkdown = () => {

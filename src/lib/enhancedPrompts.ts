@@ -1,4 +1,5 @@
 
+import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 
 interface PromptOptions {
@@ -58,55 +59,83 @@ export const getEnhancedArticlePrompt = async (options: PromptOptions): Promise<
     }
   }
 
-  const basePrompt = `당신은 전문적인 블로그 콘텐츠 작성자입니다. 다음 요구사항에 따라 고품질의 블로그 글을 작성해주세요.
+  const colors = getColors(selectedColorTheme);
+  const refLink = referenceLink || 'https://worldpis.com';
+  const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
+  
+  // 빈 배열로 전달하여 기본 템플릿 사용
+  const htmlTemplate = getHtmlTemplate(
+    topic,
+    `[콘텐츠가 여기에 들어갑니다]`,
+    '',
+    '',
+    ''
+  );
+  const currentYear = new Date().getFullYear();
 
-**주제**: ${topic}
-**핵심 키워드**: ${keyword}
-**컬러 테마**: ${selectedColorTheme}
-${referenceContent ? `**참조 내용**: ${referenceContent}` : ''}
-${referenceSentence ? `**참조 문장**: ${referenceSentence}` : ''}
+  const basePrompt = `당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
+주제: "${topic}"
+핵심 키워드: "${keyword}"
+컬러 테마: "${selectedColorTheme}"
+${referenceContent ? `참조 내용: ${referenceContent}` : ''}
+${referenceSentence ? `참조 문장: ${referenceSentence}` : ''}
+
+다음 지침에 따라, 독자의 시선을 사로잡고 검색 엔진 상위 노출을 목표로 하는 완벽한 블로그 게시물을 작성해주세요.
 
 **작성 요구사항**:
 
-1. **구조와 형식**:
-   - 제목을 H4 태그로 작성하고 검은색으로 지정
-   - 3-4개의 소제목을 H2 태그로 구성하되, 각 소제목 끝에 내용과 어울리는 이모지 1개 추가
-   - 각 소제목별로 핵심 키워드 "${keyword}"를 자연스럽게 1회 굵게(bold) 표시
-   - 소제목당 200-300자 내외의 내용 작성
-   - HTML 형태로 출력
+1. **출력 형식**: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요. HTML 외에 다른 텍스트, 설명, 마크다운 형식(\`\`\`html)을 포함하지 마세요.
 
-2. **콘텐츠 품질**:
-   - SEO에 최적화된 내용
-   - 독자에게 실질적 도움이 되는 정보 제공
-   - 자연스러운 키워드 배치
-   - 읽기 쉬운 문체와 구조
+2. **콘텐츠 독창성**: 동일한 주제나 키워드로 이전에 글을 작성했을 수 있습니다. 하지만 이번에는 완전히 새로운 관점과 독창적인 접근 방식을 사용해야 합니다. 이전 글과 절대 중복되지 않는, 완전히 새로운 글을 생성해주세요. 예시, 비유, 스토리텔링을 다르게 구성하고, 글의 구조와 표현 방식에도 변화를 주어 독자에게 신선한 가치를 제공해야 합니다.
 
-3. **시각적 요소**:
-   - 컬러 테마 "${selectedColorTheme}"에 맞는 스타일링
-   - 적절한 여백과 줄바꿈
-   - 가독성 높은 레이아웃
+3. **독자 중심 글쓰기**: 글의 모든 내용은 독자가 '${topic}'에 대해 검색했을 때 가장 궁금해하고, 알고 싶어하는 정보를 중심으로 구성해야 합니다. 단순히 정보를 나열하는 것을 넘어, 독자의 문제를 해결해주고 실질적인 도움을 준다는 느낌을 주어야 합니다.
 
-4. **태그 생성**:
-   - 글 내용과 관련된 정확한 태그 7개 생성
-   - 주제 "${topic}" 자체는 태그에서 제외
-   - 태그는 다음 형식으로 글 끝에 추가:
-   <p style="text-align: center; font-size: 14px; color: #666; margin-top: 40px;" data-ke-size="size16">
-   #태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7
-   </p>
+4. **소제목 최적화**: H2 소제목은 절대로 주제 "${topic}"를 그대로 반복하지 마세요. 대신 독자가 해당 주제와 관련하여 꼬리를 물고 궁금해할 만한 연관 검색어나 실질적인 질문들로 구성하세요. 각 소제목 끝에 내용과 어울리는 이모지 1개를 추가하세요.
+
+5. **감정적 연결과 공감**: 독자가 이 주제를 검색한 이유는 정보 습득뿐만 아니라 마음의 위로, 용기, 동기부여를 얻고 싶어서입니다. 글 전반에 독자의 마음에 공감하는 표현과 격려의 메시지를 자연스럽게 녹여내세요.
+
+6. **시의성**: 글의 내용이 최신 정보를 반영해야 할 경우, 현재 년도(${currentYear}년)를 자연스럽게 언급하여 정보의 신뢰도를 높일 수 있습니다.
+
+7. **콘텐츠 분량**: 전체 글자 수는 반드시 **1400자에서 1900자 사이**여야 합니다. 이 분량 제한을 엄격하게 지켜주세요.
+
+8. **키워드 활용**: 핵심 키워드 '${keyword}'를 글 전체에 자연스럽게 녹여내세요. 목표 키워드 밀도는 1.5% ~ 2.5%를 지향하지만, 가장 중요한 것은 글의 가독성과 자연스러움입니다. 각 H2 섹션별로 핵심 키워드를 문맥에 맞게 자연스럽게 사용하되, 정확히 1번만 <strong>${keyword}</strong>와 같이 강조해주세요.
+
+9. **문체**: 전체 글의 어조를 일관되게 유지해주세요. 독자에게 말을 거는 듯한 인간적이고 친근한 구어체('~해요', '~죠' 체)를 사용해주세요. '~입니다', '~습니다'와 같은 격식체는 절대 사용하지 마세요.
+
+10. **가독성 향상**: 각 단락은 최대 3개의 문장으로 구성하는 것을 원칙으로 합니다. 만약 한 단락에 3개 이상의 문장이 포함될 경우, 의미 단위에 맞게 자연스럽게 별도의 단락으로 나눠주세요.
+
+11. **내부/외부 링크**: 글의 신뢰도를 높이기 위해, 본문 내용과 관련된 권위 있는 외부 사이트나 통계 자료로 연결되는 링크를 최소 2개 이상 자연스럽게 포함해주세요.
+링크 작성 형식: <a href="https://www.example.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">링크텍스트</a>
+
+12. **태그 생성**: 글의 마지막에 태그를 생성할 때, '태그:' 라는 접두사를 절대 포함하지 말고, 다음 형식으로 글 끝에 추가:
+<p style="text-align: center; font-size: 14px; color: #666; margin-top: 40px;" data-ke-size="size16">
+#태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7
+</p>
 
 ${referenceContent ? `
-5. **참조 내용 활용**:
-   - 참조 내용을 자연스럽게 글에 녹여서 활용
-   - 참조 링크의 정보와 연결되는 내용으로 작성
+13. **참조 내용 활용**: 참조 내용을 자연스럽게 글에 녹여서 활용하세요.
 ` : ''}
 
 ${referenceLink ? `
-6. **외부 링크 처리**:
-   - 외부 링크 "${referenceLink}" 사용하여 글 하단에 참조 링크 삽입
-   - 참조 문장: "${referenceSentence || '👉 워드프레스 꿀팁 더 보러가기'}"
+14. **외부 링크 처리**: 외부 링크 "${referenceLink}" 사용하여 글 하단에 참조 링크 삽입하세요.
 ` : ''}
 
-**출력 형식**: 완전한 HTML 코드로 작성하되, \`\`\`html 같은 마크다운 코드 블록은 사용하지 마세요.
+**사용할 변수**:
+- Primary Color: ${colors.primary}
+- Secondary Color: ${colors.secondary}
+- Text Highlight Color: ${colors.textHighlight}
+- Highlight Color: ${colors.highlight}
+- Highlight Border Color: ${colors.highlightBorder}
+- Warn BG Color: ${colors.warnBg}
+- Warn Border Color: ${colors.warnBorder}
+- Link Color: ${colors.link}
+- Reference Link: ${refLink}
+- Reference Text: ${refText}
+- Topic: ${topic}
+- Main Keyword: ${keyword}
+
+**HTML 템플릿**:
+${htmlTemplate}
 
 **중요**: 응답은 반드시 HTML 태그로 시작하고 끝나야 하며, 일반 텍스트나 설명 없이 HTML 코드만 출력하세요.`;
 

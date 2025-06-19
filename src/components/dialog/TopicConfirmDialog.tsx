@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface TopicConfirmDialogProps {
   isOpen: boolean;
@@ -19,25 +19,35 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleConfirm = () => {
-    if (isProcessing) return; // 중복 클릭 방지
+  const handleConfirm = async () => {
+    if (isProcessing) {
+      console.log('이미 처리 중 - 중복 클릭 방지');
+      return;
+    }
     
-    setIsProcessing(true);
     console.log('주제 확인 버튼 클릭됨:', topic);
+    setIsProcessing(true);
     
     try {
-      // 즉시 onConfirm 함수 호출 (async/await 사용하지 않음)
-      onConfirm();
+      // onConfirm 함수 실행
+      await onConfirm();
+      
+      // 성공적으로 완료되면 다이얼로그 닫기
       onClose();
     } catch (error) {
       console.error('주제 확인 처리 오류:', error);
+    } finally {
       setIsProcessing(false);
     }
   };
 
   const handleCancel = () => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('처리 중에는 취소할 수 없습니다');
+      return;
+    }
     
+    console.log('주제 선택 취소됨');
     if (onCancel) {
       onCancel();
     }
@@ -66,6 +76,13 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel
+            onClick={handleCancel}
+            disabled={isProcessing}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            취소
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isProcessing}
