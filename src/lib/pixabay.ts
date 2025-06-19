@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 
 interface PixabayImage {
@@ -16,109 +17,39 @@ interface PixabayResponse {
   totalHits: number;
 }
 
-// AI를 통한 소제목 내용 분석 및 픽사베이 최적화 키워드 생성
-const generatePixabayOptimizedKeywords = async (
-  htmlContent: string,
-  geminiApiKey: string
-): Promise<string[]> => {
-  console.log('🤖 AI 기반 픽사베이 최적화 키워드 생성 시작');
+// 간단한 키워드 생성 (AI 분석 제거)
+const generateSimpleKeywords = (htmlContent: string): string[] => {
+  console.log('🔍 간단한 키워드 생성 시작');
   
-  const h2Sections = htmlContent.match(/<h2[^>]*>.*?<\/h2>[\s\S]*?(?=<h2|$)/gi);
+  const h2Sections = htmlContent.match(/<h2[^>]*>.*?<\/h2>/gi);
   if (!h2Sections || h2Sections.length === 0) {
     console.log('❌ H2 섹션을 찾을 수 없습니다.');
     return [];
   }
 
-  const optimizedKeywords: string[] = [];
+  const keywords: string[] = [];
   
   // 최대 5개 섹션 처리
   for (let i = 0; i < Math.min(h2Sections.length, 5); i++) {
     const section = h2Sections[i];
     
-    // 섹션에서 제목과 내용 추출
+    // 섹션에서 제목 추출
     const titleMatch = section.match(/<h2[^>]*>(.*?)<\/h2>/i);
-    const contentText = section.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     
-    if (titleMatch && contentText.length > 50) {
+    if (titleMatch) {
       const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
-      const sectionContent = contentText.substring(0, 800); // 800자로 제한
-      
-      try {
-        console.log(`🔍 ${i+1}번째 섹션 AI 분석 시작: "${title}"`);
-        
-        const prompt = `다음 블로그 글 섹션의 내용을 분석하여 Pixabay 이미지 검색에 최적화된 영어 키워드를 생성해주세요.
-
-제목: ${title}
-내용: ${sectionContent}
-
-요구사항:
-1. 섹션의 핵심 주제를 정확히 파악
-2. Pixabay에서 관련 이미지를 찾을 수 있는 구체적인 영어 키워드 조합 생성
-3. 3-5개의 핵심 영어 단어로 구성
-4. 한국어 고유 개념은 영어로 의역하여 표현
-
-예시:
-- 해수욕장 혼잡도 → "crowded beach summer vacation people"
-- 정부 지원금 신청 → "government financial support application documents"
-- 디지털 플랫폼 사용법 → "digital platform computer interface technology"
-
-키워드만 출력하세요:`;
-
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
-        
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              maxOutputTokens: 100,
-              temperature: 0.3,
-            },
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const aiKeyword = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-          
-          if (aiKeyword && aiKeyword.length > 5) {
-            // AI 키워드 정제 (큰따옴표, 불필요한 문자 제거)
-            const cleanKeyword = aiKeyword
-              .replace(/["""'']/g, '')
-              .replace(/^키워드:|keyword:|Keywords?:/i, '')
-              .replace(/\n/g, ' ')
-              .trim();
-            
-            optimizedKeywords.push(cleanKeyword);
-            console.log(`✅ ${i+1}번째 섹션 AI 키워드 생성 성공: "${cleanKeyword}"`);
-          } else {
-            throw new Error('AI 키워드 생성 실패');
-          }
-        } else {
-          throw new Error('AI API 호출 실패');
-        }
-        
-        // API 호출 간격
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-      } catch (error) {
-        console.error(`❌ ${i+1}번째 섹션 AI 분석 실패:`, error);
-        
-        // 폴백: 기존 방식으로 키워드 생성
-        const fallbackKeyword = generateFallbackKeyword(title);
-        optimizedKeywords.push(fallbackKeyword);
-        console.log(`🔄 ${i+1}번째 섹션 폴백 키워드: "${fallbackKeyword}"`);
-      }
+      const keyword = generateKeywordFromTitle(title);
+      keywords.push(keyword);
+      console.log(`✅ ${i+1}번째 섹션 키워드 생성: "${keyword}"`);
     }
   }
 
-  console.log('🎯 AI 기반 키워드 생성 완료:', optimizedKeywords);
-  return optimizedKeywords;
+  console.log('🎯 키워드 생성 완료:', keywords);
+  return keywords;
 };
 
-// 폴백 키워드 생성 (AI 실패 시)
-const generateFallbackKeyword = (title: string): string => {
+// 제목 기반 키워드 생성
+const generateKeywordFromTitle = (title: string): string => {
   const koreanToEnglishMapping: { [key: string]: string } = {
     // 해수욕장/여행 관련
     '해수욕장': 'beach seaside ocean summer vacation',
@@ -188,7 +119,7 @@ const generateFallbackKeyword = (title: string): string => {
   }
 };
 
-// 10페이지까지 검색하여 중복되지 않는 이미지 수집 (강화된 디버깅)
+// 10페이지까지 검색하여 중복되지 않는 이미지 수집
 export const searchPixabayImages10Pages = async (
   query: string,
   apiKey: string,
@@ -208,13 +139,12 @@ export const searchPixabayImages10Pages = async (
   let retryCount = 0;
   const maxRetries = 3;
   
-  // 10페이지까지 순차 검색 (강화된 로깅)
+  // 10페이지까지 순차 검색
   for (let page = 1; page <= 10 && validImages.length < maxImages; page++) {
     try {
       const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&orientation=horizontal&category=backgrounds&min_width=800&min_height=600&per_page=20&page=${page}&safesearch=true&order=popular`;
       
       console.log(`📡 ${page}페이지 검색 시작 (재시도: ${retryCount})`);
-      console.log(`🌐 요청 URL: ${url.replace(apiKey, 'API_KEY_HIDDEN')}`);
       
       const response = await fetch(url);
       
@@ -224,7 +154,7 @@ export const searchPixabayImages10Pages = async (
         console.error(`❌ ${page}페이지 - 잘못된 요청 (API 키 오류 가능성)`);
         const errorText = await response.text();
         console.error('오류 상세:', errorText);
-        return []; // API 키 문제인 경우 즉시 중단
+        return [];
       }
       
       if (response.status === 429) {
@@ -232,7 +162,7 @@ export const searchPixabayImages10Pages = async (
         await new Promise(resolve => setTimeout(resolve, 2000));
         if (retryCount < maxRetries) {
           retryCount++;
-          page--; // 같은 페이지 재시도
+          page--;
           continue;
         }
       }
@@ -254,8 +184,6 @@ export const searchPixabayImages10Pages = async (
           const hasGoodQuality = img.views > 1000 && img.downloads > 100;
           const hasValidUrl = img.webformatURL && img.webformatURL.includes('pixabay.com');
           
-          console.log(`🖼️ 이미지 ${img.id} 품질 체크: 중복없음=${isNotDuplicate}, 고품질=${hasGoodQuality}, 유효URL=${hasValidUrl}`);
-          
           return isNotDuplicate && hasGoodQuality && hasValidUrl;
         });
         
@@ -266,8 +194,8 @@ export const searchPixabayImages10Pages = async (
         
         imagesToAdd.forEach(img => {
           validImages.push(img);
-          usedImageIds.add(img.id); // 전역 중복 방지 세트에 추가
-          console.log(`➕ 이미지 추가: ${img.id} (${img.webformatURL})`);
+          usedImageIds.add(img.id);
+          console.log(`➕ 이미지 추가: ${img.id}`);
         });
         
         console.log(`🎯 ${page}페이지에서 ${imagesToAdd.length}개 이미지 추가됨 (현재 총 ${validImages.length}개)`);
@@ -280,22 +208,21 @@ export const searchPixabayImages10Pages = async (
         console.warn(`⚠️ ${page}페이지 - 이미지 없음`);
       }
       
-      retryCount = 0; // 성공 시 재시도 카운트 리셋
+      retryCount = 0;
       // API 호출 간격
       await new Promise(resolve => setTimeout(resolve, 600));
       
     } catch (error) {
       console.error(`❌ ${page}페이지 검색 실패 (재시도: ${retryCount}):`, error);
       
-      // 재시도 로직
       if (retryCount < maxRetries) {
         retryCount++;
-        page--; // 같은 페이지 재시도
+        page--;
         await new Promise(resolve => setTimeout(resolve, 1500));
         continue;
       } else {
         retryCount = 0;
-        continue; // 다음 페이지로
+        continue;
       }
     }
   }
@@ -303,11 +230,7 @@ export const searchPixabayImages10Pages = async (
   console.log(`🏁 픽사베이 10페이지 검색 완료 - 최종 결과: ${validImages.length}개 이미지`);
   
   if (validImages.length === 0) {
-    console.error('❌ 픽사베이 검색 결과 없음 - 가능한 원인:');
-    console.error('1. API 키가 유효하지 않음');
-    console.error('2. 검색 키워드에 대한 이미지가 없음');
-    console.error('3. 네트워크 연결 문제');
-    console.error('4. Pixabay 서비스 장애');
+    console.error('❌ 픽사베이 검색 결과 없음');
   }
   
   return validImages;
@@ -342,20 +265,19 @@ export const searchPixabayImages = async (
 export const integratePixabayImages = async (
   htmlContent: string,
   pixabayApiKey: string,
-  geminiApiKey: string
+  geminiApiKey?: string
 ): Promise<{ finalHtml: string; imageCount: number; clipboardImages: string[] }> => {
-  console.log('🔥 AI 기반 픽사베이 이미지 통합 시작:', { 
+  console.log('🔥 간단한 픽사베이 이미지 통합 시작:', { 
     htmlLength: htmlContent.length,
-    hasPixabayKey: !!pixabayApiKey,
-    hasGeminiKey: !!geminiApiKey
+    hasPixabayKey: !!pixabayApiKey
   });
 
   try {
-    // 1. AI를 통한 픽사베이 최적화 키워드 생성
-    const optimizedKeywords = await generatePixabayOptimizedKeywords(htmlContent, geminiApiKey);
-    console.log('✅ AI 기반 픽사베이 최적화 키워드들:', optimizedKeywords);
+    // 1. 간단한 키워드 생성 (AI 분석 제거)
+    const keywords = generateSimpleKeywords(htmlContent);
+    console.log('✅ 간단한 키워드들:', keywords);
 
-    if (optimizedKeywords.length === 0) {
+    if (keywords.length === 0) {
       console.log('❌ 생성된 키워드가 없습니다.');
       return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
     }
@@ -371,57 +293,30 @@ export const integratePixabayImages = async (
     const globalUsedImageIds = new Set<number>();
     const validImages: PixabayImage[] = [];
     
-    // 4. 각 키워드별로 10페이지 포괄 검색 (중복 방지 강화)
-    for (let i = 0; i < Math.min(optimizedKeywords.length, 5); i++) {
-      const keyword = optimizedKeywords[i];
-      let attempts = 0;
-      const maxAttempts = 3;
+    // 4. 각 키워드별로 10페이지 포괄 검색
+    for (let i = 0; i < Math.min(keywords.length, 5); i++) {
+      const keyword = keywords[i];
       
-      while (attempts < maxAttempts && validImages.filter((_, idx) => idx === i).length === 0) {
-        try {
-          console.log(`🔍 ${i+1}번째 소제목 - AI 키워드 검색 (시도 ${attempts + 1}): "${keyword}"`);
-          
-          // 10페이지 포괄 검색으로 1개 이미지 획득 (전역 중복 방지)
-          const images = await searchPixabayImages10Pages(keyword, pixabayApiKey, 1, globalUsedImageIds);
-          
-          if (images.length > 0) {
-            validImages.push(images[0]);
-            console.log(`✅ ${i+1}번째 소제목 - AI 키워드 검색 성공 (시도 ${attempts + 1}):`, images[0].webformatURL);
-            break;
-          } else {
-            attempts++;
-            console.log(`⚠️ ${i+1}번째 소제목 - 이미지 없음 (시도 ${attempts}), 재시도 중...`);
-            
-            if (attempts < maxAttempts) {
-              // 키워드 변형 시도
-              const fallbackKeyword = attempts === 1 
-                ? `business professional office ${keyword}` 
-                : `modern technology digital ${keyword}`;
-              
-              console.log(`🔄 ${i+1}번째 소제목 - 폴백 키워드 시도: "${fallbackKeyword}"`);
-              const fallbackImages = await searchPixabayImages10Pages(fallbackKeyword, pixabayApiKey, 1, globalUsedImageIds);
-              
-              if (fallbackImages.length > 0) {
-                validImages.push(fallbackImages[0]);
-                console.log(`✅ ${i+1}번째 소제목 - 폴백 키워드 성공:`, fallbackImages[0].webformatURL);
-                break;
-              }
-            }
-          }
-          
-          // 재시도 간격
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error(`❌ ${i+1}번째 소제목 검색 실패 (시도 ${attempts + 1}):`, error);
-          attempts++;
+      try {
+        console.log(`🔍 ${i+1}번째 소제목 - 키워드 검색: "${keyword}"`);
+        
+        const images = await searchPixabayImages10Pages(keyword, pixabayApiKey, 1, globalUsedImageIds);
+        
+        if (images.length > 0) {
+          validImages.push(images[0]);
+          console.log(`✅ ${i+1}번째 소제목 - 키워드 검색 성공:`, images[0].webformatURL);
+        } else {
+          console.log(`⚠️ ${i+1}번째 소제목 - 이미지 없음`);
         }
+      } catch (error) {
+        console.error(`❌ ${i+1}번째 소제목 검색 실패:`, error);
       }
       
       // API 호출 간격
       await new Promise(resolve => setTimeout(resolve, 800));
     }
 
-    console.log('🎯 AI 기반 픽사베이 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
+    console.log('🎯 간단한 픽사베이 검색 완료 - 최종 유효한 이미지 수:', validImages.length);
 
     if (validImages.length === 0) {
       console.log('❌ 사용 가능한 이미지가 없습니다.');
@@ -438,7 +333,7 @@ export const integratePixabayImages = async (
       
       const altText = sectionTitle.replace(/<[^>]*>/g, '').replace(/[^\w\s가-힣]/g, ' ').trim() || '블로그 이미지';
       
-      // 티스토리 최적화 이미지 태그 (텍스트 정보 완전 제거)
+      // 티스토리 최적화 이미지 태그
       const imageHtml = `
         <div class="pixabay-image-container" style="text-align: center; margin: 30px 0; padding: 25px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); border-radius: 15px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);">
           <img 
@@ -459,7 +354,7 @@ export const integratePixabayImages = async (
       if (sectionEndIndex > 4) {
         updatedHtml = updatedHtml.slice(0, sectionEndIndex) + imageHtml + updatedHtml.slice(sectionEndIndex);
         clipboardImages.push(image.webformatURL);
-        console.log(`✅ ${i+1}번째 이미지 삽입 완료 (AI 키워드 기반)`);
+        console.log(`✅ ${i+1}번째 이미지 삽입 완료`);
       }
     }
 
@@ -514,7 +409,7 @@ export const integratePixabayImages = async (
     };
 
   } catch (error) {
-    console.error('❌ AI 기반 픽사베이 이미지 통합 중 전체 오류:', error);
+    console.error('❌ 간단한 픽사베이 이미지 통합 중 전체 오류:', error);
     return { finalHtml: htmlContent, imageCount: 0, clipboardImages: [] };
   }
 };
