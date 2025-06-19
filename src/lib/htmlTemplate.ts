@@ -1,3 +1,4 @@
+
 const getCssStyles = (colors: any): string => `
 /* 모바일 최적화 - 강력한 우선순위로 여백 최소화 */
 @media (max-width: 768px) { 
@@ -45,33 +46,6 @@ const getCssStyles = (colors: any): string => `
   }
 }
 
-/* 이미지 복사 최적화 - 티스토리 호환성 개선 */
-.copyable-image {
-  cursor: pointer !important;
-  border: 2px dashed transparent !important;
-  transition: border-color 0.3s ease !important;
-  display: block !important;
-  margin: 20px auto !important;
-  max-width: 100% !important;
-  height: auto !important;
-  border-radius: 8px !important;
-}
-
-.copyable-image:hover {
-  border-color: #3b82f6 !important;
-}
-
-.image-copy-notice {
-  background-color: #eff6ff !important;
-  border: 1px solid #dbeafe !important;
-  padding: 12px !important;
-  margin: 10px 0 !important;
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  color: #1e40af !important;
-  text-align: center !important;
-}
-
 /* 가독성 향상을 위한 P태그 기본 스타일 */
 p {
   margin-bottom: 18px;
@@ -116,36 +90,6 @@ const getIntroSection = (colors: any, naturalKeyword: string): string => `
 <p style="height: 20px;">&nbsp;</p>
 `;
 
-// 150자 기준 자동 줄바꿈 함수 추가
-const addLineBreaksForReadability = (content: string): string => {
-  // 150자마다 문장 끝에서 줄바꿈 추가
-  const sentences = content.split('.');
-  let result = '';
-  let currentLength = 0;
-  
-  for (let i = 0; i < sentences.length; i++) {
-    const sentence = sentences[i].trim();
-    if (!sentence) continue;
-    
-    currentLength += sentence.length;
-    result += sentence;
-    
-    if (i < sentences.length - 1) {
-      result += '.';
-      
-      // 150자를 넘었고 다음 문장이 있다면 줄바꿈 추가
-      if (currentLength >= 150 && i < sentences.length - 2) {
-        result += '</p><p style="height: 20px;">&nbsp;</p><p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">';
-        currentLength = 0;
-      } else {
-        result += ' ';
-      }
-    }
-  }
-  
-  return result;
-};
-
 const getDynamicSection = (colors: any, heading: { title: string; emoji: string; content: string }, sectionNumber: number): string => {
   // 테이블을 삽입할 최적의 섹션 결정 (보통 2-4번째 섹션)
   const shouldInsertTable = sectionNumber >= 2 && sectionNumber <= 4;
@@ -162,19 +106,19 @@ const getDynamicSection = (colors: any, heading: { title: string; emoji: string;
 </h2>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-[SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다. ${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요.
+[SECTION_CONTENT_${sectionNumber}] 관련해서 많은 분들이 궁금해하시는 부분들을 전문가 수준의 깊이 있는 정보로 설명드리겠어요. 단순한 안내가 아닌, 실제로 성공적인 결과를 얻을 수 있는 구체적인 방법들을 중심으로 다뤄보겠습니다. ${heading.content}를 통해 더 구체적인 내용을 확인하실 수 있어요. 여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-여기서는 일반적으로 알려지지 않은 전문가만의 노하우와 실무에서 바로 적용 가능한 팁들을 공유드릴게요. 복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다. 특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요.
+복잡해 보일 수 있지만 단계별로 차근차근 따라하시면 누구나 성공할 수 있답니다. 특히 이 부분에서 많은 분들이 놓치기 쉬운 중요한 포인트들과 함정들을 미리 알려드릴게요. 실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊 마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다.
 </p>
 
 <p style="height: 20px;">&nbsp;</p>
 
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
-실제 경험을 바탕으로 한 구체적인 수치와 사례들도 함께 제공해드리니 꼭 참고해보시기 바라요. 😊 마지막으로 이 분야의 최신 동향과 앞으로의 변화 전망까지 포함해서 여러분이 더 나은 선택을 할 수 있도록 도움을 드리겠습니다. 💡 관련 정보는 <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>나 <a href="https://www.naver.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">네이버</a>에서도 확인하실 수 있어요.
+💡 관련 정보는 <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>나 <a href="https://www.naver.com" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">네이버</a>에서도 확인하실 수 있어요.
 </p>
 
 ${shouldInsertTable ? `
@@ -248,10 +192,6 @@ A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가
 
 <p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
 A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
-</div>
-
-<div class="image-copy-notice">
-💡 <strong>이미지 활용 팁:</strong> 아래 이미지를 클릭하면 클립보드에 복사됩니다. 티스토리에서 Ctrl+V로 붙여넣기 후 대표 이미지로 설정하세요!
 </div>
 ` : ''}
 

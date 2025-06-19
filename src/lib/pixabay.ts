@@ -42,7 +42,7 @@ export const integratePixabayImages = async (
         if (imageUrl) {
           console.log(`✅ 섹션 ${i + 1} 이미지 발견:`, imageUrl);
           
-          // 티스토리 최적화 이미지 HTML - Canvas 기반 복사 가능
+          // 티스토리 호환 이미지 HTML - Canvas 기반으로 실제 파일 복사
           const sectionEndPattern = new RegExp(`(${escapeRegExp(sectionsToProcess[i])})`, 'g');
           const imageHtml = `
             <div style="text-align: center; margin: 20px 0;">
@@ -50,9 +50,9 @@ export const integratePixabayImages = async (
                 src="${imageUrl}" 
                 alt="섹션 ${i + 1} 관련 이미지" 
                 style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); cursor: pointer; user-select: none;" 
-                class="tistory-copyable-image" 
                 data-section="${i + 1}"
-                onclick="copyImageToClipboard(this)"
+                onload="setupImageForCopy(this)"
+                onclick="copyImageAsFile(this)"
                 oncontextmenu="return false"
                 draggable="false"
                 crossorigin="anonymous">
@@ -74,44 +74,54 @@ export const integratePixabayImages = async (
       }
     }
 
-    // 티스토리 호환 이미지 복사 스크립트 - Canvas 기반으로 실제 파일 데이터 생성
+    // 개선된 이미지 복사 스크립트 - 티스토리에서 스크립트 노출 방지
     const imageScript = `
+    <!-- 티스토리 호환 이미지 복사 스크립트 -->
+    <div style="display: none;">
     <script>
-    async function copyImageToClipboard(imgElement) {
+    // 티스토리 이미지 파일 복사 기능
+    function setupImageForCopy(imgElement) {
+      if (!imgElement) return;
+      imgElement.title = '클릭하여 이미지를 파일로 복사 (티스토리 잘라내기/붙여넣기 가능)';
+    }
+    
+    async function copyImageAsFile(imgElement) {
+      if (!imgElement) return;
+      
       try {
-        console.log('🖼️ 티스토리 호환 이미지 복사 시작');
+        console.log('🖼️ 이미지 파일 복사 시작');
         
-        // 로딩 표시
+        // 시각적 피드백
         const originalBorder = imgElement.style.border;
+        const originalFilter = imgElement.style.filter;
         imgElement.style.border = '3px solid #3b82f6';
         imgElement.style.filter = 'brightness(0.8)';
         
-        // Canvas를 사용하여 실제 이미지 파일 데이터로 변환
+        // Canvas로 이미지를 파일 데이터로 변환
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // 이미지 로드를 위한 새로운 Image 객체 생성
-        const proxyImg = new Image();
-        proxyImg.crossOrigin = 'anonymous';
+        // 새로운 Image 객체로 CORS 처리
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
         
-        proxyImg.onload = async function() {
+        img.onload = function() {
           try {
-            // 고해상도 설정
-            canvas.width = proxyImg.naturalWidth;
-            canvas.height = proxyImg.naturalHeight;
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
             
-            // 흰색 배경 추가 (투명도 제거)
+            // 배경색 설정 (투명도 제거)
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // 이미지 그리기
-            ctx.drawImage(proxyImg, 0, 0);
+            ctx.drawImage(img, 0, 0);
             
-            // Blob으로 변환 (높은 품질)
+            // Blob으로 변환하여 실제 파일 생성
             canvas.toBlob(async function(blob) {
               if (blob) {
                 try {
-                  // ClipboardItem으로 실제 파일처럼 복사
+                  // ClipboardItem으로 파일 데이터 복사
                   const clipboardItem = new ClipboardItem({
                     'image/png': blob
                   });
@@ -122,78 +132,59 @@ export const integratePixabayImages = async (
                   imgElement.style.border = '3px solid #22c55e';
                   imgElement.style.filter = 'brightness(1.2)';
                   
-                  showCopyMessage('✅ 이미지가 파일로 복사되었습니다!\\n티스토리에서 Ctrl+V로 붙여넣으면 실제 파일로 업로드됩니다.', 'success');
+                  showNotification('✅ 이미지가 파일로 복사되었습니다! 티스토리에서 Ctrl+V로 붙여넣으세요.', 'success');
                   
                   setTimeout(() => {
                     imgElement.style.border = originalBorder;
-                    imgElement.style.filter = '';
+                    imgElement.style.filter = originalFilter;
                   }, 2000);
                   
-                } catch (clipError) {
-                  console.log('클립보드 복사 실패, 다운로드 방식 시도:', clipError);
-                  
-                  // 대안: 직접 다운로드
-                  const link = document.createElement('a');
-                  link.download = 'tistory_image_section_' + (imgElement.dataset.section || 'unknown') + '.png';
-                  link.href = canvas.toDataURL('image/png');
-                  link.click();
-                  
-                  showCopyMessage('📁 이미지가 다운로드되었습니다!\\n다운로드된 파일을 티스토리에 직접 업로드하세요.', 'info');
-                  
-                  imgElement.style.border = originalBorder;
-                  imgElement.style.filter = '';
+                } catch (error) {
+                  console.log('클립보드 복사 실패, 다운로드 방식 시도');
+                  downloadImage(canvas, imgElement);
+                  resetImageStyle(imgElement, originalBorder, originalFilter);
                 }
               }
             }, 'image/png', 0.95);
             
-          } catch (canvasError) {
-            console.error('Canvas 처리 오류:', canvasError);
-            fallbackCopy(imgElement, originalBorder);
+          } catch (error) {
+            console.error('Canvas 처리 오류:', error);
+            showNotification('⚠️ 이미지를 우클릭하여 다른 이름으로 저장하세요.', 'warning');
+            resetImageStyle(imgElement, originalBorder, originalFilter);
           }
         };
         
-        proxyImg.onerror = function() {
-          console.log('이미지 로드 실패, 직접 복사 시도');
-          fallbackCopy(imgElement, originalBorder);
+        img.onerror = function() {
+          console.log('이미지 로드 실패');
+          showNotification('❌ 이미지 복사에 실패했습니다.', 'error');
+          resetImageStyle(imgElement, originalBorder, originalFilter);
         };
         
-        // 이미지 로드 시도
-        const imageUrl = imgElement.src;
-        proxyImg.src = imageUrl;
+        img.src = imgElement.src;
         
       } catch (error) {
         console.error('이미지 복사 전체 오류:', error);
-        fallbackCopy(imgElement, imgElement.style.border);
+        showNotification('❌ 이미지 복사에 실패했습니다.', 'error');
       }
     }
     
-    // 대체 복사 방법
-    async function fallbackCopy(imgElement, originalBorder) {
-      try {
-        imgElement.style.border = '3px solid #f59e0b';
-        imgElement.style.filter = 'brightness(1.1)';
-        
-        showCopyMessage('⚠️ 이미지를 우클릭하여 복사하거나 다운로드하세요.', 'warning');
-        
-        setTimeout(() => {
-          imgElement.style.border = originalBorder;
-          imgElement.style.filter = '';
-        }, 2000);
-        
-      } catch (fallbackError) {
-        console.error('대체 복사도 실패:', fallbackError);
-        
-        imgElement.style.border = '3px solid #ef4444';
-        showCopyMessage('❌ 복사에 실패했습니다.\\n이미지를 우클릭하여 다른 이름으로 저장하세요.', 'error');
-        
-        setTimeout(() => {
-          imgElement.style.border = originalBorder;
-        }, 2000);
-      }
+    function downloadImage(canvas, imgElement) {
+      const link = document.createElement('a');
+      const sectionNum = imgElement.dataset.section || 'unknown';
+      link.download = 'tistory_image_section_' + sectionNum + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showNotification('📁 이미지가 다운로드되었습니다! 파일을 티스토리에 업로드하세요.', 'info');
     }
     
-    // 복사 알림 메시지
-    function showCopyMessage(message, type) {
+    function resetImageStyle(imgElement, originalBorder, originalFilter) {
+      setTimeout(() => {
+        imgElement.style.border = originalBorder;
+        imgElement.style.filter = originalFilter;
+      }, 2000);
+    }
+    
+    function showNotification(message, type) {
       const colors = {
         success: '#22c55e',
         info: '#3b82f6',
@@ -202,21 +193,11 @@ export const integratePixabayImages = async (
       };
       
       const notification = document.createElement('div');
-      notification.innerHTML = message.replace(/\\\\n/g, '<br>');
-      notification.style.cssText = \`
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: \${colors[type] || colors.info};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        max-width: 300px;
-        line-height: 1.4;
-      \`;
+      notification.textContent = message;
+      notification.style.cssText = 
+        'position: fixed; top: 20px; right: 20px; background: ' + (colors[type] || colors.info) + 
+        '; color: white; padding: 15px 20px; border-radius: 8px; z-index: 10000; font-weight: bold; ' +
+        'box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 300px; line-height: 1.4;';
       
       document.body.appendChild(notification);
       
@@ -227,14 +208,13 @@ export const integratePixabayImages = async (
       }, 5000);
     }
     
-    // 모든 이미지에 이벤트 자동 추가
+    // 페이지 로드 시 모든 이미지에 이벤트 설정
     document.addEventListener('DOMContentLoaded', function() {
-      const images = document.querySelectorAll('.tistory-copyable-image');
-      images.forEach(img => {
-        img.title = '클릭하여 티스토리용 이미지 파일로 복사 (잘라내기/붙여넣기 가능)';
-      });
+      const images = document.querySelectorAll('img[data-section]');
+      images.forEach(setupImageForCopy);
     });
-    </script>`;
+    </script>
+    </div>`;
 
     finalHtml = finalHtml + imageScript;
 
