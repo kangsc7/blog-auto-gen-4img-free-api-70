@@ -24,7 +24,7 @@ export const getEnhancedArticlePrompt = async (options: EnhancedArticlePromptOpt
   } = options;
 
   const colorTheme = colorThemes.find(theme => theme.value === selectedColorTheme) || colorThemes[0];
-  const template = getHtmlTemplate(colorTheme);
+  const template = getHtmlTemplate(colorTheme, topic, keyword, referenceLink || 'https://worldpis.com', referenceSentence || '워드프레스 꿀팁 더 보러가기', []);
 
   const basePrompt = `
 당신은 전문 블로그 콘텐츠 작성자입니다. 다음 조건에 따라 SEO 최적화된 블로그 글을 작성해주세요:
