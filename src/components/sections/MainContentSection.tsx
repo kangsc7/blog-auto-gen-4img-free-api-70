@@ -2,9 +2,9 @@
 import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
+import { StickyImageSidebar } from '@/components/layout/StickyImageSidebar';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { SimpleArticleEditor } from '@/components/display/SimpleArticleEditor';
-import { StickyImageSidebar } from '@/components/layout/StickyImageSidebar';
 import { AppState } from '@/types';
 
 interface MainContentSectionProps {
@@ -45,9 +45,9 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   hasAccess,
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      {/* 왼쪽 컨트롤 패널 (1/4) */}
-      <div className="lg:col-span-1 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 메인 콘텐츠 (왼쪽 2/3) */}
+      <div className="lg:col-span-2 space-y-6">
         <TopicGenerator
           appState={appState}
           saveAppState={saveAppState}
@@ -69,10 +69,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
           appState={appState}
           saveAppState={saveAppState}
         />
-      </div>
 
-      {/* 메인 편집창 (2/4) */}
-      <div className="lg:col-span-2">
         <SimpleArticleEditor
           generatedContent={appState.generatedContent}
           isGeneratingContent={isGeneratingContent}
@@ -81,7 +78,7 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
         />
       </div>
 
-      {/* 오른쪽 이미지 도구 (1/4, sticky 지원) */}
+      {/* 이미지 도구 사이드바 (오른쪽 1/3, sticky 지원) */}
       <div className="lg:col-span-1">
         <StickyImageSidebar
           appState={appState}

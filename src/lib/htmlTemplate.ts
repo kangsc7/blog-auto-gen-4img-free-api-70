@@ -13,23 +13,13 @@ const getCssStyles = (colors: any): string => `
   * {
     box-sizing: border-box !important;
   }
-  /* 모바일에서 이미지 더 크게 표시 - 캡션 제거 */
+  /* 모바일에서 이미지 더 크게 표시 */
   img { 
     max-width: 100% !important; 
     min-height: 250px !important; 
     object-fit: cover !important;
     margin: 0 auto !important;
     padding: 0 !important;
-    display: block !important;
-    border-radius: 8px !important;
-  }
-  
-  /* 이미지 캡션 완전 제거 */
-  img + p,
-  img + span,
-  img + div,
-  figcaption {
-    display: none !important;
   }
   
   /* 모바일 가독성 개선 */
@@ -47,7 +37,6 @@ const getCssStyles = (colors: any): string => `
     margin: 30px 0 15px 0 !important;
   }
 }
-
 @media (max-width: 480px) {
   .wrapper-div {
     padding: 0 10px !important;
@@ -68,7 +57,7 @@ const getCssStyles = (colors: any): string => `
   }
 }
 
-/* 티스토리 대표 이미지 설정 최적화 - 캡션 완전 제거 */
+/* 티스토리 대표 이미지 설정 최적화 */
 .tistory-image {
   cursor: pointer !important;
   border: 2px dashed transparent !important;
@@ -94,21 +83,6 @@ const getCssStyles = (colors: any): string => `
 .tistory-image:hover {
   border-color: #3b82f6 !important;
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
-}
-
-/* 이미지 다음에 오는 모든 텍스트 요소 숨기기 - 캡션 방지 */
-.tistory-image + *,
-img + p,
-img + span,
-img + div,
-img + figcaption,
-figure figcaption {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 /* 가독성 개선을 위한 단락 스타일 */
@@ -139,7 +113,7 @@ figure figcaption {
   text-decoration-thickness: 2px !important;
 }
 
-/* 이미지 복사 최적화 - 티스토리 호환성 개선, 캡션 제거 */
+/* 이미지 복사 최적화 - 티스토리 호환성 개선 */
 .copyable-image {
   cursor: pointer !important;
   border: 2px dashed transparent !important;
@@ -155,10 +129,15 @@ figure figcaption {
   border-color: #3b82f6 !important;
 }
 
-/* 모든 이미지 캡션 제거 */
-.copyable-image + *,
-.tistory-image + * {
-  display: none !important;
+.image-copy-notice {
+  background-color: #eff6ff !important;
+  border: 1px solid #dbeafe !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  color: #1e40af !important;
+  text-align: center !important;
 }
 
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
@@ -513,19 +492,6 @@ export const getHtmlTemplate = (
     <meta property="og:type" content="article">
     <style>
         ${cssStyles}
-        /* 추가: 모든 이미지 캡션 제거 */
-        img[alt]::after,
-        img[title]::after {
-            content: none !important;
-            display: none !important;
-        }
-        
-        /* 이미지 바로 다음 텍스트 노드 숨기기 */
-        img + br + span,
-        img + br + p,
-        img ~ p:first-of-type {
-            display: none !important;
-        }
     </style>
 </head>
 <body>

@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Link, Save, ChevronUp, ChevronDown } from 'lucide-react';
 import { AppState } from '@/types';
 
 interface ExternalReferenceInputProps {
@@ -17,76 +17,106 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   saveAppState,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [pendingLink, setPendingLink] = useState(appState.referenceLink || '');
+  const [pendingSentence, setPendingSentence] = useState(appState.referenceSentence || '');
 
-  const handleReferenceUrlChange = (url: string) => {
-    saveAppState({ referenceLink: url });
-  };
-
-  const handleReferenceSentenceChange = (sentence: string) => {
-    saveAppState({ referenceSentence: sentence });
-  };
-
-  const clearReferenceData = () => {
-    saveAppState({ 
-      referenceLink: '', 
-      referenceSentence: '' 
-    });
-  };
-
+  // 더블클릭으로 토글
   const handleDoubleClick = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const handleSave = () => {
+    saveAppState({
+      referenceLink: pendingLink,
+      referenceSentence: pendingSentence,
+    });
+  };
+
+  const hasChanges = 
+    pendingLink !== (appState.referenceLink || '') || 
+    pendingSentence !== (appState.referenceSentence || '');
+
   return (
-    <Card className="shadow-md" onDoubleClick={handleDoubleClick}>
-      <CardHeader className="cursor-pointer">
-        <CardTitle className="flex items-center justify-between text-indigo-700">
+    <Card className="shadow-md">
+      <CardHeader 
+        className={`cursor-pointer transition-all duration-300 ${isCollapsed ? 'pb-3' : ''}`}
+        onDoubleClick={handleDoubleClick}
+      >
+        <CardTitle className="flex items-center justify-between text-purple-700">
           <span className="flex items-center">
-            <ExternalLink className="h-5 w-5 mr-2" />
-            4. 외부 링크 설정 (선택사항)
+            <Link className="h-5 w-5 mr-2" />
+            외부 참조 링크 설정
           </span>
           <div className="flex items-center space-x-2">
-            {isCollapsed ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronUp className="h-4 w-4" />
+            {hasChanges && (
+              <Button 
+                onClick={handleSave}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Save className="h-4 w-4 mr-1" />
+                저장
+              </Button>
             )}
-            <span className="text-xs text-gray-500">더블클릭으로 접기/펼치기</span>
+            {isCollapsed ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronUp className="h-4 w-4 text-gray-500" />
+            )}
           </div>
         </CardTitle>
+        {isCollapsed && (
+          <p className="text-xs text-gray-500 mt-1">
+            더블클릭하여 내용 보기 • 현재: {pendingLink ? '링크 설정됨' : '링크 없음'}
+          </p>
+        )}
       </CardHeader>
+      
       {!isCollapsed && (
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">외부 참조 링크</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">참조 링크 URL</label>
             <Input
-              placeholder="관련 웹사이트 URL을 입력하세요 (예: https://example.com)"
-              value={appState.referenceLink || ''}
-              onChange={(e) => handleReferenceUrlChange(e.target.value)}
+              type="url"
+              placeholder="https://example.com (선택사항)"
+              value={pendingLink}
+              onChange={(e) => setPendingLink(e.target.value)}
+              className="w-full"
             />
-            <p className="text-xs text-gray-500 mt-1">블로그 글 하단에 추가될 외부 링크입니다.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              글 마지막에 표시될 외부 링크를 입력하세요 (미입력 시 기본 링크 사용)
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">링크 설명 문구</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">링크 텍스트</label>
             <Textarea
-              placeholder="링크에 대한 설명을 입력하세요 (예: 더 자세한 정보 확인하기)"
-              value={appState.referenceSentence || ''}
-              onChange={(e) => handleReferenceSentenceChange(e.target.value)}
-              className="min-h-16"
+              placeholder="워드프레스 꿀팁 더 보러가기 (기본값)"
+              value={pendingSentence}
+              onChange={(e) => setPendingSentence(e.target.value)}
+              className="min-h-20"
             />
-            <p className="text-xs text-gray-500 mt-1">링크와 함께 표시될 설명 문구입니다.</p>
+            <p className="text-xs text-gray-500 mt-1">
+              링크에 표시될 텍스트를 입력하세요 (미입력 시 기본 텍스트 사용)
+            </p>
           </div>
 
-          {(appState.referenceLink || appState.referenceSentence) && (
-            <Button
-              onClick={clearReferenceData}
-              variant="outline"
-              size="sm"
-              className="text-red-600 border-red-600 hover:bg-red-50"
+          <div className="bg-blue-50 p-3 rounded border border-blue-200">
+            <p className="text-sm text-blue-800">
+              <strong>💡 사용 팁:</strong> 더블클릭으로 창을 접거나 펼 수 있습니다.
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              참조 링크는 블로그 글의 신뢰도를 높이고 독자에게 추가 정보를 제공합니다.
+            </p>
+          </div>
+
+          {hasChanges && (
+            <Button 
+              onClick={handleSave}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              링크 정보 삭제
+              <Save className="h-4 w-4 mr-2" />
+              외부 참조 설정 저장
             </Button>
           )}
         </CardContent>
