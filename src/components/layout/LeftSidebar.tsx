@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
@@ -49,19 +49,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   preventDuplicates,
   deleteReferenceData,
 }) => {
-  const [isSticky, setIsSticky] = useState(false);
   const [isHuggingFaceExpanded, setIsHuggingFaceExpanded] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const shouldBeSticky = scrollPosition > 1000;
-      setIsSticky(shouldBeSticky);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleHuggingFaceDoubleClick = () => {
     setIsHuggingFaceExpanded(!isHuggingFaceExpanded);
@@ -77,22 +65,22 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         setManualTopic={topicControls.setManualTopic}
         handleManualTopicAdd={topicControls.handleManualTopicAdd}
         preventDuplicates={preventDuplicates}
+        generateTopicsFromKeyword={generationFunctions.generateTopics}
       />
 
       <ArticleGenerator
         appState={appState}
+        saveAppState={saveAppState}
         isGeneratingContent={generationStatus.isGeneratingContent}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
+        selectTopic={topicControls.selectTopic}
+        generateArticleContent={generationFunctions.generateArticle}
       />
 
       <EvergreenKeywordCounter />
 
-      {/* 이미지 생성 창들 - 원래 위치에서 늦은 스크롤시 따라다니기 */}
-      <div className={`space-y-4 transition-all duration-500 ${
-        isSticky 
-          ? 'fixed top-4 left-4 z-50 w-[380px] max-h-[calc(100vh-2rem)] overflow-y-auto bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-200 p-4' 
-          : 'relative'
-      }`}>
+      {/* 이미지 생성 창들 - sticky 기능 제거하고 일반 레이아웃으로 변경 */}
+      <div className="space-y-4">
         <ImageCreation
           appState={appState}
           isGeneratingImage={generationStatus.isGeneratingImage}
