@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,24 +27,26 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   
   // localStorage 키
   const STORAGE_KEY = 'blog_editor_content';
+  const LAST_GENERATED_KEY = 'blog_last_generated_content';
   
   // 타이머 refs
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const userEditTimeoutRef = useRef<NodeJS.Timeout>();
   
   // 안전한 localStorage 작업
-  const safeLocalStorageGet = useCallback(() => {
+  const safeLocalStorageGet = useCallback((key: string) => {
     try {
-      return localStorage.getItem(STORAGE_KEY) || '';
+      return localStorage.getItem(key) || '';
     } catch (error) {
       console.error('localStorage 읽기 실패:', error);
       return '';
     }
   }, []);
   
-  const safeLocalStorageSet = useCallback((content: string) => {
+  const safeLocalStorageSet = useCallback((key: string, content: string) => {
     try {
-      localStorage.setItem(STORAGE_KEY, content);
+      localStorage.setItem(key, content);
+      console.log(`💾 localStorage 저장 완료: ${key}`);
       return true;
     } catch (error) {
       console.error('localStorage 저장 실패:', error);
@@ -53,7 +54,33 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, []);
   
-  // 새로운 생성 콘텐츠 강제 적용 - 개선된 로직
+  // 초기 로드 시 localStorage에서 복원 - 개선된 로직
+  useEffect(() => {
+    console.log('🔄 편집기 초기화 시작');
+    
+    const savedContent = safeLocalStorageGet(STORAGE_KEY);
+    const savedLastGenerated = safeLocalStorageGet(LAST_GENERATED_KEY);
+    
+    console.log('💾 저장된 콘텐츠 확인:', {
+      savedContentLength: savedContent.length,
+      savedLastGeneratedLength: savedLastGenerated.length,
+      currentGeneratedLength: generatedContent.length
+    });
+    
+    // 저장된 콘텐츠가 있으면 즉시 복원
+    if (savedContent && !isGeneratingContent) {
+      console.log('📂 저장된 콘텐츠 복원:', savedContent.length + '자');
+      setEditorContent(savedContent);
+      setLastGeneratedContent(savedLastGenerated);
+      onContentChange(savedContent);
+      
+      if (editorRef.current) {
+        editorRef.current.innerHTML = savedContent;
+      }
+    }
+  }, []); // 빈 의존성 배열로 최초 한 번만 실행
+  
+  // 새로운 생성 콘텐츠 처리 - 개선된 로직
   useEffect(() => {
     console.log('🔍 콘텐츠 동기화 체크:', {
       hasGeneratedContent: !!generatedContent,
@@ -71,10 +98,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       
       console.log('✅ 새로운 콘텐츠 강제 적용 시작');
       
-      // 즉시 상태 업데이트
+      // 즉시 상태 업데이트 및 localStorage 저장
       setEditorContent(generatedContent);
       setLastGeneratedContent(generatedContent);
-      safeLocalStorageSet(generatedContent);
+      safeLocalStorageSet(STORAGE_KEY, generatedContent);
+      safeLocalStorageSet(LAST_GENERATED_KEY, generatedContent);
       onContentChange(generatedContent);
       
       // DOM 업데이트 - 다음 프레임에서 실행
@@ -96,32 +124,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [generatedContent, isGeneratingContent, lastGeneratedContent, onContentChange, safeLocalStorageSet, toast]);
   
-  // 초기 로드 시 localStorage에서 복원 (생성된 콘텐츠가 없을 때만)
-  useEffect(() => {
-    if (!generatedContent && !isGeneratingContent && !editorContent) {
-      const savedContent = safeLocalStorageGet();
-      if (savedContent) {
-        console.log('📂 저장된 콘텐츠 복원');
-        setEditorContent(savedContent);
-        onContentChange(savedContent);
-        if (editorRef.current) {
-          editorRef.current.innerHTML = savedContent;
-        }
-      }
-    }
-  }, [safeLocalStorageGet, generatedContent, isGeneratingContent, editorContent, onContentChange]);
-  
-  // 자동 저장
+  // 자동 저장 - 개선된 로직
   const performAutoSave = useCallback((content: string) => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
     autoSaveTimeoutRef.current = setTimeout(() => {
-      safeLocalStorageSet(content);
+      safeLocalStorageSet(STORAGE_KEY, content);
       onContentChange(content);
       console.log('💾 자동 저장 완료');
-    }, 500);
+    }, 300); // 더 빠른 자동 저장
   }, [safeLocalStorageSet, onContentChange]);
   
   // 사용자 입력 처리
@@ -147,18 +160,58 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     }
   }, [isGeneratingContent, performAutoSave]);
   
-  // 페이지 언로드 시 최종 저장
+  // 창 포커스/블러 이벤트 처리 - 새로 추가
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      console.log('🔄 창 포커스 - 콘텐츠 복원 확인');
+      const savedContent = safeLocalStorageGet(STORAGE_KEY);
+      if (savedContent && savedContent !== editorContent) {
+        console.log('📂 창 포커스 시 콘텐츠 복원');
+        setEditorContent(savedContent);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = savedContent;
+        }
+      }
+    };
+
+    const handleWindowBlur = () => {
+      console.log('💾 창 블러 - 현재 콘텐츠 저장');
+      if (editorContent) {
+        safeLocalStorageSet(STORAGE_KEY, editorContent);
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [editorContent, safeLocalStorageGet, safeLocalStorageSet]);
+  
+  // 페이지 언로드 시 최종 저장 - 개선된 로직
   useEffect(() => {
     const handleBeforeUnload = () => {
+      console.log('💾 페이지 언로드 - 최종 저장');
       if (editorContent) {
-        safeLocalStorageSet(editorContent);
+        safeLocalStorageSet(STORAGE_KEY, editorContent);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden && editorContent) {
+        console.log('💾 페이지 숨김 - 콘텐츠 저장');
+        safeLocalStorageSet(STORAGE_KEY, editorContent);
       }
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
@@ -167,6 +220,26 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       }
     };
   }, [editorContent, safeLocalStorageSet]);
+  
+  // 초기화 감지를 위한 전역 이벤트 리스너 - 새로 추가
+  useEffect(() => {
+    const handleReset = () => {
+      console.log('🔄 초기화 이벤트 감지 - 편집기 내용 삭제');
+      setEditorContent('');
+      setLastGeneratedContent('');
+      if (editorRef.current) {
+        editorRef.current.innerHTML = '';
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LAST_GENERATED_KEY);
+    };
+
+    window.addEventListener('app-reset', handleReset);
+    
+    return () => {
+      window.removeEventListener('app-reset', handleReset);
+    };
+  }, []);
   
   // 클립보드 복사
   const handleCopyToClipboard = useCallback(() => {
@@ -223,7 +296,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기
+              블로그 글 편집기 (자동 보존)
               {isUserEditing && <span className="ml-2 text-xs text-orange-500">⌨️ 편집 중</span>}
               {showDebugInfo && (
                 <span className="ml-2 text-xs text-gray-400">
@@ -275,8 +348,8 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
-                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장됩니다.</p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (자동 보존)</p>
+                <p>아래 내용을 자유롭게 수정하세요. 실시간 자동 저장되며 창 전환 시에도 보존됩니다.</p>
                 {isUserEditing && (
                   <p className="text-xs text-orange-600 mt-1">⌨️ 편집 중: 안전하게 보호됩니다</p>
                 )}

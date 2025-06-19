@@ -52,53 +52,48 @@ export const useRefactoredAppController = () => {
     hasAccess || isAdmin
   );
 
-  // 주제 확인 다이얼로그 상태 - 더 안정적인 관리
+  // 주제 확인 다이얼로그 상태 - 단순화된 관리
   const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<string>('');
-  const [isProcessingConfirm, setIsProcessingConfirm] = useState(false);
 
   // 주제 선택 시 확인 다이얼로그 표시
   const handleTopicSelect = (topic: string) => {
     console.log('주제 선택됨:', topic);
     setPendingTopic(topic);
     setShowTopicConfirmDialog(true);
-    setIsProcessingConfirm(false); // 초기화
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 개선된 처리
+  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 단순화된 처리
   const handleTopicConfirm = () => {
-    console.log('주제 확인 버튼 클릭:', { pendingTopic, isProcessingConfirm });
+    console.log('주제 확인 버튼 클릭:', pendingTopic);
     
-    // 이미 처리 중이거나 주제가 없으면 무시
-    if (isProcessingConfirm || !pendingTopic) {
-      console.log('처리 중이거나 주제 없음 - 무시');
+    if (!pendingTopic) {
+      console.log('주제 없음 - 무시');
       return;
     }
-    
-    // 처리 시작 플래그 설정
-    setIsProcessingConfirm(true);
     
     try {
       console.log('주제 확인 처리 시작:', pendingTopic);
       
-      // 1. 먼저 주제를 선택 (appState 업데이트)
-      console.log('topicControls.selectTopic 호출:', pendingTopic);
+      // 1. 즉시 다이얼로그 닫기
+      setShowTopicConfirmDialog(false);
+      
+      // 2. 주제 선택
       topicControls.selectTopic(pendingTopic);
       
-      // 2. 다이얼로그 닫기 및 상태 초기화
-      setShowTopicConfirmDialog(false);
-      setPendingTopic('');
-      
-      // 3. 즉시 글 생성 시작 (약간의 딜레이 후)
+      // 3. 글 생성 시작 (약간의 딜레이)
       setTimeout(() => {
         console.log('자동 글 생성 시작:', { topic: pendingTopic, keyword: appState.keyword });
         generateArticle({ topic: pendingTopic, keyword: appState.keyword });
-        setIsProcessingConfirm(false); // 처리 완료
       }, 100);
+      
+      // 4. 상태 초기화
+      setPendingTopic('');
       
     } catch (error) {
       console.error('주제 확인 처리 중 오류:', error);
-      setIsProcessingConfirm(false);
+      // 오류 발생 시 다이얼로그 다시 열기
+      setShowTopicConfirmDialog(true);
     }
   };
 
@@ -107,7 +102,6 @@ export const useRefactoredAppController = () => {
     console.log('주제 선택 취소');
     setShowTopicConfirmDialog(false);
     setPendingTopic('');
-    setIsProcessingConfirm(false);
   };
 
   const convertToMarkdown = () => {
@@ -129,6 +123,19 @@ export const useRefactoredAppController = () => {
     if (isGeneratingContent) {
       stopArticleGeneration();
     }
+  };
+
+  // 초기화 함수 개선 - 편집기에 이벤트 발송
+  const enhancedResetApp = () => {
+    console.log('🔄 향상된 초기화 시작');
+    
+    // 편집기에 초기화 이벤트 발송
+    window.dispatchEvent(new Event('app-reset'));
+    
+    // 기존 초기화 실행
+    handleResetApp();
+    
+    console.log('✅ 향상된 초기화 완료');
   };
 
   const generationStatus = {
@@ -168,7 +175,7 @@ export const useRefactoredAppController = () => {
     huggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
-    handleResetApp,
+    handleResetApp: enhancedResetApp, // 향상된 초기화 함수 사용
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
@@ -190,6 +197,5 @@ export const useRefactoredAppController = () => {
     pendingTopic,
     handleTopicCancel,
     convertToMarkdown,
-    isProcessingConfirm, // 추가된 상태
   };
 };
