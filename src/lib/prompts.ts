@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -19,7 +20,7 @@ export const getArticlePrompt = ({
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
   const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
-  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText);
+  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText, true);
   const currentYear = new Date().getFullYear();
 
   return `
