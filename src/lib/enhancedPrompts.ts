@@ -1,4 +1,5 @@
-import { getWebCrawlContent } from './webCrawl';
+
+import { WebCrawlerService } from './webCrawler';
 
 interface EnhancedPromptParams {
   topic: string;
@@ -18,7 +19,7 @@ export const getEnhancedArticlePrompt = async (params: EnhancedPromptParams): Pr
   // 웹 크롤링 정보 가져오기
   let webCrawlContent = '';
   try {
-    webCrawlContent = await getWebCrawlContent(keyword, apiKey);
+    webCrawlContent = await WebCrawlerService.crawlForKeyword(keyword, apiKey);
   } catch (error) {
     console.error('웹 크롤링 정보 가져오기 실패:', error);
   }
