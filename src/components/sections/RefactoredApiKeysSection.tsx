@@ -28,9 +28,9 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   }, []);
 
   console.log('RefactoredApiKeysSection 렌더링 - 매니저 상태:', {
-    gemini: { key: geminiManager?.geminiApiKey, validated: geminiManager?.isGeminiApiKeyValidated },
-    pixabay: { key: pixabayManager?.pixabayApiKey, validated: pixabayManager?.isPixabayApiKeyValidated },
-    huggingface: { key: huggingFaceManager?.huggingFaceApiKey, validated: huggingFaceManager?.isHuggingFaceApiKeyValidated }
+    gemini: { key: geminiManager.geminiApiKey, validated: geminiManager.isGeminiApiKeyValidated },
+    pixabay: { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated },
+    huggingface: { key: huggingFaceManager.huggingFaceApiKey, validated: huggingFaceManager.isHuggingFaceApiKeyValidated }
   });
 
   return (
@@ -48,37 +48,37 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
         <div className="flex flex-wrap gap-3 justify-center">
           <div className="relative z-[200]">
             <GeminiApiKeyManager
-              geminiApiKey={geminiManager?.geminiApiKey || ''}
-              setGeminiApiKey={geminiManager?.setGeminiApiKey}
-              isGeminiApiKeyValidated={geminiManager?.isGeminiApiKeyValidated || false}
-              setIsGeminiApiKeyValidated={geminiManager?.setIsGeminiApiKeyValidated}
-              isGeminiValidating={geminiManager?.isGeminiValidating || false}
-              validateGeminiApiKey={geminiManager?.validateGeminiApiKey}
-              deleteGeminiApiKeyFromStorage={geminiManager?.deleteGeminiApiKeyFromStorage}
+              geminiApiKey={geminiManager.geminiApiKey}
+              setGeminiApiKey={geminiManager.setGeminiApiKey}
+              isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
+              setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
+              isGeminiValidating={geminiManager.isGeminiValidating}
+              validateGeminiApiKey={geminiManager.validateGeminiApiKey}
+              deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
             />
           </div>
           
           <div className="relative z-[200]">
             <PixabayApiKeyManager
-              pixabayApiKey={pixabayManager?.pixabayApiKey || ''}
-              setPixabayApiKey={pixabayManager?.setPixabayApiKey}
-              isPixabayApiKeyValidated={pixabayManager?.isPixabayApiKeyValidated || false}
-              setIsPixabayApiKeyValidated={pixabayManager?.setIsPixabayApiKeyValidated}
-              isPixabayValidating={pixabayManager?.isPixabayValidating || false}
-              validatePixabayApiKey={pixabayManager?.validatePixabayApiKey}
-              deletePixabayApiKeyFromStorage={pixabayManager?.deletePixabayApiKeyFromStorage}
+              pixabayApiKey={pixabayManager.pixabayApiKey}
+              setPixabayApiKey={pixabayManager.setPixabayApiKey}
+              isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
+              setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+              isPixabayValidating={pixabayManager.isPixabayValidating}
+              validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
+              deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
             />
           </div>
           
           <div className="relative z-[200]">
             <HuggingFaceApiKeyManager
-              huggingFaceApiKey={huggingFaceManager?.huggingFaceApiKey || ''}
-              setHuggingFaceApiKey={huggingFaceManager?.setHuggingFaceApiKey}
-              isHuggingFaceApiKeyValidated={huggingFaceManager?.isHuggingFaceApiKeyValidated || false}
-              setIsHuggingFaceApiKeyValidated={huggingFaceManager?.setIsHuggingFaceApiKeyValidated}
-              isHuggingFaceValidating={huggingFaceManager?.isHuggingFaceValidating || false}
-              validateHuggingFaceApiKey={huggingFaceManager?.validateHuggingFaceApiKey}
-              deleteHuggingFaceApiKeyFromStorage={huggingFaceManager?.deleteHuggingFaceApiKeyFromStorage}
+              huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+              setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
+              isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+              setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+              isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
+              validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
+              deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
             />
           </div>
         </div>
