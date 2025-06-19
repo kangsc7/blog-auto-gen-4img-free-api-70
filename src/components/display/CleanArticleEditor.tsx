@@ -12,6 +12,8 @@ interface CleanArticleEditorProps {
   onContentChange: (content: string) => void;
 }
 
+const STORAGE_KEY = 'blog_editor_content_permanent_v2';
+
 export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   generatedContent,
   isGeneratingContent,
@@ -22,40 +24,109 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveInterval, setAutoSaveInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // localStorage에서 편집기 내용 로드 (영구 보존)
+  // 영구 저장된 콘텐츠 로드 (최우선 실행)
   useEffect(() => {
-    const savedContent = localStorage.getItem('blog_editor_content_permanent');
-    if (savedContent && !generatedContent && !isGeneratingContent) {
-      console.log('💾 저장된 편집기 내용 복원:', savedContent.length + '자');
-      setEditorContent(savedContent);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = savedContent;
-        addImageClickHandlers();
+    const loadSavedContent = () => {
+      try {
+        const savedContent = localStorage.getItem(STORAGE_KEY);
+        if (savedContent && !generatedContent && !isGeneratingContent) {
+          console.log('💾 영구 저장된 편집기 내용 복원:', savedContent.length + '자');
+          setEditorContent(savedContent);
+          if (editorRef.current) {
+            editorRef.current.innerHTML = savedContent;
+            setTimeout(() => addImageClickHandlers(), 300);
+          }
+          onContentChange(savedContent);
+          
+          // 마지막 저장 시간 업데이트
+          setLastSaved(new Date());
+        }
+      } catch (error) {
+        console.error('❌ 영구 저장 콘텐츠 로드 실패:', error);
       }
-    }
+    };
+
+    loadSavedContent();
   }, []);
+
+  // 자동 저장 기능 (5초마다)
+  useEffect(() => {
+    if (editorContent && !isGeneratingContent) {
+      // 기존 인터벌 정리
+      if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+      }
+
+      // 새로운 자동 저장 설정
+      const interval = setInterval(() => {
+        saveContentPermanently(editorContent);
+      }, 5000); // 5초마다 자동 저장
+
+      setAutoSaveInterval(interval);
+
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    }
+  }, [editorContent, isGeneratingContent]);
+
+  // 페이지 떠나기 전 저장
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (editorContent) {
+        saveContentPermanently(editorContent);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && editorContent) {
+        saveContentPermanently(editorContent);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [editorContent]);
 
   // 앱 초기화 이벤트 리스너
   useEffect(() => {
     const handleAppReset = () => {
       console.log('🔄 편집기 초기화 이벤트 수신');
-      if (editorRef.current) {
-        editorRef.current.innerHTML = '';
-        setEditorContent('');
-        localStorage.removeItem('blog_editor_content_permanent');
-        onContentChange('');
-        setLastSaved(null);
-      }
+      clearEditor();
     };
     
     window.addEventListener('app-reset', handleAppReset);
     return () => {
       window.removeEventListener('app-reset', handleAppReset);
     };
-  }, [onContentChange]);
+  }, []);
 
-  // 글로벌 이미지 클릭 핸들러 함수 등록 (개선된 버전)
+  // 영구 저장 함수
+  const saveContentPermanently = (content: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, content);
+      setLastSaved(new Date());
+      console.log('💾 편집기 내용 영구 저장 완료:', content.length + '자');
+    } catch (error) {
+      console.error('❌ 편집기 내용 영구 저장 실패:', error);
+      toast({
+        title: "저장 실패",
+        description: "저장 공간이 부족할 수 있습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // 글로벌 이미지 클릭 핸들러 함수 등록
   useEffect(() => {
     (window as any).copyImageToClipboard = async (imageUrl: string) => {
       try {
@@ -123,7 +194,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 이미지에 클릭 이벤트 추가 - 강화된 방식
+  // 이미지에 클릭 이벤트 추가
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -163,7 +234,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 새로운 콘텐츠가 생성되면 편집기에 반영 (영구 저장)
+  // 새로운 콘텐츠가 생성되면 편집기에 반영
   useEffect(() => {
     if (generatedContent && !isGeneratingContent && generatedContent !== editorContent) {
       console.log('📝 새 콘텐츠 적용 및 영구 저장:', generatedContent.length + '자');
@@ -171,28 +242,16 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       
       if (editorRef.current) {
         editorRef.current.innerHTML = generatedContent;
-        // 이미지 클릭 핸들러를 약간의 지연 후 추가
-        setTimeout(() => addImageClickHandlers(), 200);
+        setTimeout(() => addImageClickHandlers(), 300);
       }
       
-      // 영구 자동 저장
-      saveContent(generatedContent);
+      // 즉시 영구 저장
+      saveContentPermanently(generatedContent);
       onContentChange(generatedContent);
     }
   }, [generatedContent, isGeneratingContent, editorContent, onContentChange]);
 
-  // 콘텐츠 저장 함수 (영구 보존)
-  const saveContent = (content: string) => {
-    try {
-      localStorage.setItem('blog_editor_content_permanent', content);
-      setLastSaved(new Date());
-      console.log('💾 편집기 내용 영구 저장 완료:', content.length + '자');
-    } catch (error) {
-      console.error('❌ 편집기 내용 저장 실패:', error);
-    }
-  };
-
-  // 사용자 편집 처리 (실시간 영구 저장)
+  // 사용자 편집 처리
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
@@ -201,34 +260,38 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       
       // 이미지 클릭 핸들러 다시 추가
       setTimeout(() => addImageClickHandlers(), 100);
+    }
+  };
+
+  // 편집기 내용 완전 삭제
+  const clearEditor = () => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = '';
+      setEditorContent('');
+      localStorage.removeItem(STORAGE_KEY);
+      onContentChange('');
+      setLastSaved(null);
       
-      // 실시간 영구 저장 (디바운스)
-      setTimeout(() => saveContent(newContent), 1000);
+      // 자동 저장 인터벌 정리
+      if (autoSaveInterval) {
+        clearInterval(autoSaveInterval);
+        setAutoSaveInterval(null);
+      }
+      
+      toast({ 
+        title: "🗑️ 편집기 완전 초기화", 
+        description: "편집기 내용이 영구적으로 삭제되었습니다." 
+      });
     }
   };
 
   // 수동 저장
   const handleManualSave = () => {
     if (editorContent) {
-      saveContent(editorContent);
+      saveContentPermanently(editorContent);
       toast({ 
         title: "💾 영구 저장 완료", 
         description: "편집기 내용이 영구적으로 저장되었습니다. 창 전환, 새로고침해도 유지됩니다." 
-      });
-    }
-  };
-
-  // 편집기 내용 삭제
-  const handleClearEditor = () => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
-      setEditorContent('');
-      localStorage.removeItem('blog_editor_content_permanent');
-      onContentChange('');
-      setLastSaved(null);
-      toast({ 
-        title: "🗑️ 편집기 초기화", 
-        description: "편집기 내용이 영구적으로 삭제되었습니다." 
       });
     }
   };
@@ -287,10 +350,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                     className="text-purple-600 border-purple-600 hover:bg-purple-50"
                   >
                     <Save className="h-4 w-4 mr-1" />
-                    영구저장
+                    수동저장
                   </Button>
                   <Button 
-                    onClick={handleClearEditor}
+                    onClick={clearEditor}
                     size="sm"
                     variant="outline"
                     className="text-red-600 border-red-600 hover:bg-red-50"
@@ -325,21 +388,26 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           {isGeneratingContent ? (
             <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
               <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
-              <p className="font-semibold text-lg text-blue-600">컬러테마 + 시각카드 적용하여 글을 생성하고 있습니다...</p>
+              <p className="font-semibold text-lg text-blue-600">컬러테마 + 시각카드 + 이미지 추가하여 글을 생성하고 있습니다...</p>
               <p className="text-sm">잠시만 기다려주세요.</p>
             </div>
           ) : editorContent ? (
             <div className="space-y-4 w-full">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
-                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (영구 보존)</p>
+                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (영구 보존 + 자동저장)</p>
                   <p>자유롭게 수정하세요. 이미지 클릭시 티스토리용 복사, 창 전환/새로고침해도 내용 유지됨</p>
                 </div>
-                {lastSaved && (
-                  <div className="text-xs text-green-600">
-                    💾 마지막 저장: {lastSaved.toLocaleTimeString()}
+                <div className="text-xs">
+                  {lastSaved && (
+                    <div className="text-green-600">
+                      💾 마지막 저장: {lastSaved.toLocaleTimeString()}
+                    </div>
+                  )}
+                  <div className="text-blue-600 mt-1">
+                    🔄 자동저장: 5초마다
                   </div>
-                )}
+                </div>
               </div>
               <div
                 ref={editorRef}
@@ -347,7 +415,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                 className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 prose prose-lg max-w-none w-full overflow-auto"
                 onInput={handleInput}
                 onPaste={(e) => {
-                  setTimeout(() => addImageClickHandlers(), 200);
+                  setTimeout(() => addImageClickHandlers(), 300);
                 }}
                 suppressContentEditableWarning={true}
                 style={{

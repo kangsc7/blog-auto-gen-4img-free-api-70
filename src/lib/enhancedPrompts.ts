@@ -90,7 +90,9 @@ export const getEnhancedArticlePrompt = async ({
         - Text Highlight Color: ${colors.textHighlight}
         - Highlight Color: ${colors.highlight}
         - Link Color: ${colors.link}
-        모든 버튼, 카드, 링크, 강조 텍스트에 위 색상을 정확히 사용하세요.
+        **모든 H2, H3 소제목도 반드시 다음 스타일을 적용하세요:**
+        - H2 태그: <h2 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px;">
+        - H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em;">
 
         **🚨 각 섹션 글자수와 가독성 - 최우선 준수 사항 🚨**
         **각 H2 섹션의 본문은 반드시 190자에서 250자 사이로 작성해야 합니다.**
@@ -101,16 +103,131 @@ export const getEnhancedArticlePrompt = async ({
         - 모든 문단은 <p> 태그로 감싸기
         - 각 <p> 태그 사이에는 공백 줄바꿈 추가
 
-        **🚨 시각요약 카드 필수 삽입 🚨**
-        - 1번째 섹션 끝에 반드시 다음과 같은 시각요약 카드를 삽입하세요:
-        <div style="background: linear-gradient(135deg, ${colors.highlight}, ${colors.secondary}); border-left: 5px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-          <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">📋 ${topic} 핵심 요약</h4>
-          <ul style="color: #2d3748; line-height: 1.6; margin: 0; padding-left: 20px;">
-            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">대상:</strong> [구체적인 대상]</li>
-            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">혜택:</strong> [핵심 혜택]</li>
-            <li style="margin-bottom: 8px;"><strong style="color: ${colors.primary};">방법:</strong> [간단한 방법]</li>
-            <li><strong style="color: ${colors.primary};">기한:</strong> [중요한 기한 정보]</li>
-          </ul>
+        **🚨 시각화 요약 카드 필수 삽입 - 정확한 HTML 적용 🚨**
+        - 1번째 섹션 끝에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요 (컬러테마 연동):
+        
+        <style>
+        .single-summary-card-container {
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px 15px;
+            background-color: ${colors.secondary};
+            margin: 25px 0;
+        }
+        .single-summary-card {
+            width: 100%;
+            max-width: 700px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid ${colors.primary};
+            box-sizing: border-box;
+        }
+        .single-summary-card .card-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid ${colors.primary};
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .single-summary-card .card-header-icon {
+            font-size: 38px;
+            color: ${colors.primary};
+            margin-right: 16px;
+        }
+        .single-summary-card .card-header h3 {
+            font-size: 28px;
+            color: ${colors.primary};
+            margin: 0;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+        .single-summary-card .card-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            font-size: 18px;
+            line-height: 1.7;
+            color: #333;
+        }
+        .single-summary-card .card-content .section {
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .single-summary-card .card-content .section:last-child {
+            margin-bottom: 0;
+        }
+        .single-summary-card .card-content strong {
+            color: ${colors.primary};
+            font-weight: 600;
+        }
+        .single-summary-card .card-content .highlight {
+            background-color: ${colors.textHighlight};
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .single-summary-card .card-content .formula {
+            background-color: ${colors.highlight};
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            text-align: center;
+            margin-top: 8px;
+            color: ${colors.primary};
+        }
+        .single-summary-card .card-footer {
+            font-size: 15px;
+            color: #777;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px dashed ${colors.primary};
+            margin-top: auto;
+        }
+        @media (max-width: 768px) {
+            .single-summary-card-container { padding: 20px 10px; }
+            .single-summary-card { padding: 22px; border-radius: 10px; }
+            .single-summary-card .card-header-icon { font-size: 32px; margin-right: 12px; }
+            .single-summary-card .card-header h3 { font-size: 24px; }
+            .single-summary-card .card-content { font-size: 16px; line-height: 1.6; }
+            .single-summary-card .card-content .section { margin-bottom: 10px; line-height: 1.6; }
+            .single-summary-card .card-content .highlight { padding: 2px 5px; }
+            .single-summary-card .card-content .formula { padding: 7px 10px; font-size: 0.9em; }
+            .single-summary-card .card-footer { font-size: 14px; padding-top: 12px; }
+        }
+        @media (max-width: 480px) {
+            .single-summary-card { padding: 18px; border-radius: 8px; }
+            .single-summary-card .card-header-icon { font-size: 28px; margin-right: 10px; }
+            .single-summary-card .card-header h3 { font-size: 20px; }
+            .single-summary-card .card-content { font-size: 15px; line-height: 1.5; }
+            .single-summary-card .card-content .section { margin-bottom: 8px; line-height: 1.5; }
+            .single-summary-card .card-content .formula { padding: 6px 8px; font-size: 0.85em; }
+            .single-summary-card .card-footer { font-size: 13px; padding-top: 10px; }
+        }
+        </style>
+        
+        <div class="single-summary-card-container">
+            <div class="single-summary-card">
+                <div class="card-header"><span class="card-header-icon">💡</span>
+                    <h3 data-ke-size="size23">${topic} 핵심 요약</h3>
+                </div>
+                <div class="card-content">
+                    <div class="section"><b>대상:</b> <span class="highlight">[구체적인 대상]</span></div>
+                    <div class="section"><b>혜택:</b> <span class="highlight">[핵심 혜택]</span></div>
+                    <div class="section"><b>신청방법:</b>
+                        <div class="formula">[간단한 신청 절차]</div>
+                    </div>
+                    <div class="section"><b>주의사항:</b> <span class="highlight">[중요한 주의사항]</span></div>
+                </div>
+                <div class="card-footer">💡 더 자세한 정보는 아래 내용을 확인하세요</div>
+            </div>
         </div>
 
         **🚨 주의사항 카드 필수 삽입 🚨**
@@ -145,10 +262,6 @@ export const getEnhancedArticlePrompt = async ({
             </tbody>
           </table>
         </div>
-
-        **🚨 FAQ 소제목 필수 추가 🚨**
-        - 5번째 섹션에 반드시 "💬 자주 묻는 질문 (FAQ)" 소제목을 H3로 추가
-        - FAQ 하위에 주제와 관련된 실용적인 Q&A 세트 포함
 
         **🚨 외부 참조 링크 및 문장 필수 적용 🚨**
         ${referenceLink ? `
@@ -204,7 +317,9 @@ ${htmlTemplate}
         - **각 섹션은 정확히 190자에서 250자 사이의 적절한 분량이어야 합니다**
         - **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
         - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
-        - **시각요약 카드, 주의카드, 테이블 필수 포함**
+        - **H2, H3 소제목에 컬러테마 스타일 필수 적용**
+        - **시각화 요약 카드 정확한 HTML로 필수 포함**
+        - **주의카드, 테이블 필수 포함**
         - **외부 참조 링크와 문장 필수 적용**
         - **150자 초과 시 마침표에서 줄바꿈 및 공백 줄 추가 필수**
         - **모든 문단은 <p> 태그로 감싸기**
