@@ -5,7 +5,6 @@ import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
 import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
-import { EvergreenKeywordCounter } from '@/components/display/EvergreenKeywordCounter';
 import { AppState } from '@/types';
 
 interface LeftSidebarProps {
@@ -76,8 +75,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         selectTopic={topicControls.selectTopic}
         generateArticleContent={generationFunctions.generateArticle}
       />
-
-      <EvergreenKeywordCounter />
 
       <div className="space-y-4">
         <ImageCreation

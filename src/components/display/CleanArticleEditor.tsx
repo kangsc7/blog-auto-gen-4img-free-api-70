@@ -36,7 +36,26 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 이미지 클릭 핸들러 - 티스토리용 이미지 복사
+  // 앱 초기화 이벤트 리스너
+  useEffect(() => {
+    const handleAppReset = () => {
+      console.log('편집기 초기화 이벤트 수신');
+      if (editorRef.current) {
+        editorRef.current.innerHTML = '';
+        setEditorContent('');
+        localStorage.removeItem('blog_editor_content_permanent');
+        onContentChange('');
+        setLastSaved(null);
+      }
+    };
+    
+    window.addEventListener('app-reset', handleAppReset);
+    return () => {
+      window.removeEventListener('app-reset', handleAppReset);
+    };
+  }, [onContentChange]);
+
+  // 이미지 클릭 핸들러 - 티스토리용 이미지 복사 (단순화)
   const handleImageClick = async (imageUrl: string) => {
     try {
       console.log('이미지 클릭 복사 시도:', imageUrl);
@@ -67,24 +86,21 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 이미지에 클릭 이벤트 추가
+  // 이미지에 클릭 이벤트 추가 (단순화된 방식)
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
-      images.forEach(img => {
+      images.forEach((img, index) => {
         img.style.cursor = 'pointer';
         img.title = '클릭하면 이미지가 클립보드에 복사됩니다';
         
-        // 기존 이벤트 리스너 제거 후 새로 추가
-        img.removeEventListener('click', img.clickHandler as any);
-        const clickHandler = () => {
+        // 새로운 이벤트 리스너 추가 (기존 방식 대신)
+        img.onclick = () => {
           const src = img.getAttribute('src');
           if (src) {
             handleImageClick(src);
           }
         };
-        img.clickHandler = clickHandler;
-        img.addEventListener('click', clickHandler);
       });
     }
   };
@@ -125,7 +141,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       onContentChange(newContent);
       
       // 이미지 클릭 핸들러 다시 추가
-      addImageClickHandlers();
+      setTimeout(() => addImageClickHandlers(), 100);
       
       // 자동 저장 (디바운스)
       setTimeout(() => saveContent(newContent), 1000);
@@ -194,7 +210,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   };
 
   return (
-    <Card className="shadow-md">
+    <Card className="shadow-md w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center text-green-700">
@@ -245,7 +261,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="w-full">
         {isGeneratingContent ? (
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
@@ -253,7 +269,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <p className="text-sm">잠시만 기다려주세요.</p>
           </div>
         ) : editorContent ? (
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center">
               <div>
                 <p className="font-bold mb-1">📝 편집 가능한 블로그 글</p>
@@ -268,7 +284,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <div
               ref={editorRef}
               contentEditable={true}
-              className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 prose max-w-none"
+              className="border border-gray-300 rounded-lg p-6 min-h-[400px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 prose max-w-none w-full overflow-auto"
               onInput={handleInput}
               onPaste={(e) => {
                 // 붙여넣기 후 이미지 핸들러 다시 추가
@@ -279,7 +295,9 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                 lineHeight: '1.6',
                 fontFamily: 'inherit',
                 width: '100%',
-                maxWidth: '100%'
+                maxWidth: '100%',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
               }}
             />
           </div>
