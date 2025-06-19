@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -22,7 +21,13 @@ export const getArticlePrompt = ({
   const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
   
   // 빈 배열로 전달하여 기본 템플릿 사용
-  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, refText, []);
+  const htmlTemplate = getHtmlTemplate(
+    topic,
+    `[콘텐츠가 여기에 들어갑니다]`,
+    '',
+    '',
+    ''
+  );
   const currentYear = new Date().getFullYear();
 
   return `
