@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -49,6 +48,7 @@ const Index = () => {
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
     showTopicConfirmDialog,
+    setShowTopicConfirmDialog,
     pendingTopic,
     handleTopicCancel,
     convertToMarkdown,
@@ -257,7 +257,7 @@ const Index = () => {
         deleteReferenceData={deleteReferenceData}
       />
 
-      {/* 주제 확인 다이얼로그 - 간단한 버전으로 수정 */}
+      {/* 주제 확인 다이얼로그 - onClose 속성 추가 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
@@ -268,6 +268,11 @@ const Index = () => {
         onCancel={() => {
           console.log('TopicConfirmDialog onCancel 호출됨');
           handleTopicCancel();
+        }}
+        onClose={() => {
+          console.log('TopicConfirmDialog onClose 호출됨');
+          setShowTopicConfirmDialog(false);
+          setPendingTopic('');
         }}
       />
 
