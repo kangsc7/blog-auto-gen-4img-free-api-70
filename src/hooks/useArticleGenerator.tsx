@@ -148,7 +148,7 @@ export const useArticleGenerator = (
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
           title: "🖼️ 2단계: 이미지 추가 중", 
-          description: "소제목별로 최적의 이미지를 검색하여 순서대로 삽입 중입니다." 
+          description: "소제목별로 페이지별 순차 검색하여 최적의 이미지를 삽입 중입니다." 
         });
         
         try {
@@ -169,7 +169,7 @@ export const useArticleGenerator = (
             pixabayImagesAdded = true;
             toast({ 
               title: "✅ 이미지 추가 완료", 
-              description: `${imageCount}개의 이미지가 소제목별로 순서대로 삽입되었습니다. 클릭 시 티스토리 복사 가능!`,
+              description: `${imageCount}개의 이미지가 소제목별로 페이지별 순차 검색으로 삽입되었습니다. 클릭 시 티스토리 복사 가능!`,
               duration: 4000
             });
           } else {
@@ -212,14 +212,22 @@ export const useArticleGenerator = (
         colorTheme: selectedColorTheme 
       };
 
+      console.log('🔄 편집기 동기화 - 상태 저장 시작:', finalHtml.length + '자');
       saveAppState(stateToSave);
       
-      // 편집기에 자동 저장
+      // 편집기와 완전 동기화 - 통합된 저장 키 사용
+      const UNIFIED_EDITOR_KEY = 'blog_editor_content_permanent_v3';
       try {
-        localStorage.setItem('blog_editor_content_permanent', finalHtml);
-        console.log('✅ 편집기 영구 저장 완료');
+        localStorage.setItem(UNIFIED_EDITOR_KEY, finalHtml);
+        console.log('✅ 편집기 완전 동기화 저장 완료:', finalHtml.length + '자');
+        
+        // 편집기에 새 콘텐츠 알림 이벤트 발송
+        window.dispatchEvent(new CustomEvent('editor-content-updated', { 
+          detail: { content: finalHtml } 
+        }));
+        console.log('📢 편집기 콘텐츠 업데이트 이벤트 발송됨');
       } catch (error) {
-        console.error('❌ 편집기 저장 실패:', error);
+        console.error('❌ 편집기 동기화 저장 실패:', error);
       }
       
       // 최종 완료 메시지

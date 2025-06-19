@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy, RefreshCw, Trash2 } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CleanArticleEditorProps {
@@ -12,7 +12,7 @@ interface CleanArticleEditorProps {
   onContentChange: (content: string) => void;
 }
 
-const STORAGE_KEY = 'blog_editor_content_permanent_v3';
+const UNIFIED_EDITOR_KEY = 'blog_editor_content_permanent_v3';
 
 export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   generatedContent,
@@ -23,36 +23,99 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const { toast } = useToast();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 영구 저장된 콘텐츠 로드 (API 키와 동일한 방식)
-  useEffect(() => {
-    const loadPermanentContent = () => {
-      try {
-        const savedContent = localStorage.getItem(STORAGE_KEY);
-        if (savedContent && !generatedContent && !isGeneratingContent) {
-          console.log('💾 영구 저장된 편집기 내용 복원 (API 키와 동일한 방식):', savedContent.length + '자');
-          setEditorContent(savedContent);
-          if (editorRef.current) {
-            editorRef.current.innerHTML = savedContent;
-            setTimeout(() => addImageClickHandlers(), 300);
-          }
-          onContentChange(savedContent);
+  // 통합된 콘텐츠 로드 함수
+  const loadUnifiedContent = () => {
+    try {
+      const savedContent = localStorage.getItem(UNIFIED_EDITOR_KEY);
+      console.log('🔄 통합 편집기 콘텐츠 로드 시도:', { 
+        hasLocal: !!savedContent, 
+        hasGenerated: !!generatedContent,
+        localLength: savedContent?.length || 0,
+        generatedLength: generatedContent?.length || 0
+      });
+      
+      // 우선순위: 생성된 새 콘텐츠 > 저장된 콘텐츠
+      const finalContent = generatedContent || savedContent || '';
+      
+      if (finalContent && finalContent !== editorContent) {
+        console.log('✅ 편집기 콘텐츠 업데이트:', finalContent.length + '자');
+        setEditorContent(finalContent);
+        
+        if (editorRef.current) {
+          editorRef.current.innerHTML = finalContent;
+          setTimeout(() => addImageClickHandlers(), 300);
         }
-      } catch (error) {
-        console.error('❌ 영구 저장 콘텐츠 로드 실패:', error);
+        
+        onContentChange(finalContent);
+        return true;
       }
-    };
+      return false;
+    } catch (error) {
+      console.error('❌ 통합 콘텐츠 로드 실패:', error);
+      return false;
+    }
+  };
 
-    loadPermanentContent();
+  // 초기 로드
+  useEffect(() => {
+    if (!isInitialized) {
+      console.log('🚀 편집기 초기화 시작');
+      loadUnifiedContent();
+      setIsInitialized(true);
+    }
   }, []);
 
-  // API 키와 동일한 영구 저장 방식 - 즉시 저장
+  // 새 생성 콘텐츠 감지 및 적용
+  useEffect(() => {
+    if (generatedContent && !isGeneratingContent && generatedContent !== editorContent) {
+      console.log('📝 새 생성 콘텐츠 감지 및 적용:', generatedContent.length + '자');
+      
+      setEditorContent(generatedContent);
+      
+      if (editorRef.current) {
+        editorRef.current.innerHTML = generatedContent;
+        setTimeout(() => addImageClickHandlers(), 300);
+      }
+      
+      // 통합 저장
+      savePermanently(generatedContent);
+      onContentChange(generatedContent);
+    }
+  }, [generatedContent, isGeneratingContent]);
+
+  // 편집기 콘텐츠 업데이트 이벤트 리스너
+  useEffect(() => {
+    const handleContentUpdate = (event: CustomEvent) => {
+      const newContent = event.detail.content;
+      console.log('📢 편집기 콘텐츠 업데이트 이벤트 수신:', newContent.length + '자');
+      
+      if (newContent && newContent !== editorContent) {
+        setEditorContent(newContent);
+        
+        if (editorRef.current) {
+          editorRef.current.innerHTML = newContent;
+          setTimeout(() => addImageClickHandlers(), 300);
+        }
+        
+        onContentChange(newContent);
+      }
+    };
+    
+    window.addEventListener('editor-content-updated', handleContentUpdate as EventListener);
+    return () => {
+      window.removeEventListener('editor-content-updated', handleContentUpdate as EventListener);
+    };
+  }, [editorContent, onContentChange]);
+
+  // 통합 영구 저장 함수
   const savePermanently = (content: string) => {
     try {
-      localStorage.setItem(STORAGE_KEY, content);
-      console.log('💾 편집기 내용 영구 저장 (API 키와 동일한 방식):', content.length + '자');
+      localStorage.setItem(UNIFIED_EDITOR_KEY, content);
+      console.log('💾 통합 편집기 영구 저장:', content.length + '자');
     } catch (error) {
-      console.error('❌ 편집기 내용 영구 저장 실패:', error);
+      console.error('❌ 통합 편집기 저장 실패:', error);
       toast({
         title: "저장 실패",
         description: "저장 공간이 부족할 수 있습니다.",
@@ -61,7 +124,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 페이지 이벤트에서 즉시 저장 (API 키와 동일한 방식)
+  // 페이지 이벤트에서 즉시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (editorContent) {
@@ -205,31 +268,14 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 새로운 콘텐츠가 생성되면 편집기에 반영 및 즉시 영구 저장 (API 키와 동일한 방식)
-  useEffect(() => {
-    if (generatedContent && !isGeneratingContent && generatedContent !== editorContent) {
-      console.log('📝 새 콘텐츠 적용 및 즉시 영구 저장 (API 키와 동일한 방식):', generatedContent.length + '자');
-      setEditorContent(generatedContent);
-      
-      if (editorRef.current) {
-        editorRef.current.innerHTML = generatedContent;
-        setTimeout(() => addImageClickHandlers(), 300);
-      }
-      
-      // 즉시 영구 저장 (API 키와 동일한 방식)
-      savePermanently(generatedContent);
-      onContentChange(generatedContent);
-    }
-  }, [generatedContent, isGeneratingContent, editorContent, onContentChange]);
-
-  // 사용자 편집 처리 및 즉시 저장 (API 키와 동일한 방식)
+  // 사용자 편집 처리 및 즉시 저장
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
       setEditorContent(newContent);
       onContentChange(newContent);
       
-      // 편집 중 즉시 저장 (API 키와 동일한 방식)
+      // 편집 중 즉시 저장
       savePermanently(newContent);
       
       // 이미지 클릭 핸들러 다시 추가
@@ -237,17 +283,17 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 편집기 내용 영구 삭제 (API 키 삭제와 동일한 방식)
+  // 편집기 내용 영구 삭제
   const permanentClearEditor = () => {
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
       setEditorContent('');
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(UNIFIED_EDITOR_KEY);
       onContentChange('');
       
       toast({ 
         title: "🗑️ 편집기 영구 초기화", 
-        description: "편집기 내용이 영구적으로 삭제되었습니다. (API 키 삭제와 동일한 방식)" 
+        description: "편집기 내용이 영구적으로 삭제되었습니다." 
       });
     }
   };
