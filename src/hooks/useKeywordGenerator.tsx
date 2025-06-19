@@ -2,7 +2,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { RealTimeTrendCrawler } from '@/lib/realTimeTrendCrawler';
 import { ExpandedEvergreenService } from '@/lib/expandedEvergreenKeywords';
-import { useEvergreenKeywords } from '@/hooks/use-evergreen-keywords';
+import { useEvergreenKeywords } from '@/hooks/useEvergreenKeywords';
 
 export const useKeywordGenerator = (appState: AppState) => {
     const { toast } = useToast();
