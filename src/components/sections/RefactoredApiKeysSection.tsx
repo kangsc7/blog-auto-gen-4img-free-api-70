@@ -40,23 +40,34 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
         className={`cursor-pointer transition-all duration-500 ease-in-out transform ${
           isExpanded 
             ? 'opacity-100 max-h-[600px] scale-100' 
-            : 'opacity-70 max-h-12 scale-95 overflow-hidden'
+            : 'opacity-100 max-h-16 scale-100 overflow-hidden'
         }`}
       >
         {/* 통합된 API 키 설정 창 */}
-        <div className={`bg-white rounded-lg shadow-lg border-2 border-gray-200 p-4 transition-all duration-300 ${
-          isExpanded ? 'border-blue-300' : 'border-gray-200'
+        <div className={`bg-white rounded-lg shadow-lg border-2 p-4 transition-all duration-300 ${
+          isExpanded ? 'border-blue-300' : 'border-gray-300'
         }`}>
           {!isExpanded ? (
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-700 mb-1">🔑 API 키 설정</h3>
+              <h3 className="text-xl font-bold text-blue-700 mb-2">🔑 API 키 통합 설정</h3>
               <p className="text-sm text-gray-600">
-                💡 더블클릭해서 API 키 설정 보기
+                💡 더블클릭해서 API 키 설정창을 열어보세요
               </p>
+              <div className="mt-2 text-xs text-blue-500">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                설정된 키: {[
+                  geminiManager.isGeminiApiKeyValidated ? 'Gemini' : null,
+                  pixabayManager.isPixabayApiKeyValidated ? 'Pixabay' : null,
+                  huggingFaceManager.isHuggingFaceApiKeyValidated ? 'HuggingFace' : null
+                ].filter(Boolean).join(', ') || '없음'}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-center text-blue-700 mb-4">🔑 API 키 통합 설정</h3>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-blue-700 mb-2">🔑 API 키 통합 설정</h3>
+                <p className="text-sm text-gray-500 mb-4">더블클릭하면 닫힙니다</p>
+              </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="relative z-[200]">

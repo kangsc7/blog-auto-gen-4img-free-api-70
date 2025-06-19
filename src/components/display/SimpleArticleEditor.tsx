@@ -11,6 +11,14 @@ interface SimpleArticleEditorProps {
   onContentChange: (content: string) => void;
 }
 
+// Script 태그 제거 함수
+const removeScriptTags = (htmlContent: string): string => {
+  console.log('🧹 Script 태그 제거 시작');
+  const cleanedContent = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  console.log('✅ Script 태그 제거 완료');
+  return cleanedContent;
+};
+
 export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
   generatedContent,
   isGeneratingContent,
@@ -59,11 +67,9 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       console.log('이미지 클릭 복사 시도:', imageUrl);
       
-      // 이미지를 fetch하여 blob으로 변환
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       
-      // ClipboardItem으로 이미지 복사
       const clipboardItem = new ClipboardItem({
         [blob.type]: blob
       });
@@ -98,8 +104,29 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
     try {
       const editor = editorRef.current;
       
-      editor.innerHTML = content;
-      console.log('✅ 1차 innerHTML 설정 완료');
+      // 주제 스타일을 H4 크기, 검은색으로 적용
+      let processedContent = content.replace(
+        /<h3([^>]*style="[^"]*color:\s*[^;]*;[^"]*")([^>]*)>/gi,
+        '<h4 style="color: #000000; font-weight: bold; font-size: 1.2em; margin: 20px 0 15px 0; line-height: 1.4;">$2>'
+      );
+      
+      // 주제 H3를 H4로 변경하고 색상을 검은색으로 설정
+      processedContent = processedContent.replace(
+        /<h3([^>]*)>/gi,
+        '<h4 style="color: #000000; font-weight: bold; font-size: 1.2em; margin: 20px 0 15px 0; line-height: 1.4;"$1>'
+      );
+      
+      // H3 종료 태그를 H4로 변경
+      processedContent = processedContent.replace(/<\/h3>/gi, '</h4>');
+      
+      // 주제 뒤에 공백 줄 추가
+      processedContent = processedContent.replace(
+        /(<h4[^>]*>[^<]*<\/h4>)/gi,
+        '$1\n<p style="height: 20px;">&nbsp;</p>'
+      );
+      
+      editor.innerHTML = processedContent;
+      console.log('✅ 1차 innerHTML 설정 완료 (주제 H4 스타일 적용)');
       
       // 이미지 클릭 이벤트 리스너 추가
       const images = editor.querySelectorAll('img');
@@ -123,18 +150,18 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       console.log('✅ 2차 강제 리플로우 완료');
       
       requestAnimationFrame(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== processedContent) {
           console.log('⚠️ 3차 검증 실패 - 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = processedContent;
         } else {
           console.log('✅ 3차 검증 성공');
         }
       });
       
       setTimeout(() => {
-        if (editor.innerHTML !== content) {
+        if (editor.innerHTML !== processedContent) {
           console.log('⚠️ 최종 검증 실패 - 최종 재설정');
-          editor.innerHTML = content;
+          editor.innerHTML = processedContent;
           
           editor.style.opacity = '0';
           setTimeout(() => {
@@ -393,11 +420,17 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    navigator.clipboard.writeText(editorContent).then(() => {
+    console.log('📋 HTML 복사 시작 - Script 태그 제거 적용');
+    
+    // Script 태그 제거된 버전을 클립보드에 복사
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    navigator.clipboard.writeText(cleanedContent).then(() => {
       toast({ 
-        title: "HTML 복사 완료", 
-        description: "HTML 코드가 클립보드에 복사되었습니다. 티스토리 코드 편집창에 붙여넣으세요. 이미지는 클릭해서 별도 복사하세요." 
+        title: "HTML 복사 완료 (Script 태그 제거됨)", 
+        description: "Script 태그가 제거된 HTML 코드가 클립보드에 복사되었습니다. 티스토리 코드 편집창에 안전하게 붙여넣으세요." 
       });
+      console.log('✅ Script 태그 제거된 HTML 복사 완료');
     }).catch(() => {
       toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
     });
@@ -409,17 +442,23 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
       return;
     }
     
-    const blob = new Blob([editorContent], { type: 'text/html;charset=utf-8' });
+    console.log('💾 HTML 다운로드 시작 - Script 태그 제거 적용');
+    
+    // Script 태그 제거된 버전을 다운로드
+    const cleanedContent = removeScriptTags(editorContent);
+    
+    const blob = new Blob([cleanedContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     const filename = selectedTopic ? selectedTopic.replace(/[^a-zA-Z0-9가-힣]/g, '_') : 'article';
-    a.download = `${filename}_edited.html`;
+    a.download = `${filename}_edited_clean.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast({ title: "다운로드 완료", description: "수정된 HTML 파일이 다운로드되었습니다." });
+    toast({ title: "다운로드 완료 (Script 태그 제거됨)", description: "Script 태그가 제거된 HTML 파일이 다운로드되었습니다." });
+    console.log('✅ Script 태그 제거된 HTML 다운로드 완료');
   }, [editorContent, selectedTopic, toast]);
 
   const showDebugInfo = process.env.NODE_ENV === 'development';
@@ -448,6 +487,15 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
         .editor-content img:hover {
           transform: scale(1.02);
           box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* 주제 H4 스타일 강제 적용 */
+        .editor-content h4 {
+          color: #000000 !important;
+          font-size: 1.2em !important;
+          font-weight: bold !important;
+          margin: 20px 0 15px 0 !important;
+          line-height: 1.4 !important;
         }
       `}</style>
       
@@ -484,7 +532,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     className="text-green-600 border-green-600 hover:bg-green-50"
                   >
                     <ClipboardCopy className="h-4 w-4 mr-1" />
-                    HTML 복사
+                    HTML 복사 (Script 제거)
                   </Button>
                   <Button 
                     onClick={handleDownloadHTML}
@@ -493,7 +541,7 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
                     className="text-blue-600 border-blue-600 hover:bg-blue-50"
                   >
                     <Download className="h-4 w-4 mr-1" />
-                    다운로드
+                    다운로드 (Script 제거)
                   </Button>
                 </>
               )}
@@ -518,11 +566,11 @@ export const SimpleArticleEditor: React.FC<SimpleArticleEditorProps> = ({
           ) : editorContent ? (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (티스토리 이미지 복사 지원)</p>
-                <p>아래 내용을 자유롭게 수정하세요. <strong>이미지를 클릭하면 티스토리용 실제 파일이 클립보드에 복사됩니다.</strong></p>
+                <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (Script 태그 제거 지원)</p>
+                <p>아래 내용을 자유롭게 수정하세요. <strong>편집기에는 원본이 표시되지만, HTML 복사/다운로드 시 Script 태그가 자동 제거됩니다.</strong></p>
                 <div className="mt-2 text-xs bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
                   <p className="font-bold text-yellow-800">🎯 티스토리 사용법:</p>
-                  <p>1. HTML 복사 → 티스토리 코드 편집창 붙여넣기</p>
+                  <p>1. HTML 복사 → 티스토리 코드 편집창 붙여넣기 (Script 태그 자동 제거됨)</p>
                   <p>2. 일반 모드로 전환 → 이미지 클릭 → Ctrl+V로 실제 이미지 파일 붙여넣기</p>
                 </div>
                 {isUserEditing && (

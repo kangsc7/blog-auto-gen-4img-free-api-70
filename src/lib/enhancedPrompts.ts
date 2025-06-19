@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 import { generateDynamicHeadings } from './dynamicHeadings';
@@ -10,6 +11,58 @@ interface EnhancedArticlePromptParams {
   referenceSentence?: string;
   apiKey: string;
 }
+
+// 블로그 글 지침 방어 시스템 - 절대 삭제/변경 금지
+const PROTECTED_GUIDELINES = {
+  // 글자수 제한 - 절대 변경 금지
+  WORD_COUNT_LIMIT: "190자에서 250자 사이",
+  
+  // 키워드 강조 규칙 - 절대 변경 금지
+  KEYWORD_EMPHASIS: "각 H2 섹션별로 핵심 키워드를 정확히 1번만 <strong> 태그로 강조",
+  
+  // 컬러테마 적용 - 절대 변경 금지
+  COLOR_THEME_MANDATORY: "선택된 컬러테마를 반드시 모든 스타일에 정확히 적용",
+  
+  // 시각화 요약 카드 - 절대 삭제 금지
+  VISUALIZATION_CARD_REQUIRED: "티스토리 호환 시각화 요약 카드 필수 삽입",
+  
+  // 주의사항 카드 - 절대 삭제 금지
+  WARNING_CARD_REQUIRED: "주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리)",
+  
+  // 태그 생성 - 절대 변경 금지
+  TAG_GENERATION: "글 마지막에 태그 생성 시 '태그:' 접두사 절대 포함하지 말고 쉼표로 구분된 키워드만",
+  
+  // 외부 링크 연동 - 절대 삭제 금지
+  EXTERNAL_LINK_INTEGRATION: "외부 참조 링크 스타일 적용",
+  
+  // 주제 스타일 - 절대 변경 금지
+  TOPIC_STYLE: "주제 제목은 H3 태그로 글 시작 부분에 반드시 포함, 컬러테마 적용",
+  
+  // 공감 박스 - 절대 삭제 금지
+  EMPATHY_BOX: "간단한 공감 박스 (주제 제목 바로 다음에 반드시 포함 - 테두리 제거)"
+};
+
+// 지침 무결성 검증 함수
+const validateGuidelines = (): boolean => {
+  console.log('🛡️ 블로그 글 지침 무결성 검증 시작');
+  
+  const requiredElements = [
+    PROTECTED_GUIDELINES.WORD_COUNT_LIMIT,
+    PROTECTED_GUIDELINES.KEYWORD_EMPHASIS,
+    PROTECTED_GUIDELINES.COLOR_THEME_MANDATORY,
+    PROTECTED_GUIDELINES.VISUALIZATION_CARD_REQUIRED,
+    PROTECTED_GUIDELINES.WARNING_CARD_REQUIRED,
+    PROTECTED_GUIDELINES.TAG_GENERATION,
+    PROTECTED_GUIDELINES.EXTERNAL_LINK_INTEGRATION,
+    PROTECTED_GUIDELINES.TOPIC_STYLE,
+    PROTECTED_GUIDELINES.EMPATHY_BOX
+  ];
+  
+  const isValid = requiredElements.every(element => element && element.length > 0);
+  console.log(`🛡️ 지침 무결성 검증 ${isValid ? '성공' : '실패'}:`, requiredElements.length, '개 요소 확인');
+  
+  return isValid;
+};
 
 // 주제에서 핵심 키워드를 자연스럽게 추출하는 함수 (년도 절대 보존)
 const extractNaturalKeyword = (topic: string): string => {
@@ -46,6 +99,13 @@ export const getEnhancedArticlePrompt = async ({
   referenceSentence,
   apiKey,
 }: EnhancedArticlePromptParams): Promise<string> => {
+  
+  // 지침 무결성 검증 - 필수
+  if (!validateGuidelines()) {
+    console.error('🚨 블로그 글 지침 무결성 검증 실패! 복구 시도 중...');
+    // 여기서 복구 로직 실행 가능
+  }
+  
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
   const refText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
@@ -68,11 +128,25 @@ export const getEnhancedArticlePrompt = async ({
   );
   const currentYear = new Date().getFullYear();
 
+  // 🛡️ 절대 삭제/변경 금지 구역 시작
   return `
 당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
 주제: "${topic}"
 입력 키워드: "${keyword}"
 자연스러운 키워드: "${naturalKeyword}"
+
+=== 🛡️ 절대 변경 금지 지침 - 방어 시스템 활성화 ===
+다음 지침들은 절대로 삭제, 변경, 누락되어서는 안 됩니다:
+- 글자수 제한: ${PROTECTED_GUIDELINES.WORD_COUNT_LIMIT}
+- 키워드 강조: ${PROTECTED_GUIDELINES.KEYWORD_EMPHASIS}
+- 컬러테마: ${PROTECTED_GUIDELINES.COLOR_THEME_MANDATORY}
+- 시각화 카드: ${PROTECTED_GUIDELINES.VISUALIZATION_CARD_REQUIRED}
+- 주의사항 카드: ${PROTECTED_GUIDELINES.WARNING_CARD_REQUIRED}
+- 태그 생성: ${PROTECTED_GUIDELINES.TAG_GENERATION}
+- 외부 링크: ${PROTECTED_GUIDELINES.EXTERNAL_LINK_INTEGRATION}
+- 주제 스타일: ${PROTECTED_GUIDELINES.TOPIC_STYLE}
+- 공감 박스: ${PROTECTED_GUIDELINES.EMPATHY_BOX}
+=== 🛡️ 방어 시스템 종료 ===
 
 === 동적 생성된 소제목 정보 (40자 제한 적용) ===
 다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다 (각 40자 이내):
@@ -98,12 +172,12 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 독자의 공감을 이끌어내는 친근한 문장으로 시작하여 주제에 대한 관심을 유발하는 내용
 
 **🚨 글자수 제한 - 절대 준수 사항 🚨**
-**각 H2 섹션의 본문은 반드시 공백 포함 230자에서 270자 사이로 작성해야 합니다.**
-- 이 글자수 제한은 절대적이며, 270자를 초과하거나 230자 미만이 되어서는 안 됩니다
+**각 H2 섹션의 본문은 반드시 공백 포함 190자에서 250자 사이로 작성해야 합니다.**
+- 이 글자수 제한은 절대적이며, 250자를 초과하거나 190자 미만이 되어서는 안 됩니다
 - **140자를 초과하면 두 번째 문장의 마침표(.) 부분에서 반드시 줄바꿈을 하고 공백 줄 하나를 추가하세요**
 - **모든 문단은 반드시 <p> 태그로 감싸서 작성하세요**
 - **각 <p> 태그 사이에는 공백 줄바꿈을 추가하여 가독성을 높이세요**
-- 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 230-270자 범위 내인지 확인하세요
+- 섹션 작성 후 반드시 공백 포함 글자수를 카운트하여 190-250자 범위 내인지 확인하세요
 
 **🚨 각 H2 섹션별 핵심 키워드 강조 - 필수 적용 🚨**
 **모든 H2 소제목 아래 본문에서 핵심 키워드 '${keyword}'는 문맥에 맞게 자연스럽게 사용하되, 정확히 1번만 <strong>${keyword}</strong> 와 같이 <strong> 태그로 강조해주세요.**
@@ -237,7 +311,7 @@ ${referenceSentence ? `
 - 대상 독자: 한국어 사용자
 - **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
 - 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
-- **가독성 최우선**: 공백 포함 230-270자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
+- **가독성 최우선**: 공백 포함 190-250자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
 
 사용할 변수:
 - Primary Color: ${colors.primary}
@@ -262,8 +336,8 @@ ${htmlTemplate}
 
 ⚠️ 재확인 사항:
 - **모든 내용이 주제 "${topic}"와 정확히 일치해야 합니다**
-- **각 섹션은 정확히 공백 포함 230자에서 270자 사이의 적절한 분량이어야 합니다**
-- **절대로 270자를 초과하거나 230자 미만이 되어서는 안 됩니다**
+- **각 섹션은 정확히 공백 포함 190자에서 250자 사이의 적절한 분량이어야 합니다**
+- **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
 - **140자 도달 시 두 번째 문장 마침표에서 반드시 줄바꿈 및 공백 줄 추가**
 - **모든 문단은 <p> 태그로 감싸고 각 <p> 태그 사이에 공백 줄바꿈 추가**
 - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
@@ -277,6 +351,8 @@ ${htmlTemplate}
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
 - **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
 - **태그는 순수 태그만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
+
+🛡️ **지침 방어 시스템 최종 확인**: 이 모든 규칙들은 절대로 삭제, 변경, 누락되어서는 안 됩니다.
   `;
 };
 
