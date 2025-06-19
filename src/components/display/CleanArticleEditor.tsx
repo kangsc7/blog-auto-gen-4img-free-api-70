@@ -24,137 +24,117 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-  const [contentSyncKey, setContentSyncKey] = useState(0);
+  const initLockRef = useRef(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // 콘텐츠 강제 동기화 함수
-  const forceSyncContent = (content: string) => {
-    console.log('🔄 콘텐츠 강제 동기화 시작:', content.length + '자');
+  // 안전한 localStorage 저장
+  const saveToStorage = (content: string) => {
+    try {
+      localStorage.setItem(UNIFIED_EDITOR_KEY, content);
+      console.log('✅ 편집기 내용 저장 완료:', content.length + '자');
+    } catch (error) {
+      console.error('❌ 편집기 내용 저장 실패:', error);
+    }
+  };
+
+  // 안전한 localStorage 로드
+  const loadFromStorage = (): string => {
+    try {
+      const saved = localStorage.getItem(UNIFIED_EDITOR_KEY);
+      console.log('📖 편집기 내용 로드:', saved ? saved.length + '자' : '없음');
+      return saved || '';
+    } catch (error) {
+      console.error('❌ 편집기 내용 로드 실패:', error);
+      return '';
+    }
+  };
+
+  // 편집기 내용 업데이트 (중복 방지)
+  const updateEditorContent = (content: string, source: string) => {
+    if (content === editorContent) {
+      console.log(`⏭️ 편집기 내용 동일 - ${source} 건너뜀`);
+      return;
+    }
+
+    console.log(`🔄 편집기 내용 업데이트 - ${source}:`, content.length + '자');
     
     setEditorContent(content);
     
-    if (editorRef.current) {
+    if (editorRef.current && editorRef.current.innerHTML !== content) {
       editorRef.current.innerHTML = content;
-      setTimeout(() => addImageClickHandlers(), 300);
-    }
-    
-    // 영구 저장
-    try {
-      localStorage.setItem(UNIFIED_EDITOR_KEY, content);
-      console.log('✅ 강제 동기화 저장 완료:', content.length + '자');
-    } catch (error) {
-      console.error('❌ 강제 동기화 저장 실패:', error);
+      setTimeout(() => addImageClickHandlers(), 100);
     }
     
     onContentChange(content);
-    setContentSyncKey(prev => prev + 1);
-  };
-
-  // 통합된 콘텐츠 로드 함수
-  const loadUnifiedContent = () => {
-    try {
-      const savedContent = localStorage.getItem(UNIFIED_EDITOR_KEY);
-      console.log('🔄 통합 편집기 콘텐츠 로드 시도:', { 
-        hasLocal: !!savedContent, 
-        hasGenerated: !!generatedContent,
-        localLength: savedContent?.length || 0,
-        generatedLength: generatedContent?.length || 0,
-        isGenerating: isGeneratingContent
-      });
-      
-      // 생성 중이 아니고 새로운 콘텐츠가 있으면 우선 적용
-      if (!isGeneratingContent && generatedContent && generatedContent.length > 100) {
-        console.log('🆕 새 생성 콘텐츠 우선 적용');
-        forceSyncContent(generatedContent);
-        return true;
-      }
-      
-      // 기존 저장된 콘텐츠 로드
-      const finalContent = savedContent || '';
-      
-      if (finalContent && finalContent !== editorContent) {
-        console.log('💾 기존 저장 콘텐츠 로드:', finalContent.length + '자');
-        setEditorContent(finalContent);
-        
-        if (editorRef.current) {
-          editorRef.current.innerHTML = finalContent;
-          setTimeout(() => addImageClickHandlers(), 300);
-        }
-        
-        onContentChange(finalContent);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('❌ 통합 콘텐츠 로드 실패:', error);
-      return false;
+    
+    // 디바운스된 저장
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveToStorage(content);
+    }, 500);
   };
 
-  // 초기 로드
+  // 초기 로드 (한 번만 실행)
   useEffect(() => {
-    if (!isInitialized) {
-      console.log('🚀 편집기 초기화 시작');
-      loadUnifiedContent();
+    if (!isInitialized && !initLockRef.current) {
+      initLockRef.current = true;
+      console.log('🚀 편집기 초기 로드 시작');
+      
+      const savedContent = loadFromStorage();
+      if (savedContent) {
+        updateEditorContent(savedContent, '초기로드');
+      }
+      
       setIsInitialized(true);
     }
   }, []);
 
-  // 새 생성 콘텐츠 감지 및 즉시 적용 - 생성 완료 시점 감지
+  // 새 생성 콘텐츠 처리 (생성 완료 시에만)
   useEffect(() => {
-    // 생성이 완료되고 새로운 콘텐츠가 있을 때
-    if (!isGeneratingContent && generatedContent && generatedContent.length > 100) {
-      console.log('🎯 생성 완료 감지 - 새 콘텐츠 즉시 적용:', generatedContent.length + '자');
-      
-      // 즉시 강제 동기화
-      setTimeout(() => {
-        forceSyncContent(generatedContent);
-      }, 100);
+    if (!isGeneratingContent && generatedContent && generatedContent.length > 100 && isInitialized) {
+      console.log('🎯 새 생성 콘텐츠 감지:', generatedContent.length + '자');
+      updateEditorContent(generatedContent, '새생성');
     }
-  }, [isGeneratingContent, generatedContent]);
+  }, [isGeneratingContent, generatedContent, isInitialized]);
 
-  // 편집기 콘텐츠 업데이트 이벤트 리스너
+  // 글로벌 이벤트 리스너
   useEffect(() => {
     const handleContentUpdate = (event: CustomEvent) => {
       const newContent = event.detail.content;
-      console.log('📢 편집기 콘텐츠 업데이트 이벤트 수신:', newContent.length + '자');
-      
-      if (newContent && newContent !== editorContent) {
-        forceSyncContent(newContent);
+      if (newContent && isInitialized) {
+        console.log('📢 글로벌 콘텐츠 업데이트 이벤트:', newContent.length + '자');
+        updateEditorContent(newContent, '글로벌이벤트');
       }
     };
-    
+
+    const handleAppReset = () => {
+      console.log('🔄 앱 리셋 이벤트');
+      updateEditorContent('', '앱리셋');
+      localStorage.removeItem(UNIFIED_EDITOR_KEY);
+    };
+
     window.addEventListener('editor-content-updated', handleContentUpdate as EventListener);
+    window.addEventListener('app-reset', handleAppReset);
+    
     return () => {
       window.removeEventListener('editor-content-updated', handleContentUpdate as EventListener);
+      window.removeEventListener('app-reset', handleAppReset);
     };
-  }, [editorContent]);
+  }, [isInitialized]);
 
-  // 통합 영구 저장 함수
-  const savePermanently = (content: string) => {
-    try {
-      localStorage.setItem(UNIFIED_EDITOR_KEY, content);
-      console.log('💾 통합 편집기 영구 저장:', content.length + '자');
-    } catch (error) {
-      console.error('❌ 통합 편집기 저장 실패:', error);
-      toast({
-        title: "저장 실패",
-        description: "저장 공간이 부족할 수 있습니다.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // 페이지 이벤트에서 즉시 저장
+  // 페이지 종료 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (editorContent) {
-        savePermanently(editorContent);
+        saveToStorage(editorContent);
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden && editorContent) {
-        savePermanently(editorContent);
+        saveToStorage(editorContent);
       }
     };
 
@@ -164,114 +144,48 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
     };
   }, [editorContent]);
 
-  // 앱 초기화 이벤트 리스너
-  useEffect(() => {
-    const handleAppReset = () => {
-      console.log('🔄 편집기 초기화 이벤트 수신');
-      permanentClearEditor();
-    };
-    
-    window.addEventListener('app-reset', handleAppReset);
-    return () => {
-      window.removeEventListener('app-reset', handleAppReset);
-    };
-  }, []);
-
-  // 글로벌 이미지 클릭 핸들러 함수 등록
-  useEffect(() => {
-    (window as any).copyImageToClipboard = async (imageUrl: string) => {
-      try {
-        console.log('🖼️ 티스토리용 이미지 복사 시도:', imageUrl);
-        
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        
-        const clipboardItem = new ClipboardItem({
-          [blob.type]: blob
-        });
-        
-        await navigator.clipboard.write([clipboardItem]);
-        
-        toast({
-          title: "✅ 티스토리용 이미지 복사 완료!",
-          description: "티스토리에서 Ctrl+V로 붙여넣으세요. 대표이미지 설정도 가능합니다.",
-          duration: 4000
-        });
-        
-      } catch (error) {
-        console.error('❌ 이미지 복사 실패:', error);
-        toast({
-          title: "⚠️ 이미지 복사 실패",
-          description: "이미지 우클릭 → '이미지 복사'를 시도해보세요.",
-          variant: "default",
-          duration: 3000
-        });
-      }
-    };
-
-    return () => {
-      delete (window as any).copyImageToClipboard;
-    };
-  }, [toast]);
-
-  // 이미지 클릭 핸들러 - 로컬 버전
-  const handleImageClick = async (imageUrl: string) => {
-    try {
-      console.log('🖼️ 로컬 이미지 클릭 복사 시도:', imageUrl);
-      
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      
-      const clipboardItem = new ClipboardItem({
-        [blob.type]: blob
-      });
-      
-      await navigator.clipboard.write([clipboardItem]);
-      
-      toast({
-        title: "✅ 이미지 복사 완료!",
-        description: "티스토리에서 Ctrl+V로 붙여넣으세요.",
-        duration: 3000
-      });
-      
-    } catch (error) {
-      console.error('❌ 이미지 복사 실패:', error);
-      toast({
-        title: "⚠️ 이미지 복사 실패",
-        description: "이미지 우클릭 → '이미지 복사'를 시도해보세요.",
-        variant: "default",
-        duration: 3000
-      });
-    }
-  };
-
-  // 이미지에 클릭 이벤트 추가
+  // 이미지 클릭 핸들러
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
       console.log('🖼️ 이미지 클릭 핸들러 추가:', images.length + '개');
       
-      images.forEach((img, index) => {
+      images.forEach((img) => {
         img.style.cursor = 'pointer';
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
         img.style.transition = 'all 0.3s ease';
         img.title = '🖱️ 클릭하면 티스토리용으로 이미지가 복사됩니다';
         
-        // 기존 이벤트 리스너 제거
-        img.onclick = null;
-        img.onmouseover = null;
-        img.onmouseout = null;
-        
-        // 새로운 이벤트 리스너 추가
-        img.onclick = () => {
+        img.onclick = async () => {
           const src = img.getAttribute('src') || img.getAttribute('data-image-url');
           if (src) {
-            console.log(`🖼️ ${index+1}번째 이미지 클릭:`, src);
-            handleImageClick(src);
+            try {
+              const response = await fetch(src);
+              const blob = await response.blob();
+              const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+              await navigator.clipboard.write([clipboardItem]);
+              
+              toast({
+                title: "✅ 이미지 복사 완료!",
+                description: "티스토리에서 Ctrl+V로 붙여넣으세요.",
+                duration: 3000
+              });
+            } catch (error) {
+              console.error('❌ 이미지 복사 실패:', error);
+              toast({
+                title: "⚠️ 이미지 복사 실패",
+                description: "이미지 우클릭 → '이미지 복사'를 시도해보세요.",
+                variant: "default",
+                duration: 3000
+              });
+            }
           }
         };
         
@@ -288,33 +202,12 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 사용자 편집 처리 및 즉시 저장
+  // 사용자 편집 처리
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
-      setEditorContent(newContent);
-      onContentChange(newContent);
-      
-      // 편집 중 즉시 저장
-      savePermanently(newContent);
-      
-      // 이미지 클릭 핸들러 다시 추가
+      updateEditorContent(newContent, '사용자편집');
       setTimeout(() => addImageClickHandlers(), 100);
-    }
-  };
-
-  // 편집기 내용 영구 삭제
-  const permanentClearEditor = () => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
-      setEditorContent('');
-      localStorage.removeItem(UNIFIED_EDITOR_KEY);
-      onContentChange('');
-      
-      toast({ 
-        title: "🗑️ 편집기 영구 초기화", 
-        description: "편집기 내용이 영구적으로 삭제되었습니다." 
-      });
     }
   };
 
@@ -446,7 +339,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                   overflowWrap: 'break-word',
                   minWidth: '0'
                 }}
-                key={contentSyncKey}
+                dangerouslySetInnerHTML={{ __html: editorContent }}
               />
             </div>
           ) : (
