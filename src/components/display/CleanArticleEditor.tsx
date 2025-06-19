@@ -408,7 +408,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                 가 매력적인 블로그 글을 생성 중입니다...
               </p>
               <p className="text-sm">잠시만 기다려주세요.</p>
-              <style jsx>{`
+              <style>{`
                 @keyframes wave {
                   0%, 100% { transform: translateY(0px); }
                   50% { transform: translateY(-10px); }
