@@ -1,19 +1,65 @@
 const getCssStyles = (colors: any): string => `
+/* 모바일 최적화 - 강력한 우선순위로 여백 최소화 */
 @media (max-width: 768px) { 
-  .wrapper-div { padding: 0 15px; }
+  .wrapper-div { 
+    padding: 0 10px !important; 
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  * {
+    box-sizing: border-box !important;
+  }
   /* 모바일에서 이미지 더 크게 표시 */
   img { 
     max-width: 100% !important; 
     min-height: 250px !important; 
     object-fit: cover !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
 }
 @media (max-width: 480px) {
+  .wrapper-div {
+    padding: 0 10px !important;
+    margin: 0 !important;
+  }
   /* 작은 모바일에서도 충분한 크기 보장 */
   img { 
     min-height: 200px !important; 
   }
 }
+
+/* 이미지 복사 최적화 - 티스토리 호환성 개선 */
+.copyable-image {
+  cursor: pointer !important;
+  border: 2px dashed transparent !important;
+  transition: border-color 0.3s ease !important;
+  display: block !important;
+  margin: 20px auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px !important;
+}
+
+.copyable-image:hover {
+  border-color: #3b82f6 !important;
+}
+
+.image-copy-notice {
+  background-color: #eff6ff !important;
+  border: 1px solid #dbeafe !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  color: #1e40af !important;
+  text-align: center !important;
+}
+
 .single-summary-card-container{font-family:'Noto Sans KR',sans-serif;display:flex;justify-content:center;align-items:center;padding:25px 15px;background-color:${colors.highlight};margin:25px 0}.single-summary-card{width:100%;max-width:700px;background-color:#ffffff;border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:30px;display:flex;flex-direction:column;overflow:hidden;border:1px solid ${colors.highlightBorder};box-sizing:border-box}.single-summary-card .card-header{display:flex;align-items:center;border-bottom:2px solid ${colors.primary};padding-bottom:15px;margin-bottom:15px}.single-summary-card .card-header-icon{font-size:38px;color:${colors.primary};margin-right:16px}.single-summary-card .card-header h3{font-size:28px;color:${colors.primary};margin:0;line-height:1.3;font-weight:700}.single-summary-card .card-content{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-start;font-size:18px;line-height:1.7;color:#333}.single-summary-card .card-content .section{margin-bottom:12px;line-height:1.7}.single-summary-card .card-content .section:last-child{margin-bottom:0}.single-summary-card .card-content strong{color:${colors.primary};font-weight:600}.single-summary-card .card-content .highlight{background-color:${colors.textHighlight};padding:3px 8px;border-radius:4px;font-weight:bold}.single-summary-card .card-content .formula{background-color:${colors.secondary};padding:8px 12px;border-radius:6px;font-size:0.95em;text-align:center;margin-top:8px;color:${colors.primary}}.single-summary-card .card-footer{font-size:15px;color:#777;text-align:center;padding-top:15px;border-top:1px dashed ${colors.highlightBorder};margin-top:auto}@media (max-width:768px){.single-summary-card-container{padding:20px 10px}.single-summary-card{padding:22px;border-radius:10px}.single-summary-card .card-header-icon{font-size:32px;margin-right:12px}.single-summary-card .card-header h3{font-size:24px}.single-summary-card .card-content{font-size:16px;line-height:1.6}.single-summary-card .card-content .section{margin-bottom:10px;line-height:1.6}.single-summary-card .card-content .highlight{padding:2px 5px}.single-summary-card .card-content .formula{padding:7px 10px;font-size:.9em}.single-summary-card .card-footer{font-size:14px;padding-top:12px}}@media (max-width:480px){.single-summary-card{padding:18px;border-radius:8px}.single-summary-card .card-header-icon{font-size:28px;margin-right:10px}.single-summary-card .card-header h3{font-size:20px}.single-summary-card .card-content{font-size:15px;line-height:1.5}.single-summary-card .card-content .section{margin-bottom:8px;line-height:1.5}.single-summary-card .card-content .formula{padding:6px 8px;font-size:.85em}.single-summary-card .card-footer{font-size:13px;padding-top:10px}}
 .content-table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 16px; }
 .content-table th { padding: 14px; text-align: left; border: 1px solid #ddd; background-color: #f5f5f5; font-weight: bold; color: #333; }
@@ -151,6 +197,10 @@ A: 주소 변경 신고를 하시면 새로운 주소에서도 계속 사용 가
 
 <p style="margin-bottom: 0; font-size: 16px; line-height: 1.6;"><strong>Q: 카드를 분실했을 때는 어떻게 하나요?</strong><br>
 A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시면 됩니다. 잔액은 그대로 보호되니 걱정하지 마세요.</p>
+</div>
+
+<div class="image-copy-notice">
+💡 <strong>이미지 활용 팁:</strong> 아래 이미지를 클릭하면 클립보드에 복사됩니다. 티스토리에서 Ctrl+V로 붙여넣기 후 대표 이미지로 설정하세요!
 </div>
 ` : ''}
 

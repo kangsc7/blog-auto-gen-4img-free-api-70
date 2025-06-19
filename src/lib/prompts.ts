@@ -1,4 +1,3 @@
-
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -86,4 +85,50 @@ export const getArticlePrompt = ({
 ${htmlTemplate}
 --- HTML TEMPLATE END ---
       `;
+};
+
+export const createImagePrompt = async (
+  text: string,
+  geminiApiKey: string,
+  targetLanguage: string = 'English',
+  style: string = 'modern digital art',
+  mood: string = 'professional',
+  additionalContext: string = ''
+): Promise<string> => {
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
+  
+  const prompt = `다음 한국어 텍스트를 ${targetLanguage} 이미지 생성 프롬프트로 변환해주세요.
+  스타일: ${style}
+  분위기: ${mood}
+  추가 컨텍스트: ${additionalContext}
+  
+  텍스트: "${text}"
+  
+  요구사항:
+  - 구체적이고 시각적인 묘사
+  - 이미지 생성 AI가 이해하기 쉬운 형태
+  - 색상, 구도, 조명 등 세부사항 포함
+  - 불필요한 텍스트나 문자 제외
+  
+  ${targetLanguage} 프롬프트만 출력해주세요:`;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API 호출 실패');
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  } catch (error) {
+    console.error('이미지 프롬프트 생성 오류:', error);
+    return '';
+  }
 };
