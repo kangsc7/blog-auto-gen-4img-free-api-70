@@ -19,7 +19,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleReferenceUrlChange = (url: string) => {
-    saveAppState({ referenceUrl: url });
+    saveAppState({ referenceLink: url });
   };
 
   const handleReferenceSentenceChange = (sentence: string) => {
@@ -28,7 +28,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
 
   const clearReferenceData = () => {
     saveAppState({ 
-      referenceUrl: '', 
+      referenceLink: '', 
       referenceSentence: '' 
     });
   };
@@ -61,7 +61,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
             <label className="block text-sm font-semibold text-gray-700 mb-2">외부 참조 링크</label>
             <Input
               placeholder="관련 웹사이트 URL을 입력하세요 (예: https://example.com)"
-              value={appState.referenceUrl}
+              value={appState.referenceLink || ''}
               onChange={(e) => handleReferenceUrlChange(e.target.value)}
             />
             <p className="text-xs text-gray-500 mt-1">블로그 글 하단에 추가될 외부 링크입니다.</p>
@@ -71,14 +71,14 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
             <label className="block text-sm font-semibold text-gray-700 mb-2">링크 설명 문구</label>
             <Textarea
               placeholder="링크에 대한 설명을 입력하세요 (예: 더 자세한 정보 확인하기)"
-              value={appState.referenceSentence}
+              value={appState.referenceSentence || ''}
               onChange={(e) => handleReferenceSentenceChange(e.target.value)}
               className="min-h-16"
             />
             <p className="text-xs text-gray-500 mt-1">링크와 함께 표시될 설명 문구입니다.</p>
           </div>
 
-          {(appState.referenceUrl || appState.referenceSentence) && (
+          {(appState.referenceLink || appState.referenceSentence) && (
             <Button
               onClick={clearReferenceData}
               variant="outline"
