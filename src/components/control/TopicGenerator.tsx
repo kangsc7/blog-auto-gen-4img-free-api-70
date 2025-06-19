@@ -10,16 +10,22 @@ interface TopicGeneratorProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
   isGeneratingTopics: boolean;
-  generateTopics: () => Promise<void>;
-  selectTopic: (topic: string) => void;
+  generateTopicsFromKeyword: (keywordOverride?: string) => Promise<string[] | null>;
+  manualTopic: string;
+  setManualTopic: React.Dispatch<React.SetStateAction<string>>;
+  handleManualTopicAdd: () => void;
+  preventDuplicates: boolean;
 }
 
 export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   appState,
   saveAppState,
   isGeneratingTopics,
-  generateTopics,
-  selectTopic,
+  generateTopicsFromKeyword,
+  manualTopic,
+  setManualTopic,
+  handleManualTopicAdd,
+  preventDuplicates,
 }) => {
   return (
     <Card className="shadow-md">
@@ -34,7 +40,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           <label className="block text-sm font-semibold text-gray-700 mb-2">핵심 키워드</label>
           <Input
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
-            value={appState.keyword || ''}
+            value={appState.keyword}
             onChange={(e) => saveAppState({ keyword: e.target.value })}
           />
           <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
@@ -56,9 +62,14 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           </div>
         </div>
 
+        {/* 중복 설정 상태 표시 */}
+        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+          현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
+        </div>
+
         <Button 
-          onClick={generateTopics}
-          disabled={!(appState.keyword || '').trim() || isGeneratingTopics || !appState.isApiKeyValidated}
+          onClick={() => generateTopicsFromKeyword()}
+          disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
           className={`w-full transition-all duration-300 ${
             isGeneratingTopics 
               ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
@@ -79,29 +90,25 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           )}
         </Button>
 
-        {/* 주제 목록 표시 */}
-        {appState.topics && appState.topics.length > 0 && (
-          <div className="border-t pt-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              생성된 주제 목록 ({appState.topics.length}개)
-            </label>
-            <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
-              {appState.topics.map((topic, index) => (
-                <div
-                  key={index}
-                  onClick={() => selectTopic(topic)}
-                  className={`p-3 border rounded cursor-pointer transition-colors text-sm ${
-                    appState.selectedTopic === topic 
-                      ? 'bg-blue-50 border-blue-300' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  {topic}
-                </div>
-              ))}
-            </div>
+        <div className="border-t pt-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">수동 주제 입력</label>
+          <div className="flex space-x-2">
+            <Input
+              placeholder="직접 주제를 입력해주세요"
+              value={manualTopic}
+              onChange={(e) => setManualTopic(e.target.value)}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleManualTopicAdd}
+              disabled={!manualTopic.trim()}
+              variant="outline"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              추가
+            </Button>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

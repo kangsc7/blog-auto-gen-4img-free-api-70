@@ -241,20 +241,12 @@ const Index = () => {
       <MainContentSection
         appState={appState}
         saveAppState={saveAppState}
-        isGeneratingTopics={generationStatus.isGeneratingTopics}
-        generateTopics={() => generationFunctions.generateTopics()}
-        isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticle={generationFunctions.generateArticle}
-        stopArticleGeneration={generationFunctions.stopArticleGeneration}
-        selectTopic={topicControls.selectTopic}
-        isGeneratingImage={generationStatus.isGeneratingImage}
-        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-        createImagePrompt={generationFunctions.createImagePrompt}
-        generateDirectImage={generationFunctions.generateDirectImage}
-        copyToClipboard={utilityFunctions.copyToClipboard}
-        openWhisk={utilityFunctions.openWhisk}
-        huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
-        hasAccess={hasAccess || isAdmin}
+        generationStatus={generationStatus}
+        generationFunctions={generationFunctions}
+        topicControls={topicControls}
+        utilityFunctions={utilityFunctions}
+        preventDuplicates={preventDuplicates}
+        handleTopicConfirm={handleTopicConfirm}
       />
 
       {/* Hugging Face 이미지 생성기 */}
