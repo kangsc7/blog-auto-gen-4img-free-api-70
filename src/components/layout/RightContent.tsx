@@ -25,6 +25,10 @@ export const RightContent: React.FC<RightContentProps> = ({
     isGeneratingContent,
     onTopicConfirm,
 }) => {
+    const handleContentChange = (content: string) => {
+        saveAppState({ generatedContent: content });
+    };
+
     return (
         <div className="lg:col-span-8 space-y-6">
             <TopicList
@@ -35,9 +39,10 @@ export const RightContent: React.FC<RightContentProps> = ({
             />
 
             <SimpleArticleEditor
-                appState={appState}
-                saveAppState={saveAppState}
+                generatedContent={appState.generatedContent}
                 isGeneratingContent={isGeneratingContent}
+                selectedTopic={appState.selectedTopic}
+                onContentChange={handleContentChange}
             />
 
             {appState.generatedContent && (

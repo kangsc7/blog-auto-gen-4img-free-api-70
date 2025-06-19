@@ -1,59 +1,64 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { RotateCcw } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Youtube, BarChart3, CreditCard, DollarSign } from 'lucide-react';
 
-interface TopNavigationProps {
-  resetAppState?: () => void;
-  preventDuplicates?: boolean;
-  setPreventDuplicates?: (value: boolean) => void;
-  canUseFeatures?: boolean;
-}
+export const TopNavigation: React.FC = () => {
+  const location = useLocation();
+  
+  const navItems = [
+    { 
+      path: '/youtube-generator', 
+      label: '블로그 글 유튜브 자동 생성', 
+      icon: <Youtube className="h-4 w-4" /> 
+    },
+    { 
+      path: '/infographic-generator', 
+      label: '인포그래픽 생성', 
+      icon: <BarChart3 className="h-4 w-4" /> 
+    },
+    { 
+      path: '/pricing', 
+      label: '가격', 
+      icon: <DollarSign className="h-4 w-4" /> 
+    },
+    { 
+      path: '/payment', 
+      label: '결제', 
+      icon: <CreditCard className="h-4 w-4" /> 
+    },
+  ];
 
-export const TopNavigation: React.FC<TopNavigationProps> = ({
-  resetAppState,
-  preventDuplicates,
-  setPreventDuplicates,
-  canUseFeatures
-}) => {
   return (
-    <div className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-800">AI 블로그 생성기</h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* 중복 방지 토글 */}
-            {setPreventDuplicates && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">중복 방지:</span>
-                <Button
-                  variant={preventDuplicates ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPreventDuplicates(!preventDuplicates)}
-                >
-                  {preventDuplicates ? "켜짐" : "꺼짐"}
-                </Button>
-              </div>
-            )}
-            
-            {/* 초기화 버튼 */}
-            {resetAppState && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetAppState}
-                className="flex items-center space-x-1"
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>초기화</span>
-              </Button>
-            )}
-          </div>
+    <nav className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-center space-x-1 py-3">
+          <Link
+            to="/"
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+              location.pathname === '/' 
+                ? 'bg-white text-blue-600 shadow-md' 
+                : 'text-white hover:bg-white/20'
+            }`}
+          >
+            홈
+          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                location.pathname === item.path 
+                  ? 'bg-white text-blue-600 shadow-md' 
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
-    </div>
+    </nav>
   );
 };

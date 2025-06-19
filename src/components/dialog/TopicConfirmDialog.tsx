@@ -25,19 +25,11 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  // 한 번만 실행되도록 중복 방지 처리
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('TopicConfirmDialog 확인 버튼 클릭됨:', topic);
-    
-    // 즉시 다이얼로그 닫기 (상태 업데이트 먼저)
-    onCancel(); // 다이얼로그를 먼저 닫고
-    
-    // 약간의 딜레이 후 확인 액션 실행
-    setTimeout(() => {
-      onConfirm();
-    }, 100);
+    console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
+    onConfirm();
   };
 
   const handleCancel = (e?: React.MouseEvent) => {
@@ -45,10 +37,11 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    console.log('TopicConfirmDialog 취소 버튼 클릭됨');
+    console.log('TopicConfirmDialog handleCancel 호출됨');
     onCancel();
   };
 
+  // onOpenChange 제거하여 명시적인 버튼 클릭만 처리
   return (
     <AlertDialog open={isOpen} onOpenChange={() => {}}>
       <AlertDialogContent className="max-w-md">
