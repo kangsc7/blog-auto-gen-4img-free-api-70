@@ -30,7 +30,7 @@ export const RightContent: React.FC<RightContentProps> = ({
     };
 
     return (
-        <div className="w-full min-w-0 flex-1 space-y-6">
+        <div className="w-full space-y-6">
             <TopicList
                 topics={appState.topics}
                 selectedTopic={appState.selectedTopic}

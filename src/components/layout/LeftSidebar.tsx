@@ -49,7 +49,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   deleteReferenceData,
 }) => {
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
