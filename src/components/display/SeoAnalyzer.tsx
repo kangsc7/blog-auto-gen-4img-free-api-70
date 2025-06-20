@@ -59,21 +59,13 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
     console.log('총 단어 수:', wordCount);
     console.log('HTML 내용 (일부):', generatedContent.substring(0, 500));
 
-    // 1. Word Count Score - 수정된 기준 (현재 글 길이 기준 90% 목표)
+    // 1. Word Count Score
     let wordCountScore = 0;
-    if (wordCount >= 600) {
-      wordCountScore = 100; // 600단어 이상이면 100점
-    } else if (wordCount >= 500) {
-      wordCountScore = 90; // 500단어 이상이면 90점
-    } else if (wordCount >= 400) {
-      wordCountScore = 80; // 400단어 이상이면 80점
-    } else if (wordCount >= 300) {
-      wordCountScore = 70; // 300단어 이상이면 70점
-    } else if (wordCount >= 200) {
-      wordCountScore = 50; // 200단어 이상이면 50점
-    } else {
-      wordCountScore = 20; // 200단어 미만은 20점
-    }
+    if (wordCount > 1500) wordCountScore = 100;
+    else if (wordCount > 1000) wordCountScore = 80;
+    else if (wordCount > 500) wordCountScore = 60;
+    else if (wordCount > 300) wordCountScore = 40;
+    else wordCountScore = 10;
 
     // 2. Keyword in Title Score - 개선된 로직
     let keywordInTitleScore = 0;
@@ -111,9 +103,9 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       console.log('제목에 키워드 포함 여부:', titleHasKeyword);
     }
 
-    // 3. Keyword Density Score - 수정된 로직 (5개 이상이면 100%)
+    // 3. Keyword Density Score - 개선된 로직
     let keywordDensityScore = 0;
-    let keywordCount = 0;
+    let actualDensity = 0;
     if (keyword && wordCount > 0) {
       // 정확한 키워드 매칭과 부분 매칭 모두 고려
       const exactMatches = (textContent.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
@@ -130,25 +122,35 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
       });
 
       // 전체 키워드 출현 횟수 (정확한 매칭 + 부분 매칭의 일부)
-      keywordCount = exactMatches + Math.floor(partialMatches * 0.3);
+      const totalKeywordCount = exactMatches + Math.floor(partialMatches * 0.3);
+      actualDensity = (totalKeywordCount / wordCount) * 100;
       
       console.log('정확한 키워드 매칭 수:', exactMatches);
       console.log('부분 키워드 매칭 수:', partialMatches);
-      console.log('총 키워드 카운트:', keywordCount);
+      console.log('총 키워드 카운트:', totalKeywordCount);
+      console.log('실제 키워드 밀도:', actualDensity.toFixed(2) + '%');
       
-      // 5개 이상이면 100점, 그 이하는 비례적으로 점수 부여
-      if (keywordCount >= 5) {
+      // 더 관대한 키워드 밀도 기준
+      if (actualDensity >= 1.0 && actualDensity <= 3.0) {
         keywordDensityScore = 100;
-      } else if (keywordCount >= 4) {
+      } 
+      else if (actualDensity >= 0.7 && actualDensity < 1.0) {
+        keywordDensityScore = 85;
+      }
+      else if (actualDensity >= 0.5 && actualDensity < 0.7) {
+        keywordDensityScore = 70;
+      }
+      else if (actualDensity >= 0.3 && actualDensity < 0.5) {
+        keywordDensityScore = 50;
+      }
+      else if (actualDensity > 3.0 && actualDensity <= 4.0) {
         keywordDensityScore = 80;
-      } else if (keywordCount >= 3) {
+      }
+      else if (actualDensity > 4.0 && actualDensity <= 5.0) {
         keywordDensityScore = 60;
-      } else if (keywordCount >= 2) {
-        keywordDensityScore = 40;
-      } else if (keywordCount >= 1) {
+      }
+      else {
         keywordDensityScore = 20;
-      } else {
-        keywordDensityScore = 0;
       }
     }
 
@@ -213,7 +215,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
 
     const newDebugInfo = {
       wordCount,
-      keywordCount,
+      actualDensity: actualDensity.toFixed(2),
       h2Count,
       h2WithKeywordCount,
       h2Texts: h2Texts.join(', '),
@@ -261,7 +263,7 @@ export const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ generatedContent, keyw
         
         {/* 디버그 정보 (개발용) */}
         <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-          <p>디버그: 단어수 {debugInfo.wordCount}, 키워드수 {debugInfo.keywordCount}개, H2개수 {debugInfo.h2Count}, 키워드H2 {debugInfo.h2WithKeywordCount}개</p>
+          <p>디버그: 단어수 {debugInfo.wordCount}, 키워드밀도 {debugInfo.actualDensity}%, H2개수 {debugInfo.h2Count}, 키워드H2 {debugInfo.h2WithKeywordCount}개</p>
           <p>H2 제목들: {debugInfo.h2Texts}</p>
         </div>
         

@@ -5,7 +5,6 @@ import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
 import { getEnhancedArticlePrompt } from '@/lib/enhancedPrompts';
 import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
-import { generateDynamicHeadings } from '@/lib/dynamicHeadings';
 
 export const useArticleGenerator = (
   appState: AppState,
@@ -55,20 +54,8 @@ export const useArticleGenerator = (
         throw new Error("사용자에 의해 중단되었습니다.");
       }
 
-      // 동적 소제목 생성
       toast({ 
-        title: "🔄 1단계: 맞춤형 소제목 생성", 
-        description: "주제에 적합한 검색 키워드 기반 소제목을 AI가 분석하여 생성 중입니다." 
-      });
-
-      const dynamicHeadings = await generateDynamicHeadings(coreKeyword, selectedTopic, appState.apiKey!);
-      
-      if (cancelArticleGeneration.current) {
-        throw new Error("사용자에 의해 중단되었습니다.");
-      }
-
-      toast({ 
-        title: "🚀 2단계: 블로그 글 생성 중", 
+        title: "🚀 1단계: 블로그 글 생성 중", 
         description: "컬러테마, 시각카드, 외부링크 연동하여 고품질 글 작성 중입니다." 
       });
 
@@ -79,7 +66,6 @@ export const useArticleGenerator = (
       console.log('🎨 랜덤 선택된 컬러테마:', selectedColorTheme);
       console.log('🔗 외부 참조 링크:', appState.referenceLink);
       console.log('📝 외부 참조 문장:', appState.referenceSentence);
-      console.log('📋 동적 생성된 소제목들:', dynamicHeadings.map(h => h.title));
 
       const prompt = await getEnhancedArticlePrompt({
         topic: selectedTopic,
@@ -88,7 +74,6 @@ export const useArticleGenerator = (
         referenceLink: appState.referenceLink,
         referenceSentence: appState.referenceSentence,
         apiKey: appState.apiKey!,
-        dynamicHeadings: dynamicHeadings,
       });
 
       if (cancelArticleGeneration.current) {
@@ -163,7 +148,7 @@ export const useArticleGenerator = (
 
       if (pixabayApiKey && isPixabayValidated) {
         toast({ 
-          title: "🖼️ 3단계: 이미지 추가 중", 
+          title: "🖼️ 2단계: 이미지 추가 중", 
           description: "소제목별로 페이지별 순차 검색하여 최적의 이미지를 삽입 중입니다." 
         });
         
@@ -249,7 +234,7 @@ export const useArticleGenerator = (
       // 최종 완료 메시지
       toast({ 
         title: "🎉 블로그 글 생성 완료!", 
-        description: `동적 소제목, 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 이미지 포함)` : '(텍스트만)'}`,
+        description: `랜덤 컬러테마(${selectedColorTheme}), 시각카드, 외부링크가 모두 적용된 완성된 글입니다. ${pixabayImagesAdded ? `(${imageCount}개 이미지 포함)` : '(텍스트만)'}`,
         duration: 5000
       });
       

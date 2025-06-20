@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface TopicConfirmDialogProps {
   isOpen: boolean;
@@ -47,12 +47,6 @@ export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
-          <AlertDialogCancel
-            onClick={handleCancel}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
-          >
-            취소
-          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
