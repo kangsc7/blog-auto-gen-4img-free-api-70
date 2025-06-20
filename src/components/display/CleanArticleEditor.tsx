@@ -299,6 +299,8 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               )}
             </div>
           </CardTitle>
+          {/* 10px 공백 추가 */}
+          <div style={{ height: '10px' }} />
         </CardHeader>
         <CardContent className="w-full">
           {isGeneratingContent ? (
