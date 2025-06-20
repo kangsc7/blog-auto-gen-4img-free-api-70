@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ArrowLeft, Download, Copy, Sparkles, Palette, Layout, FileText, Globe, RefreshCw, Eye, Save, Share2, Zap, Settings, Brain, Target, Lightbulb, TrendingUp, Users, Star, Rocket, CheckCircle, Gauge, PieChart, BarChart, Activity, Award, Cpu, Database, Layers, Monitor, Smartphone, Tablet, Wifi, Lock, Shield, Headphones, MessageCircle, Camera, Video, Music, Heart, Bookmark, Calendar, Clock, MapPin, Search, Filter, Sliders, ChevronDown, ChevronUp, ArrowUp, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, Brain, Zap, RotateCcw, Eye, Save, Sparkles, ArrowUp } from 'lucide-react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
+import StyleSelection from '@/components/infographic/StyleSelection';
+import GenerationProgress from '@/components/infographic/GenerationProgress';
+import ContentDisplay from '@/components/infographic/ContentDisplay';
+import InfographicPreview from '@/components/infographic/InfographicPreview';
 
 interface InfographicData {
   title: string;
@@ -14,14 +18,6 @@ interface InfographicData {
   selectedStyle: string;
   sourceAnalysis: string;
   componentMapping: string;
-}
-
-interface StyleOption {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
 }
 
 const InfographicGenerator = () => {
@@ -45,28 +41,10 @@ const InfographicGenerator = () => {
   const [isContentCollapsed, setIsContentCollapsed] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const styleOptions: StyleOption[] = [
-    {
-      id: 'dashboard',
-      name: '인터랙티브 대시보드',
-      description: '탐색이 용이한 고정 메뉴 구조',
-      icon: <Monitor className="h-6 w-6" />,
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      id: 'presentation',
-      name: '프레젠테이션형 인포그래픽',
-      description: '시각적 스토리텔링을 극대화한 발표 자료',
-      icon: <BarChart3 className="h-6 w-6" />,
-      color: 'from-purple-500 to-pink-500'
-    },
-    {
-      id: 'executive',
-      name: 'C-Level 원페이지 리포트',
-      description: 'CEO 보고용 컨설팅 스타일의 핵심 요약',
-      icon: <Target className="h-6 w-6" />,
-      color: 'from-green-500 to-emerald-500'
-    }
+  const styleOptions = [
+    { id: 'dashboard', name: '인터랙티브 대시보드' },
+    { id: 'presentation', name: '프레젠테이션형 인포그래픽' },
+    { id: 'executive', name: 'C-Level 원페이지 리포트' }
   ];
 
   // 블로그 편집기 데이터 자동 로드 함수
@@ -879,7 +857,7 @@ const InfographicGenerator = () => {
             
             <!-- KPI 섹션 -->
             <div class="kpi-section">
-                <h2 class="section-title">📊 Key Performance Indicators</h2>
+                <h2 class="section-title">📊 Key Insights</h2>
                 <div class="kpi-grid">
                     ${subtitles.slice(0, 3).map((subtitle, index) => `
                         <div class="kpi-card">
@@ -1218,40 +1196,10 @@ const InfographicGenerator = () => {
         )}
 
         {/* Style Selection */}
-        <Card className="mb-8 shadow-xl bg-white/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold text-gray-800">
-              <Palette className="inline mr-2 h-6 w-6" />
-              인포그래픽 스타일 선택
-            </CardTitle>
-            <p className="text-center text-gray-600">
-              콘텐츠 특성에 맞는 최적의 스타일을 선택해주세요
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {styleOptions.map((style) => (
-                <Card 
-                  key={style.id}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-2xl border-2 ${
-                    infographicData.selectedStyle === style.id 
-                      ? 'border-purple-500 bg-purple-50' 
-                      : 'border-gray-200 hover:border-purple-300'
-                  }`}
-                  onClick={() => handleStyleSelection(style.id)}
-                >
-                  <CardContent className="p-6 text-center">
-                    <div className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${style.color} flex items-center justify-center text-white mb-4`}>
-                      {style.icon}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{style.name}</h3>
-                    <p className="text-sm text-gray-600">{style.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <StyleSelection 
+          selectedStyle={infographicData.selectedStyle}
+          onStyleSelect={handleStyleSelection}
+        />
 
         {/* Generate Button */}
         {isStyleSelected && !infographicData.generatedInfographic && !isGenerating && (
@@ -1276,154 +1224,35 @@ const InfographicGenerator = () => {
         )}
 
         {/* Generation Progress */}
-        {isGenerating && (
-          <Card className="mb-8 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50">
-            <CardContent className="p-6">
-              <div className="text-center mb-4">
-                <Brain className="h-12 w-12 text-purple-600 mx-auto mb-3 animate-pulse" />
-                <h3 className="text-xl font-semibold text-gray-800">GEM 시스템 작동 중...</h3>
-                <p className="text-gray-600 mb-2">{currentStep}</p>
-                <p className="text-sm text-gray-500">지능형 웹 컴포넌트 조립 시스템</p>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 h-4 rounded-full transition-all duration-300"
-                  style={{ width: `${generationProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-center mt-2 text-sm text-gray-600">{Math.floor(generationProgress)}% 완료</p>
-            </CardContent>
-          </Card>
-        )}
+        <GenerationProgress 
+          isGenerating={isGenerating}
+          progress={generationProgress}
+          currentStep={currentStep}
+        />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Source Content */}
-          <Card className="shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardHeader 
-              className="bg-gradient-to-r from-gray-50 to-gray-100 cursor-pointer"
-              onClick={() => setIsContentCollapsed(!isContentCollapsed)}
-            >
-              <CardTitle className="flex items-center text-gray-800">
-                <FileText className="mr-2 h-5 w-5" />
-                원본 블로그 콘텐츠
-                {isContentCollapsed ? (
-                  <ChevronDown className="ml-auto h-5 w-5" />
-                ) : (
-                  <ChevronUp className="ml-auto h-5 w-5" />
-                )}
-                {infographicData.selectedStyle && (
-                  <span className="ml-2 text-sm bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                    {styleOptions.find(s => s.id === infographicData.selectedStyle)?.name}
-                  </span>
-                )}
-              </CardTitle>
-              <p className="text-xs text-gray-500">클릭으로 접기/펼치기</p>
-            </CardHeader>
-            {!isContentCollapsed && (
-              <CardContent className="p-6 max-h-96 overflow-y-auto">
-                <h3 className="font-bold text-lg mb-3 text-gray-800">{infographicData.title || '제목 없음'}</h3>
-                {infographicData.content ? (
-                  <div 
-                    className="prose prose-sm max-w-none text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: infographicData.content }}
-                  />
-                ) : (
-                  <div className="text-center py-8">
-                    <FileText className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                    <p className="text-gray-500 mb-4">블로그 편집기에서 콘텐츠를 가져와주세요.</p>
-                    <Button 
-                      onClick={loadBlogEditorData}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      콘텐츠 자동 로드
-                    </Button>
-                  </div>
-                )}
-                {infographicData.sourceAnalysis && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                    <p className="text-sm text-blue-700">{infographicData.sourceAnalysis}</p>
-                  </div>
-                )}
-              </CardContent>
-            )}
-          </Card>
+          <ContentDisplay 
+            title={infographicData.title}
+            content={infographicData.content}
+            selectedStyle={infographicData.selectedStyle}
+            sourceAnalysis={infographicData.sourceAnalysis}
+            isCollapsed={isContentCollapsed}
+            onToggleCollapse={() => setIsContentCollapsed(!isContentCollapsed)}
+            onLoadContent={loadBlogEditorData}
+            styleOptions={styleOptions}
+          />
 
           {/* Generated Infographic */}
-          <Card className="shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="flex items-center text-gray-800">
-                <Globe className="mr-2 h-5 w-5" />
-                인포그래픽 생성 화면
-                {infographicData.generatedInfographic && (
-                  <span className="ml-auto text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
-                    생성 완료
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 relative">
-              {infographicData.generatedInfographic ? (
-                <div className="space-y-4">
-                  <div className="border border-gray-200 rounded-lg overflow-hidden shadow-inner relative">
-                    <iframe 
-                      srcDoc={infographicData.generatedInfographic}
-                      className="w-full border-0"
-                      style={{ 
-                        minHeight: '600px',
-                        height: `${Math.min(Math.max(600, infographicData.generatedInfographic.length / 8), 1200)}px`
-                      }}
-                      title="Generated Infographic Preview"
-                      sandbox="allow-scripts"
-                    />
-                    
-                    {/* Scroll to Top Button inside iframe container */}
-                    {showScrollTop && (
-                      <Button
-                        onClick={scrollToTop}
-                        className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-10"
-                        size="sm"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" onClick={copyToClipboard} className="flex items-center gap-2">
-                      <Copy className="h-3 w-3" />
-                      복사
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={downloadHTML} className="flex items-center gap-2">
-                      <Download className="h-3 w-3" />
-                      다운로드
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={resetInfographic} className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50">
-                      <RotateCcw className="h-3 w-3" />
-                      초기화
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={shareInfographic} className="flex items-center gap-2">
-                      <Share2 className="h-3 w-3" />
-                      공유
-                    </Button>
-                  </div>
-
-                  {infographicData.componentMapping && (
-                    <div className="mt-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
-                      <p className="text-sm text-green-700">{infographicData.componentMapping}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Brain className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p className="mb-2">GEM 인포그래픽이 생성되면 여기에 표시됩니다</p>
-                  <p className="text-sm">스타일을 선택하고 생성 버튼을 클릭해주세요</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <InfographicPreview 
+            generatedInfographic={infographicData.generatedInfographic}
+            componentMapping={infographicData.componentMapping}
+            onCopy={copyToClipboard}
+            onDownload={downloadHTML}
+            onShare={shareInfographic}
+            onReset={resetInfographic}
+          />
         </div>
 
         {/* Advanced Feature Cards */}
