@@ -263,9 +263,9 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between flex-wrap gap-2">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (API 키와 동일한 영구 보존)
+              블로그 글 편집기
             </span>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center w-full">
               {editorContent && !isGeneratingContent && (
                 <>
                   <Button 
@@ -359,8 +359,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <div className="space-y-4 w-full">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
-                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존)</p>
-                  <p>자유롭게 수정하세요. HTML 복사시 SCRIPT 태그 자동 제거, 창 전환/새로고침해도 내용 영구 보존됨</p>
+                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글을 자유롭게 수정하세요.</p>
                 </div>
               </div>
               <div

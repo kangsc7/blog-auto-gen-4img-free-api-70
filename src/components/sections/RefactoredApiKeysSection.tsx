@@ -57,7 +57,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   validateHuggingFaceApiKey,
   deleteHuggingFaceApiKeyFromStorage,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // 기본값을 true로 변경 (접힌 상태)
 
   const handleDoubleClick = () => {
     setIsCollapsed(!isCollapsed);
