@@ -36,6 +36,51 @@ const generateNaturalContext = (naturalKeyword: string, keyword: string): string
   return `${naturalKeyword}와 관련된 ${keyword}`;
 };
 
+// 템플릿 변수 치환 함수 추가
+const replaceTemplatePlaceholders = (text: string, variables: Record<string, string>): string => {
+  let result = text;
+  
+  // 대괄호 형태의 자리 표시자 치환
+  Object.entries(variables).forEach(([key, value]) => {
+    const bracketPattern = new RegExp(`\\[${key}\\]`, 'g');
+    const curlyPattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(bracketPattern, value);
+    result = result.replace(curlyPattern, value);
+  });
+  
+  // 미치환된 대괄호 패턴 감지 및 fallback 처리
+  const unprocessedBrackets = result.match(/\[[^\]]+\]/g);
+  if (unprocessedBrackets) {
+    console.warn('미치환된 템플릿 변수 발견:', unprocessedBrackets);
+    
+    // 일반적인 fallback 값들
+    const fallbackMap: Record<string, string> = {
+      '[챗봇 이름]': '파코월드',
+      '[설정 단계 1]': '첫 번째 단계',
+      '[설정 단계 2]': '두 번째 단계',
+      '[설정 단계 3]': '세 번째 단계',
+      '[퍼센트]': '80',
+      '[기간]': '1개월',
+      '[금액]': '적정 금액',
+      '[주요 내용 요약]': '핵심 포인트를 확인하세요',
+      '[실제 활용 방법]': '단계별로 진행하세요',
+      '[주의할 점]': '주의사항을 꼼꼼히 확인하세요',
+      '[예상되는 효과]': '긍정적인 결과를 기대할 수 있습니다',
+      '[추천 대상]': '관심 있는 모든 분들께 추천합니다'
+    };
+    
+    // fallback 값으로 치환
+    Object.entries(fallbackMap).forEach(([placeholder, fallback]) => {
+      result = result.replace(new RegExp(placeholder.replace(/[[\]]/g, '\\$&'), 'g'), fallback);
+    });
+    
+    // 여전히 남은 대괄호 패턴은 제거하거나 기본값으로 치환
+    result = result.replace(/\[[^\]]+\]/g, '관련 정보');
+  }
+  
+  return result;
+};
+
 const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: string) => {
   const prompt = `
 당신은 블로그 콘텐츠 전문가입니다. 
@@ -52,9 +97,10 @@ const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: s
 4. **다양한 관점 제공**: 초보자, 경험자, 문제 해결, 비교 분석 등 다양한 관점의 소제목
 5. **소제목 길이**: 공백 포함 40자 이내로 작성
 6. **적절한 이모지**: 각 소제목에 어울리는 이모지 1개 포함
+7. **대괄호 사용 금지**: [변수명] 형태의 자리 표시자는 절대 사용하지 마세요
 
 **생성 예시** (청년 전세자금대출 주제의 경우):
-❌ 잘못된 예시: "청년 전세자금대출 신청 방법", "청년 전세자금대출 자격 조건"
+❌ 잘못된 예시: "청년 전세자금대출 신청 방법", "[대출 종류] 자격 조건"
 ✅ 올바른 예시: "신용등급 낮아도 전세자금대출 가능할까?", "보증금 없이도 전세 계약이 가능한 방법"
 
 **출력 형식:**
@@ -95,11 +141,12 @@ const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: s
       const title = line.split('|')[0]?.toLowerCase() || '';
       const titleLength = line.split('|')[0]?.trim().length || 0;
       
-      // 기존 템플릿 키워드 필터링
+      // 기존 템플릿 키워드 및 대괄호 패턴 필터링
       const bannedKeywords = ['신청 방법', '자격 조건', '필요 서류', '기본 정보', '지원 대상', '혜택 내용'];
       const hasBannedKeyword = bannedKeywords.some(keyword => title.includes(keyword));
+      const hasBrackets = title.includes('[') && title.includes(']');
       
-      return !hasBannedKeyword && titleLength <= 40;
+      return !hasBannedKeyword && !hasBrackets && titleLength <= 40;
     });
     
     const headings = filteredLines.slice(0, 7).map(line => {
@@ -270,8 +317,24 @@ export const getEnhancedArticlePrompt = async ({
   );
   const currentYear = new Date().getFullYear();
 
+  // 템플릿 변수 정의
+  const templateVariables = {
+    '챗봇 이름': '파코월드',
+    '설정 단계 1': '첫 번째 단계',
+    '설정 단계 2': '두 번째 단계', 
+    '설정 단계 3': '세 번째 단계',
+    '퍼센트': '80',
+    '기간': '1개월',
+    '금액': '적정 금액',
+    '주요 내용 요약': `${keyword}의 핵심 포인트를 확인하세요`,
+    '실제 활용 방법': `${keyword}을 단계별로 진행하세요`,
+    '주의할 점': `${keyword} 사용 시 주의사항을 꼼꼼히 확인하세요`,
+    '예상되는 효과': `${keyword}을 통해 긍정적인 결과를 기대할 수 있습니다`,
+    '추천 대상': `${keyword}에 관심 있는 모든 분들께 추천합니다`
+  };
+
   // 🛡️ 절대 삭제/변경 금지 구역 시작
-  return `
+  const basePrompt = `
 당신은 15년차 전문 블로그 카피라이터이자 SEO 마스터입니다.
 주제: "${topic}"
 입력 키워드: "${keyword}"
@@ -289,6 +352,18 @@ export const getEnhancedArticlePrompt = async ({
 - 주제 스타일: ${PROTECTED_GUIDELINES.TOPIC_STYLE}
 - 공감 박스: ${PROTECTED_GUIDELINES.EMPATHY_BOX}
 === 🛡️ 방어 시스템 종료 ===
+
+=== 🚨 템플릿 변수 사용 금지 경고 🚨 ===
+**절대로 대괄호 형태의 자리 표시자를 사용하지 마세요:**
+❌ 금지: [챗봇 이름], [설정 단계 1], [퍼센트]%, [주요 내용 요약] 등
+✅ 사용: 구체적이고 완성된 텍스트만 사용하세요
+
+**모든 내용은 완성된 형태로 작성해야 합니다:**
+- "파코월드가 도움을 드릴게요" (O)
+- "[챗봇 이름]가 도움을 드릴게요" (X)
+- "첫 번째 단계에서 확인하세요" (O)  
+- "[설정 단계 1]에서 확인하세요" (X)
+=== 🚨 템플릿 변수 금지 경고 종료 🚨 ===
 
 === 동적 생성된 소제목 정보 (창의적 검색 기반 40자 제한) ===
 다음은 해당 키워드에 대한 실제 사용자 검색 의도를 기반으로 생성된 5개의 창의적 소제목들입니다:
@@ -364,11 +439,11 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
             <h3 style="font-size: 28px; color: ${colors.primary}; margin: 0; line-height: 1.3; font-weight: 700; background: linear-gradient(45deg, ${colors.textHighlight}, ${colors.secondary}); padding: 8px 16px; border-radius: 15px; border: 1px solid ${colors.primary};">${topic} 핵심 요약</h3>
         </div>
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 18px; line-height: 1.7; color: #333;">
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">핵심 포인트:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[주요 내용 요약]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">활용 방법:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[실제 활용 방법]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">주의사항:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[주의할 점]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">기대 효과:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[예상되는 효과]</span></div>
-            <div style="margin-bottom: 0; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">추천 대상:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[추천 대상]</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">핵심 포인트:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">${keyword}의 핵심 포인트를 확인하세요</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">활용 방법:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">${keyword}을 단계별로 진행하세요</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">주의사항:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">${keyword} 사용 시 주의사항을 꼼꼼히 확인하세요</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">기대 효과:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">${keyword}을 통해 긍정적인 결과를 기대할 수 있습니다</span></div>
+            <div style="margin-bottom: 0; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">추천 대상:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">${keyword}에 관심 있는 모든 분들께 추천합니다</span></div>
         </div>
         <div style="font-size: 15px; color: #777; text-align: center; padding-top: 15px; border-top: 1px dashed ${colors.primary}; margin-top: auto;">💡 성공적인 활용을 위한 필수 체크리스트!</div>
     </div>
@@ -493,9 +568,13 @@ ${htmlTemplate}
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
 - **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
 - **태그는 짧은 키워드만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
+- **대괄호 형태의 자리 표시자는 절대 사용하지 마세요**
 
 🛡️ **지침 방어 시스템 최종 확인**: 이 모든 규칙들은 절대로 삭제, 변경, 누락되어서는 안 됩니다.
   `;
+
+  // 최종 프롬프트에서 템플릿 변수 치환
+  return replaceTemplatePlaceholders(basePrompt, templateVariables);
 };
 
 export const getEnhancedTopicPrompt = (keyword: string, count: number): string => {
