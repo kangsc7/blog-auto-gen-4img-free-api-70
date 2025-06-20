@@ -28,6 +28,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const initLockRef = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // 명령 실행 상태 추적을 위한 ref
+  const isCommandExecutingRef = useRef(false);
+  const lastUserActionRef = useRef<'typing' | 'command' | 'loading'>('typing');
 
   // 안전한 localStorage 저장
   const saveToStorage = (content: string) => {
@@ -39,8 +43,13 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 안전한 localStorage 로드
+  // 안전한 localStorage 로드 - 명령 실행 중에는 차단
   const loadFromStorage = (): string => {
+    if (isCommandExecutingRef.current) {
+      console.log('🚫 명령 실행 중 - 자동 복원 차단');
+      return '';
+    }
+    
     try {
       const saved = localStorage.getItem(UNIFIED_EDITOR_KEY);
       console.log('📖 편집기 내용 로드:', saved ? saved.length + '자' : '없음');
@@ -51,14 +60,39 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 편집기 내용 업데이트 (중복 방지)
+  // 명령어 감지 함수
+  const detectCommand = (content: string): boolean => {
+    const commandPatterns = [
+      /\/생성/,
+      /\/새글/,
+      /\/초기화/,
+      /\/저장/,
+      /\/복원/,
+      /\/삭제/,
+      // 추가 명령어 패턴들
+    ];
+    
+    return commandPatterns.some(pattern => pattern.test(content));
+  };
+
+  // 편집기 내용 업데이트 (명령 실행 상태 고려)
   const updateEditorContent = (content: string, source: string) => {
+    console.log(`🔄 편집기 내용 업데이트 시도 - ${source}:`, {
+      contentLength: content.length,
+      isCommandExecuting: isCommandExecutingRef.current,
+      lastUserAction: lastUserActionRef.current
+    });
+
+    // 명령 실행 중이고 소스가 자동 복원인 경우 차단
+    if (isCommandExecutingRef.current && (source === '초기로드' || source === '글로벌이벤트')) {
+      console.log(`🚫 명령 실행 중 자동 복원 차단 - ${source}`);
+      return;
+    }
+
     if (content === editorContent) {
       console.log(`⏭️ 편집기 내용 동일 - ${source} 건너뜀`);
       return;
     }
-
-    console.log(`🔄 편집기 내용 업데이트 - ${source}:`, content.length + '자');
     
     setEditorContent(content);
     
@@ -69,13 +103,15 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     onContentChange(content);
     
-    // 디바운스된 저장
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    // 디바운스된 저장 (명령 실행 중이 아닐 때만)
+    if (!isCommandExecutingRef.current) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        saveToStorage(content);
+      }, 500);
     }
-    saveTimeoutRef.current = setTimeout(() => {
-      saveToStorage(content);
-    }, 500);
   };
 
   // 초기 로드 (한 번만 실행)
@@ -93,26 +129,42 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 새 생성 콘텐츠 처리 (생성 완료 시에만)
+  // 새 생성 콘텐츠 처리 (생성 완료 시에만, 명령 실행 중이 아닐 때)
   useEffect(() => {
     if (!isGeneratingContent && generatedContent && generatedContent.length > 100 && isInitialized) {
-      console.log('🎯 새 생성 콘텐츠 감지:', generatedContent.length + '자');
-      updateEditorContent(generatedContent, '새생성');
+      console.log('🎯 새 생성 콘텐츠 감지:', {
+        contentLength: generatedContent.length,
+        isCommandExecuting: isCommandExecutingRef.current
+      });
+      
+      // 명령 실행이 완료된 후에만 업데이트
+      if (!isCommandExecutingRef.current) {
+        updateEditorContent(generatedContent, '새생성');
+        lastUserActionRef.current = 'loading';
+      }
     }
   }, [isGeneratingContent, generatedContent, isInitialized]);
 
-  // 글로벌 이벤트 리스너
+  // 글로벌 이벤트 리스너 - 명령 실행 상태 고려
   useEffect(() => {
     const handleContentUpdate = (event: CustomEvent) => {
       const newContent = event.detail.content;
       if (newContent && isInitialized) {
-        console.log('📢 글로벌 콘텐츠 업데이트 이벤트:', newContent.length + '자');
-        updateEditorContent(newContent, '글로벌이벤트');
+        console.log('📢 글로벌 콘텐츠 업데이트 이벤트:', {
+          contentLength: newContent.length,
+          isCommandExecuting: isCommandExecutingRef.current
+        });
+        
+        // 명령 실행 중이 아닐 때만 업데이트
+        if (!isCommandExecutingRef.current) {
+          updateEditorContent(newContent, '글로벌이벤트');
+        }
       }
     };
 
     const handleAppReset = () => {
       console.log('🔄 앱 리셋 이벤트');
+      isCommandExecutingRef.current = false; // 리셋 시 명령 상태도 초기화
       updateEditorContent('', '앱리셋');
       localStorage.removeItem(UNIFIED_EDITOR_KEY);
     };
@@ -129,13 +181,13 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   // 페이지 종료 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (editorContent) {
+      if (editorContent && !isCommandExecutingRef.current) {
         saveToStorage(editorContent);
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && editorContent) {
+      if (document.hidden && editorContent && !isCommandExecutingRef.current) {
         saveToStorage(editorContent);
       }
     };
@@ -152,7 +204,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [editorContent]);
 
-  // 향상된 이미지 클릭 핸들러 - 불필요한 정보 제거
+  // 향상된 이미지 클릭 핸들러
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -204,10 +256,36 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 사용자 편집 처리
+  // 사용자 편집 처리 - 명령어 감지 및 상태 추적
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
+      
+      // 명령어 감지
+      const isCommand = detectCommand(newContent);
+      
+      if (isCommand) {
+        console.log('🎯 명령어 감지됨:', newContent.substring(0, 50) + '...');
+        isCommandExecutingRef.current = true;
+        lastUserActionRef.current = 'command';
+        
+        // 명령어 실행 타임아웃 설정 (5초 후 자동 해제)
+        setTimeout(() => {
+          if (isCommandExecutingRef.current) {
+            console.log('⏰ 명령 실행 타임아웃 - 상태 자동 해제');
+            isCommandExecutingRef.current = false;
+          }
+        }, 5000);
+      } else {
+        // 일반 타이핑인 경우
+        if (lastUserActionRef.current === 'command') {
+          // 명령어 실행 후 일반 타이핑으로 변경됨
+          console.log('✏️ 명령어 → 일반 타이핑으로 전환');
+          isCommandExecutingRef.current = false;
+        }
+        lastUserActionRef.current = 'typing';
+      }
+      
       updateEditorContent(newContent, '사용자편집');
       setTimeout(() => addImageClickHandlers(), 100);
     }
@@ -220,7 +298,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       return;
     }
     
-    // HTML 복사 시 SCRIPT 태그 완전 제거
     const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     
     navigator.clipboard.writeText(cleanContent).then(() => {
@@ -265,8 +342,12 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
+              {isCommandExecutingRef.current && (
+                <span className="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                  명령 실행 중
+                </span>
+              )}
             </span>
-            {/* 10px 공백 추가 */}
             <div style={{ height: '10px' }}></div>
             <div className="flex flex-wrap gap-2 justify-center w-full">
               {editorContent && !isGeneratingContent && (
@@ -363,6 +444,9 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <p className="font-bold mb-1">📝 편집 가능한 블로그 글을 자유롭게 수정하세요.</p>
+                  {isCommandExecutingRef.current && (
+                    <p className="text-xs text-orange-600 mt-1">⚠️ 명령 실행 중 - 자동 복원이 차단됩니다</p>
+                  )}
                 </div>
               </div>
               <div
