@@ -21,7 +21,10 @@ const PROTECTED_GUIDELINES = {
   TAG_GENERATION: "태그 7개 생성",
   EXTERNAL_LINK_INTEGRATION: "외부 링크 연동",
   TOPIC_STYLE: "H3 주제 스타일",
-  EMPATHY_BOX: "공감 박스 필수"
+  EMPATHY_BOX: "공감 박스 필수",
+  TEXT_ALIGNMENT: "텍스트 왼쪽 정렬",
+  READABILITY_RULES: "140자 이상 시 줄바꿈 규칙",
+  RESPONSIVE_DESIGN: "모바일 반응형 필수"
 };
 
 const validateGuidelines = (): boolean => {
@@ -215,6 +218,86 @@ const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: s
   }
 };
 
+// 주제별 동적 주의사항 생성 함수
+const generateTopicSpecificWarning = async (topic: string, keyword: string, apiKey: string): Promise<string[]> => {
+  const prompt = `
+주제: "${topic}"
+키워드: "${keyword}"
+
+위 주제에 특화된 실제적이고 구체적인 주의사항 3개를 생성해주세요.
+
+**생성 규칙:**
+1. 해당 주제와 직접 관련된 실용적인 주의사항만 작성
+2. "공식 사이트 확인", "개인차 있음" 등 일반적인 내용 금지
+3. 건강, 안전, 시간, 비용, 방법 등 구체적인 주의점 위주
+4. 각 항목은 한 줄로 간결하게 작성
+5. 실제 경험자가 알려주는 팁 형태로 작성
+
+**출력 형식:**
+각 줄마다 주의사항 하나씩만 출력 (번호나 불릿 없이)
+
+**예시 (폭염 관련 주제인 경우):**
+오전 11시부터 오후 3시까지는 실외 활동을 피하세요
+30분마다 물 한 컵씩 마시고 땀으로 손실된 전해질을 보충하세요
+에어컨 온도는 실외와 5도 이상 차이나지 않게 설정하세요
+
+지금 즉시 위 주제에 맞는 구체적인 주의사항 3개를 생성해주세요:
+`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 512,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('주의사항 생성 API 요청 실패');
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('주의사항 생성 응답이 비어있습니다');
+    }
+
+    const warnings = generatedText.split('\n')
+      .filter(line => line.trim() && !line.match(/^\d+\./) && !line.startsWith('-') && !line.startsWith('*'))
+      .slice(0, 3);
+
+    if (warnings.length < 3) {
+      // 기본 주의사항으로 채우기
+      const defaultWarnings = [
+        `${keyword} 사용 전 충분한 정보를 수집하세요`,
+        `개인의 상황에 맞는 방법을 선택하시기 바랍니다`,
+        `전문가와 상담 후 진행하는 것을 추천합니다`
+      ];
+      
+      while (warnings.length < 3 && warnings.length < defaultWarnings.length) {
+        warnings.push(defaultWarnings[warnings.length]);
+      }
+    }
+
+    return warnings;
+  } catch (error) {
+    console.error('주제별 주의사항 생성 오류:', error);
+    
+    // 오류 시 기본 주의사항 반환
+    return [
+      `${keyword} 관련 최신 정보를 확인하시기 바랍니다`,
+      `개인의 상황에 따라 결과가 다를 수 있습니다`,
+      `전문가의 조언을 구하는 것을 권장합니다`
+    ];
+  }
+};
+
 const getHtmlTemplate = (topic: string, content: string, ...args: string[]): string => {
   return `
 <h3 style="color: #1a73e8; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; padding-bottom: 12px;">${topic}</h3>
@@ -306,6 +389,11 @@ export const getEnhancedArticlePrompt = async ({
   const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
   console.log('생성된 창의적 동적 소제목:', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
   
+  // 주제별 동적 주의사항 생성
+  console.log('주제별 동적 주의사항 생성 시작:', topic, keyword);
+  const topicWarnings = await generateTopicSpecificWarning(topic, keyword, apiKey);
+  console.log('생성된 주제별 주의사항:', topicWarnings);
+  
   const selectedHeadings = dynamicHeadings.slice(0, 5);
   
   const htmlTemplate = getHtmlTemplate(
@@ -351,7 +439,33 @@ export const getEnhancedArticlePrompt = async ({
 - 외부 링크: ${PROTECTED_GUIDELINES.EXTERNAL_LINK_INTEGRATION}
 - 주제 스타일: ${PROTECTED_GUIDELINES.TOPIC_STYLE}
 - 공감 박스: ${PROTECTED_GUIDELINES.EMPATHY_BOX}
+- 텍스트 정렬: ${PROTECTED_GUIDELINES.TEXT_ALIGNMENT}
+- 가독성 규칙: ${PROTECTED_GUIDELINES.READABILITY_RULES}
+- 반응형 디자인: ${PROTECTED_GUIDELINES.RESPONSIVE_DESIGN}
 === 🛡️ 방어 시스템 종료 ===
+
+=== 🚨 최우선 핵심 규칙 - 반드시 준수 🚨 ===
+
+**1️⃣ 텍스트 정렬 및 구조 (최우선 적용)**
+- **모든 소제목(H2, H3)과 본문 텍스트는 반드시 왼쪽 정렬(text-align: left)로 설정**
+- **H2 태그**: style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px; text-align: left;"
+- **H3 태그**: style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em; text-align: left;"
+- **모든 본문 문단**: style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;"
+
+**2️⃣ 가독성 향상 규칙 (강제 적용)**
+- **140자 이상 연속 문장 시**: 두 번째 마침표(.) 뒤에서 반드시 </p> 태그 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그 시작
+- **모든 문단은 <p> 태그로 래핑**: <p style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;">
+- **4-5줄 이상 연속 시**: 중간에 시각적 단락 구분 추가
+
+**3️⃣ 섹션별 글자수 제한 (엄격 준수)**
+- **각 H2 섹션 본문: 정확히 190-250자 범위 내**
+- **250자 초과 금지, 190자 미만 금지**
+- **글자수 카운트 후 범위 확인 필수**
+
+**4️⃣ 반응형 디자인 (모바일 최적화)**
+- **데스크탑**: font-size: 18px, line-height: 1.7
+- **모바일 대응**: max-width: 680px, padding: 16px
+- **모든 요소에 반응형 스타일 적용**
 
 === 🚨 템플릿 변수 사용 금지 경고 🚨 ===
 **절대로 대괄호 형태의 자리 표시자를 사용하지 마세요:**
@@ -369,6 +483,11 @@ export const getEnhancedArticlePrompt = async ({
 다음은 해당 키워드에 대한 실제 사용자 검색 의도를 기반으로 생성된 5개의 창의적 소제목들입니다:
 ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.length}자) - ${h.content}`).join('\n')}
 === 동적 소제목 정보 끝 ===
+
+=== 주제별 동적 주의사항 (${topic} 특화) ===
+다음은 해당 주제에 특화된 실제적인 주의사항들입니다:
+${topicWarnings.map((warning, i) => `${i + 1}. ${warning}`).join('\n')}
+=== 주제별 주의사항 끝 ===
 
 ⚠️ 절대 지켜야 할 핵심 규칙:
 
@@ -403,11 +522,11 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - 키워드 강조는 문맥상 자연스러운 위치에 배치하세요
 
 **예시 구조:**
-<p>첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
+<p style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;">첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
 
 <p style="height: 20px;">&nbsp;</p>
 
-<p>세 번째 문장과 <strong>${keyword}</strong>을(를) 포함한 네 번째 문장입니다.</p>
+<p style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;">세 번째 문장과 <strong>${keyword}</strong>을(를) 포함한 네 번째 문장입니다.</p>
 
 **🚨 PC와 모바일 SEO 가독성 최적화 🚨**
 - **문장 길이**: 각 문장은 25-35자 이내로 제한
@@ -425,8 +544,8 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - Highlight Color: ${colors.highlight}
 - Link Color: ${colors.link}
 **모든 H2, H3 소제목도 반드시 다음 스타일을 적용하세요 (번호 없이):**
-- H2 태그: <h2 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px;">
-- H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em;">
+- H2 태그: <h2 style="color: ${colors.primary}; font-weight: bold; margin: 25px 0 15px 0; font-size: 1.5em; border-bottom: 2px solid ${colors.primary}; padding-bottom: 8px; text-align: left;">
+- H3 태그: <h3 style="color: ${colors.primary}; font-weight: 600; margin: 20px 0 12px 0; font-size: 1.3em; text-align: left;">
 
 **🚨 티스토리 호환 시각화 요약 카드 필수 삽입 🚨**
 - 6번째 섹션의 내용 끝에 반드시 다음과 같은 시각화 요약 카드를 그대로 삽입하세요:
@@ -468,14 +587,14 @@ ${referenceLink ? `
 [각 소제목의 핵심 키워드 기반 태그 7개를 여기에 쉼표로 구분하여 배치]
 </p>` : ''}
 
-**🚨 주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리) 🚨**
-- 4번째 섹션의 내용 끝에 반드시 다음과 같은 주의사항 카드를 삽입하세요:
+**🚨 주제별 동적 주의사항 카드 필수 삽입 (컬러테마 연동된 배경과 진한 테두리) 🚨**
+- 4번째 섹션의 내용 끝에 반드시 다음과 같은 주제별 주의사항 카드를 삽입하세요:
 <div style="background: linear-gradient(135deg, ${colors.secondary}, ${colors.highlight}); border: 3px solid ${colors.primary}; padding: 20px; margin: 25px 0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
   <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
   <ul style="color: ${colors.primary}; line-height: 1.6; margin: 0; padding-left: 20px;">
-    <li style="margin-bottom: 8px;">정확한 정보는 반드시 공식 사이트에서 확인하세요</li>
-    <li style="margin-bottom: 8px;">개인의 상황에 따라 결과가 다를 수 있습니다</li>
-    <li>최신 정보와 변경사항을 주기적으로 확인하시기 바랍니다</li>
+    <li style="margin-bottom: 8px;">${topicWarnings[0] || '정확한 정보는 반드시 공식 사이트에서 확인하세요'}</li>
+    <li style="margin-bottom: 8px;">${topicWarnings[1] || '개인의 상황에 따라 결과가 다를 수 있습니다'}</li>
+    <li>${topicWarnings[2] || '최신 정보와 변경사항을 주기적으로 확인하시기 바랍니다'}</li>
   </ul>
 </div>
 
@@ -493,8 +612,8 @@ ${referenceLink ? `
     </thead>
     <tbody>
       <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px 15px; font-weight: 600; color: ${colors.primary};">[항목1]</td>
-        <td style="padding: 12px 15px; color: #4a5568;">[내용1]</td>
+        <td style="padding: 12px 15px; font-weight: 600; color: ${colors.primary};">주요 항목</td>
+        <td style="padding: 12px 15px; color: #4a5568;">상세 내용</td>
       </tr>
       [추가 행들...]
     </tbody>
@@ -557,18 +676,20 @@ ${htmlTemplate}
 - **절대로 250자를 초과하거나 190자 미만이 되어서는 안 됩니다**
 - **140자 도달 시 두 번째 문장 마침표에서 반드시 줄바꿈 및 공백 줄 추가**
 - **모든 문단은 <p> 태그로 감싸고 각 <p> 태그 사이에 공백 줄바꿈 추가**
+- **모든 소제목과 본문 텍스트는 반드시 왼쪽 정렬(text-align: left) 적용**
 - **컬러테마 "${selectedColorTheme}" 색상을 모든 요소에 정확히 적용**
 - **H2, H3 소제목에 컬러테마 스타일 필수 적용 (번호 넘버링 절대 금지)**
 - **각 H2 섹션별로 핵심 키워드 '${keyword}'를 <strong> 태그로 정확히 1번만 강조**
 - **티스토리 호환 시각화 요약 카드 정확한 HTML로 필수 포함 (script 태그 금지)**
-- **주의카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
+- **주제별 동적 주의사항 카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
 - **외부 참조 링크는 도움이 되는 경우에만 적용: 가운데 정렬, 태그 위에 배치**
 - **주제는 H3로 글 상단에, 간단한 공감 박스 포함 (테두리 제거)**
-- **주의사항 카드는 4번째 섹션 끝에 배치 (컬러테마 연동)**
+- **주의사항 카드는 4번째 섹션 끝에 배치 (주제별 동적 내용으로 구성)**
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
 - **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
 - **태그는 짧은 키워드만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
 - **대괄호 형태의 자리 표시자는 절대 사용하지 마세요**
+- **반응형 디자인: font-size: 18px, line-height: 1.7, max-width: 680px 모바일 대응**
 
 🛡️ **지침 방어 시스템 최종 확인**: 이 모든 규칙들은 절대로 삭제, 변경, 누락되어서는 안 됩니다.
   `;

@@ -459,13 +459,14 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                 }}
                 suppressContentEditableWarning={true}
                 style={{
-                  lineHeight: '1.6',
+                  lineHeight: '1.7',
                   fontFamily: 'inherit',
                   width: '100%',
                   maxWidth: '100%',
                   wordWrap: 'break-word',
                   overflowWrap: 'break-word',
-                  minWidth: '0'
+                  minWidth: '0',
+                  fontSize: '18px'
                 }}
                 dangerouslySetInnerHTML={{ __html: editorContent }}
               />
@@ -479,6 +480,27 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           )}
         </CardContent>
       </Card>
+      
+      {/* 반응형 모바일 스타일 추가 */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .prose {
+            max-width: 680px !important;
+            padding: 16px !important;
+            font-size: 18px !important;
+          }
+          
+          .prose h1, .prose h2, .prose h3 {
+            text-align: left !important;
+          }
+          
+          .prose p {
+            text-align: left !important;
+            line-height: 1.7 !important;
+            margin-bottom: 18px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
