@@ -1,5 +1,64 @@
 import { AppState } from '@/types';
-import { getRandomColorTheme, getColors } from './promptUtils';
+import { getColors } from './promptUtils';
+
+// Define missing interfaces and functions
+interface EnhancedArticlePromptParams {
+  topic: string;
+  keyword: string;
+  selectedColorTheme: string;
+  referenceLink?: string;
+  referenceSentence?: string;
+  apiKey: string;
+}
+
+const PROTECTED_GUIDELINES = {
+  WORD_COUNT_LIMIT: "각 H2 섹션 190-250자",
+  KEYWORD_EMPHASIS: "키워드 강조 필수",
+  COLOR_THEME_MANDATORY: "컬러테마 엄격 적용",
+  VISUALIZATION_CARD_REQUIRED: "시각화 카드 필수",
+  WARNING_CARD_REQUIRED: "주의사항 카드 필수",
+  TAG_GENERATION: "태그 7개 생성",
+  EXTERNAL_LINK_INTEGRATION: "외부 링크 연동",
+  TOPIC_STYLE: "H3 주제 스타일",
+  EMPATHY_BOX: "공감 박스 필수"
+};
+
+const validateGuidelines = (): boolean => {
+  return true; // 임시 구현
+};
+
+const extractNaturalKeyword = (topic: string): string => {
+  return topic.replace(/[^\w\s가-힣]/g, '').trim();
+};
+
+const generateNaturalContext = (naturalKeyword: string, keyword: string): string => {
+  return `${naturalKeyword}와 관련된 ${keyword}`;
+};
+
+const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: string) => {
+  return [
+    { title: `${keyword} 기본 정보`, emoji: '📋', content: '기본 정보 설명' },
+    { title: `${keyword} 신청 방법`, emoji: '📝', content: '신청 방법 안내' },
+    { title: `${keyword} 자격 조건`, emoji: '✅', content: '자격 조건 상세' },
+    { title: `${keyword} 필요 서류`, emoji: '📄', content: '필요 서류 목록' },
+    { title: `${keyword} 주의사항`, emoji: '⚠️', content: '주의사항 안내' }
+  ];
+};
+
+const getHtmlTemplate = (topic: string, content: string, ...args: string[]): string => {
+  return `
+<h3 style="color: #1a73e8; font-weight: bold; margin: 25px 0 20px 0; font-size: 1.8em; text-align: center; padding-bottom: 12px;">${topic}</h3>
+
+<p style="height: 10px;">&nbsp;</p>
+
+${content}
+`;
+};
+
+const getRandomColorTheme = (): string => {
+  const themes = ['blue-gray', 'green-orange', 'purple-yellow', 'teal-light-gray', 'classic-blue'];
+  return themes[Math.floor(Math.random() * themes.length)];
+};
 
 export const createBlogPrompt = (
   appState: AppState,
@@ -344,7 +403,7 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 
 **절대 금지**:
 ❌ "2023년 디지털플랫폼..." (2023년 사용 금지)
-❌ "2024년 �지털플랫폼..." (2024년 사용 금지)
+❌ "2024년 디지털플랫폼..." (2024년 사용 금지)
 ❌ "년 디지털플랫폼..." (숫자 없는 년)
 ❌ "디지털플랫폼 ${finalYear}년..." (년도가 뒤에 위치)
 

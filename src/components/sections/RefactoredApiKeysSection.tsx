@@ -50,28 +50,31 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
               <GeminiApiKeyManager 
                 geminiApiKey={geminiManager.geminiApiKey}
                 setGeminiApiKey={geminiManager.setGeminiApiKey}
-                isGeminiValidated={geminiManager.isApiKeyValidated}
-                setIsGeminiValidated={geminiManager.setIsApiKeyValidated}
-                testGeminiKey={geminiManager.testApiKey}
-                isGeminiTesting={geminiManager.isTesting}
+                isGeminiApiKeyValidated={geminiManager.isApiKeyValidated}
+                setIsGeminiApiKeyValidated={geminiManager.setIsApiKeyValidated}
+                isGeminiValidating={geminiManager.isTesting}
+                validateGeminiApiKey={geminiManager.testApiKey}
+                deleteGeminiApiKeyFromStorage={geminiManager.deleteApiKey}
               />
               
               <PixabayApiKeyManager 
                 pixabayApiKey={pixabayManager.pixabayApiKey}
                 setPixabayApiKey={pixabayManager.setPixabayApiKey}
-                isPixabayApiKeyValidated={pixabayManager.isPixabayValidating}
+                isPixabayApiKeyValidated={pixabayManager.isPixabayValidated}
                 setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayValidated}
-                testPixabayApiKey={pixabayManager.testPixabayKey}
-                isPixabayTesting={pixabayManager.isPixabayTesting}
+                isPixabayValidating={pixabayManager.isPixabayTesting}
+                validatePixabayApiKey={pixabayManager.testPixabayKey}
+                deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayKey}
               />
               
               <HuggingFaceApiKeyManager 
                 huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
                 setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
-                isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceValidating}
+                isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceValidated}
                 setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceValidated}
-                testHuggingFaceApiKey={huggingFaceManager.testHuggingFaceKey}
                 isHuggingFaceTesting={huggingFaceManager.isHuggingFaceTesting}
+                validateHuggingFaceApiKey={huggingFaceManager.testHuggingFaceKey}
+                deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceKey}
               />
             </div>
           </div>
