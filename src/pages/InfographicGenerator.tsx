@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart3, ArrowLeft, Download, Copy, Sparkles, Palette, Layout, FileText, Globe, RefreshCw, Eye, Save, Share2, Zap, Settings, Brain, Target, Lightbulb, TrendingUp, Users, Star, Rocket, CheckCircle, Gauge, PieChart, BarChart, Activity, Award, Cpu, Database, Layers, Monitor, Smartphone, Tablet, Wifi, Lock, Shield, Headphones, MessageCircle, Camera, Video, Music, Heart, Bookmark, Calendar, Clock, MapPin, Search, Filter, Sliders } from 'lucide-react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { useToast } from '@/hooks/use-toast';
+import { useAppStateManager } from '@/hooks/useAppStateManager';
 
 interface InfographicData {
   title: string;
@@ -27,6 +28,7 @@ const InfographicGenerator = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { appState } = useAppStateManager();
   
   const [infographicData, setInfographicData] = useState<InfographicData>({
     title: '',
@@ -64,6 +66,86 @@ const InfographicGenerator = () => {
       color: 'from-green-500 to-emerald-500'
     }
   ];
+
+  // 블로그 편집기 데이터 자동 로드 함수
+  const loadBlogEditorData = () => {
+    console.log('🔄 블로그 편집기 데이터 자동 로드 시작');
+    
+    try {
+      // localStorage에서 편집기 데이터 읽기
+      const editorContent = localStorage.getItem('blog_editor_content_permanent_v3') || '';
+      const generatedContent = localStorage.getItem('blog_generated_content') || '';
+      const selectedTopic = localStorage.getItem('blog_selected_topic') || '';
+      const keyword = localStorage.getItem('blog_keyword') || '';
+      
+      // 앱 상태에서도 데이터 확인
+      const finalContent = editorContent || generatedContent || appState.generatedContent || '';
+      const finalTitle = selectedTopic || appState.selectedTopic || keyword || appState.keyword || '블로그 글';
+      
+      console.log('📊 로드된 데이터:', {
+        editorContent: editorContent.length,
+        generatedContent: generatedContent.length,
+        appStateContent: appState.generatedContent?.length || 0,
+        finalContent: finalContent.length,
+        finalTitle
+      });
+      
+      if (finalContent.trim()) {
+        setInfographicData(prev => ({
+          ...prev,
+          title: finalTitle,
+          content: finalContent
+        }));
+        
+        toast({
+          title: "✅ 데이터 로드 완료",
+          description: `블로그 편집기에서 ${finalContent.length}자의 콘텐츠를 자동으로 가져왔습니다.`,
+        });
+        
+        return true;
+      } else {
+        console.warn('⚠️ 블로그 편집기에 콘텐츠가 없습니다');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ 블로그 데이터 로드 실패:', error);
+      return false;
+    }
+  };
+
+  // 컴포넌트 마운트 시 데이터 자동 로드
+  useEffect(() => {
+    console.log('🚀 인포그래픽 페이지 초기화');
+    
+    // 1. navigation state에서 데이터 확인
+    if (location.state?.blogContent && location.state?.blogTitle) {
+      console.log('📍 Navigation state에서 데이터 로드');
+      setInfographicData({
+        title: location.state.blogTitle,
+        content: location.state.blogContent,
+        generatedInfographic: '',
+        selectedStyle: '',
+        sourceAnalysis: '',
+        componentMapping: ''
+      });
+    } else {
+      // 2. localStorage에서 자동 로드
+      console.log('💾 localStorage에서 자동 로드 시도');
+      loadBlogEditorData();
+    }
+  }, [location.state, appState.generatedContent, appState.selectedTopic, appState.keyword]);
+
+  // appState 변경 시 실시간 동기화
+  useEffect(() => {
+    if (appState.generatedContent && !infographicData.content) {
+      console.log('🔄 앱 상태와 실시간 동기화');
+      setInfographicData(prev => ({
+        ...prev,
+        title: appState.selectedTopic || appState.keyword || '블로그 글',
+        content: appState.generatedContent
+      }));
+    }
+  }, [appState.generatedContent, appState.selectedTopic, appState.keyword, infographicData.content]);
 
   // 개선된 인포그래픽 생성 함수
   const generateAdvancedInfographic = (content: string, title: string, styleType: string) => {
@@ -319,6 +401,22 @@ const InfographicGenerator = () => {
   }, [location.state]);
 
   const handleStyleSelection = (styleId: string) => {
+    console.log('🎨 스타일 선택:', styleId);
+    
+    // 데이터가 없으면 자동으로 로드 시도
+    if (!infographicData.content.trim()) {
+      console.log('📤 콘텐츠가 없어 자동 로드 시도');
+      const loaded = loadBlogEditorData();
+      if (!loaded) {
+        toast({
+          title: "⚠️ 콘텐츠 없음",
+          description: "먼저 블로그 편집기에서 글을 작성해주세요.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     setInfographicData(prev => ({ ...prev, selectedStyle: styleId }));
     
     toast({
@@ -328,6 +426,9 @@ const InfographicGenerator = () => {
   };
 
   const generateInfographic = async () => {
+    console.log('🚀 인포그래픽 생성 시작');
+    
+    // 1. 스타일 검증
     if (!infographicData.selectedStyle) {
       toast({
         title: "⚠️ 스타일 미선택",
@@ -337,13 +438,27 @@ const InfographicGenerator = () => {
       return;
     }
 
-    if (!infographicData.content || !infographicData.title) {
-      toast({
-        title: "⚠️ 콘텐츠 없음",
-        description: "블로그 편집기에서 콘텐츠를 먼저 가져와주세요.",
-        variant: "destructive"
-      });
-      return;
+    // 2. 콘텐츠 검증 및 자동 로드
+    let currentContent = infographicData.content;
+    let currentTitle = infographicData.title;
+    
+    if (!currentContent.trim()) {
+      console.log('📤 콘텐츠가 없어 자동 로드 시도');
+      const loaded = loadBlogEditorData();
+      if (loaded) {
+        // 상태 업데이트 후 최신 값 사용
+        setTimeout(() => {
+          generateInfographic();
+        }, 100);
+        return;
+      } else {
+        toast({
+          title: "⚠️ 콘텐츠 없음",
+          description: "블로그 편집기에서 콘텐츠를 먼저 작성해주세요.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setIsGenerating(true);
@@ -376,15 +491,15 @@ const InfographicGenerator = () => {
       }
 
       const infographicHTML = generateAdvancedInfographic(
-        infographicData.content, 
-        infographicData.title, 
+        currentContent, 
+        currentTitle || '블로그 글', 
         infographicData.selectedStyle
       );
 
       setInfographicData(prev => ({
         ...prev,
         generatedInfographic: infographicHTML,
-        sourceAnalysis: `콘텐츠 분석 완료: ${prev.content.length}자의 텍스트에서 ${Math.floor(prev.content.length / 100)}개의 의미 단위를 식별했습니다.`,
+        sourceAnalysis: `콘텐츠 분석 완료: ${currentContent.length}자의 텍스트에서 ${Math.floor(currentContent.length / 100)}개의 의미 단위를 식별했습니다.`,
         componentMapping: `${prev.selectedStyle} 스타일에 최적화된 컴포넌트 매핑이 완료되었습니다.`
       }));
 
@@ -433,7 +548,7 @@ const InfographicGenerator = () => {
   };
 
   const regenerateInfographic = () => {
-    if (infographicData.selectedStyle && infographicData.content) {
+    if (infographicData.selectedStyle && (infographicData.content || loadBlogEditorData())) {
       generateInfographic();
     }
   };
@@ -451,6 +566,7 @@ const InfographicGenerator = () => {
   };
 
   const isStyleSelected = !!infographicData.selectedStyle;
+  const hasContent = !!infographicData.content?.trim();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
@@ -491,6 +607,17 @@ const InfographicGenerator = () => {
             블로그 편집기로 돌아가기
           </Button>
           
+          {/* 데이터 자동 로드 버튼 */}
+          {!hasContent && (
+            <Button 
+              onClick={loadBlogEditorData}
+              className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              블로그 편집기에서 데이터 가져오기
+            </Button>
+          )}
+          
           {infographicData.generatedInfographic && (
             <>
               <Button 
@@ -529,47 +656,55 @@ const InfographicGenerator = () => {
           )}
         </div>
 
-        {/* Style Selection - 오버레이 문제 해결 */}
-        {!isStyleSelected && (
-          <Card className="mb-8 shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-center text-2xl font-bold text-gray-800">
-                <Palette className="inline mr-2 h-6 w-6" />
-                인포그래픽 스타일 선택
-              </CardTitle>
-              <p className="text-center text-gray-600">
-                콘텐츠 특성에 맞는 최적의 스타일을 선택해주세요
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {styleOptions.map((style) => (
-                  <Card 
-                    key={style.id}
-                    className={`cursor-pointer transition-all duration-300 hover:shadow-2xl border-2 ${
-                      infographicData.selectedStyle === style.id 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    }`}
-                    onClick={() => handleStyleSelection(style.id)}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${style.color} flex items-center justify-center text-white mb-4`}>
-                        {style.icon}
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">{style.name}</h3>
-                      <p className="text-sm text-gray-600">{style.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Content Status Indicator */}
+        {hasContent && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              블로그 콘텐츠 로드 완료 ({infographicData.content.length}자)
+            </div>
+          </div>
         )}
 
-        {/* Generate Button - 오버레이 없이 독립적으로 렌더링 */}
+        {/* Style Selection */}
+        <Card className="mb-8 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl font-bold text-gray-800">
+              <Palette className="inline mr-2 h-6 w-6" />
+              인포그래픽 스타일 선택
+            </CardTitle>
+            <p className="text-center text-gray-600">
+              콘텐츠 특성에 맞는 최적의 스타일을 선택해주세요
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {styleOptions.map((style) => (
+                <Card 
+                  key={style.id}
+                  className={`cursor-pointer transition-all duration-300 hover:shadow-2xl border-2 ${
+                    infographicData.selectedStyle === style.id 
+                      ? 'border-purple-500 bg-purple-50' 
+                      : 'border-gray-200 hover:border-purple-300'
+                  }`}
+                  onClick={() => handleStyleSelection(style.id)}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${style.color} flex items-center justify-center text-white mb-4`}>
+                      {style.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{style.name}</h3>
+                    <p className="text-sm text-gray-600">{style.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Generate Button */}
         {isStyleSelected && !infographicData.generatedInfographic && !isGenerating && (
-          <div className="mb-8 text-center relative z-10">
+          <div className="mb-8 text-center">
             <Button
               onClick={generateInfographic}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl px-8 py-4 text-lg"
@@ -624,7 +759,17 @@ const InfographicGenerator = () => {
                   dangerouslySetInnerHTML={{ __html: infographicData.content }}
                 />
               ) : (
-                <p className="text-gray-500">블로그 편집기에서 콘텐츠를 가져와주세요.</p>
+                <div className="text-center py-8">
+                  <FileText className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                  <p className="text-gray-500 mb-4">블로그 편집기에서 콘텐츠를 가져와주세요.</p>
+                  <Button 
+                    onClick={loadBlogEditorData}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    콘텐츠 자동 로드
+                  </Button>
+                </div>
               )}
               {infographicData.sourceAnalysis && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
