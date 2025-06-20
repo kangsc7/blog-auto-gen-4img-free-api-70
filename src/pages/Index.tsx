@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -159,9 +160,29 @@ const Index = () => {
       />
       
       <RefactoredApiKeysSection 
-        geminiManager={geminiManager}
-        pixabayManager={pixabayManager}
-        huggingFaceManager={huggingFaceManager}
+        geminiApiKey={geminiManager.geminiApiKey}
+        setGeminiApiKey={geminiManager.setGeminiApiKey}
+        isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
+        setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
+        isGeminiValidating={geminiManager.isGeminiValidating}
+        validateGeminiApiKey={geminiManager.validateGeminiApiKey}
+        deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
+        
+        pixabayApiKey={pixabayManager.pixabayApiKey}
+        setPixabayApiKey={pixabayManager.setPixabayApiKey}
+        isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
+        setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+        isPixabayValidating={pixabayManager.isPixabayValidating}
+        validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
+        deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
+        
+        huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+        setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
+        isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+        setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+        isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
+        validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
+        deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
       />
 
       {/* 컨트롤 섹션 - 전체 width 사용 */}
