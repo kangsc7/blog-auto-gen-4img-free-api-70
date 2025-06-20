@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ArrowLeft, Download, Copy, Sparkles, Palette, Layout, FileText, Globe, RefreshCw, Eye, Save, Share2, Zap, Settings, Brain, Target, Lightbulb, TrendingUp, Users, Star, Rocket, CheckCircle, Gauge, PieChart, BarChart, Activity, Award, Cpu, Database, Layers, Monitor, Smartphone, Tablet, Wifi, Lock, Shield, Headphones, MessageCircle, Camera, Video, Music, Heart, Bookmark, Calendar, Clock, MapPin, Search, Filter, Sliders, ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
+import { BarChart3, ArrowLeft, Download, Copy, Sparkles, Palette, Layout, FileText, Globe, RefreshCw, Eye, Save, Share2, Zap, Settings, Brain, Target, Lightbulb, TrendingUp, Users, Star, Rocket, CheckCircle, Gauge, PieChart, BarChart, Activity, Award, Cpu, Database, Layers, Monitor, Smartphone, Tablet, Wifi, Lock, Shield, Headphones, MessageCircle, Camera, Video, Music, Heart, Bookmark, Calendar, Clock, MapPin, Search, Filter, Sliders, ChevronDown, ChevronUp, ArrowUp, RotateCcw } from 'lucide-react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -156,10 +155,34 @@ const InfographicGenerator = () => {
     }
   }, [appState.generatedContent, appState.selectedTopic, appState.keyword, infographicData.content]);
 
+  // 블로그 콘텐츠에서 소제목 추출 함수
+  const extractSubtitles = (content: string) => {
+    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+    const subtitles = [];
+    let match;
+    
+    while ((match = h2Regex.exec(content)) !== null) {
+      subtitles.push(match[1].replace(/<[^>]*>/g, '').trim());
+    }
+    
+    return subtitles.slice(0, 5); // 최대 5개까지만
+  };
+
+  // 각 소제목의 내용 추출 함수
+  const extractContentBySubtitle = (content: string, subtitle: string) => {
+    const regex = new RegExp(`<h2[^>]*>${subtitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*</h2>(.*?)(?=<h2|$)`, 'si');
+    const match = content.match(regex);
+    return match ? match[1].trim() : '';
+  };
+
   // GEM 지침에 따른 고급 인포그래픽 생성 함수
   const generateAdvancedGEMInfographic = (content: string, title: string, styleType: string) => {
     // 콘텐츠 전처리 - ** 패턴을 <strong> 태그로 변환
     const processedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // 소제목 추출
+    const subtitles = extractSubtitles(processedContent);
+    console.log('추출된 소제목:', subtitles);
     
     // 테마 시스템 매핑
     const themeMapping = {
@@ -208,18 +231,18 @@ const InfographicGenerator = () => {
     let infographicHTML = '';
 
     if (styleType === 'dashboard') {
-      infographicHTML = generateDashboardStyle(processedContent, title, currentTheme, keyMetrics);
+      infographicHTML = generateDashboardStyle(processedContent, title, currentTheme, subtitles);
     } else if (styleType === 'presentation') {
-      infographicHTML = generatePresentationStyle(processedContent, title, currentTheme, keyMetrics);
+      infographicHTML = generatePresentationStyle(processedContent, title, currentTheme, subtitles);
     } else if (styleType === 'executive') {
-      infographicHTML = generateExecutiveStyle(processedContent, title, currentTheme, keyMetrics);
+      infographicHTML = generateExecutiveStyle(processedContent, title, currentTheme, subtitles);
     }
 
     return infographicHTML;
   };
 
-  // 대시보드 스타일 생성
-  const generateDashboardStyle = (content: string, title: string, theme: any, metrics: any[]) => {
+  // 대시보드 스타일 생성 (가독성 문제 해결)
+  const generateDashboardStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -248,6 +271,7 @@ const InfographicGenerator = () => {
             background: linear-gradient(135deg, var(--background-color) 0%, var(--accent-color) 100%);
             color: var(--text-color);
             line-height: 1.6;
+            font-size: 16px;
         }
         
         .dashboard-container {
@@ -265,6 +289,7 @@ const InfographicGenerator = () => {
             width: 280px;
             overflow-y: auto;
             box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
         
         .sidebar h2 {
@@ -273,6 +298,8 @@ const InfographicGenerator = () => {
             text-align: center;
             border-bottom: 2px solid rgba(255,255,255,0.3);
             padding-bottom: 15px;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         .nav-menu {
@@ -291,6 +318,11 @@ const InfographicGenerator = () => {
             border-radius: 8px;
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .nav-menu a:hover {
@@ -303,6 +335,8 @@ const InfographicGenerator = () => {
             margin-left: 280px;
             padding: 40px;
             min-height: 100vh;
+            max-width: calc(100vw - 280px);
+            overflow-x: hidden;
         }
         
         .header {
@@ -318,39 +352,8 @@ const InfographicGenerator = () => {
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 15px;
-        }
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .metric-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .metric-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-        
-        .metric-label {
-            color: #666;
-            font-size: 0.9rem;
+            line-height: 1.3;
+            word-wrap: break-word;
         }
         
         .content-section {
@@ -367,26 +370,16 @@ const InfographicGenerator = () => {
             margin-bottom: 20px;
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 10px;
+            line-height: 1.3;
+            word-wrap: break-word;
         }
         
-        .progress-bar {
-            background: #f0f0f0;
-            border-radius: 10px;
-            height: 20px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            height: 100%;
-            border-radius: 10px;
-            animation: fillProgress 2s ease-out;
-        }
-        
-        @keyframes fillProgress {
-            from { width: 0%; }
-            to { width: var(--progress-width); }
+        .content-section p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .highlight-box {
@@ -397,10 +390,25 @@ const InfographicGenerator = () => {
             border-left: 4px solid var(--primary-color);
         }
         
+        .highlight-box p {
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
-            .dashboard-container { grid-template-columns: 1fr; }
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; padding: 20px; }
+            .dashboard-container { 
+                grid-template-columns: 1fr; 
+            }
+            .sidebar { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 0; 
+                padding: 20px;
+                max-width: 100vw;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
@@ -410,46 +418,37 @@ const InfographicGenerator = () => {
             <h2>📊 대시보드</h2>
             <ul class="nav-menu">
                 <li><a href="#overview">개요</a></li>
-                <li><a href="#metrics">핵심 지표</a></li>
-                <li><a href="#content">콘텐츠 분석</a></li>
-                <li><a href="#insights">인사이트</a></li>
+                ${subtitles.map((subtitle, index) => `
+                    <li><a href="#section${index + 1}">${subtitle}</a></li>
+                `).join('')}
+                <li><a href="#conclusion">결론</a></li>
             </ul>
         </nav>
         
         <main class="main-content">
             <div class="header" id="overview">
                 <h1>${title}</h1>
-                <p>GEM 시스템 분석 결과 - 인터랙티브 대시보드</p>
+                <p>전문적인 분석과 인사이트를 담은 인터랙티브 대시보드</p>
             </div>
             
-            <div class="metrics-grid" id="metrics">
-                ${metrics.map(metric => `
-                    <div class="metric-card">
-                        <div class="metric-number">${metric.number}${metric.unit}</div>
-                        <div class="metric-label">${metric.label}</div>
+            ${subtitles.map((subtitle, index) => {
+              const sectionContent = extractContentBySubtitle(content, subtitle);
+              return `
+                <div class="content-section" id="section${index + 1}">
+                    <h2>${subtitle}</h2>
+                    <div class="highlight-box">
+                        ${sectionContent || `<p>${subtitle}에 대한 상세한 분석과 설명이 포함된 전문적인 내용입니다.</p>`}
                     </div>
-                `).join('')}
-            </div>
-            
-            <div class="content-section" id="content">
-                <h2>📝 콘텐츠 분석</h2>
-                <div class="highlight-box">
-                    <strong>원본 콘텐츠 요약:</strong><br>
-                    ${content.substring(0, 500).replace(/<[^>]*>/g, '')}...
                 </div>
-                
-                <div class="progress-bar">
-                    <div class="progress-fill" style="--progress-width: 95%; width: 95%;"></div>
-                </div>
-                <p>콘텐츠 완성도: 95%</p>
-            </div>
+              `;
+            }).join('')}
             
-            <div class="content-section" id="insights">
+            <div class="content-section" id="conclusion">
                 <h2>🎯 핵심 인사이트</h2>
                 <div class="highlight-box">
-                    <p>• 고품질 콘텐츠 구조 확인</p>
-                    <p>• 논리적 정보 흐름 최적화</p>
-                    <p>• 독자 친화적 접근성 보장</p>
+                    <p>• 체계적이고 논리적인 구조로 정보 전달</p>
+                    <p>• 실무진을 위한 실행 가능한 인사이트 제공</p>
+                    <p>• 데이터 기반의 객관적 분석 결과</p>
                 </div>
             </div>
         </main>
@@ -473,8 +472,8 @@ const InfographicGenerator = () => {
 </html>`;
   };
 
-  // 프레젠테이션 스타일 생성
-  const generatePresentationStyle = (content: string, title: string, theme: any, metrics: any[]) => {
+  // 프레젠테이션 스타일 생성 (소제목 기반)
+  const generatePresentationStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -581,27 +580,6 @@ const InfographicGenerator = () => {
             50% { transform: scale(1.05); }
         }
         
-        .stat-display {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            border: 3px solid var(--primary-color);
-        }
-        
-        .stat-number {
-            font-size: 4rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-        
-        .stat-label {
-            font-size: 1.2rem;
-            color: #666;
-        }
-        
         .text-content h2 {
             font-size: 2.5rem;
             color: var(--primary-color);
@@ -627,31 +605,6 @@ const InfographicGenerator = () => {
             font-weight: bold;
         }
         
-        .quote-block {
-            background: var(--primary-color);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        }
-        
-        .quote-text {
-            font-size: 2rem;
-            font-style: italic;
-            line-height: 1.4;
-        }
-        
-        .quote-block:before {
-            content: """;
-            font-size: 6rem;
-            position: absolute;
-            top: -20px;
-            left: 20px;
-            opacity: 0.3;
-        }
-        
         @media (max-width: 768px) {
             .slide-content {
                 grid-template-columns: 1fr;
@@ -659,7 +612,6 @@ const InfographicGenerator = () => {
             }
             .hero-title { font-size: 2.5rem; }
             .large-icon { font-size: 4rem; }
-            .stat-number { font-size: 2.5rem; }
         }
     </style>
 </head>
@@ -675,63 +627,30 @@ const InfographicGenerator = () => {
         </div>
     </div>
     
-    <!-- 핵심 지표 슬라이드 -->
-    <div class="slide">
-        <div class="slide-content">
-            <div class="text-content">
-                <h2>📊 핵심 성과 지표</h2>
-                <ul class="bullet-points">
-                    <li>콘텐츠 완성도 98% 달성</li>
-                    <li>구조적 완결성 확보</li>
-                    <li>독자 접근성 최적화</li>
-                </ul>
-            </div>
-            <div class="visual-element">
-                <div class="stat-display">
-                    <div class="stat-number">${metrics[0].number}</div>
-                    <div class="stat-label">${metrics[0].label}</div>
+    ${subtitles.map((subtitle, index) => {
+      const sectionContent = extractContentBySubtitle(content, subtitle);
+      const icons = ['fas fa-lightbulb', 'fas fa-target', 'fas fa-rocket', 'fas fa-star', 'fas fa-trophy'];
+      const icon = icons[index] || 'fas fa-info-circle';
+      
+      return `
+        <!-- ${subtitle} 슬라이드 -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="text-content">
+                    <h2>${subtitle}</h2>
+                    <ul class="bullet-points">
+                        <li>체계적인 접근 방식으로 문제 해결</li>
+                        <li>실무진을 위한 구체적인 실행 방안</li>
+                        <li>검증된 방법론 기반의 전략적 접근</li>
+                    </ul>
+                </div>
+                <div class="visual-element">
+                    <i class="${icon} large-icon"></i>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- 콘텐츠 분석 슬라이드 -->
-    <div class="slide">
-        <div class="slide-content">
-            <div class="visual-element">
-                <i class="fas fa-brain large-icon"></i>
-            </div>
-            <div class="text-content">
-                <h2>🧠 지능형 분석</h2>
-                <ul class="bullet-points">
-                    <li>의미 단위 자동 식별</li>
-                    <li>논리적 구조 검증</li>
-                    <li>최적화된 정보 흐름</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 핵심 인사이트 슬라이드 -->
-    <div class="slide">
-        <div class="slide-content">
-            <div class="text-content">
-                <h2>💡 핵심 인사이트</h2>
-                <ul class="bullet-points">
-                    <li>고품질 콘텐츠 기준 충족</li>
-                    <li>독자 중심 정보 구조</li>
-                    <li>효과적인 메시지 전달</li>
-                </ul>
-            </div>
-            <div class="visual-element">
-                <div class="quote-block">
-                    <div class="quote-text">
-                        품질과 접근성을 동시에 만족하는 최적화된 콘텐츠
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+      `;
+    }).join('')}
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -764,8 +683,8 @@ const InfographicGenerator = () => {
 </html>`;
   };
 
-  // 이그제큐티브 스타일 생성
-  const generateExecutiveStyle = (content: string, title: string, theme: any, metrics: any[]) => {
+  // 이그제큐티브 스타일 생성 (최적화)
+  const generateExecutiveStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -812,27 +731,6 @@ const InfographicGenerator = () => {
             padding: 50px 40px;
             text-align: center;
             position: relative;
-        }
-        
-        .header:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255,255,255,0.05) 10px,
-                rgba(255,255,255,0.05) 20px
-            );
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 2;
         }
         
         .header h1 {
@@ -919,30 +817,6 @@ const InfographicGenerator = () => {
             color: #666;
         }
         
-        .progress-container {
-            margin: 20px 0;
-        }
-        
-        .progress-bar {
-            background: #f0f0f0;
-            border-radius: 10px;
-            height: 15px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        
-        .progress-fill {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            height: 100%;
-            border-radius: 10px;
-            animation: fillProgress 2s ease-out forwards;
-        }
-        
-        @keyframes fillProgress {
-            from { width: 0%; }
-            to { width: 95%; }
-        }
-        
         .recommendations-list {
             list-style: none;
         }
@@ -970,17 +844,6 @@ const InfographicGenerator = () => {
             border-top: 3px solid var(--primary-color);
         }
         
-        .gem-badge {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        
         @media (max-width: 768px) {
             .executive-grid {
                 grid-template-columns: 1fr;
@@ -999,10 +862,8 @@ const InfographicGenerator = () => {
 <body>
     <div class="executive-container">
         <div class="header">
-            <div class="header-content">
-                <h1>${title}</h1>
-                <p>Executive Summary Report - C-Level Decision Making</p>
-            </div>
+            <h1>${title}</h1>
+            <p>Executive Summary Report - 전략적 의사결정을 위한 핵심 분석</p>
         </div>
         
         <div class="executive-grid">
@@ -1011,8 +872,8 @@ const InfographicGenerator = () => {
                 <h2 class="section-title">📋 Executive Summary</h2>
                 <div class="takeaway-box">
                     <p><strong>핵심 요약:</strong></p>
-                    <p>고품질 콘텐츠 분석을 통해 최적화된 정보 구조와 효과적인 메시지 전달 체계를 확인했습니다.</p>
-                    <p><strong>주요 성과:</strong> 98% 콘텐츠 완성도 달성 및 독자 접근성 최적화 완료</p>
+                    <p>체계적인 분석을 통해 도출된 전략적 인사이트와 실행 가능한 솔루션을 제시합니다.</p>
+                    <p><strong>주요 성과:</strong> 데이터 기반의 객관적 분석과 실무진을 위한 구체적 방향성 제시</p>
                 </div>
             </div>
             
@@ -1020,10 +881,10 @@ const InfographicGenerator = () => {
             <div class="kpi-section">
                 <h2 class="section-title">📊 Key Performance Indicators</h2>
                 <div class="kpi-grid">
-                    ${metrics.slice(0, 3).map(metric => `
+                    ${subtitles.slice(0, 3).map((subtitle, index) => `
                         <div class="kpi-card">
-                            <div class="kpi-number">${metric.number}</div>
-                            <div class="kpi-label">${metric.label}</div>
+                            <div class="kpi-number">${index + 1}</div>
+                            <div class="kpi-label">${subtitle}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -1031,17 +892,14 @@ const InfographicGenerator = () => {
             
             <!-- 데이터 시각화 섹션 -->
             <div class="visualization-section">
-                <h2 class="section-title">📈 Data Visualization</h2>
-                <div class="progress-container">
-                    <h4>콘텐츠 품질 지수</h4>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                    <p>95% - 최고 수준의 콘텐츠 품질 확인</p>
-                </div>
-                
+                <h2 class="section-title">📈 Strategic Analysis</h2>
                 <div class="takeaway-box">
-                    <p><strong>분석 결과:</strong> 논리적 구조와 명확한 정보 전달을 통해 독자 만족도 극대화</p>
+                    <p><strong>분석 결과:</strong></p>
+                    <ul style="list-style: none; padding-left: 0;">
+                        ${subtitles.slice(0, 3).map(subtitle => `
+                            <li style="margin-bottom: 10px;">• ${subtitle}</li>
+                        `).join('')}
+                    </ul>
                 </div>
             </div>
             
@@ -1049,43 +907,17 @@ const InfographicGenerator = () => {
             <div class="recommendations-section">
                 <h2 class="section-title">🎯 Strategic Recommendations</h2>
                 <ul class="recommendations-list">
-                    <li>현재 콘텐츠 품질 수준 유지 및 지속적 개선</li>
-                    <li>독자 피드백 시스템 도입으로 실시간 최적화</li>
-                    <li>다채널 배포 전략 수립으로 도달범위 확대</li>
+                    <li>현재 분석 결과를 바탕으로 한 지속적 모니터링</li>
+                    <li>실행 가능한 액션 플랜 수립 및 단계별 실행</li>
+                    <li>성과 측정 지표 설정 및 정기적 평가 체계 구축</li>
                 </ul>
             </div>
         </div>
         
         <div class="footer">
-            <p>본 리포트는 GEM(Generative Enhanced Mapping) 시스템으로 생성되었습니다.</p>
-            <div class="gem-badge">Powered by GEM AI</div>
+            <p>본 리포트는 전문적인 분석 도구를 통해 생성되었습니다.</p>
         </div>
     </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 프로그레스 바 애니메이션
-            const progressBars = document.querySelectorAll('.progress-fill');
-            
-            const observerOptions = {
-                threshold: 0.5,
-                rootMargin: '0px'
-            };
-            
-            const progressObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.animationPlayState = 'running';
-                    }
-                });
-            }, observerOptions);
-            
-            progressBars.forEach(bar => {
-                bar.style.animationPlayState = 'paused';
-                progressObserver.observe(bar);
-            });
-        });
-    </script>
 </body>
 </html>`;
   };
@@ -1147,10 +979,8 @@ const InfographicGenerator = () => {
       console.log('📤 콘텐츠가 없어 자동 로드 시도');
       const loaded = loadBlogEditorData();
       if (loaded) {
-        setTimeout(() => {
-          generateInfographic();
-        }, 100);
-        return;
+        currentContent = infographicData.content;
+        currentTitle = infographicData.title;
       } else {
         toast({
           title: "⚠️ 콘텐츠 없음",
@@ -1174,11 +1004,11 @@ const InfographicGenerator = () => {
       const steps = [
         '콘텐츠 전처리 및 정제 중...',
         '의미 단위 식별 및 분석 중...',
+        '소제목 추출 및 매핑 중...',
         '테마 자동 선택 중...',
         '컴포넌트 매핑 중...',
         '레이아웃 설계 중...',
         '스타일 시스템 적용 중...',
-        '인터랙션 구현 중...',
         '최종 검증 및 최적화 중...',
         '인포그래픽 조립 완료!'
       ];
@@ -1197,6 +1027,8 @@ const InfographicGenerator = () => {
 
       setInfographicData(prev => ({
         ...prev,
+        content: currentContent,
+        title: currentTitle,
         generatedInfographic: infographicHTML,
         sourceAnalysis: `GEM 분석 완료: ${currentContent.length}자의 텍스트에서 고품질 의미 단위를 식별했습니다.`,
         componentMapping: `${prev.selectedStyle} 스타일에 최적화된 컴포넌트 매핑이 완료되었습니다.`
@@ -1246,10 +1078,34 @@ const InfographicGenerator = () => {
     });
   };
 
-  const regenerateInfographic = () => {
-    if (infographicData.selectedStyle && (infographicData.content || loadBlogEditorData())) {
-      generateInfographic();
-    }
+  const resetInfographic = () => {
+    setInfographicData(prev => ({
+      ...prev,
+      generatedInfographic: '',
+      sourceAnalysis: '',
+      componentMapping: ''
+    }));
+    
+    toast({
+      title: "🔄 초기화 완료",
+      description: "인포그래픽이 초기화되었습니다.",
+    });
+  };
+
+  const resetAll = () => {
+    setInfographicData({
+      title: '',
+      content: '',
+      generatedInfographic: '',
+      selectedStyle: '',
+      sourceAnalysis: '',
+      componentMapping: ''
+    });
+    
+    toast({
+      title: "🔄 전체 초기화 완료",
+      description: "모든 설정과 데이터가 초기화되었습니다.",
+    });
   };
 
   const shareInfographic = () => {
@@ -1340,15 +1196,6 @@ const InfographicGenerator = () => {
                 <Download className="mr-2 h-4 w-4" />
                 HTML 다운로드
               </Button>
-              
-              <Button 
-                onClick={regenerateInfographic}
-                className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-                disabled={isGenerating}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                다시 생성
-              </Button>
 
               <Button 
                 onClick={shareInfographic}
@@ -1408,13 +1255,22 @@ const InfographicGenerator = () => {
 
         {/* Generate Button */}
         {isStyleSelected && !infographicData.generatedInfographic && !isGenerating && (
-          <div className="mb-8 text-center">
+          <div className="mb-8 text-center flex gap-4 justify-center">
             <Button
               onClick={generateInfographic}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl px-8 py-4 text-lg"
             >
               <Zap className="mr-2 h-5 w-5" />
               인포그래픽 생성하기
+            </Button>
+            
+            <Button
+              onClick={resetAll}
+              variant="outline"
+              className="px-8 py-4 text-lg border-red-300 text-red-600 hover:bg-red-50"
+            >
+              <RotateCcw className="mr-2 h-5 w-5" />
+              초기화
             </Button>
           </div>
         )}
@@ -1446,7 +1302,7 @@ const InfographicGenerator = () => {
           <Card className="shadow-xl bg-white/80 backdrop-blur-sm">
             <CardHeader 
               className="bg-gradient-to-r from-gray-50 to-gray-100 cursor-pointer"
-              onDoubleClick={() => setIsContentCollapsed(!isContentCollapsed)}
+              onClick={() => setIsContentCollapsed(!isContentCollapsed)}
             >
               <CardTitle className="flex items-center text-gray-800">
                 <FileText className="mr-2 h-5 w-5" />
@@ -1462,7 +1318,7 @@ const InfographicGenerator = () => {
                   </span>
                 )}
               </CardTitle>
-              <p className="text-xs text-gray-500">더블클릭으로 접기/펼치기</p>
+              <p className="text-xs text-gray-500">클릭으로 접기/펼치기</p>
             </CardHeader>
             {!isContentCollapsed && (
               <CardContent className="p-6 max-h-96 overflow-y-auto">
@@ -1499,7 +1355,7 @@ const InfographicGenerator = () => {
             <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
               <CardTitle className="flex items-center text-gray-800">
                 <Globe className="mr-2 h-5 w-5" />
-                GEM 생성 인포그래픽
+                인포그래픽 생성 화면
                 {infographicData.generatedInfographic && (
                   <span className="ml-auto text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
                     생성 완료
@@ -1516,7 +1372,7 @@ const InfographicGenerator = () => {
                       className="w-full border-0"
                       style={{ 
                         minHeight: '600px',
-                        height: `${Math.max(600, infographicData.generatedInfographic.length / 10)}px`
+                        height: `${Math.min(Math.max(600, infographicData.generatedInfographic.length / 8), 1200)}px`
                       }}
                       title="Generated Infographic Preview"
                       sandbox="allow-scripts"
@@ -1543,9 +1399,9 @@ const InfographicGenerator = () => {
                       <Download className="h-3 w-3" />
                       다운로드
                     </Button>
-                    <Button size="sm" variant="outline" onClick={regenerateInfographic} className="flex items-center gap-2">
-                      <RefreshCw className="h-3 w-3" />
-                      재생성
+                    <Button size="sm" variant="outline" onClick={resetInfographic} className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50">
+                      <RotateCcw className="h-3 w-3" />
+                      초기화
                     </Button>
                     <Button size="sm" variant="outline" onClick={shareInfographic} className="flex items-center gap-2">
                       <Share2 className="h-3 w-3" />
