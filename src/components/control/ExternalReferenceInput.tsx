@@ -204,8 +204,10 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     
     if (linkSaved && sentenceSaved) {
       console.log('✅ 실시간 군급 보안 저장 완료');
+      return true;
     } else {
       console.error('❌ 실시간 군급 보안 저장 부분 실패');
+      return false;
     }
   };
 
@@ -237,29 +239,38 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
     const currentLink = appState.referenceLink || '';
     const currentSentence = appState.referenceSentence || '';
     
-    performUltraSecureSave(currentLink, currentSentence);
+    const saveSuccess = performUltraSecureSave(currentLink, currentSentence);
     
-    setTimeout(() => {
-      const verifyLink = militaryGradeStorage.get('link');
-      const verifySentence = militaryGradeStorage.get('sentence');
-      
-      if (verifyLink === currentLink && verifySentence === currentSentence) {
-        toast({
-          title: "✅ 군급 보안 저장 검증 완료",
-          description: "참조 링크와 문장이 군급 보안으로 영구 저장되었습니다.",
-          duration: 3000
-        });
-        console.log('✅ 군급 보안 저장 검증 성공');
-      } else {
-        toast({
-          title: "⚠️ 저장 검증 실패",
-          description: "저장 과정에서 문제가 발생했습니다. 다시 시도해주세요.",
-          variant: "destructive",
-          duration: 3000
-        });
-        console.error('❌ 군급 보안 저장 검증 실패');
-      }
-    }, 500);
+    if (saveSuccess) {
+      // 추가 검증
+      setTimeout(() => {
+        const verifyLink = militaryGradeStorage.get('link');
+        const verifySentence = militaryGradeStorage.get('sentence');
+        
+        if (verifyLink === currentLink && verifySentence === currentSentence) {
+          toast({
+            title: "✅ 저장 완료",
+            description: "참조 링크와 문장이 성공적으로 저장되었습니다.",
+            duration: 3000
+          });
+          console.log('✅ 저장 검증 성공');
+        } else {
+          toast({
+            title: "⚠️ 저장 검증 실패",
+            description: "저장 과정에서 문제가 발생했습니다. 다시 시도해주세요.",
+            variant: "destructive",
+            duration: 3000
+          });
+          console.error('❌ 저장 검증 실패');
+        }
+      }, 500);
+    } else {
+      toast({
+        title: "❌ 저장 실패",
+        description: "저장 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDelete = () => {
@@ -280,14 +291,20 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
       
       if (deleteSuccess) {
         toast({
-          title: "🗑️ 완전 삭제 완료",
-          description: "참조 링크와 문장이 모든 저장소에서 완전히 삭제되었습니다.",
+          title: "🗑️ 삭제 완료",
+          description: "참조 링크와 문장이 완전히 삭제되었습니다.",
         });
-        console.log('✅ 완전 삭제 성공');
+        console.log('✅ 삭제 성공');
+      } else {
+        toast({
+          title: "⚠️ 삭제 불완전",
+          description: "일부 데이터가 남아있을 수 있습니다.",
+          variant: "destructive"
+        });
       }
       
     } catch (error) {
-      console.error('❌ 완전 삭제 실패:', error);
+      console.error('❌ 삭제 실패:', error);
       toast({
         title: "❌ 삭제 실패",
         description: "삭제 과정에서 오류가 발생했습니다.",
@@ -405,7 +422,7 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
 
           {(appState.referenceLink || appState.referenceSentence) && (
             <div className="text-xs text-green-600 bg-green-50 p-3 rounded border border-green-200">
-              ✅ 현재 군급 보안 저장된 참조 정보:
+              ✅ 현재 저장된 참조 정보:
               {appState.referenceLink && (
                 <div className="mt-1">
                   <strong>🔗 링크:</strong> {appState.referenceLink}
