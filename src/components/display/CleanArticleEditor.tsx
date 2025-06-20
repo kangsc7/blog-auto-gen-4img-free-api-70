@@ -481,8 +481,23 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         </CardContent>
       </Card>
       
-      {/* 반응형 모바일 스타일 추가 */}
-      <style jsx>{`
+      {/* 왼쪽 정렬 강제 적용 스타일 */}
+      <style>{`
+        .prose * {
+          text-align: left !important;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+          text-align: left !important;
+        }
+        
+        .prose p {
+          text-align: left !important;
+          line-height: 1.7 !important;
+          margin-bottom: 18px !important;
+          font-size: 18px !important;
+        }
+        
         @media (max-width: 768px) {
           .prose {
             max-width: 680px !important;

@@ -1,4 +1,3 @@
-
 import { AppState } from '@/types';
 import { getColors } from './promptUtils';
 
@@ -385,6 +384,17 @@ export const getEnhancedArticlePrompt = async ({
   const naturalKeyword = extractNaturalKeyword(topic);
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
   
+  // 🎨 창의적 변주를 위한 랜덤 요소들
+  const selectedPerspective = getRandomPerspective();
+  const selectedWritingStyle = getRandomWritingStyle();
+  const alternativeExpression = generateAlternativeExpressions(keyword);
+  const variedExamples = generateVariedExamples(topic, keyword);
+  
+  console.log('🎭 선택된 글쓰기 관점:', selectedPerspective.name);
+  console.log('✍️ 선택된 문체:', selectedWritingStyle.name);
+  console.log('📝 대체 표현:', alternativeExpression);
+  console.log('💡 예시 유형:', variedExamples.type);
+  
   console.log('동적 소제목 생성 시작 (창의적 방식):', keyword, topic);
   const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
   console.log('생성된 창의적 동적 소제목:', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
@@ -427,6 +437,24 @@ export const getEnhancedArticlePrompt = async ({
 주제: "${topic}"
 입력 키워드: "${keyword}"
 자연스러운 키워드: "${naturalKeyword}"
+
+=== 🎭 창의적 글쓰기 변주 시스템 - 최우선 적용 ===
+**선택된 글쓰기 관점**: ${selectedPerspective.name}
+- 설명: ${selectedPerspective.description}
+- 스타일: ${selectedPerspective.style}
+
+**선택된 문체**: ${selectedWritingStyle.name} (${selectedWritingStyle.pattern})
+
+**예시 접근법**: ${variedExamples.type} 위주로 구성
+- 가능한 예시: ${variedExamples.examples.join(', ')}
+
+**🚨 창의적 변주 필수 규칙 🚨**
+1. **70% 이상 문장 구조 변경**: 기존과 완전히 다른 문장 구조, 접속어, 표현 방식 사용
+2. **관점 변화**: ${selectedPerspective.name} 관점으로 전체 글 구성
+3. **문체 일관성**: ${selectedWritingStyle.name} 스타일로 통일
+4. **예시 다양화**: ${variedExamples.type} 중심의 새로운 사례와 비유 사용
+5. **구조적 변주**: 소제목 순서와 강조점을 기존과 다르게 배치
+6. **표현 창의성**: "${alternativeExpression}" 같은 새로운 표현 방식 적극 활용
 
 === 🛡️ 절대 변경 금지 지침 - 방어 시스템 활성화 ===
 다음 지침들은 절대로 삭제, 변경, 누락되어서는 안 됩니다:
@@ -499,13 +527,13 @@ ${topicWarnings.map((warning, i) => `${i + 1}. ${warning}`).join('\n')}
 2. **간단한 공감 박스** (주제 제목 바로 다음에 반드시 포함 - 테두리 제거):
 <div style="background: linear-gradient(135deg, ${colors.highlight} 0%, #ffffff 100%); border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
   <p style="color: #333; line-height: 1.6; font-size: 16px; margin: 0;">
-    혹시 지금 이런 고민하고 계시나요? "${naturalKeyword}에 대해 정확한 정보를 찾고 있는데, 어디서부터 시작해야 할지 막막하네요..." 
-    많은 분들이 똑같은 고민을 하고 계세요. 하지만 걱정하지 마세요! 이 글 하나로 ${naturalKeyword}의 모든 것을 완벽하게 정리해드릴게요.
+    ${selectedPerspective.name} 관점에서 접근하여, ${naturalKeyword}에 대해 ${selectedWritingStyle.name}로 자세히 알아보겠어요. 
+    많은 분들이 궁금해하시는 내용을 ${variedExamples.type}를 통해 쉽게 설명드릴게요.
   </p>
 </div>
 
 3. **공감 후킹 문단** (공감 박스 바로 다음):
-독자의 공감을 이끌어내는 친근한 문장으로 시작하여 주제에 대한 관심을 유발하는 내용
+${selectedPerspective.name} 관점에서 ${selectedWritingStyle.pattern} 톤으로 독자의 공감을 이끌어내는 친근한 문장으로 시작
 
 **🚨 글자수 제한 - 절대 준수 사항 🚨**
 **각 H2 섹션의 본문은 반드시 공백 포함 190자에서 250자 사이로 작성해야 합니다.**
@@ -522,7 +550,7 @@ ${topicWarnings.map((warning, i) => `${i + 1}. ${warning}`).join('\n')}
 - 키워드 강조는 문맥상 자연스러운 위치에 배치하세요
 
 **예시 구조:**
-<p style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;">첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
+<p style="text-align: left; line-height: 1.7; font-size: 18px; margin-bottom: 18px;">${selectedWritingStyle.name} 스타일로 첫 번째 문장과 두 번째 문장입니다. (140자 기준 체크 - 여기서 줄바꿈)</p>
 
 <p style="height: 20px;">&nbsp;</p>
 
@@ -633,7 +661,7 @@ ${referenceSentence ? `
 
 **🚨 공식 사이트 자동 링크 연결 - 주제 관련성 우선 🚨**
 **주제와 실제로 관련이 있는 경우에만** 공식 사이트 링크를 자연스럽게 포함해주세요.
-**억지로 링크를 넣지 마세요. 도움이 되는 경우에만 사용하세요.**
+**억지로 링크를 넣지 말세요. 도움이 되는 경우에만 사용하세요.**
 
 **🚨 각 소제목별 핵심 키워드 기반 태그 생성 - 짧은 키워드만 🚨**
 생성된 5개의 동적 소제목에서 각각 핵심 키워드를 추출하여 7개의 **짧은** 태그를 만들어주세요:
@@ -646,8 +674,11 @@ ${referenceSentence ? `
 - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요
 - 대상 독자: 한국어 사용자
 - **시의성**: 현재 년도(${currentYear}년)의 최신 상황을 자연스럽게 언급하세요
-- 문체: 친근한 구어체('~해요', '~죠' 체)를 사용하고, 격식체('~입니다', '~습니다')는 사용하지 마세요
+- 문체: ${selectedWritingStyle.name} (${selectedWritingStyle.pattern})를 일관되게 사용하세요
+- **관점**: ${selectedPerspective.name} 관점으로 전체 글을 구성하세요
 - **가독성 최우선**: 공백 포함 190-250자 범위 내에서 140자 도달 시 두 번째 문장 마침표에서 </p> 태그로 닫고 공백 줄바꿈 추가 후 새로운 <p> 태그로 시작
+- **창의성**: 기존과 70% 이상 다른 문장 구조와 표현 방식 사용
+- **예시 활용**: ${variedExamples.type} 중심의 사례 포함
 
 사용할 변수:
 - Primary Color: ${colors.primary}
@@ -756,30 +787,4 @@ export const getEnhancedTopicPrompt = (keyword: string, count: number): string =
 **생성 원칙**:
 1. **키워드 포함**: '${keyword}' 관련 내용이 반드시 포함되어야 합니다
 2. **실용성**: 독자에게 도움이 되는 실용적인 정보 제목
-3. **SEO 최적화**: 검색에 최적화된 구체적인 제목
-4. **다양성**: 다양한 관점에서 접근한 제목들
-5. **최신성**: 필요시 2025년을 자연스럽게 포함
-
-**추천 제목 패턴**:
-- "[키워드] 완벽 가이드"
-- "[키워드] 초보자를 위한 시작 방법"
-- "[키워드] 노하우 및 팁"
-- "[키워드] 추천 방법"
-- "[키워드] 장단점 비교"
-- "[키워드] 효과적인 활용법"
-- "[키워드] 주의사항과 해결책"
-- "2025년 [키워드] 최신 동향"
-
-**제목 예시** (${keyword} 기준):
-- "${keyword} 초보자도 쉽게 시작하는 방법"
-- "${keyword} 효과적인 활용을 위한 완벽 가이드"
-- "2025년 ${keyword} 성공을 위한 필수 노하우"
-
-**최종 출력 규칙**:
-- 번호나 불릿 포인트 없이 제목만 출력
-- 각 제목은 줄바꿈으로 구분
-- 다른 설명이나 주석 절대 금지
-
-지금 즉시 위 지침에 따라 ${count}개의 자연스러운 제목을 생성해주세요.`;
-  }
-};
+3. **SEO 최적화**: 검색에 최적화
