@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, CheckCircle, Brain, Zap, RotateCcw, Eye, Save, Sparkles, ArrowUp } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, Brain, Zap, RotateCcw, Eye, Save, Sparkles, ArrowUp, Copy, Download, Share2 } from 'lucide-react';
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
@@ -192,19 +192,6 @@ const InfographicGenerator = () => {
 
     const currentTheme = themeMapping[styleType as keyof typeof themeMapping] || themeMapping.dashboard;
     
-    // 콘텐츠에서 통계 및 데이터 추출
-    const contentLength = processedContent.length;
-    const wordCount = processedContent.split(' ').length;
-    const paragraphCount = processedContent.split('</p>').length - 1;
-    
-    // 핵심 메트릭 생성
-    const keyMetrics = [
-      { number: Math.floor(contentLength / 100).toString(), label: '콘텐츠 밀도 지수', unit: 'pts' },
-      { number: wordCount.toString(), label: '총 단어 수', unit: '개' },
-      { number: paragraphCount.toString(), label: '구조적 섹션', unit: '개' },
-      { number: '98', label: '품질 점수', unit: '%' }
-    ];
-
     // 스타일별 맞춤 생성
     let infographicHTML = '';
 
@@ -1182,6 +1169,15 @@ const InfographicGenerator = () => {
                 <Share2 className="mr-2 h-4 w-4" />
                 공유하기
               </Button>
+
+              <Button 
+                onClick={resetInfographic}
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 shadow-lg"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                초기화
+              </Button>
             </>
           )}
         </div>
@@ -1195,7 +1191,7 @@ const InfographicGenerator = () => {
           </div>
         )}
 
-        {/* Style Selection */}
+        {/* Enhanced Style Selection with Animations */}
         <StyleSelection 
           selectedStyle={infographicData.selectedStyle}
           onStyleSelect={handleStyleSelection}
