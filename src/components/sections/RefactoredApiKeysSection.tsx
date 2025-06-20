@@ -11,7 +11,7 @@ interface RefactoredApiKeysSectionProps {
   setGeminiApiKey: (key: string) => void;
   isGeminiApiKeyValidated: boolean;
   setIsGeminiApiKeyValidated: (validated: boolean) => void;
-  isGeminiTesting: boolean;
+  isGeminiValidating: boolean;
   validateGeminiApiKey: (key: string) => Promise<boolean>;
   deleteGeminiApiKeyFromStorage: () => void;
   
@@ -19,16 +19,17 @@ interface RefactoredApiKeysSectionProps {
   setPixabayApiKey: (key: string) => void;
   isPixabayApiKeyValidated: boolean;
   setIsPixabayApiKeyValidated: (validated: boolean) => void;
-  pixabayTesting: boolean;
+  isPixabayValidating: boolean;
   validatePixabayApiKey: (key: string) => Promise<boolean>;
   deletePixabayApiKeyFromStorage: () => void;
   
-  huggingFaceApiKey: any;
-  setHuggingFaceApiKey: any;
-  isHuggingFaceApiKeyValidated: any;
-  setIsHuggingFaceApiKeyValidated: any;
-  validateHuggingFaceApiKey: any;
-  deleteHuggingFaceApiKeyFromStorage: any;
+  huggingFaceApiKey: string;
+  setHuggingFaceApiKey: (key: string) => void;
+  isHuggingFaceApiKeyValidated: boolean;
+  setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
+  isHuggingFaceValidating: boolean;
+  validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
+  deleteHuggingFaceApiKeyFromStorage: () => void;
 }
 
 export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> = ({
@@ -36,7 +37,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   setGeminiApiKey,
   isGeminiApiKeyValidated,
   setIsGeminiApiKeyValidated,
-  isGeminiTesting,
+  isGeminiValidating,
   validateGeminiApiKey,
   deleteGeminiApiKeyFromStorage,
   
@@ -44,7 +45,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   setPixabayApiKey,
   isPixabayApiKeyValidated,
   setIsPixabayApiKeyValidated,
-  pixabayTesting,
+  isPixabayValidating,
   validatePixabayApiKey,
   deletePixabayApiKeyFromStorage,
   
@@ -52,6 +53,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   setHuggingFaceApiKey,
   isHuggingFaceApiKeyValidated,
   setIsHuggingFaceApiKeyValidated,
+  isHuggingFaceValidating,
   validateHuggingFaceApiKey,
   deleteHuggingFaceApiKeyFromStorage,
 }) => {
@@ -69,7 +71,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
           setGeminiApiKey={setGeminiApiKey}
           isGeminiApiKeyValidated={isGeminiApiKeyValidated}
           setIsGeminiApiKeyValidated={setIsGeminiApiKeyValidated}
-          isGeminiTesting={isGeminiTesting}
+          isGeminiValidating={isGeminiValidating}
           validateGeminiApiKey={validateGeminiApiKey}
           deleteGeminiApiKeyFromStorage={deleteGeminiApiKeyFromStorage}
         />
@@ -79,7 +81,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
           setPixabayApiKey={setPixabayApiKey}
           isPixabayApiKeyValidated={isPixabayApiKeyValidated}
           setIsPixabayApiKeyValidated={setIsPixabayApiKeyValidated}
-          pixabayTesting={pixabayTesting}
+          isPixabayValidating={isPixabayValidating}
           validatePixabayApiKey={validatePixabayApiKey}
           deletePixabayApiKeyFromStorage={deletePixabayApiKeyFromStorage}
         />
@@ -89,6 +91,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
           setHuggingFaceApiKey={setHuggingFaceApiKey}
           isHuggingFaceApiKeyValidated={isHuggingFaceApiKeyValidated}
           setIsHuggingFaceApiKeyValidated={setIsHuggingFaceApiKeyValidated}
+          isHuggingFaceValidating={isHuggingFaceValidating}
           validateHuggingFaceApiKey={validateHuggingFaceApiKey}
           deleteHuggingFaceApiKeyFromStorage={deleteHuggingFaceApiKeyFromStorage}
         />
