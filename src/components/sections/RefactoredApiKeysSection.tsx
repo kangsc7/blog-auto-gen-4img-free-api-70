@@ -57,7 +57,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
   validateHuggingFaceApiKey,
   deleteHuggingFaceApiKeyFromStorage,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true); // 기본값을 true로 변경 (접힌 상태)
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const handleDoubleClick = () => {
     setIsCollapsed(!isCollapsed);
@@ -73,7 +73,7 @@ export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> =
         <CardTitle className="flex items-center justify-between text-blue-700">
           <div className="flex items-center">
             <Key className="h-5 w-5 mr-2" />
-            🔑 API 키 관리 (영구 보존)
+            🔑 API 키 관리
           </div>
           {isCollapsed ? (
             <ChevronDown className="h-5 w-5" />

@@ -1,3 +1,4 @@
+
 import { AppState } from '@/types';
 import { getColors } from './promptUtils';
 
@@ -36,13 +37,135 @@ const generateNaturalContext = (naturalKeyword: string, keyword: string): string
 };
 
 const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: string) => {
-  return [
-    { title: `${keyword} 기본 정보`, emoji: '📋', content: '기본 정보 설명' },
-    { title: `${keyword} 신청 방법`, emoji: '📝', content: '신청 방법 안내' },
-    { title: `${keyword} 자격 조건`, emoji: '✅', content: '자격 조건 상세' },
-    { title: `${keyword} 필요 서류`, emoji: '📄', content: '필요 서류 목록' },
-    { title: `${keyword} 주의사항`, emoji: '⚠️', content: '주의사항 안내' }
-  ];
+  const prompt = `
+당신은 블로그 콘텐츠 전문가입니다. 
+
+주제: "${topic}"
+핵심 키워드: "${keyword}"
+
+위 키워드와 주제에 대해 사람들이 실제로 궁금해하고 검색할 만한 7개의 소제목을 생성해주세요.
+
+**🚨 중요한 생성 규칙 🚨**
+1. **기존 고정 템플릿 완전 금지**: "신청 방법", "자격 조건", "필요 서류", "기본 정보" 등 획일적인 템플릿은 절대 사용하지 마세요
+2. **실제 검색 의도 반영**: 사용자가 구글에서 실제로 검색할 만한 자연스러운 질문형 또는 관심사 기반 제목
+3. **검색 트렌드 고려**: 최신 검색 트렌드와 사용자 관심사를 반영한 소제목
+4. **다양한 관점 제공**: 초보자, 경험자, 문제 해결, 비교 분석 등 다양한 관점의 소제목
+5. **소제목 길이**: 공백 포함 40자 이내로 작성
+6. **적절한 이모지**: 각 소제목에 어울리는 이모지 1개 포함
+
+**생성 예시** (청년 전세자금대출 주제의 경우):
+❌ 잘못된 예시: "청년 전세자금대출 신청 방법", "청년 전세자금대출 자격 조건"
+✅ 올바른 예시: "신용등급 낮아도 전세자금대출 가능할까?", "보증금 없이도 전세 계약이 가능한 방법"
+
+**출력 형식:**
+각 줄마다 다음 형식으로 출력해주세요:
+제목|이모지|간단설명
+
+지금 즉시 위 지침에 따라 7개의 창의적이고 검색 친화적인 소제목을 생성해주세요:
+`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: 1024,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('소제목 생성 API 요청 실패');
+    }
+
+    const data = await response.json();
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('소제목 생성 응답이 비어있습니다');
+    }
+
+    const lines = generatedText.split('\n').filter(line => line.trim() && line.includes('|'));
+    
+    // 기존 템플릿 키워드가 포함된 소제목 필터링 및 40자 제한
+    const filteredLines = lines.filter(line => {
+      const title = line.split('|')[0]?.toLowerCase() || '';
+      const titleLength = line.split('|')[0]?.trim().length || 0;
+      
+      // 기존 템플릿 키워드 필터링
+      const bannedKeywords = ['신청 방법', '자격 조건', '필요 서류', '기본 정보', '지원 대상', '혜택 내용'];
+      const hasBannedKeyword = bannedKeywords.some(keyword => title.includes(keyword));
+      
+      return !hasBannedKeyword && titleLength <= 40;
+    });
+    
+    const headings = filteredLines.slice(0, 7).map(line => {
+      const parts = line.split('|');
+      let title = parts[0]?.trim() || `${keyword} 관련 정보`;
+      
+      // 제목이 40자를 초과하면 자르기
+      if (title.length > 40) {
+        title = title.substring(0, 37) + '...';
+      }
+      
+      return {
+        title,
+        emoji: parts[1]?.trim() || '💡',
+        content: parts[2]?.trim() || '관련 정보를 제공합니다'
+      };
+    });
+
+    // 7개가 안 되면 창의적인 기본 소제목으로 채우기
+    const creativeDefaultHeadings = [
+      { title: `${keyword} 시작하기 전 꼭 알아야 할 점`, emoji: '💡', content: '기초 지식을 제공합니다' },
+      { title: `전문가가 추천하는 ${keyword} 활용법`, emoji: '👨‍💼', content: '전문가 팁을 공유합니다' },
+      { title: `${keyword} 실패 사례와 해결책`, emoji: '⚠️', content: '실패를 예방하는 방법을 알려드립니다' },
+      { title: `${keyword} 최신 트렌드 분석`, emoji: '📈', content: '최근 동향을 분석합니다' },
+      { title: `${keyword} 비용 절약하는 꿀팁`, emoji: '💰', content: '경제적인 활용법을 제공합니다' },
+      { title: `${keyword} 실제 후기와 평가`, emoji: '📝', content: '실사용자 후기를 공유합니다' },
+      { title: `${keyword} 향후 전망과 발전 방향`, emoji: '🔮', content: '미래 전망을 분석합니다' }
+    ];
+    
+    while (headings.length < 7) {
+      const missingIndex = headings.length;
+      if (missingIndex < creativeDefaultHeadings.length) {
+        let defaultTitle = creativeDefaultHeadings[missingIndex].title;
+        // 기본 제목도 40자 제한 적용
+        if (defaultTitle.length > 40) {
+          defaultTitle = defaultTitle.substring(0, 37) + '...';
+        }
+        headings.push({
+          ...creativeDefaultHeadings[missingIndex],
+          title: defaultTitle
+        });
+      } else {
+        break;
+      }
+    }
+
+    return headings;
+  } catch (error) {
+    console.error('동적 소제목 생성 오류:', error);
+    
+    // 오류 시 창의적인 기본 소제목 반환
+    const fallbackHeadings = [
+      { title: `${keyword} 시작하기 전 준비사항`, emoji: '🚀', content: '시작 전 알아야 할 정보를 제공합니다' },
+      { title: `${keyword} 선택할 때 고려사항`, emoji: '🤔', content: '올바른 선택을 위한 가이드입니다' },
+      { title: `${keyword} 실제 사용 후기 분석`, emoji: '📊', content: '실사용자 경험을 분석합니다' },
+      { title: `${keyword} 문제 발생 시 해결법`, emoji: '🔧', content: '문제 해결 방법을 제시합니다' },
+      { title: `${keyword} 효과적인 활용 전략`, emoji: '💪', content: '효과를 극대화하는 방법입니다' },
+      { title: `${keyword} 최신 업데이트 소식`, emoji: '📰', content: '최근 변화와 소식을 전달합니다' },
+      { title: `${keyword} 향후 계획과 준비`, emoji: '📅', content: '미래를 위한 준비 방법입니다' }
+    ].map(heading => ({
+      ...heading,
+      title: heading.title.length > 40 ? heading.title.substring(0, 37) + '...' : heading.title
+    }));
+
+    return fallbackHeadings;
+  }
 };
 
 const getHtmlTemplate = (topic: string, content: string, ...args: string[]): string => {
@@ -132,9 +255,9 @@ export const getEnhancedArticlePrompt = async ({
   const naturalKeyword = extractNaturalKeyword(topic);
   const contextualTerms = generateNaturalContext(naturalKeyword, keyword);
   
-  console.log('동적 소제목 생성 시작 (40자 제한):', keyword, topic);
+  console.log('동적 소제목 생성 시작 (창의적 방식):', keyword, topic);
   const dynamicHeadings = await generateDynamicHeadings(keyword, topic, apiKey);
-  console.log('생성된 동적 소제목 (40자 제한):', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
+  console.log('생성된 창의적 동적 소제목:', dynamicHeadings.map(h => `${h.title} (${h.title.length}자)`));
   
   const selectedHeadings = dynamicHeadings.slice(0, 5);
   
@@ -167,8 +290,8 @@ export const getEnhancedArticlePrompt = async ({
 - 공감 박스: ${PROTECTED_GUIDELINES.EMPATHY_BOX}
 === 🛡️ 방어 시스템 종료 ===
 
-=== 동적 생성된 소제목 정보 (40자 제한 적용) ===
-다음은 해당 키워드에 대한 사용자 궁금증을 기반으로 생성된 5개의 핵심 소제목들입니다 (각 40자 이내):
+=== 동적 생성된 소제목 정보 (창의적 검색 기반 40자 제한) ===
+다음은 해당 키워드에 대한 실제 사용자 검색 의도를 기반으로 생성된 5개의 창의적 소제목들입니다:
 ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.length}자) - ${h.content}`).join('\n')}
 === 동적 소제목 정보 끝 ===
 
@@ -215,7 +338,7 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
 - **문장 길이**: 각 문장은 25-35자 이내로 제한
 - **문단 구조**: 최대 3문장으로 구성, 필요시 별도 문단으로 분리
 - **키워드 밀도**: 자연스럽게 1.5-2.5% 유지
-- **내부 링크**: 관련 정보로 연결되는 링크 최소 3개 포함
+- **내부 링크**: 주제와 관련이 있는 경우에만 포함 (억지로 넣지 말 것)
 - **모바일 최적화**: 짧은 문장, 명확한 구조, 충분한 여백
 - **스캔 가능성**: 중요 정보는 굵게 표시, 리스트 활용
 
@@ -241,13 +364,13 @@ ${selectedHeadings.map((h, i) => `${i + 1}. ${h.title} ${h.emoji} (${h.title.len
             <h3 style="font-size: 28px; color: ${colors.primary}; margin: 0; line-height: 1.3; font-weight: 700; background: linear-gradient(45deg, ${colors.textHighlight}, ${colors.secondary}); padding: 8px 16px; border-radius: 15px; border: 1px solid ${colors.primary};">${topic} 핵심 요약</h3>
         </div>
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 18px; line-height: 1.7; color: #333;">
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">지원 대상:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[구체적인 대상과 자격 조건]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">지원 금액:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[지원 금액과 혜택 내용]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">신청 방법:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[온라인 또는 오프라인 신청 방법]</span></div>
-            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">필요 서류:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[신청에 필요한 서류 목록]</span></div>
-            <div style="margin-bottom: 0; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">신청 기간:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[신청 기간과 중요 일정]</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">핵심 포인트:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[주요 내용 요약]</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">활용 방법:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[실제 활용 방법]</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">주의사항:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[주의할 점]</span></div>
+            <div style="margin-bottom: 12px; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">기대 효과:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[예상되는 효과]</span></div>
+            <div style="margin-bottom: 0; line-height: 1.7;"><strong style="color: ${colors.primary}; font-weight: 600;">추천 대상:</strong> <span style="background-color: ${colors.textHighlight}; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: ${colors.primary};">[추천 대상]</span></div>
         </div>
-        <div style="font-size: 15px; color: #777; text-align: center; padding-top: 15px; border-top: 1px dashed ${colors.primary}; margin-top: auto;">💡 성공적인 신청을 위한 필수 체크리스트!</div>
+        <div style="font-size: 15px; color: #777; text-align: center; padding-top: 15px; border-top: 1px dashed ${colors.primary}; margin-top: auto;">💡 성공적인 활용을 위한 필수 체크리스트!</div>
     </div>
 </div>
 
@@ -276,8 +399,8 @@ ${referenceLink ? `
   <h4 style="color: ${colors.primary}; font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">⚠️ 주의사항</h4>
   <ul style="color: ${colors.primary}; line-height: 1.6; margin: 0; padding-left: 20px;">
     <li style="margin-bottom: 8px;">정확한 정보는 반드시 공식 사이트에서 확인하세요</li>
-    <li style="margin-bottom: 8px;">신청 기한과 자격 요건을 미리 확인하시기 바랍니다</li>
-    <li>개인정보 보호를 위해 안전한 사이트에서만 신청하세요</li>
+    <li style="margin-bottom: 8px;">개인의 상황에 따라 결과가 다를 수 있습니다</li>
+    <li>최신 정보와 변경사항을 주기적으로 확인하시기 바랍니다</li>
   </ul>
 </div>
 
@@ -314,16 +437,16 @@ ${referenceSentence ? `
 기존 5개 섹션에 추가로 6번째 격려 섹션을 포함하여 총 6개의 섹션으로 구성됩니다.
 **모든 H2 소제목에는 절대로 번호(1., 2., 3. 등)를 넣지 마세요.**
 
-**🚨 공식 사이트 자동 링크 연결 🚨**
-본문에 주제와 관련된 공식 사이트 링크를 3-5개 자연스럽게 포함해주세요.
-**반드시 다음 형식으로 작성하세요:**
-- 정부24: <a href="https://www.gov.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">정부24</a>
-- 복지로: <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">복지로</a>
+**🚨 공식 사이트 자동 링크 연결 - 주제 관련성 우선 🚨**
+**주제와 실제로 관련이 있는 경우에만** 공식 사이트 링크를 자연스럽게 포함해주세요.
+**억지로 링크를 넣지 마세요. 도움이 되는 경우에만 사용하세요.**
 
-**🚨 각 소제목별 핵심 키워드 기반 태그 생성 🚨**
-생성된 5개의 동적 소제목에서 각각 핵심 키워드를 추출하여 7개의 태그를 만들어주세요:
+**🚨 각 소제목별 핵심 키워드 기반 태그 생성 - 짧은 키워드만 🚨**
+생성된 5개의 동적 소제목에서 각각 핵심 키워드를 추출하여 7개의 **짧은** 태그를 만들어주세요:
 - 동적 소제목들: ${selectedHeadings.map(h => h.title).join(', ')}
-- 이 소제목들에서 핵심 키워드를 추출하여 "${naturalKeyword}, [소제목1 키워드], [소제목2 키워드], [소제목3 키워드], [소제목4 키워드], [소제목5 키워드], [주제 관련 키워드]" 형태로 7개 태그 생성
+- **긴 주제 문장은 태그에 포함하지 마세요**
+- **단어 단위의 짧고 실용적인 키워드만 태그로 사용하세요**
+- 예시: "${naturalKeyword}, 활용법, 주의사항, 효과, 방법, 팁, 가이드" 형태로 7개 태그 생성
 
 다음 지침에 따라 작성해주세요:
 - 출력 형식: 반드시 HTML 코드 블록 하나로만 결과를 제공해주세요
@@ -347,7 +470,7 @@ ${referenceSentence ? `
 - Original Keyword: ${keyword}
 - Natural Keyword: ${naturalKeyword}
 
-아래는 반드시 따라야 할 HTML 템플릿입니다 (6개 동적 소제목 포함).
+아래는 반드시 따라야 할 HTML 템플릿입니다 (6개 창의적 동적 소제목 포함).
 
 --- HTML TEMPLATE START ---
 ${htmlTemplate}
@@ -364,12 +487,12 @@ ${htmlTemplate}
 - **각 H2 섹션별로 핵심 키워드 '${keyword}'를 <strong> 태그로 정확히 1번만 강조**
 - **티스토리 호환 시각화 요약 카드 정확한 HTML로 필수 포함 (script 태그 금지)**
 - **주의카드, 테이블 필수 포함 (컬러테마 연동된 배경과 진한 테두리)**
-- **외부 참조 링크 정확한 스타일로 적용: 가운데 정렬, 태그 위에 배치**
+- **외부 참조 링크는 도움이 되는 경우에만 적용: 가운데 정렬, 태그 위에 배치**
 - **주제는 H3로 글 상단에, 간단한 공감 박스 포함 (테두리 제거)**
 - **주의사항 카드는 4번째 섹션 끝에 배치 (컬러테마 연동)**
 - **시각화 요약 카드는 6번째 섹션 끝에 배치**
 - **참조 링크 스타일: 사용자가 제공한 정확한 HTML 스타일 적용**
-- **태그는 순수 태그만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
+- **태그는 짧은 키워드만 쉼표로 구분하여 "태그:" 같은 텍스트 없이 배치**
 
 🛡️ **지침 방어 시스템 최종 확인**: 이 모든 규칙들은 절대로 삭제, 변경, 누락되어서는 안 됩니다.
   `;

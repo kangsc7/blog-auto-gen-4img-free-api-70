@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -265,6 +266,8 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <Edit className="h-5 w-5 mr-2" />
               블로그 글 편집기
             </span>
+            {/* 10px 공백 추가 */}
+            <div style={{ height: '10px' }}></div>
             <div className="flex flex-wrap gap-2 justify-center w-full">
               {editorContent && !isGeneratingContent && (
                 <>
