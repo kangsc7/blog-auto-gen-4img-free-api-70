@@ -187,7 +187,7 @@ export const HuggingFaceImageGenerator: React.FC<HuggingFaceImageGeneratorProps>
         <CardTitle className="flex items-center justify-between text-purple-700">
           <div className="flex items-center">
             <Wand2 className="h-6 w-6 mr-2" />
-            Hugging Face 이미지 생성기
+            허깅페이스 이미지 생성
           </div>
           {isCollapsed ? (
             <ChevronDown className="h-5 w-5" />
