@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface CleanArticleEditorProps {
   generatedContent: string;
@@ -20,6 +21,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   onContentChange,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -210,20 +212,20 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사 - SCRIPT 태그만 제거
+  // HTML 복사 - SCRIPT 태그 제거
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    // HTML 복사 시에만 SCRIPT 태그 제거
+    // HTML 복사 시 SCRIPT 태그 완전 제거
     const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     
     navigator.clipboard.writeText(cleanContent).then(() => {
       toast({ 
         title: "✅ HTML 복사 완료 (SCRIPT 태그 제거됨)", 
-        description: "티스토리 코드 편집창에 붙여넣으세요." 
+        description: "티스토리 코드 편집창에 안전하게 붙여넣으세요." 
       });
     });
   };
@@ -248,6 +250,12 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     toast({ title: "📥 다운로드 완료" });
   };
 
+  // 인포그래픽 페이지로 이동
+  const goToInfographic = () => {
+    console.log('📊 인포그래픽 페이지로 이동');
+    navigate('/infographic-generator');
+  };
+
   return (
     <div className="w-full max-w-full">
       <Card className="shadow-md w-full">
@@ -260,6 +268,15 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <div className="flex flex-wrap gap-2">
               {editorContent && !isGeneratingContent && (
                 <>
+                  <Button 
+                    onClick={goToInfographic}
+                    size="sm"
+                    variant="outline"
+                    className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    인포그래픽 페이지 이동
+                  </Button>
                   <Button 
                     onClick={handleCopyToClipboard}
                     size="sm"
@@ -343,7 +360,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존)</p>
-                  <p>자유롭게 수정하세요. HTML 복사시 SCRIPT 태그만 자동 제거, 창 전환/새로고침해도 내용 영구 보존됨</p>
+                  <p>자유롭게 수정하세요. HTML 복사시 SCRIPT 태그 자동 제거, 창 전환/새로고침해도 내용 영구 보존됨</p>
                 </div>
               </div>
               <div
