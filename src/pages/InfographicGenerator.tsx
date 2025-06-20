@@ -6,6 +6,8 @@ import { ArrowLeft, RefreshCw, CheckCircle, Brain, Zap, RotateCcw, Eye, Save, Sp
 import { TopNavigation } from '@/components/layout/TopNavigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
+import { useHuggingFaceManager } from '@/hooks/useHuggingFaceManager';
+import { useInfographicImageGenerator } from '@/hooks/useInfographicImageGenerator';
 import StyleSelection from '@/components/infographic/StyleSelection';
 import GenerationProgress from '@/components/infographic/GenerationProgress';
 import ContentDisplay from '@/components/infographic/ContentDisplay';
@@ -20,11 +22,18 @@ interface InfographicData {
   componentMapping: string;
 }
 
+interface ImageData {
+  imageUrl: string;
+  layoutType: 'left' | 'right' | 'background' | 'top';
+}
+
 const InfographicGenerator = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { appState } = useAppStateManager();
+  const { huggingFaceApiKey } = useHuggingFaceManager();
+  const { generateImagesForInfographic, isGeneratingImages } = useInfographicImageGenerator(huggingFaceApiKey);
   
   const [infographicData, setInfographicData] = useState<InfographicData>({
     title: '',
@@ -35,6 +44,7 @@ const InfographicGenerator = () => {
     componentMapping: ''
   });
   
+  const [generatedImages, setGeneratedImages] = useState<ImageData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState('');
@@ -153,8 +163,8 @@ const InfographicGenerator = () => {
     return match ? match[1].trim() : '';
   };
 
-  // GEM 지침에 따른 고급 인포그래픽 생성 함수
-  const generateAdvancedGEMInfographic = (content: string, title: string, styleType: string) => {
+  // 이미지가 포함된 고급 인포그래픽 생성 함수
+  const generateAdvancedGEMInfographic = (content: string, title: string, styleType: string, images: ImageData[] = []) => {
     // 콘텐츠 전처리 - ** 패턴을 <strong> 태그로 변환
     const processedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
@@ -196,18 +206,18 @@ const InfographicGenerator = () => {
     let infographicHTML = '';
 
     if (styleType === 'dashboard') {
-      infographicHTML = generateDashboardStyle(processedContent, title, currentTheme, subtitles);
+      infographicHTML = generateDashboardStyle(processedContent, title, currentTheme, subtitles, images);
     } else if (styleType === 'presentation') {
-      infographicHTML = generatePresentationStyle(processedContent, title, currentTheme, subtitles);
+      infographicHTML = generatePresentationStyle(processedContent, title, currentTheme, subtitles, images);
     } else if (styleType === 'executive') {
-      infographicHTML = generateExecutiveStyle(processedContent, title, currentTheme, subtitles);
+      infographicHTML = generateExecutiveStyle(processedContent, title, currentTheme, subtitles, images);
     }
 
     return infographicHTML;
   };
 
-  // 대시보드 스타일 생성 (가독성 문제 해결)
-  const generateDashboardStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
+  // 대시보드 스타일 생성 (문제 해결된 버전)
+  const generateDashboardStyle = (content: string, title: string, theme: any, subtitles: string[], images: ImageData[] = []) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -232,7 +242,7 @@ const InfographicGenerator = () => {
         }
         
         body {
-            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: linear-gradient(135deg, var(--background-color) 0%, var(--accent-color) 100%);
             color: var(--text-color);
             line-height: 1.6;
@@ -241,30 +251,30 @@ const InfographicGenerator = () => {
         
         .dashboard-container {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 250px 1fr;
             min-height: 100vh;
         }
         
         .sidebar {
             background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 30px 20px;
+            padding: 20px 15px;
             position: fixed;
             height: 100vh;
-            width: 280px;
+            width: 250px;
             overflow-y: auto;
             box-shadow: 4px 0 20px rgba(0,0,0,0.1);
             z-index: 1000;
         }
         
         .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
             text-align: center;
             border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 15px;
-            white-space: normal;
+            padding-bottom: 10px;
             word-wrap: break-word;
+            hyphens: auto;
         }
         
         .nav-menu {
@@ -272,91 +282,131 @@ const InfographicGenerator = () => {
         }
         
         .nav-menu li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .nav-menu a {
             color: white;
             text-decoration: none;
             display: block;
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border-radius: 6px;
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.4;
-            white-space: normal;
             word-wrap: break-word;
+            hyphens: auto;
             overflow-wrap: break-word;
         }
         
         .nav-menu a:hover {
             background: rgba(255,255,255,0.1);
             border-left-color: white;
-            transform: translateX(5px);
+            transform: translateX(3px);
         }
         
         .main-content {
-            margin-left: 280px;
-            padding: 40px;
+            margin-left: 250px;
+            padding: 30px;
             min-height: 100vh;
-            max-width: calc(100vw - 280px);
+            max-width: calc(100vw - 250px);
             overflow-x: hidden;
         }
         
         .header {
             background: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             text-align: center;
+            ${images[0]?.layoutType === 'background' ? `background-image: url(${images[0].imageUrl}); background-size: cover; background-position: center; position: relative;` : ''}
         }
         
+        ${images[0]?.layoutType === 'background' ? `
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+        }
+        
+        .header * {
+            position: relative;
+            z-index: 1;
+        }
+        ` : ''}
+        
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             color: var(--primary-color);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             line-height: 1.3;
             word-wrap: break-word;
+            hyphens: auto;
         }
         
         .content-section {
             background: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            ${images.length > 0 ? 'display: grid; grid-template-columns: 1fr 200px; gap: 20px; align-items: start;' : ''}
+        }
+        
+        .content-section.with-image-left {
+            grid-template-columns: 200px 1fr;
+        }
+        
+        .content-section.with-image-top {
+            grid-template-columns: 1fr;
+        }
+        
+        .section-image {
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        
+        .section-image.top {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 15px;
         }
         
         .content-section h2 {
             color: var(--primary-color);
-            font-size: 1.8rem;
-            margin-bottom: 20px;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
             border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             line-height: 1.3;
             word-wrap: break-word;
+            hyphens: auto;
         }
         
         .content-section p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
             word-wrap: break-word;
+            hyphens: auto;
             overflow-wrap: break-word;
         }
         
         .highlight-box {
             background: var(--accent-color);
-            padding: 25px;
-            border-radius: 10px;
-            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
             border-left: 4px solid var(--primary-color);
-        }
-        
-        .highlight-box p {
-            margin-bottom: 10px;
         }
         
         @media (max-width: 768px) {
@@ -368,11 +418,14 @@ const InfographicGenerator = () => {
             }
             .main-content { 
                 margin-left: 0; 
-                padding: 20px;
+                padding: 15px;
                 max-width: 100vw;
             }
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+            }
+            .content-section {
+                grid-template-columns: 1fr !important;
             }
         }
     </style>
@@ -398,12 +451,22 @@ const InfographicGenerator = () => {
             
             ${subtitles.map((subtitle, index) => {
               const sectionContent = extractContentBySubtitle(content, subtitle);
+              const imageData = images[index % images.length];
+              const layoutClass = imageData ? `with-image-${imageData.layoutType}` : '';
+              
               return `
-                <div class="content-section" id="section${index + 1}">
-                    <h2>${subtitle}</h2>
-                    <div class="highlight-box">
-                        ${sectionContent || `<p>${subtitle}에 대한 상세한 분석과 설명이 포함된 전문적인 내용입니다.</p>`}
+                <div class="content-section ${layoutClass}" id="section${index + 1}">
+                    ${imageData?.layoutType === 'top' ? `<img src="${imageData.imageUrl}" alt="${subtitle}" class="section-image top">` : ''}
+                    
+                    <div class="text-content">
+                        <h2>${subtitle}</h2>
+                        <div class="highlight-box">
+                            ${sectionContent || `<p>${subtitle}에 대한 상세한 분석과 설명이 포함된 전문적인 내용입니다.</p>`}
+                        </div>
                     </div>
+                    
+                    ${imageData && imageData.layoutType !== 'top' && imageData.layoutType !== 'background' ? 
+                      `<img src="${imageData.imageUrl}" alt="${subtitle}" class="section-image">` : ''}
                 </div>
               `;
             }).join('')}
@@ -437,8 +500,8 @@ const InfographicGenerator = () => {
 </html>`;
   };
 
-  // 프레젠테이션 스타일 생성 (소제목 기반)
-  const generatePresentationStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
+  // 프레젠테이션 스타일 생성 (세로폭 줄이고 이미지 추가)
+  const generatePresentationStyle = (content: string, title: string, theme: any, subtitles: string[], images: ImageData[] = []) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -464,18 +527,19 @@ const InfographicGenerator = () => {
         }
         
         body {
-            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: linear-gradient(135deg, var(--background-color) 0%, var(--accent-color) 100%);
             color: var(--text-color);
             line-height: 1.6;
         }
         
         .slide {
-            min-height: 100vh;
+            min-height: 70vh;
             display: flex;
             align-items: center;
-            padding: 60px 40px;
+            padding: 40px 30px;
             position: relative;
+            margin-bottom: 30px;
         }
         
         .slide:nth-child(even) {
@@ -483,16 +547,15 @@ const InfographicGenerator = () => {
         }
         
         .slide-content {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 60px;
+            gap: 40px;
             align-items: center;
         }
         
         .slide:nth-child(even) .slide-content {
-            grid-template-columns: 1fr 1fr;
             direction: rtl;
         }
         
@@ -505,6 +568,7 @@ const InfographicGenerator = () => {
             color: white;
             text-align: center;
             justify-content: center;
+            min-height: 80vh;
         }
         
         .hero-slide .slide-content {
@@ -513,16 +577,16 @@ const InfographicGenerator = () => {
         }
         
         .hero-title {
-            font-size: 4rem;
+            font-size: 3rem;
             font-weight: bold;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .hero-subtitle {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             opacity: 0.9;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         
         .visual-element {
@@ -531,12 +595,21 @@ const InfographicGenerator = () => {
             align-items: center;
             justify-content: center;
             text-align: center;
+            position: relative;
+        }
+        
+        .slide-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            object-fit: cover;
         }
         
         .large-icon {
-            font-size: 8rem;
+            font-size: 6rem;
             color: var(--primary-color);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             animation: pulse 2s infinite;
         }
         
@@ -546,19 +619,25 @@ const InfographicGenerator = () => {
         }
         
         .text-content h2 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: var(--primary-color);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .content-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
         }
         
         .bullet-points {
             list-style: none;
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
         
         .bullet-points li {
-            margin-bottom: 15px;
-            padding-left: 30px;
+            margin-bottom: 12px;
+            padding-left: 25px;
             position: relative;
         }
         
@@ -571,11 +650,15 @@ const InfographicGenerator = () => {
         }
         
         @media (max-width: 768px) {
+            .slide {
+                min-height: 60vh;
+                padding: 30px 20px;
+            }
             .slide-content {
                 grid-template-columns: 1fr;
-                gap: 30px;
+                gap: 25px;
             }
-            .hero-title { font-size: 2.5rem; }
+            .hero-title { font-size: 2rem; }
             .large-icon { font-size: 4rem; }
         }
     </style>
@@ -596,6 +679,7 @@ const InfographicGenerator = () => {
       const sectionContent = extractContentBySubtitle(content, subtitle);
       const icons = ['fas fa-lightbulb', 'fas fa-target', 'fas fa-rocket', 'fas fa-star', 'fas fa-trophy'];
       const icon = icons[index] || 'fas fa-info-circle';
+      const imageData = images[index % images.length];
       
       return `
         <!-- ${subtitle} 슬라이드 -->
@@ -603,14 +687,18 @@ const InfographicGenerator = () => {
             <div class="slide-content">
                 <div class="text-content">
                     <h2>${subtitle}</h2>
+                    ${sectionContent ? `<div class="content-text">${sectionContent}</div>` : `
                     <ul class="bullet-points">
                         <li>체계적인 접근 방식으로 문제 해결</li>
                         <li>실무진을 위한 구체적인 실행 방안</li>
                         <li>검증된 방법론 기반의 전략적 접근</li>
-                    </ul>
+                    </ul>`}
                 </div>
                 <div class="visual-element">
-                    <i class="${icon} large-icon"></i>
+                    ${imageData ? 
+                      `<img src="${imageData.imageUrl}" alt="${subtitle}" class="slide-image">` :
+                      `<i class="${icon} large-icon"></i>`
+                    }
                 </div>
             </div>
         </div>
@@ -619,11 +707,10 @@ const InfographicGenerator = () => {
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 스크롤 기반 애니메이션
             const slides = document.querySelectorAll('.slide');
             
             const observerOptions = {
-                threshold: 0.5,
+                threshold: 0.3,
                 rootMargin: '0px'
             };
             
@@ -648,8 +735,8 @@ const InfographicGenerator = () => {
 </html>`;
   };
 
-  // 이그제큐티브 스타일 생성 (최적화)
-  const generateExecutiveStyle = (content: string, title: string, theme: any, subtitles: string[]) => {
+  // 이그제큐티브 스타일 생성 (이미지 추가)
+  const generateExecutiveStyle = (content: string, title: string, theme: any, subtitles: string[], images: ImageData[] = []) => {
     return `
 <!DOCTYPE html>
 <html lang="ko">
@@ -674,38 +761,56 @@ const InfographicGenerator = () => {
         }
         
         body {
-            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            font-family: "Paperlogy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--background-color);
             color: var(--text-color);
             line-height: 1.6;
-            padding: 40px 20px;
+            padding: 30px 15px;
         }
         
         .executive-container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
-            border-radius: 20px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
         }
         
         .header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 50px 40px;
+            padding: 40px 30px;
             text-align: center;
             position: relative;
+            ${images[0]?.layoutType === 'background' ? `background-image: url(${images[0].imageUrl}); background-size: cover; background-position: center;` : ''}
         }
         
+        ${images[0]?.layoutType === 'background' ? `
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.8), rgba(76, 175, 80, 0.8));
+        }
+        
+        .header * {
+            position: relative;
+            z-index: 1;
+        }
+        ` : ''}
+        
         .header h1 {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
             font-weight: 700;
         }
         
         .header p {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             opacity: 0.9;
         }
         
@@ -717,68 +822,76 @@ const InfographicGenerator = () => {
         }
         
         .summary-section {
-            padding: 40px;
+            padding: 30px;
             border-right: 1px solid #eee;
             border-bottom: 1px solid #eee;
         }
         
         .kpi-section {
-            padding: 40px;
+            padding: 30px;
             border-bottom: 1px solid #eee;
             background: var(--accent-color);
         }
         
         .visualization-section {
-            padding: 40px;
+            padding: 30px;
             border-right: 1px solid #eee;
+            ${images[1] ? 'display: flex; align-items: center; gap: 20px;' : ''}
         }
         
         .recommendations-section {
-            padding: 40px;
+            padding: 30px;
             background: var(--accent-color);
         }
         
         .section-title {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--primary-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-weight: 600;
             border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         
         .takeaway-box {
             background: white;
-            border-radius: 10px;
-            padding: 25px;
+            border-radius: 8px;
+            padding: 20px;
             border-left: 4px solid var(--primary-color);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .section-image {
+            max-width: 150px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
         }
         
         .kpi-card {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border-top: 3px solid var(--primary-color);
         }
         
         .kpi-number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
             color: var(--primary-color);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .kpi-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: #666;
         }
         
@@ -788,23 +901,23 @@ const InfographicGenerator = () => {
         
         .recommendations-list li {
             background: white;
-            margin-bottom: 15px;
-            padding: 20px;
-            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 6px;
             border-left: 4px solid var(--secondary-color);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .recommendations-list li:before {
             content: "✓";
             color: var(--primary-color);
             font-weight: bold;
-            margin-right: 10px;
+            margin-right: 8px;
         }
         
         .footer {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 30px 40px;
+            padding: 25px 30px;
             text-align: center;
             border-top: 3px solid var(--primary-color);
         }
@@ -820,7 +933,10 @@ const InfographicGenerator = () => {
                 border-right: none;
             }
             .header h1 { font-size: 2rem; }
-            .kpi-number { font-size: 2rem; }
+            .kpi-number { font-size: 1.5rem; }
+            .visualization-section {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -849,7 +965,7 @@ const InfographicGenerator = () => {
                     ${subtitles.slice(0, 3).map((subtitle, index) => `
                         <div class="kpi-card">
                             <div class="kpi-number">${index + 1}</div>
-                            <div class="kpi-label">${subtitle}</div>
+                            <div class="kpi-label">${subtitle.length > 15 ? subtitle.substring(0, 15) + '...' : subtitle}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -857,15 +973,18 @@ const InfographicGenerator = () => {
             
             <!-- 데이터 시각화 섹션 -->
             <div class="visualization-section">
-                <h2 class="section-title">📈 Strategic Analysis</h2>
-                <div class="takeaway-box">
-                    <p><strong>분석 결과:</strong></p>
-                    <ul style="list-style: none; padding-left: 0;">
-                        ${subtitles.slice(0, 3).map(subtitle => `
-                            <li style="margin-bottom: 10px;">• ${subtitle}</li>
-                        `).join('')}
-                    </ul>
+                <div class="flex-1">
+                    <h2 class="section-title">📈 Strategic Analysis</h2>
+                    <div class="takeaway-box">
+                        <p><strong>분석 결과:</strong></p>
+                        <ul style="list-style: none; padding-left: 0;">
+                            ${subtitles.slice(0, 3).map(subtitle => `
+                                <li style="margin-bottom: 8px;">• ${subtitle.length > 25 ? subtitle.substring(0, 25) + '...' : subtitle}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
                 </div>
+                ${images[1] ? `<img src="${images[1].imageUrl}" alt="Strategic Analysis" class="section-image">` : ''}
             </div>
             
             <!-- 권고사항 섹션 -->
@@ -970,6 +1089,8 @@ const InfographicGenerator = () => {
         '콘텐츠 전처리 및 정제 중...',
         '의미 단위 식별 및 분석 중...',
         '소제목 추출 및 매핑 중...',
+        '이미지 생성 프롬프트 준비 중...',
+        '허깅페이스 이미지 생성 중...',
         '테마 자동 선택 중...',
         '컴포넌트 매핑 중...',
         '레이아웃 설계 중...',
@@ -978,8 +1099,22 @@ const InfographicGenerator = () => {
         '인포그래픽 조립 완료!'
       ];
 
-      for (let i = 0; i < steps.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 400));
+      // 진행 상황 업데이트
+      for (let i = 0; i < 4; i++) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        setCurrentStep(steps[i]);
+        setGenerationProgress((i + 1) * (40 / steps.length));
+      }
+
+      // 이미지 생성
+      setCurrentStep(steps[4]);
+      const subtitles = extractSubtitles(currentContent);
+      const images = await generateImagesForInfographic(subtitles, currentContent);
+      setGeneratedImages(images);
+
+      // 나머지 진행 상황
+      for (let i = 5; i < steps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 300));
         setCurrentStep(steps[i]);
         setGenerationProgress((i + 1) * (100 / steps.length));
       }
@@ -987,7 +1122,8 @@ const InfographicGenerator = () => {
       const infographicHTML = generateAdvancedGEMInfographic(
         currentContent, 
         currentTitle || '블로그 글', 
-        infographicData.selectedStyle
+        infographicData.selectedStyle,
+        images
       );
 
       setInfographicData(prev => ({
@@ -996,12 +1132,12 @@ const InfographicGenerator = () => {
         title: currentTitle,
         generatedInfographic: infographicHTML,
         sourceAnalysis: `GEM 분석 완료: ${currentContent.length}자의 텍스트에서 고품질 의미 단위를 식별했습니다.`,
-        componentMapping: `${prev.selectedStyle} 스타일에 최적화된 컴포넌트 매핑이 완료되었습니다.`
+        componentMapping: `${prev.selectedStyle} 스타일에 최적화된 컴포넌트 매핑과 ${images.length}개의 AI 생성 이미지가 완료되었습니다.`
       }));
 
       toast({
         title: "🎉 GEM 인포그래픽 생성 완료!",
-        description: "지침을 100% 반영한 고품질 인포그래픽이 생성되었습니다.",
+        description: `지침을 100% 반영한 고품질 인포그래픽이 ${images.length}개의 이미지와 함께 생성되었습니다.`,
       });
 
     } catch (error) {
@@ -1050,6 +1186,7 @@ const InfographicGenerator = () => {
       sourceAnalysis: '',
       componentMapping: ''
     }));
+    setGeneratedImages([]);
     
     toast({
       title: "🔄 초기화 완료",
@@ -1066,6 +1203,7 @@ const InfographicGenerator = () => {
       sourceAnalysis: '',
       componentMapping: ''
     });
+    setGeneratedImages([]);
     
     toast({
       title: "🔄 전체 초기화 완료",
@@ -1112,10 +1250,11 @@ const InfographicGenerator = () => {
                 🧠 GEM 지능형 인포그래픽 생성기
               </CardTitle>
               <p className="text-xl opacity-90 mb-4">
-                콘텐츠 분석 → 컴포넌트 매핑 → 지능형 조립
+                콘텐츠 분석 → 이미지 생성 → 컴포넌트 매핑 → 지능형 조립
               </p>
               <div className="flex justify-center gap-4 text-sm">
                 <span className="bg-white/20 px-3 py-1 rounded-full">AI 기반</span>
+                <span className="bg-white/20 px-3 py-1 rounded-full">이미지 통합</span>
                 <span className="bg-white/20 px-3 py-1 rounded-full">실시간 생성</span>
                 <span className="bg-white/20 px-3 py-1 rounded-full">완벽 호환</span>
               </div>
@@ -1221,7 +1360,7 @@ const InfographicGenerator = () => {
 
         {/* Generation Progress */}
         <GenerationProgress 
-          isGenerating={isGenerating}
+          isGenerating={isGenerating || isGeneratingImages}
           progress={generationProgress}
           currentStep={currentStep}
         />
@@ -1256,7 +1395,7 @@ const InfographicGenerator = () => {
           {[
             { icon: Eye, title: "실시간 미리보기", desc: "생성 즉시 독립실행형 HTML로 확인 가능", color: "indigo" },
             { icon: Save, title: "완벽한 호환성", desc: "모든 브라우저에서 동작하는 순수 HTML/CSS", color: "green" },
-            { icon: Sparkles, title: "GEM 최적화", desc: "100% 지침 준수로 최고 품질 보장", color: "orange" }
+            { icon: Sparkles, title: "AI 이미지 통합", desc: "허깅페이스 AI로 자동 생성된 맞춤형 이미지", color: "orange" }
           ].map((feature, index) => (
             <Card key={index} className={`text-center p-6 bg-gradient-to-br from-${feature.color}-50 to-${feature.color}-100 border-${feature.color}-200 shadow-lg hover:shadow-xl transition-all`}>
               <feature.icon className={`h-12 w-12 text-${feature.color}-600 mx-auto mb-4`} />
@@ -1271,7 +1410,7 @@ const InfographicGenerator = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-blue-600">3초</div>
+                <div className="text-2xl font-bold text-blue-600">5초</div>
                 <div className="text-sm text-gray-600">평균 생성 시간</div>
               </div>
               <div>
@@ -1283,8 +1422,8 @@ const InfographicGenerator = () => {
                 <div className="text-sm text-gray-600">스타일 옵션</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-orange-600">10+</div>
-                <div className="text-sm text-gray-600">컴포넌트 시스템</div>
+                <div className="text-2xl font-bold text-orange-600">AI</div>
+                <div className="text-sm text-gray-600">이미지 생성</div>
               </div>
             </div>
           </CardContent>
