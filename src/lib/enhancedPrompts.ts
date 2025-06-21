@@ -48,9 +48,8 @@ ${externalReferencePrompt}
 
 1. **전체 구조**:
    - 매력적인 제목 (H1)
-   - 서론 (공백 포함 정확히 120-150자 이내)
-   - 5-7개의 H2 소제목과 본문
-   - 결론 (120-150자)
+   - 서론 (공백 포함 정확히 120-150자 이내 - 최고 우선순위)
+   - 7개의 H2 소제목과 본문 (마지막은 결론과 용기, 격려)
    - 테이블, 시각화 카드, 주의 카드, 태그, 외부링크 포함
 
 2. **H2 섹션 작성 규칙 (최고 우선순위)**:
@@ -60,27 +59,32 @@ ${externalReferencePrompt}
    - 각 문단은 <p> 태그로 감싸기
    - <p> 태그 사이에는 줄바꿈 추가
 
-3. **필수 포함 요소** (각 H2 섹션마다):
+3. **H2 소제목 필수 규칙**:
+   - 모든 H2 소제목 끝에 관련 이모지 추가 (최고 우선순위)
+   - H2 소제목 바로 아래에 컬러테마 밑줄 추가
+   - 7번째 H2는 반드시 "결론과 용기, 격려" 내용으로 작성
+   
+4. **필수 포함 요소** (각 H2 섹션마다):
    - 구체적인 사례 또는 통계 기반 인용
    - 독자 입장에서 느끼는 감정 또는 공감 지점
    - 전문가 또는 실사용자의 조언/팁
    - 실용적이고 완결형 정보 제공
 
-4. **시각적 요소 필수 포함**:
+5. **시각적 요소 필수 포함**:
    - 비교표 또는 데이터 테이블 (최소 1개)
    - 시각화 요약 카드 (핵심 포인트 정리)
-   - 주의사항 카드 (경고 또는 팁)
-   - 관련 태그 목록
+   - 주의사항 카드 (경고 또는 팁) - 2~6번째 소제목 사이에 위치
+   - 관련 태그 목록 (쉼표로 구분하여 7개)
    - 참고 외부링크 (신뢰할 수 있는 출처)
 
-5. **스타일링**:
+6. **스타일링**:
    - 모든 텍스트는 왼쪽 정렬 (text-align: left)
    - H1: 색상 ${primaryColor}, 굵게, 중앙 정렬
-   - H2: 색상 ${primaryColor}, 굵게, 왼쪽 정렬  
+   - H2: 색상 ${primaryColor}, 굵게, 왼쪽 정렬, 이모지 포함, 밑줄 추가
    - 강조 텍스트: <strong style="color: ${primaryColor};">
    - 배경색 강조: <span style="background-color: ${secondaryColor}; padding: 2px 6px; border-radius: 3px;">
 
-6. **HTML 구조 예시**:
+7. **HTML 구조 예시**:
 \`\`\`html
 <article style="font-family: 'Noto Sans KR', sans-serif; line-height: 1.7; color: #333; text-align: left;">
   <h1 style="color: ${primaryColor}; text-align: center; font-size: 2.2em; font-weight: bold; margin: 30px 0;">[매력적인 제목]</h1>
@@ -89,11 +93,11 @@ ${externalReferencePrompt}
     <p style="text-align: left; margin: 0; font-size: 1.1em;">서론 내용 (120-150자 이내)</p>
   </div>
 
-  <h2 style="color: ${primaryColor}; font-size: 1.6em; font-weight: bold; margin: 35px 0 20px 0; text-align: left;">[H2 소제목]</h2>
+  <h2 style="color: ${primaryColor}; font-size: 1.6em; font-weight: bold; margin: 35px 0 20px 0; text-align: left; border-bottom: 3px solid ${primaryColor}; padding-bottom: 8px;">[H2 소제목] 🎯</h2>
   
-  <p style="text-align: left; margin: 15px 0; font-size: 1.05em;">첫 번째 문단 내용. 구체적인 사례와 통계를 포함하여 작성합니다.</p>
+  <p style="text-align: left; margin: 15px 0; font-size: 1.05em;">첫 번째 문단 내용.</p>
   
-  <p style="text-align: left; margin: 15px 0; font-size: 1.05em;">두 번째 문단에서는 독자의 공감을 이끌어내는 내용을 포함합니다.</p>
+  <p style="text-align: left; margin: 15px 0; font-size: 1.05em;">두 번째 문단 내용.</p>
 
   <!-- 비교 테이블 예시 -->
   <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #ddd;">
@@ -106,22 +110,106 @@ ${externalReferencePrompt}
   </table>
 
   <!-- 시각화 요약 카드 -->
-  <div style="background: linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}25); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid ${primaryColor};">
-    <h4 style="color: ${primaryColor}; margin: 0 0 10px 0;">핵심 포인트</h4>
-    <ul style="margin: 0; padding-left: 20px;">
-      <li>주요 내용 1</li>
-      <li>주요 내용 2</li>
-      <li>주요 내용 3</li>
-    </ul>
+  <style>
+  .single-summary-card-container {
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 25px 15px;
+      background-color: ${secondaryColor}20;
+      margin: 25px 0;
+  }
+  .single-summary-card {
+      width: 100%;
+      max-width: 700px;
+      background-color: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid ${primaryColor}40;
+      box-sizing: border-box;
+  }
+  .single-summary-card .card-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid ${primaryColor};
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+  }
+  .single-summary-card .card-header-icon {
+      font-size: 38px;
+      color: ${primaryColor};
+      margin-right: 16px;
+  }
+  .single-summary-card .card-header h3 {
+      font-size: 28px;
+      color: ${primaryColor};
+      margin: 0;
+      line-height: 1.3;
+      font-weight: 700;
+  }
+  .single-summary-card .card-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      font-size: 18px;
+      line-height: 1.7;
+      color: #333;
+  }
+  .single-summary-card .card-content .section {
+      margin-bottom: 12px;
+      line-height: 1.7;
+  }
+  .single-summary-card .card-content .section:last-child {
+      margin-bottom: 0;
+  }
+  .single-summary-card .card-content strong {
+      color: ${primaryColor};
+      font-weight: 600;
+  }
+  .single-summary-card .card-content .highlight {
+      background-color: ${secondaryColor}60;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+  }
+  .single-summary-card .card-footer {
+      font-size: 15px;
+      color: #777;
+      text-align: center;
+      padding-top: 15px;
+      border-top: 1px dashed ${primaryColor}40;
+      margin-top: auto;
+  }
+  </style>
+  
+  <div class="single-summary-card-container">
+    <div class="single-summary-card">
+      <div class="card-header">
+        <span class="card-header-icon">💡</span>
+        <h3>${keyword} 핵심 요약</h3>
+      </div>
+      <div class="card-content">
+        <div class="section"><b>핵심 포인트 1:</b> <span class="highlight">주요 내용</span></div>
+        <div class="section"><b>핵심 포인트 2:</b> <span class="highlight">주요 내용</span></div>
+        <div class="section"><b>핵심 포인트 3:</b> <span class="highlight">주요 내용</span></div>
+      </div>
+      <div class="card-footer">이 정보로 더 나은 결과를 얻으세요!</div>
+    </div>
   </div>
 
-  <!-- 주의사항 카드 -->
+  <!-- 주의사항 카드 (2~6번째 소제목 사이) -->
   <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffeaa7;">
     <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ 주의사항</h4>
     <p style="color: #856404; margin: 0;">중요한 주의사항을 기재합니다.</p>
   </div>
 
-  [추가 H2 섹션들 반복]
+  [추가 H2 섹션들 반복 - 총 7개]
   
   <div style="background: linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}25); padding: 25px; border-radius: 12px; margin: 30px 0; border-left: 4px solid ${primaryColor};">
     <h3 style="color: ${primaryColor}; margin: 0 0 15px 0; text-align: left;">결론</h3>
@@ -131,11 +219,7 @@ ${externalReferencePrompt}
   <!-- 태그 섹션 -->
   <div style="margin: 30px 0;">
     <h4 style="color: ${primaryColor}; margin: 0 0 15px 0;">관련 태그</h4>
-    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-      <span style="background: ${secondaryColor}; color: ${primaryColor}; padding: 5px 12px; border-radius: 20px; font-size: 0.9em;">#${keyword}</span>
-      <span style="background: ${secondaryColor}; color: ${primaryColor}; padding: 5px 12px; border-radius: 20px; font-size: 0.9em;">#관련태그1</span>
-      <span style="background: ${secondaryColor}; color: ${primaryColor}; padding: 5px 12px; border-radius: 20px; font-size: 0.9em;">#관련태그2</span>
-    </div>
+    <p style="font-size: 16px; color: #666;">${keyword}, 관련태그1, 관련태그2, 관련태그3, 관련태그4, 관련태그5, 관련태그6</p>
   </div>
 
   <!-- 참고 링크 -->
@@ -150,11 +234,15 @@ ${externalReferencePrompt}
 \`\`\`
 
 **⚠️ 중요 준수사항:**
-- 서론은 반드시 120-150자 이내
+- 서론은 반드시 120-150자 이내 (최고 우선순위)
 - H2 섹션은 반드시 50-600자 사이
 - 150자 초과 시 2~3번째 마침표 후 줄바꿈 (최우선 규칙)
+- 모든 H2 소제목에 이모지 포함
+- H2 소제목에 컬러테마 밑줄 추가
+- 7번째 H2는 결론과 용기, 격려 내용
 - 테이블, 시각화 카드, 주의카드, 태그, 외부링크 모두 포함
 - 모든 텍스트는 text-align: left 적용
+- 태그는 쉼표로 구분하여 7개 작성
 - 실용적이고 완결형 정보 제공
 - 검색 의도에 부합하는 깊이 있는 내용
 

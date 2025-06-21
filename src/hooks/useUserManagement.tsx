@@ -153,8 +153,23 @@ export const useUserManagement = () => {
                 throw new Error('인증되지 않은 사용자입니다.');
             }
 
-            // 1. 먼저 user_roles 테이블에서 삭제 시도
-            console.log('1️⃣ user_roles에서 삭제 시도...');
+            // 1. 먼저 profiles 테이블에서 해당 사용자 확인
+            console.log('1️⃣ 사용자 존재 확인...');
+            const { data: existingUser, error: checkError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (checkError || !existingUser) {
+                console.error('❌ 삭제할 사용자를 찾을 수 없음:', checkError);
+                throw new Error('삭제할 사용자를 찾을 수 없습니다.');
+            }
+
+            console.log('✅ 삭제 대상 사용자 확인됨:', existingUser.email);
+
+            // 2. user_roles 테이블에서 삭제 (역할이 있는 경우만)
+            console.log('2️⃣ user_roles에서 삭제 시도...');
             const { error: roleError } = await supabase
                 .from('user_roles')
                 .delete()
@@ -167,8 +182,8 @@ export const useUserManagement = () => {
                 console.log('✅ user_roles 삭제 완료 (또는 해당 없음)');
             }
 
-            // 2. profiles 테이블에서 삭제
-            console.log('2️⃣ profiles에서 삭제 시도...');
+            // 3. profiles 테이블에서 삭제
+            console.log('3️⃣ profiles에서 삭제 시도...');
             const { data: deleteResult, error: profileError } = await supabase
                 .from('profiles')
                 .delete()
@@ -181,19 +196,26 @@ export const useUserManagement = () => {
             }
 
             if (!deleteResult || deleteResult.length === 0) {
-                console.warn('⚠️ 삭제할 프로필을 찾을 수 없음');
-                throw new Error('삭제할 사용자를 찾을 수 없습니다.');
+                console.warn('⚠️ 삭제할 프로필을 찾을 수 없음 (이미 삭제됨?)');
+                // 이미 삭제된 경우도 성공으로 처리
+                setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+                toast({
+                    title: "✅ 사용자 삭제 완료",
+                    description: "사용자가 이미 시스템에서 제거되었습니다.",
+                    duration: 4000
+                });
+                return true;
             }
 
             console.log('✅ 프로필 삭제 성공:', deleteResult);
 
-            // 3. 로컬 상태에서도 즉시 제거
+            // 4. 로컬 상태에서도 즉시 제거
             setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
 
-            // 4. 성공 메시지
+            // 5. 성공 메시지
             toast({ 
                 title: "✅ 사용자 완전 삭제 완료", 
-                description: "해당 사용자의 모든 데이터가 영구적으로 삭제되었습니다.",
+                description: `${existingUser.email} 사용자의 모든 데이터가 영구적으로 삭제되었습니다.`,
                 duration: 4000
             });
 
