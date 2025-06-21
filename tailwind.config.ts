@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -13,13 +12,7 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: {
-				DEFAULT: '0.5rem',
-				sm: '1rem',
-				lg: '2rem',
-				xl: '2rem',
-				'2xl': '2rem'
-			},
+			padding: '2rem',
 			screens: {
 				'2xl': '1400px'
 			}
@@ -101,4 +94,3 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

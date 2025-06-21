@@ -7,14 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit } from 'lucide-react';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
-import { useToast } from '@/hooks/use-toast';
 
 interface ArticleGeneratorProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
   selectTopic: (topic: string) => void;
   isGeneratingContent: boolean;
-  generateArticleContent: (topic?: string) => Promise<string | null>;
+  generateArticleContent: () => void;
 }
 
 export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
@@ -24,25 +23,6 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
   isGeneratingContent,
   generateArticleContent
 }) => {
-  const { toast } = useToast();
-
-  const handleSaveReferenceInfo = () => {
-    if (!appState.referenceLink && !appState.referenceSentence) {
-      toast({
-        title: "저장할 정보가 없습니다",
-        description: "외부 링크 또는 링크 문장을 입력해주세요.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    saveAppState({ saveReferenceTrigger: true });
-    toast({
-      title: "외부 링크 정보 저장 완료",
-      description: "외부 링크 정보가 성공적으로 저장되었습니다."
-    });
-  };
-
   return (
     <Card className={`shadow-md ${appState.topics.length === 0 ? 'opacity-50' : ''}`}>
       <CardHeader>
@@ -90,7 +70,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
 
         <div className="border p-4 rounded-lg space-y-4 bg-gray-50/50 shadow-inner">
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 링크</label>
                 <Input
                     placeholder="예: https://worldpis.com"
                     value={appState.referenceLink}
@@ -101,7 +81,7 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">외부 링크 문장</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">참조 문장</label>
                 <Input
                     placeholder="예: 워드프레스 꿀팁 더 보러가기"
                     value={appState.referenceSentence}
@@ -114,10 +94,10 @@ export const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
             <Button
               variant="outline"
               className="w-full bg-white"
-              onClick={handleSaveReferenceInfo}
+              onClick={() => saveAppState({ saveReferenceTrigger: true })}
               disabled={!appState.selectedTopic}
             >
-              외부 링크 정보 저장
+              참조 정보 저장
             </Button>
         </div>
 

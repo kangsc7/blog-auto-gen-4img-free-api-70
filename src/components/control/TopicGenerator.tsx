@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ interface TopicGeneratorProps {
   manualTopic: string;
   setManualTopic: React.Dispatch<React.SetStateAction<string>>;
   handleManualTopicAdd: () => void;
-  preventDuplicates: boolean;
 }
 
 export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
@@ -25,7 +23,6 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   manualTopic,
   setManualTopic,
   handleManualTopicAdd,
-  preventDuplicates,
 }) => {
   return (
     <Card className="shadow-md">
@@ -62,32 +59,12 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           </div>
         </div>
 
-        {/* 중복 설정 상태 표시 */}
-        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-          현재 설정: {appState.preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
-        </div>
-
         <Button 
           onClick={() => generateTopicsFromKeyword()}
           disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
-          className={`w-full transition-all duration-300 ${
-            isGeneratingTopics 
-              ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+          className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          {isGeneratingTopics ? (
-            <span className="flex items-center">
-              주제 생성 중
-              <span className="ml-1 animate-pulse">
-                <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
-                <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
-                <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
-              </span>
-            </span>
-          ) : (
-            '주제 생성하기'
-          )}
+          {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
         </Button>
 
         <div className="border-t pt-4">
