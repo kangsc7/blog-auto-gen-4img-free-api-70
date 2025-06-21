@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { saveApiKeyToStorage, getApiKeyFromStorage, removeApiKeyFromStorage, saveValidationStatusToStorage } from '@/lib/apiKeyStorage';
+import { saveApiKeyToStorage, getApiKeyFromStorage, removeApiKeyFromStorage, saveValidationStatusToStorage, getValidationStatusFromStorage } from '@/lib/apiKeyStorage';
 
 interface UseGeminiManagerProps {
   initialApiKey?: string;
@@ -13,20 +13,20 @@ interface UseGeminiManagerProps {
 export const useGeminiManager = (props?: UseGeminiManagerProps) => {
   const { toast } = useToast();
   
-  // 로컬 스토리지에서 키 로드 또는 props 사용
+  // 로컬 스토리지에서 키 로드 또는 props 사용 - 영구 보존
   const [geminiApiKey, setGeminiApiKey] = useState(() => {
     const storedKey = getApiKeyFromStorage('GEMINI');
     return storedKey || props?.initialApiKey || '';
   });
   
   const [isGeminiApiKeyValidated, setIsGeminiApiKeyValidated] = useState(() => {
-    const storedValidated = localStorage.getItem('gemini_validated');
-    return storedValidated ? storedValidated === 'true' : (props?.initialValidated ?? false);
+    const storedValidated = getValidationStatusFromStorage('GEMINI');
+    return storedValidated ?? (props?.initialValidated ?? false);
   });
   
   const [isGeminiValidating, setIsGeminiValidating] = useState(false);
 
-  console.log('useGeminiManager 초기화:', {
+  console.log('useGeminiManager 초기화 (영구 보존):', {
     initialApiKey: props?.initialApiKey,
     initialValidated: props?.initialValidated,
     currentKey: geminiApiKey,
@@ -73,7 +73,7 @@ export const useGeminiManager = (props?: UseGeminiManagerProps) => {
         return false;
       }
       
-      // API 키 저장
+      // API 키와 검증 상태 영구 저장
       saveApiKeyToStorage('GEMINI', apiKeyToValidate);
       saveValidationStatusToStorage('GEMINI', true);
       
@@ -81,7 +81,7 @@ export const useGeminiManager = (props?: UseGeminiManagerProps) => {
       props?.onValidationChange?.(true);
       toast({
         title: "API 키 검증 성공",
-        description: "성공적으로 연결되었습니다.",
+        description: "성공적으로 연결되었습니다. (영구 저장됨)",
       });
       return true;
     } catch (error) {
@@ -101,10 +101,16 @@ export const useGeminiManager = (props?: UseGeminiManagerProps) => {
   };
 
   const handleSetGeminiApiKey = (key: string) => {
-    console.log('Gemini API 키 설정:', key);
+    console.log('Gemini API 키 설정 (영구 저장):', key);
     setGeminiApiKey(key);
     setIsGeminiApiKeyValidated(false);
     saveValidationStatusToStorage('GEMINI', false);
+    
+    // 키가 입력되면 즉시 저장 (검증 전에도)
+    if (key.trim()) {
+      saveApiKeyToStorage('GEMINI', key);
+    }
+    
     props?.onApiKeyChange?.(key);
     props?.onValidationChange?.(false);
   };
@@ -117,14 +123,14 @@ export const useGeminiManager = (props?: UseGeminiManagerProps) => {
     isGeminiValidating,
     validateGeminiApiKey,
     deleteGeminiApiKeyFromStorage: () => {
-      console.log('Gemini API 키 완전 삭제');
+      console.log('Gemini API 키 완전 삭제 (영구 제거)');
       removeApiKeyFromStorage('GEMINI');
-      localStorage.removeItem('gemini_validated');
+      saveValidationStatusToStorage('GEMINI', false);
       setGeminiApiKey('');
       setIsGeminiApiKeyValidated(false);
       props?.onApiKeyChange?.('');
       props?.onValidationChange?.(false);
-      toast({ title: "키 삭제 완료", description: "Gemini API 키가 삭제되었습니다." });
+      toast({ title: "키 삭제 완료", description: "Gemini API 키가 영구 삭제되었습니다." });
     },
   };
 };

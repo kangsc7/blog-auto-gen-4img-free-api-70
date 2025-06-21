@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
+import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
 import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
 import { AppState } from '@/types';
 
@@ -47,43 +48,70 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   preventDuplicates,
   deleteReferenceData,
 }) => {
+  const [isHuggingFaceExpanded, setIsHuggingFaceExpanded] = useState(false);
+
+  const handleHuggingFaceDoubleClick = () => {
+    setIsHuggingFaceExpanded(!isHuggingFaceExpanded);
+  };
+
   return (
-    <div className="lg:col-span-5 space-y-6">
-      {/* 주제 생성 */}
+    <div className="space-y-6">
       <TopicGenerator
         appState={appState}
         saveAppState={saveAppState}
-        generateTopicsFromKeyword={generationFunctions.generateTopics}
         isGeneratingTopics={generationStatus.isGeneratingTopics}
         manualTopic={topicControls.manualTopic}
         setManualTopic={topicControls.setManualTopic}
         handleManualTopicAdd={topicControls.handleManualTopicAdd}
         preventDuplicates={preventDuplicates}
+        generateTopicsFromKeyword={generationFunctions.generateTopics}
       />
 
-      {/* 블로그 글 생성 */}
       <ArticleGenerator
         appState={appState}
         saveAppState={saveAppState}
-        selectTopic={topicControls.selectTopic}
         isGeneratingContent={generationStatus.isGeneratingContent}
-        generateArticleContent={generationFunctions.generateArticle}
         stopArticleGeneration={generationFunctions.stopArticleGeneration}
+        selectTopic={topicControls.selectTopic}
+        generateArticleContent={generationFunctions.generateArticle}
       />
 
-      {/* 이미지 생성 */}
-      <ImageCreation
-        appState={appState}
-        isGeneratingImage={generationStatus.isGeneratingImage}
-        isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-        createImagePrompt={generationFunctions.createImagePrompt}
-        generateDirectImage={generationFunctions.generateDirectImage}
-        copyToClipboard={utilityFunctions.copyToClipboard}
-        openWhisk={utilityFunctions.openWhisk}
-      />
+      <div className="space-y-4">
+        <ImageCreation
+          appState={appState}
+          isGeneratingImage={generationStatus.isGeneratingImage}
+          isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+          createImagePrompt={generationFunctions.createImagePrompt}
+          generateDirectImage={generationFunctions.generateDirectImage}
+          copyToClipboard={utilityFunctions.copyToClipboard}
+          openWhisk={utilityFunctions.openWhisk}
+        />
 
-      {/* 외부 링크 및 문장 참조 입력 - 이미지 생성 섹션 아래로 이동 */}
-      <ExternalReferenceInput 
+        {/* Hugging Face 이미지 생성기 - 더블클릭으로 접기/펼치기 */}
+        <div 
+          onDoubleClick={handleHuggingFaceDoubleClick}
+          className={`cursor-pointer transition-all duration-300 ${
+            isHuggingFaceExpanded ? 'opacity-100' : 'opacity-70'
+          }`}
+        >
+          <div className={`transition-all duration-300 overflow-hidden ${
+            isHuggingFaceExpanded ? 'max-h-[800px]' : 'max-h-16'
+          }`}>
+            <HuggingFaceImageGenerator
+              huggingFaceApiKey={appState.huggingFaceApiKey}
+              isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
+              hasAccess={true}
+            />
+          </div>
+          {!isHuggingFaceExpanded && (
+            <div className="text-center text-xs text-gray-500 bg-gray-50 rounded p-2 mt-1">
+              💡 더블클릭해서 Hugging Face 이미지 생성기 열기
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ExternalReferenceInput
         appState={appState}
         saveAppState={saveAppState}
         deleteReferenceData={deleteReferenceData}

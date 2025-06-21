@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, RefreshCw, Ban, Check, AlertTriangle, Clock } from 'lucide-react';
@@ -48,12 +49,21 @@ const Index = () => {
     showDuplicateErrorDialog,
     setShowDuplicateErrorDialog,
     showTopicConfirmDialog,
+    setShowTopicConfirmDialog,
     pendingTopic,
     handleTopicCancel,
     convertToMarkdown,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
+
+  // 참조 데이터 삭제 함수
+  const deleteReferenceData = () => {
+    saveAppState({ 
+      referenceLink: '', 
+      referenceSentence: '' 
+    });
+  };
 
   console.log('Index 컴포넌트 렌더링 상태:', {
     session: !!session,
@@ -111,7 +121,7 @@ const Index = () => {
     const { title, description, icon } = getStatusMessage();
 
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 w-full">
         <TopNavigation />
         <AppHeader
           currentUser={profile?.email || appState.currentUser}
@@ -142,7 +152,7 @@ const Index = () => {
   console.log('메인 화면 렌더링 시작');
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 w-full">
       <TopNavigation />
       <AppHeader
         currentUser={profile?.email || appState.currentUser}
@@ -155,12 +165,12 @@ const Index = () => {
         huggingFaceManager={huggingFaceManager}
       />
 
-      {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
-      <div className="container mx-auto mt-4 mb-3">
+      {/* 컨트롤 섹션 - 전체 width 사용 */}
+      <div className="content-container mt-4 mb-3">
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="flex items-center justify-between flex-wrap gap-6">
             
-            {/* 사용자 현황 링크 - 모든 로그인한 사용자에게 표시 */}
+            {/* 사용자 현황 링크 */}
             <div className="flex-shrink-0">
               <Link
                 to="/admin/users"
@@ -173,7 +183,7 @@ const Index = () => {
               </Link>
             </div>
             
-            {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
+            {/* 중복 설정 토글 */}
             <div className="text-center">
               <div className="mb-3">
                 <span className="text-lg font-bold text-gray-800">중복 주제 설정</span>
@@ -210,7 +220,7 @@ const Index = () => {
               </p>
             </div>
             
-            {/* 초기화 버튼 - 크기 조정 */}
+            {/* 초기화 버튼 */}
             <div className="text-center">
               <Button
                 onClick={handleResetApp}
@@ -245,19 +255,24 @@ const Index = () => {
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
         handleTopicConfirm={handleTopicConfirm}
+        deleteReferenceData={deleteReferenceData}
       />
 
-      {/* 주제 확인 다이얼로그 - 파라미터 제거하여 올바른 호출 */}
+      {/* 주제 확인 다이얼로그 */}
       <TopicConfirmDialog
         isOpen={showTopicConfirmDialog}
         topic={pendingTopic}
         onConfirm={() => {
           console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
-          handleTopicConfirm(); // 파라미터 제거
+          handleTopicConfirm();
         }}
         onCancel={() => {
           console.log('TopicConfirmDialog onCancel 호출됨');
           handleTopicCancel();
+        }}
+        onClose={() => {
+          console.log('TopicConfirmDialog onClose 호출됨');
+          setShowTopicConfirmDialog(false);
         }}
       />
 

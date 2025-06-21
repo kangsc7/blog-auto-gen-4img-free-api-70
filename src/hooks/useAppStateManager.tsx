@@ -38,7 +38,7 @@ const defaultState: AppState = {
 // localStorage 키 상수들
 const STORAGE_KEYS = {
   GENERATED_CONTENT: 'blog_generated_content',
-  EDITOR_CONTENT: 'blog_editor_content',
+  EDITOR_CONTENT: 'blog_editor_content_permanent_v3', // 편집기와 동일한 키 사용
   REFERENCE_LINK: 'blog_reference_link_permanent',
   REFERENCE_SENTENCE: 'blog_reference_sentence_permanent',
   SELECTED_TOPIC: 'blog_selected_topic',
@@ -56,12 +56,14 @@ export const useAppStateManager = () => {
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
 
-  // localStorage에서 블로그 관련 데이터 로드 - 고급 설정 포함
+  // localStorage에서 블로그 관련 데이터 로드 - 편집기와 완전 동기화
   const loadBlogDataFromStorage = useCallback(() => {
     try {
+      // 편집기와 동일한 키로 저장된 내용 우선 로드
       const editorContent = localStorage.getItem(STORAGE_KEYS.EDITOR_CONTENT);
       const generatedContent = localStorage.getItem(STORAGE_KEYS.GENERATED_CONTENT);
       
+      // 편집기 내용이 있으면 우선, 없으면 생성된 내용 사용
       const finalContent = editorContent || generatedContent || '';
       
       // 참조 링크와 문장은 영구 보존 키로 저장
@@ -72,7 +74,7 @@ export const useAppStateManager = () => {
       const visualSummaryEnabled = localStorage.getItem(STORAGE_KEYS.VISUAL_SUMMARY_ENABLED) === 'true';
       const sectionWordLimit = localStorage.getItem(STORAGE_KEYS.SECTION_WORD_LIMIT) || '200-270';
       
-      console.log('앱 상태 관리자 - 블로그 데이터 로드 (고급 설정 포함):', {
+      console.log('앱 상태 관리자 - 편집기와 완전 동기화된 블로그 데이터 로드:', {
         hasEditorContent: !!editorContent,
         hasGeneratedContent: !!generatedContent,
         finalContentLength: finalContent.length,
@@ -100,13 +102,14 @@ export const useAppStateManager = () => {
     }
   }, []);
 
-  // localStorage에 블로그 관련 데이터 저장 - 고급 설정 포함
+  // localStorage에 블로그 관련 데이터 저장 - 편집기와 완전 동기화
   const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
     try {
       if (data.generatedContent !== undefined) {
-        localStorage.setItem(STORAGE_KEYS.GENERATED_CONTENT, data.generatedContent);
+        // 편집기와 동일한 키에 저장하여 완전 동기화
         localStorage.setItem(STORAGE_KEYS.EDITOR_CONTENT, data.generatedContent);
-        console.log('앱 상태 관리자 - 콘텐츠 저장 및 동기화:', data.generatedContent.length);
+        localStorage.setItem(STORAGE_KEYS.GENERATED_CONTENT, data.generatedContent);
+        console.log('앱 상태 관리자 - 편집기와 완전 동기화된 콘텐츠 저장:', data.generatedContent.length);
       }
       if (data.referenceLink !== undefined) {
         localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
@@ -147,18 +150,18 @@ export const useAppStateManager = () => {
     
     const allKeys = getAllApiKeysFromStorage();
     
-    // 기본값과 저장된 값 비교하여 올바른 값 선택 - API 키는 항상 보존
+    // API 키가 없으면 기본값으로 설정하고 검증 상태를 true로 설정
     const finalState = {
       apiKey: allKeys.geminiKey || DEFAULT_API_KEYS.GEMINI,
       pixabayApiKey: allKeys.pixabayKey || DEFAULT_API_KEYS.PIXABAY,
       huggingFaceApiKey: allKeys.huggingFaceKey || DEFAULT_API_KEYS.HUGGING_FACE,
-      // 저장된 키가 있으면 검증 상태를 사용, 없으면 기본값은 true
-      isApiKeyValidated: allKeys.geminiKey ? allKeys.geminiValidated : true,
-      isPixabayApiKeyValidated: allKeys.pixabayKey ? allKeys.pixabayValidated : true,
-      isHuggingFaceApiKeyValidated: allKeys.huggingFaceKey ? allKeys.huggingFaceValidated : true,
+      // 모든 API 키는 기본적으로 연결된 상태로 설정
+      isApiKeyValidated: true,
+      isPixabayApiKeyValidated: true,
+      isHuggingFaceApiKeyValidated: true,
     };
 
-    console.log('✅ 최종 로드된 API 키 상태 (영구 보존):', {
+    console.log('✅ 최종 로드된 API 키 상태 (모든 키 기본 연결):', {
       gemini: { hasKey: !!finalState.apiKey, validated: finalState.isApiKeyValidated },
       pixaby: { hasKey: !!finalState.pixabayApiKey, validated: finalState.isPixabayApiKeyValidated },
       huggingface: { hasKey: !!finalState.huggingFaceApiKey, validated: finalState.isHuggingFaceApiKeyValidated }
@@ -167,10 +170,10 @@ export const useAppStateManager = () => {
     return finalState;
   }, []);
 
-  // 앱 상태 초기화 - 고급 설정 포함하여 즉시 로드
+  // 앱 상태 초기화 - API 키는 항상 연결된 상태로 설정
   useEffect(() => {
     if (!hasInitialized.current && !initializationLock.current) {
-      console.log('🚀 useAppStateManager 즉시 초기화 시작 (고급 설정 포함)');
+      console.log('🚀 useAppStateManager 즉시 초기화 시작 (모든 API 키 기본 연결)');
       initializationLock.current = true;
       
       // 동기적으로 모든 데이터 로드
@@ -178,9 +181,10 @@ export const useAppStateManager = () => {
         apiKey: getApiKeyFromStorage('GEMINI') || DEFAULT_API_KEYS.GEMINI,
         pixabayApiKey: getApiKeyFromStorage('PIXABAY') || DEFAULT_API_KEYS.PIXABAY,
         huggingFaceApiKey: getApiKeyFromStorage('HUGGING_FACE') || DEFAULT_API_KEYS.HUGGING_FACE,
-        isApiKeyValidated: getValidationStatusFromStorage('GEMINI') ?? true,
-        isPixabayApiKeyValidated: getValidationStatusFromStorage('PIXABAY') ?? true,
-        isHuggingFaceApiKeyValidated: getValidationStatusFromStorage('HUGGING_FACE') ?? true,
+        // 모든 API 키는 기본적으로 연결된 상태
+        isApiKeyValidated: true,
+        isPixabayApiKeyValidated: true,
+        isHuggingFaceApiKeyValidated: true,
       };
       
       const storedBlogData = loadBlogDataFromStorage();
@@ -195,15 +199,15 @@ export const useAppStateManager = () => {
           ...storedBlogData,
           preventDuplicates: true // 기본값 유지
         };
-        console.log('✅ 앱 상태 즉시 초기화 완료 (고급 설정 포함)');
+        console.log('✅ 앱 상태 즉시 초기화 완료 (모든 API 키 기본 연결)');
         return newState;
       });
       
       // 모든 검증 상태를 localStorage에 즉시 저장하여 동기화
       setTimeout(() => {
-        saveValidationStatusToStorage('GEMINI', storedApiKeys.isApiKeyValidated);
-        saveValidationStatusToStorage('PIXABAY', storedApiKeys.isPixabayApiKeyValidated);
-        saveValidationStatusToStorage('HUGGING_FACE', storedApiKeys.isHuggingFaceApiKeyValidated);
+        saveValidationStatusToStorage('GEMINI', true);
+        saveValidationStatusToStorage('PIXABAY', true);
+        saveValidationStatusToStorage('HUGGING_FACE', true);
       }, 100);
     }
   }, [loadApiKeysFromStorage, loadBlogDataFromStorage]);
@@ -250,22 +254,22 @@ export const useAppStateManager = () => {
   }, [saveBlogDataToStorage]);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
-    console.log(`🗑️ ${keyType} API 키를 기본값으로 복원`);
+    console.log(`🗑️ ${keyType} API 키 입력창 삭제 및 기본값 복원`);
     switch (keyType) {
       case 'gemini':
         removeApiKeyFromStorage('GEMINI');
-        saveAppState({ apiKey: DEFAULT_API_KEYS.GEMINI, isApiKeyValidated: true });
+        saveAppState({ apiKey: '', isApiKeyValidated: false });
         break;
       case 'pixabay':
         removeApiKeyFromStorage('PIXABAY');
-        saveAppState({ pixabayApiKey: DEFAULT_API_KEYS.PIXABAY, isPixabayApiKeyValidated: true });
+        saveAppState({ pixabayApiKey: '', isPixabayApiKeyValidated: false });
         break;
       case 'huggingface':
         removeApiKeyFromStorage('HUGGING_FACE');
-        saveAppState({ huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE, isHuggingFaceApiKeyValidated: true });
+        saveAppState({ huggingFaceApiKey: '', isHuggingFaceApiKeyValidated: false });
         break;
     }
-    toast({ title: "기본값으로 복원", description: `${keyType} API 키가 기본값으로 복원되었습니다.` });
+    toast({ title: "키 삭제 완료", description: `${keyType} API 키가 입력창에서 삭제되었습니다.` });
   }, [saveAppState, toast]);
 
   // 참조 링크와 문장을 영구적으로 삭제하는 함수 추가
@@ -281,30 +285,33 @@ export const useAppStateManager = () => {
   }, [saveAppState, toast]);
 
   const resetApp = useCallback(() => {
-    console.log('🔄 앱 즉시 초기화 (API 키와 참조 데이터는 보존, 블로그 데이터는 즉시 삭제)');
+    console.log('🔄 앱 즉시 초기화 (API 키와 참조 데이터는 보존, 편집기 완전 초기화)');
     
     // API 키는 보존하고 다른 데이터만 즉시 초기화
     const preservedKeys = preserveApiKeysOnReset();
     
-    // 블로그 관련 localStorage 데이터 즉시 삭제 (참조 데이터 제외)
+    // 편집기와 관련된 모든 localStorage 데이터 즉시 삭제
     localStorage.removeItem(STORAGE_KEYS.GENERATED_CONTENT);
-    localStorage.removeItem(STORAGE_KEYS.EDITOR_CONTENT);
+    localStorage.removeItem(STORAGE_KEYS.EDITOR_CONTENT); // 편집기와 동기화
     localStorage.removeItem(STORAGE_KEYS.SELECTED_TOPIC);
     localStorage.removeItem(STORAGE_KEYS.TOPICS);
     localStorage.removeItem(STORAGE_KEYS.KEYWORD);
     localStorage.removeItem(STORAGE_KEYS.COLOR_THEME);
     // 참조 링크와 문장, 고급 설정은 초기화하지 않음 (영구 보존)
     
-    // 즉시 상태 초기화
+    // 편집기 초기화 이벤트 발송
+    window.dispatchEvent(new CustomEvent('app-reset'));
+    
+    // 즉시 상태 초기화 - API 키는 항상 연결된 상태로 유지
     setAppState({
       ...defaultState,
-      // API 키와 검증 상태는 보존
+      // API 키와 검증 상태는 보존하되 항상 연결된 상태로 설정
       apiKey: preservedKeys.geminiKey || DEFAULT_API_KEYS.GEMINI,
       pixabayApiKey: preservedKeys.pixabayKey || DEFAULT_API_KEYS.PIXABAY,
       huggingFaceApiKey: preservedKeys.huggingFaceKey || DEFAULT_API_KEYS.HUGGING_FACE,
-      isApiKeyValidated: preservedKeys.geminiValidated ?? true,
-      isPixabayApiKeyValidated: preservedKeys.pixabayValidated ?? true,
-      isHuggingFaceApiKeyValidated: preservedKeys.huggingFaceValidated ?? true,
+      isApiKeyValidated: true, // 항상 연결된 상태
+      isPixabayApiKeyValidated: true, // 항상 연결된 상태
+      isHuggingFaceApiKeyValidated: true, // 항상 연결된 상태
       // 참조 링크와 문장, 고급 설정도 보존
       referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
       referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
@@ -312,7 +319,7 @@ export const useAppStateManager = () => {
     });
     
     setPreventDuplicates(true);
-    toast({ title: "즉시 초기화 완료", description: "블로그 데이터가 즉시 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
+    toast({ title: "즉시 초기화 완료", description: "편집기가 완전 초기화되었습니다. (API 키와 참조 데이터는 보존됨)" });
   }, [toast]);
 
   return {

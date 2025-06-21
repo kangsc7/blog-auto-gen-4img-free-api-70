@@ -2,76 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
-import { getEnhancedTopicPrompt } from '@/lib/enhancedPrompts';
-
-// 간단한 유사도 검사 함수 (70% 기준)
-const calculateSimilarity = (str1: string, str2: string): number => {
-  const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
-  const s1 = normalize(str1);
-  const s2 = normalize(str2);
-  
-  if (s1 === s2) return 100;
-  
-  const maxLength = Math.max(s1.length, s2.length);
-  let matches = 0;
-  
-  for (let i = 0; i < Math.min(s1.length, s2.length); i++) {
-    if (s1[i] === s2[i]) matches++;
-  }
-  
-  return (matches / maxLength) * 100;
-};
-
-// 주제 유효성 검사 함수 - 개선된 버전
-const isValidTopic = (topic: string): boolean => {
-  const cleanTopic = topic.trim();
-  
-  // 기본 길이 체크
-  if (cleanTopic.length < 5 || cleanTopic.length > 200) {
-    return false;
-  }
-  
-  // 완전히 이상한 패턴만 제외 (월 관련 제한 완화)
-  const invalidStartPatterns = [
-    /^[0-9]+\s*[.]/, // "1." 등 번호로 시작
-    /^[-•*]\s/,      // 불릿 포인트로 시작
-    /^[가-힣]{1}\s+[가-힣]{1}\s/, // "월 가" 같은 단일 글자 연속
-  ];
-  
-  // 비정상적인 내용 패턴 체크
-  const invalidContentPatterns = [
-    /^\s*$/, // 빈 문자열 또는 공백만
-    /^[^가-힣a-zA-Z]/, // 한글이나 영문이 아닌 문자로 시작
-    /\s{3,}/, // 연속된 공백 3개 이상
-  ];
-  
-  // 시작 패턴 검사
-  for (const pattern of invalidStartPatterns) {
-    if (pattern.test(cleanTopic)) {
-      console.log('비정상적인 시작 패턴 감지:', cleanTopic, pattern);
-      return false;
-    }
-  }
-  
-  // 내용 패턴 검사
-  for (const pattern of invalidContentPatterns) {
-    if (pattern.test(cleanTopic)) {
-      console.log('비정상적인 내용 패턴 감지:', cleanTopic, pattern);
-      return false;
-    }
-  }
-  
-  return true;
-};
-
-// 주제 정리 함수 - 개선된 버전
-const cleanTopic = (rawTopic: string): string => {
-  return rawTopic
-    .replace(/^[0-9-."'•*\s]+/, '') // 앞쪽 번호, 기호, 공백 제거
-    .replace(/["\n\r]+/g, '') // 따옴표, 줄바꿈 제거
-    .replace(/^\s*월\s+/, '') // 문장 앞의 "월 " 패턴 제거
-    .trim();
-};
 
 export const useTopicGenerator = (
   appState: AppState,
@@ -79,210 +9,134 @@ export const useTopicGenerator = (
 ) => {
   const { toast } = useToast();
   const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
-  const [lastGenerationTime, setLastGenerationTime] = useState(0);
+
+  // 주제 유효성 검사 함수
+  const isValidTopic = (topic: string): boolean => {
+    const cleanedTopic = topic.trim();
+    
+    // 너무 짧은 주제 제외
+    if (cleanedTopic.length < 10) return false;
+    
+    // 비정상적인 시작 패턴 제외
+    const invalidStartPatterns = [
+      /^월\s/, // "월 " 로 시작
+      /^일\s/, // "일 " 로 시작  
+      /^년\s/, // "년 " 로 시작
+      /^\d+\.\s/, // "1. " 같은 번호로 시작
+      /^-\s/, // "- " 로 시작
+      /^\*\s/, // "* " 로 시작
+      /^제\d+/, // "제1", "제2" 로 시작
+    ];
+    
+    return !invalidStartPatterns.some(pattern => pattern.test(cleanedTopic));
+  };
+
+  // 주제 정리 함수
+  const cleanTopic = (topic: string): string => {
+    return topic
+      .replace(/^[0-9]+[.\-)\s]*/, '') // 앞의 번호 제거
+      .replace(/^[-*•]\s*/, '') // 앞의 기호 제거
+      .replace(/^제\d+[호번]?\s*:?\s*/, '') // "제1호", "제2번" 등 제거
+      .replace(/^주제\s*\d*\s*:?\s*/, '') // "주제 1:", "주제:" 등 제거
+      .replace(/^월\s+/, '') // 앞의 "월 " 제거
+      .trim();
+  };
 
   const generateTopics = async (keywordOverride?: string): Promise<string[] | null> => {
-    const rawKeyword = (keywordOverride || appState.keyword).trim();
-    const cleanedKeyword = rawKeyword.replace(/\s+/g, ' ').trim();
-    
-    if (!cleanedKeyword) {
-      toast({
-        title: "키워드 오류",
-        description: "핵심 키워드를 입력해주세요.",
-        variant: "destructive"
-      });
+    const keyword = keywordOverride || appState.keyword;
+    if (!keyword) {
+      toast({ title: "키워드 입력 오류", description: "먼저 키워드를 입력해주세요.", variant: "destructive" });
       return null;
     }
-
     if (!appState.isApiKeyValidated) {
-      toast({
-        title: "API 키 검증 필요",
-        description: "먼저 API 키를 입력하고 검증해주세요.",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    // 3초 딜레이 체크 (완화)
-    const currentTime = Date.now();
-    const timeSinceLastGeneration = currentTime - lastGenerationTime;
-    if (timeSinceLastGeneration < 2000 && lastGenerationTime > 0) {
-      const remainingTime = Math.ceil((2000 - timeSinceLastGeneration) / 1000);
-      toast({
-        title: "잠시만 기다려주세요",
-        description: `${remainingTime}초 후에 다시 시도할 수 있습니다.`,
-        variant: "default"
-      });
+      toast({ title: "API 키 검증 필요", description: "먼저 API 키를 입력하고 검증해주세요.", variant: "destructive" });
       return null;
     }
 
     setIsGeneratingTopics(true);
-    setLastGenerationTime(currentTime);
-    
     try {
-      const count = appState.topicCount;
-      
-      // 개선된 프롬프트 - 월 관련 제한 완화
-      const enhancedPrompt = `"${cleanedKeyword}"를 핵심 키워드로 하여 블로그 주제 ${count}개를 생성해주세요.
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
+      const requestedCount = appState.topicCount || 10;
 
-**중요한 형식 규칙:**
-1. 각 주제는 새로운 줄에 하나씩만 작성
-2. 번호, 불릿 포인트, 기호 등을 절대 사용하지 마세요
-3. 주제는 완전한 문장 형태로 작성 (예: "가을철 건강관리 필수 팁 5가지")
-4. 10자 이상 80자 이하로 작성
-5. "${cleanedKeyword}" 키워드가 자연스럽게 포함되도록 작성
-6. 실제 블로그 제목처럼 매력적이고 클릭하고 싶게 작성
+      const prompt = `"${keyword}"를 키워드로 하여 ${currentYear}년 ${currentMonth}월 현재 기준으로 블로그 포스팅에 적합한 주제를 정확히 ${requestedCount}개만 생성해주세요.
 
-**주제 특성:**
-- 실용적이고 검색 가치가 있는 내용
-- 독자들이 클릭하고 싶은 흥미로운 제목
-- SEO에 최적화된 키워드 포함
-- 월, 계절, 시기 관련 내용도 자연스럽게 포함 가능
+생성 규칙:
+1. 각 주제는 완전한 문장 형태로 15-25자 내외
+2. "${keyword}" 키워드가 자연스럽게 포함되어야 함
+3. ${currentYear}년 최신 트렌드와 정보를 반영
+4. 실용적이고 검색 가치가 높은 내용
+5. 독자의 관심을 끌 수 있는 매력적인 제목
+6. **중요: 정확히 ${requestedCount}개의 주제만 생성해야 함**
 
-**예시 형식:**
-2024년 최신 ${cleanedKeyword} 트렌드 완벽 분석
-초보자를 위한 ${cleanedKeyword} 시작 가이드 A to Z
-전문가가 추천하는 ${cleanedKeyword} 베스트 방법 10가지
+형식:
+각 주제는 번호나 기호 없이 제목만 작성하고, 한 줄에 하나씩 작성해주세요.
+절대로 ${requestedCount}개를 초과하거나 미달하지 마세요.
 
-각 주제를 한 줄씩 작성해주세요:`;
+예시 형태:
+"${keyword} 완벽 가이드: ${currentYear}년 최신 정보 총정리"
+"${keyword} 활용법: 초보자도 쉽게 따라하는 단계별 방법"
+
+주의사항:
+- 정치적, 종교적, 논란의 여지가 있는 주제 제외
+- 과도한 상업적 표현 자제
+- 각 주제가 서로 다른 관점에서 접근하도록 구성
+- 반드시 ${requestedCount}개 이하로 생성`;
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${appState.apiKey}`;
-
-      // API 요청 타임아웃 설정
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30초 타임아웃
 
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ 
-          contents: [{ parts: [{ text: enhancedPrompt }] }],
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.4, // 약간 높여서 창의성 증가
             maxOutputTokens: 2048,
-            topP: 0.9,
-            topK: 40,
-          }
-        })
+            temperature: 1.0,
+          },
+        }),
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error?.message || `HTTP ${response.status}: API 요청 실패`;
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'API 요청에 실패했습니다.');
       }
       
       const data = await response.json();
       
-      // API 응답 검증 강화
-      if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Gemini API 응답 오류:', data);
-        throw new Error('API로부터 유효한 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.');
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error('API로부터 유효한 응답을 받지 못했습니다.');
       }
       
-      const generatedText = data.candidates[0].content.parts[0].text;
-      console.log('Gemini API 원본 응답:', generatedText);
+      const rawTopics = data.candidates[0].content.parts[0].text;
       
-      // 개선된 텍스트 파싱
-      const lines = generatedText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-      
-      console.log('파싱된 라인들:', lines);
-      
-      // 주제 정리 및 검증
-      const rawTopics = lines
-        .map(topic => cleanTopic(topic))
-        .filter(topic => topic.length > 0);
-      
-      console.log('정리된 주제들:', rawTopics);
-      
-      // 유효성 검사 적용
-      const validTopics = rawTopics
-        .filter(topic => isValidTopic(topic))
-        .slice(0, count); // 요청한 개수만큼만 선택
+      // 주제 파싱 및 정리 - 정확한 개수만 반환
+      const topics = rawTopics
+        .split('\n')
+        .map(line => cleanTopic(line))
+        .filter(topic => topic.length > 0 && isValidTopic(topic))
+        .slice(0, requestedCount); // 요청된 개수만큼만 자르기
 
-      console.log('유효한 주제들:', validTopics);
+      console.log(`요청된 주제 수: ${requestedCount}, 생성된 주제 수: ${topics.length}`);
+      console.log('정리된 주제들:', topics);
 
-      if (validTopics.length === 0) {
-        console.error('유효한 주제가 없음. 원본 텍스트:', generatedText);
-        throw new Error('생성된 텍스트에서 유효한 주제를 추출할 수 없습니다. 다시 시도해주세요.');
+      if (topics.length === 0) {
+        throw new Error('유효한 주제를 생성하지 못했습니다.');
       }
 
-      let finalTopics = validTopics;
-
-      // Get preventDuplicates from appState
-      const preventDuplicates = appState.preventDuplicates || false;
-
-      // 중복 금지 설정이 활성화된 경우에만 유사도 검사
-      if (preventDuplicates && appState.topics.length > 0) {
-        finalTopics = validTopics.filter(newTopic => {
-          return !appState.topics.some(existingTopic => {
-            const similarity = calculateSimilarity(newTopic, existingTopic);
-            return similarity >= 70;
-          });
-        });
-
-        const removedCount = validTopics.length - finalTopics.length;
-        if (removedCount > 0) {
-          console.log(`중복 제거: ${removedCount}개 주제 제거됨`);
-          toast({
-            title: "중복 주제 제거",
-            description: `70% 이상 유사한 ${removedCount}개 주제가 제거되었습니다.`,
-            variant: "default"
-          });
-        }
+      // 키워드 저장 (덮어쓰기 방지)
+      const stateUpdate: Partial<AppState> = { topics };
+      if (keywordOverride) {
+        stateUpdate.keyword = keywordOverride;
       }
-
-      // 주제가 전혀 없는 경우 처리
-      if (finalTopics.length === 0) {
-        if (preventDuplicates) {
-          // 중복 방지 모드에서 모든 주제가 중복인 경우, 일부 주제를 허용
-          finalTopics = validTopics.slice(0, Math.min(3, validTopics.length));
-          toast({
-            title: "중복 주제 일부 허용",
-            description: `모든 주제가 중복되어 ${finalTopics.length}개 주제를 허용했습니다.`,
-            variant: "default"
-          });
-        } else {
-          throw new Error('생성된 주제가 없습니다. 다른 키워드로 시도해주세요.');
-        }
-      }
-
-      // 상태 업데이트 - 중복 허용/금지에 관계없이 추가
-      const combinedTopics = [...appState.topics, ...finalTopics];
-      saveAppState({ topics: combinedTopics, selectedTopic: '', keyword: cleanedKeyword });
       
-      toast({ 
-        title: "AI 기반 주제 생성 완료", 
-        description: `${finalTopics.length}개의 고품질 주제가 성공적으로 생성되었습니다.` 
-      });
-      
-      return finalTopics;
+      saveAppState(stateUpdate);
+      toast({ title: "주제 생성 완료", description: `${topics.length}개의 주제가 생성되었습니다.` });
+      return topics;
     } catch (error) {
-      console.error('주제 생성 상세 오류:', error);
-      let errorMessage = "주제 생성 중 오류가 발생했습니다.";
-      
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = "요청 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.";
-        } else if (error.message.includes('API key')) {
-          errorMessage = "API 키에 문제가 있습니다. API 키를 다시 확인해주세요.";
-        } else if (error.message.includes('quota') || error.message.includes('limit')) {
-          errorMessage = "API 사용 한도에 도달했습니다. 잠시 후 다시 시도해주세요.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      toast({ 
-        title: "주제 생성 실패", 
-        description: errorMessage, 
-        variant: "destructive" 
-      });
+      console.error('주제 생성 오류:', error);
+      toast({ title: "주제 생성 실패", description: error instanceof Error ? error.message : "주제 생성 중 오류가 발생했습니다.", variant: "destructive" });
       return null;
     } finally {
       setIsGeneratingTopics(false);

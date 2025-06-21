@@ -26,6 +26,12 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
 }) => {
   console.log('GeminiApiKeyManager 렌더링:', { geminiApiKey, isGeminiApiKeyValidated });
 
+  const handleDelete = () => {
+    setGeminiApiKey('');
+    setIsGeminiApiKeyValidated(false);
+    deleteGeminiApiKeyFromStorage();
+  };
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -64,7 +70,7 @@ export const GeminiApiKeyManager: React.FC<GeminiApiKeyManagerProps> = ({
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={deleteGeminiApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
+            <Button onClick={handleDelete} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>

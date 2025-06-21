@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TopicList } from '@/components/display/TopicList';
-import { SimpleArticleEditor } from '@/components/display/SimpleArticleEditor';
+import { CleanArticleEditor } from '@/components/display/CleanArticleEditor';
 import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
 import { ContentActions } from '@/components/control/ContentActions';
 import { AppState } from '@/types';
@@ -30,7 +30,7 @@ export const RightContent: React.FC<RightContentProps> = ({
     };
 
     return (
-        <div className="lg:col-span-8 space-y-6">
+        <div className="space-y-6 w-full min-w-0">
             <TopicList
                 topics={appState.topics}
                 selectedTopic={appState.selectedTopic}
@@ -38,7 +38,7 @@ export const RightContent: React.FC<RightContentProps> = ({
                 onTopicConfirm={onTopicConfirm}
             />
 
-            <SimpleArticleEditor
+            <CleanArticleEditor
                 generatedContent={appState.generatedContent}
                 isGeneratingContent={isGeneratingContent}
                 selectedTopic={appState.selectedTopic}

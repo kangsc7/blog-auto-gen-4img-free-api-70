@@ -1,82 +1,55 @@
 
 import React from 'react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { FileText, Sparkles } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface TopicConfirmDialogProps {
   isOpen: boolean;
-  topic: string;
+  onClose: () => void;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
+  topic: string;
 }
 
 export const TopicConfirmDialog: React.FC<TopicConfirmDialogProps> = ({
   isOpen,
-  topic,
+  onClose,
   onConfirm,
   onCancel,
+  topic,
 }) => {
-  const handleConfirm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('TopicConfirmDialog handleConfirm 호출됨:', topic);
+  const handleConfirm = () => {
     onConfirm();
+    onClose();
   };
 
-  const handleCancel = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
     }
-    console.log('TopicConfirmDialog handleCancel 호출됨');
-    onCancel();
+    onClose();
   };
 
-  // onOpenChange 제거하여 명시적인 버튼 클릭만 처리
   return (
-    <AlertDialog open={isOpen} onOpenChange={() => {}}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader className="text-center">
-          <div className="mx-auto bg-blue-100 rounded-full p-3 w-fit mb-4">
-            <FileText className="h-8 w-8 text-blue-600" />
-          </div>
-          <AlertDialogTitle className="text-xl font-bold text-gray-900">
-            블로그 글 작성 확인
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-xl font-bold text-blue-600">
+            🚀 블로그 글 생성 확인
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-base text-gray-600 mt-3">
-            선택하신 주제로 블로그 글을 작성하시겠습니까?
+          <AlertDialogDescription className="text-base leading-relaxed">
+            <div className="bg-blue-50 p-3 rounded-lg mb-4">
+              <p className="font-semibold text-blue-800 mb-2">선택하신 주제:</p>
+              <p className="text-blue-700 italic">"{topic}"</p>
+            </div>
+            <p className="text-gray-700">
+              이 주제로 블로그 글을 생성하시겠습니까?
+            </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
-        <div className="bg-blue-50 rounded-lg p-4 my-4 border border-blue-200">
-          <div className="flex items-start space-x-3">
-            <Sparkles className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-blue-900 text-sm mb-1">선택된 주제:</p>
-              <p className="text-blue-800 font-medium">{topic}</p>
-            </div>
-          </div>
-        </div>
-
-        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-          <AlertDialogCancel 
-            onClick={handleCancel}
-            className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            아니요
-          </AlertDialogCancel>
-          <AlertDialogAction 
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogAction
             onClick={handleConfirm}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
           >
             네, 작성하겠습니다
           </AlertDialogAction>

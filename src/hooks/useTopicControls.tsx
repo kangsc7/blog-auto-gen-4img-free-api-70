@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 
-// 간단한 유사도 검사 함수 (70% 기준)
+// 간단한 유사도 검사 함수 (70% 기준) - 중복 금지 기능
 const calculateSimilarity = (str1: string, str2: string): number => {
   const normalize = (str: string) => str.replace(/\s+/g, '').toLowerCase();
   const s1 = normalize(str1);
@@ -43,7 +43,7 @@ export const useTopicControls = (appState: AppState, saveAppState: (newState: Pa
   const [manualTopic, setManualTopic] = useState('');
 
   const selectTopic = (topic: string) => {
-    console.log('주제 선택:', topic);
+    console.log('📌 주제 선택:', topic);
     saveAppState({ selectedTopic: topic });
   };
 
@@ -59,26 +59,34 @@ export const useTopicControls = (appState: AppState, saveAppState: (newState: Pa
 
     const trimmedTopic = manualTopic.trim();
 
-    // 중복 금지 설정이 활성화된 경우에만 유사도 검사
+    // 중복 금지 설정이 활성화된 경우에만 유사도 검사 (70% 기준)
     if (appState.preventDuplicates && appState.topics.length > 0) {
+      console.log('🔍 중복 금지 모드 - 유사도 70% 검사 시작');
+      
       const isDuplicate = appState.topics.some(existingTopic => {
         const similarity = calculateSimilarity(trimmedTopic, existingTopic);
+        console.log(`📊 유사도 검사: "${trimmedTopic}" vs "${existingTopic}" = ${similarity.toFixed(1)}%`);
         return similarity >= 70;
       });
 
       if (isDuplicate) {
+        console.log('❌ 중복 주제 감지 (70% 이상 유사)');
         toast({
-          title: "중복 주제 감지",
-          description: "70% 이상 유사한 주제가 이미 존재합니다.",
+          title: "중복 주제 감지 (70% 기준)",
+          description: "70% 이상 유사한 주제가 이미 존재합니다. 중복 금지가 활성화되어 있어 추가할 수 없습니다.",
           variant: "destructive"
         });
         return;
+      } else {
+        console.log('✅ 중복 검사 통과 (70% 미만)');
       }
+    } else {
+      console.log('🔓 중복 허용 모드 - 유사도 검사 생략');
     }
 
     // 수동 입력된 주제에서 핵심 키워드 추출
     const extractedKeyword = extractKeywordFromTopic(trimmedTopic);
-    console.log('수동 주제 추가:', { topic: trimmedTopic, keyword: extractedKeyword });
+    console.log('📝 수동 주제 추가:', { topic: trimmedTopic, keyword: extractedKeyword });
     
     const updatedTopics = [...appState.topics, trimmedTopic];
     
@@ -91,9 +99,11 @@ export const useTopicControls = (appState: AppState, saveAppState: (newState: Pa
     
     setManualTopic('');
     
+    const duplicateStatus = appState.preventDuplicates ? '중복 금지 적용됨' : '중복 허용됨';
+    
     toast({
       title: "주제 추가 완료",
-      description: `"${trimmedTopic}" 주제가 추가되고 선택되었습니다. 핵심 키워드: "${extractedKeyword || trimmedTopic}"`,
+      description: `"${trimmedTopic}" 주제가 추가되고 선택되었습니다. 핵심 키워드: "${extractedKeyword || trimmedTopic}" (${duplicateStatus})`,
       duration: 3000
     });
   };

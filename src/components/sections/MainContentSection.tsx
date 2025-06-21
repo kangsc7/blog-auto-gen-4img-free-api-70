@@ -33,6 +33,7 @@ interface MainContentSectionProps {
   };
   preventDuplicates: boolean;
   handleTopicConfirm?: (topic: string) => void;
+  deleteReferenceData?: () => void;
 }
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
@@ -44,11 +45,12 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
   utilityFunctions,
   preventDuplicates,
   handleTopicConfirm,
+  deleteReferenceData,
 }) => {
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4">
+    <div className="content-container py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
+        <div className="lg:col-span-4 w-full min-w-0">
           <LeftSidebar
             appState={appState}
             saveAppState={saveAppState}
@@ -57,9 +59,10 @@ export const MainContentSection: React.FC<MainContentSectionProps> = ({
             topicControls={topicControls}
             utilityFunctions={utilityFunctions}
             preventDuplicates={preventDuplicates}
+            deleteReferenceData={deleteReferenceData}
           />
         </div>
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 w-full min-w-0">
           <RightContent
             appState={appState}
             saveAppState={saveAppState}
