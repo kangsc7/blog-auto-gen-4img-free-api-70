@@ -38,7 +38,6 @@ interface UserManagementTableProps {
   isAdmin?: boolean;
 }
 
-// 관리자 이메일 목록
 const ADMIN_EMAILS = ['5321497@naver.com'];
 
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmin = false }) => {
@@ -54,21 +53,17 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     );
   }
 
-  // 비관리자는 승인된 사용자만 보기, 관리자는 모든 상태의 사용자 보기
   const filteredUsers = isAdmin ? users : users.filter((user) => user.status === 'approved');
   
-  // 상태별로 사용자 분류
   const approvedUsers = filteredUsers.filter((user) => user.status === 'approved');
   const pendingUsers = isAdmin ? users.filter((user) => user.status === 'pending') : [];
   const rejectedUsers = isAdmin ? users.filter((user) => user.status === 'rejected') : [];
   const expiredUsers = isAdmin ? users.filter((user) => user.status === 'expired') : [];
 
-  // 사용자가 관리자인지 확인하는 함수
   const isAdminUser = (email: string) => {
     return ADMIN_EMAILS.includes(email);
   };
 
-  // 접근 기간 설정
   const handleSetAccessDays = async (userId: string) => {
     const days = parseInt(accessDays[userId] || '0');
     if (isNaN(days) || days < 0) {
@@ -81,7 +76,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     }
   };
 
-  // 승인 취소 (거절로 상태 변경)
   const handleApprovalCancel = async (userId: string, userEmail: string) => {
     if (window.confirm(`정말로 ${userEmail} 사용자의 승인을 취소하시겠습니까?`)) {
       console.log('🔄 승인 취소 처리 시작:', { userId, userEmail });
@@ -89,7 +83,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     }
   };
 
-  // 사용자 삭제
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (window.confirm(`정말로 ${userEmail} 사용자를 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
       console.log('🗑️ 사용자 삭제 처리 시작:', { userId, userEmail });
@@ -97,7 +90,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     }
   };
 
-  // 비관리자용 승인된 사용자만 보여주는 컴포넌트
   if (!isAdmin) {
     return (
       <div className="space-y-8">
@@ -131,7 +123,13 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                         {user.email}
                         {isAdminUser(user.email) && <Badge variant="secondary" className="ml-2">관리자</Badge>}
                       </TableCell>
-                      <TableCell><RemainingTime approvedAt={user.approved_at} expiresAt={user.access_expires_at} /></TableCell>
+                      <TableCell>
+                        {isAdminUser(user.email) ? (
+                          <Badge variant="outline" className="text-green-600 border-green-600">무제한</Badge>
+                        ) : (
+                          <RemainingTime approvedAt={user.approved_at} expiresAt={user.access_expires_at} />
+                        )}
+                      </TableCell>
                       <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{getStatusLabel(user.status)}</Badge></TableCell>
                     </TableRow>
                   ))
@@ -144,7 +142,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     );
   }
 
-  // 관리자용 모든 상태의 사용자 보여주는 컴포넌트
   return (
     <div className="space-y-8">
       {/* 승인 대기 사용자 */}
@@ -191,7 +188,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
         <CardHeader>
           <CardTitle>승인된 사용자 ({approvedUsers.length})</CardTitle>
           <CardDescription>
-            서비스 이용이 승인된 사용자입니다. 접근 기간을 개별적으로 설정할 수 있습니다.
+            서비스 이용이 승인된 사용자입니다. 관리자는 무제한 권한을 가집니다.
           </CardDescription>
         </CardHeader>
         <CardContent>

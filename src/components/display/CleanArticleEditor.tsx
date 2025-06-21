@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +29,9 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   const initLockRef = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   
-  // 명령 실행 상태 추적을 위한 ref
   const isCommandExecutingRef = useRef(false);
   const lastUserActionRef = useRef<'typing' | 'command' | 'loading'>('typing');
 
-  // 안전한 localStorage 저장
   const saveToStorage = (content: string) => {
     try {
       localStorage.setItem(UNIFIED_EDITOR_KEY, content);
@@ -42,7 +41,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 안전한 localStorage 로드 - 명령 실행 중에는 차단
   const loadFromStorage = (): string => {
     if (isCommandExecutingRef.current) {
       console.log('🚫 명령 실행 중 - 자동 복원 차단');
@@ -59,7 +57,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 명령어 감지 함수
   const detectCommand = (content: string): boolean => {
     const commandPatterns = [
       /\/생성/,
@@ -68,13 +65,11 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       /\/저장/,
       /\/복원/,
       /\/삭제/,
-      // 추가 명령어 패턴들
     ];
     
     return commandPatterns.some(pattern => pattern.test(content));
   };
 
-  // 편집기 내용 업데이트 (명령 실행 상태 고려)
   const updateEditorContent = (content: string, source: string) => {
     console.log(`🔄 편집기 내용 업데이트 시도 - ${source}:`, {
       contentLength: content.length,
@@ -82,7 +77,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
       lastUserAction: lastUserActionRef.current
     });
 
-    // 명령 실행 중이고 소스가 자동 복원인 경우 차단
     if (isCommandExecutingRef.current && (source === '초기로드' || source === '글로벌이벤트')) {
       console.log(`🚫 명령 실행 중 자동 복원 차단 - ${source}`);
       return;
@@ -102,7 +96,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     onContentChange(content);
     
-    // 디바운스된 저장 (명령 실행 중이 아닐 때만)
     if (!isCommandExecutingRef.current) {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -113,7 +106,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 초기 로드 (한 번만 실행)
   useEffect(() => {
     if (!isInitialized && !initLockRef.current) {
       initLockRef.current = true;
@@ -128,7 +120,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 새 생성 콘텐츠 처리 (생성 완료 시에만, 명령 실행 중이 아닐 때)
   useEffect(() => {
     if (!isGeneratingContent && generatedContent && generatedContent.length > 100 && isInitialized) {
       console.log('🎯 새 생성 콘텐츠 감지:', {
@@ -136,7 +127,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         isCommandExecuting: isCommandExecutingRef.current
       });
       
-      // 명령 실행이 완료된 후에만 업데이트
       if (!isCommandExecutingRef.current) {
         updateEditorContent(generatedContent, '새생성');
         lastUserActionRef.current = 'loading';
@@ -144,7 +134,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, [isGeneratingContent, generatedContent, isInitialized]);
 
-  // 글로벌 이벤트 리스너 - 명령 실행 상태 고려
   useEffect(() => {
     const handleContentUpdate = (event: CustomEvent) => {
       const newContent = event.detail.content;
@@ -154,7 +143,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           isCommandExecuting: isCommandExecutingRef.current
         });
         
-        // 명령 실행 중이 아닐 때만 업데이트
         if (!isCommandExecutingRef.current) {
           updateEditorContent(newContent, '글로벌이벤트');
         }
@@ -163,7 +151,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
 
     const handleAppReset = () => {
       console.log('🔄 앱 리셋 이벤트');
-      isCommandExecutingRef.current = false; // 리셋 시 명령 상태도 초기화
+      isCommandExecutingRef.current = false;
       updateEditorContent('', '앱리셋');
       localStorage.removeItem(UNIFIED_EDITOR_KEY);
     };
@@ -177,7 +165,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [isInitialized]);
 
-  // 페이지 종료 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (editorContent && !isCommandExecutingRef.current) {
@@ -203,7 +190,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [editorContent]);
 
-  // 향상된 이미지 클릭 핸들러
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -255,12 +241,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 사용자 편집 처리 - 명령어 감지 및 상태 추적
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
       
-      // 명령어 감지
       const isCommand = detectCommand(newContent);
       
       if (isCommand) {
@@ -268,7 +252,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         isCommandExecutingRef.current = true;
         lastUserActionRef.current = 'command';
         
-        // 명령어 실행 타임아웃 설정 (5초 후 자동 해제)
         setTimeout(() => {
           if (isCommandExecutingRef.current) {
             console.log('⏰ 명령 실행 타임아웃 - 상태 자동 해제');
@@ -276,9 +259,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           }
         }, 5000);
       } else {
-        // 일반 타이핑인 경우
         if (lastUserActionRef.current === 'command') {
-          // 명령어 실행 후 일반 타이핑으로 변경됨
           console.log('✏️ 명령어 → 일반 타이핑으로 전환');
           isCommandExecutingRef.current = false;
         }
@@ -290,7 +271,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사 - SCRIPT 태그 및 JavaScript 코드 완전 제거 (티스토리 전용)
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
@@ -299,24 +279,14 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     console.log('🚫 티스토리용 HTML 복사 - SCRIPT 태그 강력 제거 시작');
     
-    // SCRIPT 태그와 모든 JavaScript 코드 완전 제거
     let cleanContent = editorContent;
     
-    // 1. <script> 태그 완전 제거 (다양한 패턴 대응)
     cleanContent = cleanContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     cleanContent = cleanContent.replace(/<script[^>]*>/gi, '');
     cleanContent = cleanContent.replace(/<\/script>/gi, '');
-    
-    // 2. JavaScript 이벤트 핸들러 제거
     cleanContent = cleanContent.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
-    
-    // 3. javascript: 프로토콜 제거
     cleanContent = cleanContent.replace(/javascript:[^"']*/gi, '');
-    
-    // 4. 인라인 JavaScript 코드 제거
     cleanContent = cleanContent.replace(/\s*javascript\s*:\s*[^;]+;?/gi, '');
-    
-    // 5. 추가 보안: script 관련 모든 잔여물 제거
     cleanContent = cleanContent.replace(/script/gi, '');
     
     console.log('✅ SCRIPT 태그 제거 완료 - 티스토리 안전 복사 준비됨');
@@ -336,7 +306,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     });
   };
 
-  // HTML 다운로드
   const handleDownloadHTML = () => {
     if (!editorContent) {
       toast({ title: "다운로드할 콘텐츠가 없습니다.", variant: "destructive" });
@@ -356,7 +325,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     toast({ title: "📥 다운로드 완료" });
   };
 
-  // 인포그래픽 페이지로 이동
   const goToInfographic = () => {
     console.log('📊 인포그래픽 페이지로 이동');
     navigate('/infographic-generator');
@@ -509,7 +477,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
         </CardContent>
       </Card>
       
-      {/* 왼쪽 정렬 강제 적용 스타일 */}
       <style>{`
         .prose * {
           text-align: left !important;
