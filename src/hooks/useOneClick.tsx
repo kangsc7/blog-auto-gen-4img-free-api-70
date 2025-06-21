@@ -30,7 +30,6 @@ export const useOneClick = (
   const [showTopicSelectionDialog, setShowTopicSelectionDialog] = useState(false);
   const [showDuplicateErrorDialog, setShowDuplicateErrorDialog] = useState(false);
   const cancelOneClick = useRef(false);
-  const currentController = useRef<AbortController | null>(null);
 
   const validateConditions = (): boolean => {
     if (!hasAccess) {
@@ -42,10 +41,21 @@ export const useOneClick = (
       return false;
     }
 
-    if (!appState.isApiKeyValidated) {
+    // API 키 검증 상태를 더 엄격하게 체크
+    const isValidated = appState.isApiKeyValidated && 
+                       appState.isPixabayApiKeyValidated && 
+                       appState.isHuggingFaceApiKeyValidated;
+
+    if (!isValidated) {
+      console.log('❌ API 키 검증 실패:', {
+        gemini: appState.isApiKeyValidated,
+        pixabay: appState.isPixabayApiKeyValidated,
+        huggingface: appState.isHuggingFaceApiKeyValidated
+      });
+      
       toast({
         title: "API 키 검증 필요",
-        description: "먼저 API 키를 입력하고 검증해주세요.",
+        description: "모든 API 키가 검증되어야 합니다.",
         variant: "destructive"
       });
       return false;
@@ -60,7 +70,6 @@ export const useOneClick = (
     console.log(`🚀 ${keywordType} 원클릭 생성 시작`);
     setIsOneClickGenerating(true);
     cancelOneClick.current = false;
-    currentController.current = new AbortController();
 
     try {
       // 1단계: 키워드 선택
@@ -69,8 +78,11 @@ export const useOneClick = (
       
       console.log(`🎯 선택된 키워드: ${randomKeyword}`);
       
-      // 키워드를 상태에 저장
-      saveAppState({ keyword: randomKeyword });
+      // 키워드를 상태에 즉시 저장하고 UI에 반영
+      await new Promise<void>((resolve) => {
+        saveAppState({ keyword: randomKeyword });
+        setTimeout(resolve, 100); // 상태 업데이트 대기
+      });
       
       toast({
         title: `🎯 1단계: 키워드 선택 완료`,
@@ -98,11 +110,6 @@ export const useOneClick = (
       console.log(`✅ 생성된 주제 수: ${topics.length}`);
       console.log('📝 생성된 주제들:', topics);
 
-      // 주제가 제대로 저장되었는지 확인
-      setTimeout(() => {
-        console.log('🔍 상태 확인 - 저장된 주제들:', appState.topics);
-      }, 1000);
-
       toast({
         title: "✅ 2단계: 주제 생성 완료",
         description: `${topics.length}개의 주제가 생성되었습니다.`,
@@ -111,7 +118,7 @@ export const useOneClick = (
 
       if (cancelOneClick.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // 3단계: 중복 체크
+      // 3단계: 주제 선택
       let selectedTopic = "";
       
       if (preventDuplicates) {
@@ -140,18 +147,21 @@ export const useOneClick = (
 
       if (cancelOneClick.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // 4단계: 주제 선택
+      // 주제 선택을 상태에 반영
+      await new Promise<void>((resolve) => {
+        selectTopic(selectedTopic);
+        setTimeout(resolve, 100); // 상태 업데이트 대기
+      });
+
       toast({
         title: "🎯 3단계: 주제 선택 완료",
         description: `선택된 주제: ${selectedTopic}`,
         duration: 2000
       });
 
-      selectTopic(selectedTopic);
-
       if (cancelOneClick.current) throw new Error("사용자에 의해 중단되었습니다.");
 
-      // 5단계: 글 생성
+      // 4단계: 글 생성
       toast({
         title: "✍️ 4단계: 블로그 글 생성 중",
         description: "고품질 블로그 글을 작성하고 있습니다.",
@@ -188,30 +198,21 @@ export const useOneClick = (
       let errorMessage = "원클릭 생성 중 오류가 발생했습니다.";
       
       if (error instanceof Error) {
-        if (error.name === 'AbortError' || error.message.includes('중단')) {
+        if (error.message.includes('중단')) {
           errorMessage = "사용자에 의해 중단되었습니다.";
         } else {
           errorMessage = error.message;
         }
       }
       
-      if (errorMessage === "사용자에 의해 중단되었습니다.") {
-        toast({
-          title: "원클릭 생성 중단됨",
-          description: "사용자 요청에 따라 생성을 중단했습니다.",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "원클릭 생성 실패",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: errorMessage === "사용자에 의해 중단되었습니다." ? "원클릭 생성 중단됨" : "원클릭 생성 실패",
+        description: errorMessage,
+        variant: errorMessage === "사용자에 의해 중단되었습니다." ? "default" : "destructive"
+      });
     } finally {
       setIsOneClickGenerating(false);
       cancelOneClick.current = false;
-      currentController.current = null;
     }
   };
 
@@ -227,20 +228,13 @@ export const useOneClick = (
 
   const handleStopOneClick = () => {
     console.log('⏹️ 원클릭 생성 중단 요청');
-    
     cancelOneClick.current = true;
-    
-    if (currentController.current) {
-      currentController.current.abort();
-      console.log('AbortController.abort() 호출됨');
-    }
-    
     setIsOneClickGenerating(false);
     
     toast({
       title: "원클릭 생성 즉시 중단",
-      description: "현재 진행 중인 원클릭 생성을 즉시 중단했습니다.",
-      variant: "default"
+      description: "현재 진행 중인 원클릭 생성을 중단했습니다.",
+      duration: 3000
     });
   };
 

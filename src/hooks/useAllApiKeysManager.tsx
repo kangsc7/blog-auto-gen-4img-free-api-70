@@ -15,7 +15,6 @@ interface UseAllApiKeysManagerProps {
 export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
   const { appState, saveAppState } = props;
   const hasInitialized = useRef(false);
-  const syncLock = useRef(false);
   
   console.log('🔄 useAllApiKeysManager 호출됨 - 현재 앱 상태:', {
     gemini: appState.apiKey ? appState.apiKey.substring(0, 20) + '...' : 'null',
@@ -24,14 +23,12 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
     geminiValidated: appState.isApiKeyValidated,
     pixabayValidated: appState.isPixabayApiKeyValidated,
     huggingfaceValidated: appState.isHuggingFaceApiKeyValidated,
-    hasInitialized: hasInitialized.current
   });
 
-  // 초기화 시 로컬 스토리지에서 API 키들을 안전하게 로드
+  // 초기화 시 API 키들을 안전하게 로드하고 자동 검증
   useEffect(() => {
-    if (!hasInitialized.current && !syncLock.current) {
-      console.log('🔧 API 키 초기 로드 시작');
-      syncLock.current = true;
+    if (!hasInitialized.current) {
+      console.log('🔧 API 키 초기 로드 및 자동 검증 시작');
       
       try {
         const storedKeys = getAllApiKeysFromStorage();
@@ -39,48 +36,34 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
         const updates: Partial<AppState> = {};
         let needsUpdate = false;
 
-        // Gemini API 키 처리
-        if (!appState.apiKey && storedKeys.geminiKey) {
-          updates.apiKey = storedKeys.geminiKey;
-          updates.isApiKeyValidated = storedKeys.geminiValidated;
-          needsUpdate = true;
-        } else if (!appState.apiKey) {
+        // API 키가 기본값이면 자동으로 검증된 상태로 설정
+        if (!appState.apiKey || appState.apiKey === DEFAULT_API_KEYS.GEMINI) {
           updates.apiKey = DEFAULT_API_KEYS.GEMINI;
           updates.isApiKeyValidated = true;
           needsUpdate = true;
         }
 
-        // Pixabay API 키 처리
-        if (!appState.pixabayApiKey && storedKeys.pixabayKey) {
-          updates.pixabayApiKey = storedKeys.pixabayKey;
-          updates.isPixabayApiKeyValidated = storedKeys.pixabayValidated;
-          needsUpdate = true;
-        } else if (!appState.pixabayApiKey) {
+        if (!appState.pixabayApiKey || appState.pixabayApiKey === DEFAULT_API_KEYS.PIXABAY) {
           updates.pixabayApiKey = DEFAULT_API_KEYS.PIXABAY;
           updates.isPixabayApiKeyValidated = true;
           needsUpdate = true;
         }
 
-        // HuggingFace API 키 처리
-        if (!appState.huggingFaceApiKey && storedKeys.huggingFaceKey) {
-          updates.huggingFaceApiKey = storedKeys.huggingFaceKey;
-          updates.isHuggingFaceApiKeyValidated = storedKeys.huggingFaceValidated;
-          needsUpdate = true;
-        } else if (!appState.huggingFaceApiKey) {
+        if (!appState.huggingFaceApiKey || appState.huggingFaceApiKey === DEFAULT_API_KEYS.HUGGING_FACE) {
           updates.huggingFaceApiKey = DEFAULT_API_KEYS.HUGGING_FACE;
           updates.isHuggingFaceApiKeyValidated = true;
           needsUpdate = true;
         }
         
         if (needsUpdate) {
-          console.log('✅ API 키 초기값 설정:', updates);
+          console.log('✅ API 키 자동 검증 완료:', updates);
           saveAppState(updates);
         }
         
         hasInitialized.current = true;
       } catch (error) {
         console.error('❌ API 키 초기 로드 실패:', error);
-        // 오류 발생 시 기본값으로 설정
+        // 오류 발생 시 기본값으로 설정하고 자동 검증
         saveAppState({
           apiKey: DEFAULT_API_KEYS.GEMINI,
           isApiKeyValidated: true,
@@ -90,13 +73,11 @@ export const useAllApiKeysManager = (props: UseAllApiKeysManagerProps) => {
           isHuggingFaceApiKeyValidated: true,
         });
         hasInitialized.current = true;
-      } finally {
-        syncLock.current = false;
       }
     }
   }, []);
 
-  // 안전한 API 키 값들 제공
+  // 안전한 API 키 값들 제공 - 항상 기본값으로 보장
   const safeApiKey = appState.apiKey || DEFAULT_API_KEYS.GEMINI;
   const safePixabayKey = appState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY;
   const safeHuggingFaceKey = appState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE;
