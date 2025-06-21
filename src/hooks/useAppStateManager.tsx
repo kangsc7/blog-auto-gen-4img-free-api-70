@@ -36,12 +36,70 @@ const defaultState: AppState = {
   preventDuplicates: true,
 };
 
+// localStorage 키 상수들
+const STORAGE_KEYS = {
+  GENERATED_CONTENT: 'blog_generated_content',
+  REFERENCE_LINK: 'blog_reference_link',
+  REFERENCE_SENTENCE: 'blog_reference_sentence',
+  SELECTED_TOPIC: 'blog_selected_topic',
+  TOPICS: 'blog_topics',
+  KEYWORD: 'blog_keyword',
+  COLOR_THEME: 'blog_color_theme'
+};
+
 export const useAppStateManager = () => {
   const { toast } = useToast();
   const [appState, setAppState] = useState<AppState>(defaultState);
   const [preventDuplicates, setPreventDuplicates] = useState(true);
   const hasInitialized = useRef(false);
   const initializationLock = useRef(false);
+
+  // localStorage에서 블로그 관련 데이터 로드
+  const loadBlogDataFromStorage = useCallback(() => {
+    try {
+      return {
+        generatedContent: localStorage.getItem(STORAGE_KEYS.GENERATED_CONTENT) || '',
+        referenceLink: localStorage.getItem(STORAGE_KEYS.REFERENCE_LINK) || '',
+        referenceSentence: localStorage.getItem(STORAGE_KEYS.REFERENCE_SENTENCE) || '',
+        selectedTopic: localStorage.getItem(STORAGE_KEYS.SELECTED_TOPIC) || '',
+        topics: JSON.parse(localStorage.getItem(STORAGE_KEYS.TOPICS) || '[]'),
+        keyword: localStorage.getItem(STORAGE_KEYS.KEYWORD) || '',
+        colorTheme: localStorage.getItem(STORAGE_KEYS.COLOR_THEME) || ''
+      };
+    } catch (error) {
+      console.error('블로그 데이터 로드 실패:', error);
+      return {};
+    }
+  }, []);
+
+  // localStorage에 블로그 관련 데이터 저장
+  const saveBlogDataToStorage = useCallback((data: Partial<AppState>) => {
+    try {
+      if (data.generatedContent !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.GENERATED_CONTENT, data.generatedContent);
+      }
+      if (data.referenceLink !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.REFERENCE_LINK, data.referenceLink);
+      }
+      if (data.referenceSentence !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.REFERENCE_SENTENCE, data.referenceSentence);
+      }
+      if (data.selectedTopic !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.SELECTED_TOPIC, data.selectedTopic);
+      }
+      if (data.topics !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.TOPICS, JSON.stringify(data.topics));
+      }
+      if (data.keyword !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.KEYWORD, data.keyword);
+      }
+      if (data.colorTheme !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.COLOR_THEME, data.colorTheme);
+      }
+    } catch (error) {
+      console.error('블로그 데이터 저장 실패:', error);
+    }
+  }, []);
 
   // localStorage에서 API 키 복원 - 개선된 버전
   const loadApiKeysFromStorage = useCallback(() => {
@@ -69,19 +127,20 @@ export const useAppStateManager = () => {
     return finalState;
   }, []);
 
-  // 앱 상태 초기화 - 한 번만 실행되도록 보장하되 API 키는 보존
+  // 앱 상태 초기화 - 한 번만 실행되도록 보장하되 API 키와 블로그 데이터는 보존
   useEffect(() => {
     if (!hasInitialized.current && !initializationLock.current) {
-      console.log('🚀 useAppStateManager 초기화 시작 (API 키 보존)');
+      console.log('🚀 useAppStateManager 초기화 시작 (API 키 및 블로그 데이터 보존)');
       initializationLock.current = true;
       
       const storedApiKeys = loadApiKeysFromStorage();
+      const storedBlogData = loadBlogDataFromStorage();
       
       hasInitialized.current = true;
       
       setAppState(prev => {
-        const newState = { ...prev, ...storedApiKeys };
-        console.log('✅ 앱 상태 초기화 완료 (API 키 보존):', newState);
+        const newState = { ...prev, ...storedApiKeys, ...storedBlogData };
+        console.log('✅ 앱 상태 초기화 완료 (API 키 및 블로그 데이터 보존):', newState);
         return newState;
       });
       
@@ -92,7 +151,7 @@ export const useAppStateManager = () => {
         saveValidationStatusToStorage('HUGGING_FACE', storedApiKeys.isHuggingFaceApiKeyValidated);
       }, 100);
     }
-  }, [loadApiKeysFromStorage]);
+  }, [loadApiKeysFromStorage, loadBlogDataFromStorage]);
 
   // preventDuplicates 상태 동기화
   useEffect(() => {
@@ -103,7 +162,7 @@ export const useAppStateManager = () => {
   }, [preventDuplicates]);
 
   const saveAppState = useCallback((newState: Partial<AppState>) => {
-    console.log('💾 앱 상태 업데이트 요청 (API 키 영구 보존):', newState);
+    console.log('💾 앱 상태 업데이트 요청 (API 키 및 블로그 데이터 영구 보존):', newState);
     
     // API 키 관련 상태가 변경되면 localStorage에도 즉시 저장하여 영구 보존
     if (newState.apiKey !== undefined) {
@@ -125,16 +184,15 @@ export const useAppStateManager = () => {
       saveValidationStatusToStorage('HUGGING_FACE', newState.isHuggingFaceApiKeyValidated);
     }
 
+    // 블로그 관련 데이터도 localStorage에 저장
+    saveBlogDataToStorage(newState);
+
     setAppState(prev => {
       const updatedState = { ...prev, ...newState };
-      console.log('✅ 앱 상태 업데이트 완료 (API 키 영구 보존):', {
-        gemini: { key: updatedState.apiKey?.substring(0, 20) + '...', validated: updatedState.isApiKeyValidated },
-        pixabay: { key: updatedState.pixabayApiKey?.substring(0, 20) + '...', validated: updatedState.isPixabayApiKeyValidated },
-        huggingface: { key: updatedState.huggingFaceApiKey?.substring(0, 20) + '...', validated: updatedState.isHuggingFaceApiKeyValidated }
-      });
+      console.log('✅ 앱 상태 업데이트 완료 (API 키 및 블로그 데이터 영구 보존)');
       return updatedState;
     });
-  }, []);
+  }, [saveBlogDataToStorage]);
 
   const deleteApiKeyFromStorage = useCallback((keyType: 'gemini' | 'pixabay' | 'huggingface') => {
     console.log(`🗑️ ${keyType} API 키를 기본값으로 복원`);
@@ -156,10 +214,15 @@ export const useAppStateManager = () => {
   }, [saveAppState, toast]);
 
   const resetApp = useCallback(() => {
-    console.log('🔄 앱 전체 초기화 (API 키는 보존)');
+    console.log('🔄 앱 전체 초기화 (API 키는 보존, 블로그 데이터는 삭제)');
     
     // API 키는 보존하고 다른 데이터만 초기화
     const preservedKeys = preserveApiKeysOnReset();
+    
+    // 블로그 관련 localStorage 데이터 삭제
+    Object.values(STORAGE_KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
     
     setAppState({
       ...defaultState,
@@ -173,7 +236,7 @@ export const useAppStateManager = () => {
     });
     
     setPreventDuplicates(true);
-    toast({ title: "초기화 완료", description: "데이터가 초기화되었습니다. (API 키는 보존됨)" });
+    toast({ title: "초기화 완료", description: "블로그 데이터가 초기화되었습니다. (API 키는 보존됨)" });
   }, [toast]);
 
   return {

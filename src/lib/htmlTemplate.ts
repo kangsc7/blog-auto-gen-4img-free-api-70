@@ -1,4 +1,3 @@
-
 const getCssStyles = (colors: any): string => `
 @media (max-width: 768px) { 
   .wrapper-div { padding: 0 15px; }
@@ -99,16 +98,16 @@ A: 즉시 발급기관에 분실신고를 하시고, 재발급 신청을 하시�
 // 6번째 섹션 (격려 섹션) 생성 함수 수정 - 박스 높이 증가 및 외부 링크 연결
 const getEncouragementSection = (colors: any, keyword: string, refLink: string, referenceSentence?: string): string => `
 <h2 style="font-size: 24px; color: ${colors.primary}; margin: 35px 0 18px; padding-bottom: 10px; border-bottom: 2px solid #eaeaea; font-weight: bold; line-height: 1.4;" data-ke-size="size26"><b>더 자세한 세부 정보가 필요하시요? 🌟</b></h2>
-<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
-<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
-</p>
-<p style="height: 20px;">&nbsp;</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 혹시 더 궁금한 것이 있으시거나 추가적인 도움이 필요하시다면 언제든지 문의해보세요. [SECTION_CONTENT_6] 관련 정보는 계속해서 업데이트되고 있어서, 최신 정보를 놓치지 않으시길 바라요.
 </p>
 <p style="height: 20px;">&nbsp;</p>
 <p style="margin-bottom: 18px; font-size: 17px; line-height: 1.7;" data-ke-size="size16">
 여러분도 충분히 할 수 있어요! 많은 분들이 이미 성공적으로 혜택을 받고 계시니까 포기하지 마시고 도전해보세요. 💪 작은 한 걸음이 큰 변화를 만들어낼 거예요.
+</p>
+<p style="height: 20px;">&nbsp;</p>
+<p style="margin-bottom: 18px; font-size: 18px; line-height: 1.8; text-align: center; background-color: ${colors.secondary}; padding: 35px 25px; border-radius: 12px; min-height: 80px; display: flex; align-items: center; justify-content: center;" data-ke-size="size16">
+<strong>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.primary}; text-decoration: underline; font-weight: bold;">${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</a></strong>
 </p>
 <p style="height: 20px;">&nbsp;</p>
 `;
@@ -139,7 +138,7 @@ const getClosingSection = (colors: any, refLink: string, referenceSentence?: str
 </p>
 <p style="height: 20px;">&nbsp;</p>
 <p style="height: 20px;">&nbsp;</p>
-<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: none; font-weight: bold;"><strong>${referenceSentence || '더 많은 정보 확인하기'}</strong></a></p>
+<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16"><b>이 글과 관련된 다른 정보가 궁금하다면?</b><br>👉 <a href="${refLink}" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline; font-weight: bold;"><strong>${referenceSentence || '워드프레스 꿀팁 더 보러가기'}</strong></a></p>
 <p style="height: 30px;">&nbsp;</p>
 `;
 
