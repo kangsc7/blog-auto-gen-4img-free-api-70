@@ -15,7 +15,7 @@ export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
   const { appState, saveAppState, resetAppState } = useAppStateManager();
   
-  // useAllApiKeysManager 올바른 단일 파라미터 전달
+  // useAllApiKeysManager에 안전한 상태 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
     appState,
     saveAppState,
@@ -23,6 +23,20 @@ export const useRefactoredAppController = () => {
   
   const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
+
+  // API 키 검증 상태를 더 안전하게 확인
+  const isAllApiKeysValidated = Boolean(
+    geminiManager.isGeminiApiKeyValidated && 
+    pixabayManager.isPixabayApiKeyValidated && 
+    huggingFaceManager.isHuggingFaceApiKeyValidated
+  );
+
+  console.log('🔍 API 키 검증 상태 확인:', {
+    gemini: geminiManager.isGeminiApiKeyValidated,
+    pixabay: pixabayManager.isPixabayApiKeyValidated,
+    huggingface: huggingFaceManager.isHuggingFaceApiKeyValidated,
+    allValidated: isAllApiKeysValidated
+  });
 
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
   const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
@@ -137,7 +151,7 @@ export const useRefactoredAppController = () => {
     // 기존 초기화 실행 (resetAppState 사용)
     resetAppState();
     
-    console.log('✅ 향상된 초기화 완료');
+    console.log('✅향상된 초기화 완료');
   };
 
   const generationStatus = {
@@ -163,7 +177,11 @@ export const useRefactoredAppController = () => {
   };
 
   return {
-    appState,
+    appState: {
+      ...appState,
+      // API 키 검증 상태를 올바르게 업데이트
+      isApiKeyValidated: isAllApiKeysValidated,
+    },
     saveAppState,
     session,
     profile,
@@ -177,16 +195,16 @@ export const useRefactoredAppController = () => {
     huggingFaceManager,
     preventDuplicates,
     setPreventDuplicates,
-    handleResetApp: enhancedResetApp, // 향상된 초기화 함수 사용
+    handleResetApp: enhancedResetApp,
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick: handleUnifiedStop, // 통합된 중단 기능 사용
+    handleStopOneClick: handleUnifiedStop,
     generationStatus,
     generationFunctions,
     topicControls: {
       ...topicControls,
-      selectTopic: handleTopicSelect, // 주제 선택 시 확인 다이얼로그 표시
+      selectTopic: handleTopicSelect,
     },
     utilityFunctions,
     handleTopicConfirm,
