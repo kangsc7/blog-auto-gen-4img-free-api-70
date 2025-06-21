@@ -6,26 +6,28 @@ import { Input } from '@/components/ui/input';
 import { ImagePlus, CheckCircle } from 'lucide-react';
 
 interface PixabayApiKeyManagerProps {
-  apiKey: string;
-  setApiKey: (key: string) => void;
-  isValidated: boolean;
-  isValidating: boolean;
-  validateApiKey: () => void;
-  saveApiKey: () => void;
-  deleteApiKey: () => void;
+  pixabayApiKey: string;
+  setPixabayApiKey: (key: string) => void;
+  isPixabayApiKeyValidated: boolean;
+  setIsPixabayApiKeyValidated: (validated: boolean) => void;
+  isPixabayValidating: boolean;
+  validatePixabayApiKey: (key: string) => Promise<boolean>;
+  deletePixabayApiKeyFromStorage: () => void;
 }
 
 export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
-  apiKey,
-  setApiKey,
-  isValidated,
-  isValidating,
-  validateApiKey,
-  saveApiKey,
-  deleteApiKey,
+  pixabayApiKey,
+  setPixabayApiKey,
+  isPixabayApiKeyValidated,
+  setIsPixabayApiKeyValidated,
+  isPixabayValidating,
+  validatePixabayApiKey,
+  deletePixabayApiKeyFromStorage,
 }) => {
+  console.log('PixabayApiKeyManager 렌더링:', { pixabayApiKey, isPixabayApiKeyValidated });
+
   return (
-    <Card className="shadow-md">
+    <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
         <CardTitle className="flex items-center text-orange-700">
           <ImagePlus className="h-5 w-5 mr-2" />
@@ -39,38 +41,38 @@ export const PixabayApiKeyManager: React.FC<PixabayApiKeyManagerProps> = ({
             <Input
               type="password"
               placeholder="Pixabay API 키를 입력해주세요"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              value={pixabayApiKey || ''}
+              onChange={(e) => {
+                setPixabayApiKey(e.target.value);
+                setIsPixabayApiKeyValidated(false);
+              }}
               className="flex-1"
             />
             <Button 
-              onClick={validateApiKey} 
-              disabled={!apiKey.trim() || isValidating}
+              onClick={() => validatePixabayApiKey(pixabayApiKey)} 
+              disabled={!pixabayApiKey?.trim() || isPixabayValidating}
               variant="outline" 
-              className={isValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-orange-600 border-orange-600 hover:bg-orange-50"}
+              className={isPixabayApiKeyValidated ? "text-green-600 border-green-600 hover:bg-green-50" : "text-orange-600 border-orange-600 hover:bg-orange-50"}
             >
-              {isValidating ? (
+              {isPixabayValidating ? (
                 <>검증 중...</>
-              ) : isValidated ? (
+              ) : isPixabayApiKeyValidated ? (
                 <><CheckCircle className="h-4 w-4 mr-1" />연결됨</>
               ) : (
-                '검증'
+                '검증 및 저장'
               )}
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={saveApiKey} size="sm" className="flex-1 bg-gray-600 hover:bg-gray-700">
-              키 저장
-            </Button>
-            <Button onClick={deleteApiKey} size="sm" variant="destructive" className="flex-1">
+            <Button onClick={deletePixabayApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>
           <p className="text-xs text-blue-600 mt-1">
             <a href="https://pixabay.com/api/docs/" target="_blank" rel="noopener noreferrer" className="hover:underline">Pixabay에서 API 키 발급</a>
           </p>
-          {isValidated && (
-            <p className="text-xs text-green-600 mt-1">✅ Pixabay API 키가 검증되었습니다.</p>
+          {isPixabayApiKeyValidated && (
+            <p className="text-xs text-green-600 mt-1">✅ Pixabay API 키가 검증 및 저장되었습니다.</p>
           )}
         </div>
       </CardContent>

@@ -59,7 +59,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   };
 
   return (
-    <Card className="shadow-md">
+    <Card id="article-preview" className="shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center text-green-700">
@@ -97,16 +97,21 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
             <p className="font-semibold text-lg">
-              <span className="font-bold text-blue-600">파코월드</span>가 글을 생성하고 있습니다...
+              <span className="font-bold text-blue-600 animate-pulse inline-block transform transition-all duration-500 hover:scale-110">
+                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite]">파</span>
+                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.05s]">코</span>
+                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.1s]">월</span>
+                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.15s]">드</span>
+              </span>가 글을 생성하고 있습니다...
             </p>
-            <p className="text-sm">잠시만 기다려주세요.</p>
+            <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
           </div>
         ) : generatedContent ? (
           <div
             ref={editableDivRef}
             contentEditable={true}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
-            className="border p-4 rounded bg-gray-50 max-h-[60vh] min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto"
+            className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             suppressContentEditableWarning={true}
           />
         ) : (
