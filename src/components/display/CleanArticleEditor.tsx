@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,41 +32,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   // 명령 실행 상태 추적을 위한 ref
   const isCommandExecutingRef = useRef(false);
   const lastUserActionRef = useRef<'typing' | 'command' | 'loading'>('typing');
-
-  // 향상된 SCRIPT 태그 제거 함수 - 강력한 지침 적용
-  const removeScriptTags = (htmlContent: string): string => {
-    console.log('🔒 SCRIPT 태그 제거 시작 - 티스토리 복사 안전성 확보');
-    
-    let cleanedContent = htmlContent;
-    
-    // 1단계: 기본 SCRIPT 태그 제거 (대소문자 구분 없음, 여러 줄 포함)
-    cleanedContent = cleanedContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gmi, '');
-    
-    // 2단계: 단일 SCRIPT 태그 제거
-    cleanedContent = cleanedContent.replace(/<script[^>]*>/gmi, '');
-    cleanedContent = cleanedContent.replace(/<\/script>/gmi, '');
-    
-    // 3단계: JavaScript 이벤트 핸들러 제거 (보안 강화)
-    const jsEventPatterns = [
-      /\s*on\w+\s*=\s*"[^"]*"/gmi,
-      /\s*on\w+\s*=\s*'[^']*'/gmi,
-      /\s*javascript:[^"']*/gmi
-    ];
-    
-    jsEventPatterns.forEach(pattern => {
-      cleanedContent = cleanedContent.replace(pattern, '');
-    });
-    
-    // 4단계: window 객체 관련 코드 제거
-    cleanedContent = cleanedContent.replace(/window\.[^;]*;?/gmi, '');
-    
-    // 5단계: eval, Function 등 위험한 코드 제거
-    cleanedContent = cleanedContent.replace(/eval\([^)]*\)/gmi, '');
-    cleanedContent = cleanedContent.replace(/new\s+Function\([^)]*\)/gmi, '');
-    
-    console.log('✅ SCRIPT 태그 완전 제거 완료 - 티스토리 안전');
-    return cleanedContent.trim();
-  };
 
   // 안전한 localStorage 저장
   const saveToStorage = (content: string) => {
@@ -325,42 +291,19 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 강화된 HTML 복사 - SCRIPT 태그 완전 제거 및 재발 방지
+  // HTML 복사 - SCRIPT 태그 제거
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    console.log('🔒 티스토리 안전 복사 시작 - SCRIPT 태그 제거');
+    const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     
-    // 강력한 SCRIPT 태그 제거 적용
-    const safeContent = removeScriptTags(editorContent);
-    
-    // 추가 안전성 검증
-    if (safeContent.toLowerCase().includes('<script') || safeContent.toLowerCase().includes('javascript:')) {
-      console.error('⚠️ SCRIPT 태그 제거 실패 감지');
+    navigator.clipboard.writeText(cleanContent).then(() => {
       toast({ 
-        title: "❌ 복사 실패", 
-        description: "SCRIPT 태그 제거에 실패했습니다. 관리자에게 문의하세요.", 
-        variant: "destructive" 
-      });
-      return;
-    }
-    
-    navigator.clipboard.writeText(safeContent).then(() => {
-      toast({ 
-        title: "✅ 티스토리 안전 복사 완료!", 
-        description: "모든 SCRIPT 태그가 제거되어 티스토리에 안전하게 붙여넣을 수 있습니다.",
-        duration: 4000
-      });
-      console.log('✅ 티스토리 안전 복사 성공 - SCRIPT 완전 제거됨');
-    }).catch((error) => {
-      console.error('❌ 클립보드 복사 실패:', error);
-      toast({ 
-        title: "❌ 복사 실패", 
-        description: "클립보드 복사에 실패했습니다.", 
-        variant: "destructive" 
+        title: "✅ HTML 복사 완료 (SCRIPT 태그 제거됨)", 
+        description: "티스토리 코드 편집창에 안전하게 붙여넣으세요." 
       });
     });
   };
@@ -425,7 +368,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                     className="text-green-600 border-green-600 hover:bg-green-50"
                   >
                     <ClipboardCopy className="h-4 w-4 mr-1" />
-                    티스토리 안전 복사
+                    HTML 복사
                   </Button>
                   <Button 
                     onClick={handleDownloadHTML}
@@ -501,7 +444,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <p className="font-bold mb-1">📝 편집 가능한 블로그 글을 자유롭게 수정하세요.</p>
-                  <p className="text-xs text-green-600 mt-1">🔒 "티스토리 안전 복사" 버튼은 모든 SCRIPT 태그를 제거하여 안전합니다</p>
                   {isCommandExecutingRef.current && (
                     <p className="text-xs text-orange-600 mt-1">⚠️ 명령 실행 중 - 자동 복원이 차단됩니다</p>
                   )}

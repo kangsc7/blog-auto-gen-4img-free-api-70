@@ -10,6 +10,7 @@ export const useUserManagement = () => {
     const { toast } = useToast();
 
     const fetchUsers = useCallback(async () => {
+        // Keep loading true only on initial fetch
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -34,7 +35,7 @@ export const useUserManagement = () => {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'profiles' },
                 () => {
-                    fetchUsers();
+                    fetchUsers(); // Refetch on any change
                 }
             )
             .subscribe();
@@ -75,46 +76,21 @@ export const useUserManagement = () => {
         return true;
     };
 
-    const setUserAccessDuration = async (userId: string, days: number) => {
-        const now = new Date();
-        const totalSeconds = days * 24 * 60 * 60;
-        
+    const deleteUser = async (userId: string) => {
         const { error } = await supabase
             .from('profiles')
-            .update({
-                access_duration_days: days,
-                remaining_time_seconds: totalSeconds,
-                last_time_update: now.toISOString(),
-                status: days > 0 ? 'approved' : 'expired',
-                updated_at: now.toISOString()
-            })
+            .delete()
             .eq('id', userId);
 
-        if (error) {
-            console.error('Error setting user access duration:', error);
-            toast({ title: "접근 기간 설정 실패", description: error.message, variant: "destructive" });
-            return false;
-        }
-
-        toast({ 
-            title: "접근 기간 설정", 
-            description: days > 0 ? `${days}일간 접근이 설정되었습니다.` : "접근이 즉시 만료되었습니다." 
-        });
-        return true;
-    };
-
-    const deleteUser = async (userId: string) => {
-        const { error } = await supabase.auth.admin.deleteUser(userId);
-        
         if (error) {
             console.error('Error deleting user:', error);
             toast({ title: "사용자 삭제 실패", description: error.message, variant: "destructive" });
             return false;
         }
 
-        toast({ title: "사용자 삭제", description: "사용자가 완전히 삭제되었습니다." });
+        toast({ title: "사용자 삭제", description: "사용자가 성공적으로 삭제되었습니다." });
         return true;
     };
 
-    return { users, loading, updateUserStatus, deleteUser, setUserAccessDuration };
+    return { users, loading, updateUserStatus, deleteUser };
 };

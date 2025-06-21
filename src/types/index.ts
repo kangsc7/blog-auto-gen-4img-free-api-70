@@ -28,7 +28,7 @@ export interface AppState {
   saveReferenceTrigger?: boolean;
 }
 
-export type UserStatus = 'pending' | 'approved' | 'rejected' | 'expired';
+export type UserStatus = 'pending' | 'approved' | 'rejected';
 export type AppRole = 'admin' | 'user';
 
 export interface Profile {
@@ -38,7 +38,4 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   approved_at: string | null;
-  access_duration_days: number | null;
-  remaining_time_seconds: number | null;
-  last_time_update: string | null;
 }
