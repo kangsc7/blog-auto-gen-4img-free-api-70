@@ -1,42 +1,45 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export const ScrollToTopButton: React.FC = () => {
+export const ScrollToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    const toggleVisibility = () => {
-      // 스크롤 임계값을 3700으로 증가
-      if (window.pageYOffset > 3700) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener('scroll', toggleVisibility);
-
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  const toggleVisibility = () => {
+    if (window.pageYOffset > 300) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+  };
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
-  if (!isVisible) {
-    return null;
-  }
+  useEffect(() => {
+    window.addEventListener('scroll', toggleVisibility);
+
+    return () => {
+      window.removeEventListener('scroll', toggleVisibility);
+    };
+  }, []);
 
   return (
     <Button
       onClick={scrollToTop}
-      className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
-      size="lg"
+      className={cn(
+        'fixed bottom-8 right-8 z-50 h-12 w-12 rounded-full p-0 shadow-lg transition-opacity duration-300',
+        'bg-blue-600 hover:bg-blue-700 text-white',
+        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      )}
+      variant="default"
+      aria-label="Scroll to top"
     >
       <ArrowUp className="h-6 w-6" />
     </Button>

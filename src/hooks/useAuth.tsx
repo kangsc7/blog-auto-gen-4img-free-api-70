@@ -87,11 +87,11 @@ export const useAuth = () => {
 
   const handleSignUp = async (signUpData: { email: string; password: string }) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: 'https://blog-ai-wizard-forge.lovable.app/',
         },
       });
 
@@ -99,44 +99,7 @@ export const useAuth = () => {
         toast({ title: "회원가입 실패", description: error.message, variant: "destructive" });
         return false;
       }
-
-      // 테스트 기간 중 자동 승인: 회원가입 성공 시 즉시 승인된 상태로 프로필 생성
-      if (data.user) {
-        const now = new Date();
-        const accessExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30일 후 만료
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            status: 'approved', // 테스트 기간 중 자동 승인
-            approved_at: now.toISOString(),
-            access_expires_at: accessExpiresAt.toISOString(),
-            remaining_access_days: 30,
-          });
-
-        if (profileError) {
-          console.error('프로필 생성 오류:', profileError);
-        }
-
-        // 회원가입 성공 후 자동 로그인 시도
-        const loginResult = await handleLogin({
-          email: signUpData.email,
-          password: signUpData.password
-        });
-
-        if (loginResult) {
-          toast({ 
-            title: "🎉 회원가입 및 자동 승인 완료!", 
-            description: "테스트 기간 중 자동으로 승인되어 30일간 이용하실 수 있습니다.",
-            duration: 5000
-          });
-          return true;
-        }
-      }
-
-      toast({ title: "회원가입 성공", description: "이메일 인증을 완료하고 로그인해주세요." });
+      toast({ title: "회원가입 성공", description: "인증 메일을 확인해주세요." });
       return true;
     } catch (error: any) {
       console.error('회원가입 오류:', error);

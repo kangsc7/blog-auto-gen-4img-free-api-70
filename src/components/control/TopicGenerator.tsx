@@ -10,7 +10,7 @@ interface TopicGeneratorProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
   isGeneratingTopics: boolean;
-  generateTopicsFromKeyword: (keywordOverride?: string) => Promise<string[] | null>;
+  generateTopicsFromKeyword: () => void;
   manualTopic: string;
   setManualTopic: React.Dispatch<React.SetStateAction<string>>;
   handleManualTopicAdd: () => void;
@@ -42,10 +42,8 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
             value={appState.keyword}
             onChange={(e) => saveAppState({ keyword: e.target.value })}
-            disabled={true}
-            className="bg-gray-100 cursor-not-allowed"
           />
-          <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다 (수동 입력 불가)</p>
+          <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
         </div>
         
         <div>
@@ -66,7 +64,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
 
         {/* 중복 설정 상태 표시 */}
         <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-          현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
+          현재 설정: {appState.preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
         </div>
 
         <Button 
@@ -99,13 +97,13 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
               placeholder="직접 주제를 입력해주세요"
               value={manualTopic}
               onChange={(e) => setManualTopic(e.target.value)}
-              className="flex-1 border-2 border-blue-500 shadow-md focus:border-blue-700 focus:ring-2 focus:ring-blue-200"
+              className="flex-1"
             />
             <Button 
               onClick={handleManualTopicAdd}
               disabled={!manualTopic.trim()}
               variant="outline"
-              className="text-blue-600 border-2 border-blue-600 hover:bg-blue-50 shadow-md font-bold"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
             >
               추가
             </Button>

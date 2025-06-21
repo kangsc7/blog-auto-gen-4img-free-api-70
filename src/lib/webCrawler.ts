@@ -10,36 +10,28 @@ interface CrawlResult {
 export class WebCrawlerService {
   private static async searchWebContent(keyword: string, apiKey: string): Promise<CrawlResult[]> {
     try {
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear(); // 2025
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentDay = currentDate.getDate();
-
       // 구글 검색 시뮬레이션을 위한 Gemini API 활용
-      const searchPrompt = `현재 날짜: ${currentYear}년 ${currentMonth}월 ${currentDay}일
-
-"${keyword}"에 대한 ${currentYear}년 최신 정보를 찾기 위해 웹 검색을 시뮬레이션해주세요. 다음 형식으로 3-5개의 가상의 검색 결과를 생성해주세요. 반드시 ${currentYear}년 최신 정보를 포함하여 실제 존재할 법한 내용으로 구성해주세요:
+      const searchPrompt = `"${keyword}"에 대한 최신 정보를 찾기 위해 웹 검색을 시뮬레이션해주세요. 다음 형식으로 3-5개의 가상의 검색 결과를 생성해주세요. 반드시 2024-2025년 최신 정보를 포함하여 실제 존재할 법한 내용으로 구성해주세요:
 
 제목1: [구체적인 제목]
-내용1: [상세한 설명 600자 이상]
-요약1: [핵심 포인트 100자]
+내용1: [상세한 설명 200자 이상]
+요약1: [핵심 포인트 50자]
 공식링크1: [관련 정부기관이나 공공기관의 실제 웹사이트 주소]
 
 제목2: [구체적인 제목]
-내용2: [상세한 설명 600자 이상]  
-요약2: [핵심 포인트 100자]
+내용2: [상세한 설명 200자 이상]  
+요약2: [핵심 포인트 50자]
 공식링크2: [관련 정부기관이나 공공기관의 실제 웹사이트 주소]
 
 (이런 식으로 계속...)
 
 **중요 지침**:
 - "${keyword}" 키워드가 모든 제목과 내용에 포함되어야 함
-- 반드시 ${currentYear}년 ${currentMonth}월 기준 최신 정보 반영
+- 2025년 최신 정보 반영
 - 정확하고 유용한 정보 제공
 - 각 항목은 서로 다른 관점에서 접근
 - 공식링크는 반드시 실제 존재하는 정부기관, 공공기관 웹사이트여야 함 (예: 보건복지부, 복지정보포털, 에너지바우처 공식사이트 등)
-- ${currentYear}년 실제 성공 사례나 구체적인 수치 데이터 포함
-- 과거 연도(${currentYear-1}년 이전) 정보는 절대 포함하지 말고, 오직 ${currentYear}년 현재 기준의 최신 정보만 제공`;
+- 실제 성공 사례나 구체적인 수치 데이터 포함`;
 
       const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
@@ -107,13 +99,11 @@ export class WebCrawlerService {
     const crawlResults = await this.searchWebContent(keyword, apiKey);
     
     if (crawlResults.length === 0) {
-      return `${keyword}에 대한 2025년 최신 정보를 찾지 못했습니다. 일반적인 지식을 바탕으로 작성합니다.`;
+      return `${keyword}에 대한 추가 정보를 찾지 못했습니다. 일반적인 지식을 바탕으로 작성합니다.`;
     }
 
-    const currentYear = new Date().getFullYear();
-    
     // 크롤링된 정보를 요약하여 반환
-    let crawledInfo = `=== ${keyword} 관련 ${currentYear}년 최신 정보 ===\n\n`;
+    let crawledInfo = `=== ${keyword} 관련 최신 정보 ===\n\n`;
     
     crawlResults.forEach((result, index) => {
       crawledInfo += `${index + 1}. ${result.title}\n`;
@@ -125,7 +115,7 @@ export class WebCrawlerService {
       crawledInfo += `\n`;
     });
 
-    crawledInfo += `=== ${currentYear}년 추천 공식 웹사이트 ===\n`;
+    crawledInfo += `=== 추천 공식 웹사이트 ===\n`;
     crawledInfo += `보건복지부: https://www.mw.go.kr\n`;
     crawledInfo += `복지정보포털: https://www.welfaresupport.go.kr\n`;
     crawledInfo += `에너지바우처 공식사이트: https://www.energyvoucher.go.kr\n`;

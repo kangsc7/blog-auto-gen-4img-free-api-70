@@ -32,6 +32,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ currentUser, handleLogout 
           <Bot className="h-8 w-8 text-blue-600 mr-3" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">AI 블로그 콘텐츠 생성기</h1>
+            <p className="text-sm text-gray-600">GenSpark 기반 자동화 콘텐츠 시스템 도구</p>
           </div>
         </Link>
         

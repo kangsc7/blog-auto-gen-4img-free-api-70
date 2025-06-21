@@ -26,12 +26,6 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
 }) => {
   console.log('HuggingFaceApiKeyManager 렌더링:', { huggingFaceApiKey, isHuggingFaceApiKeyValidated });
 
-  const handleDelete = () => {
-    setHuggingFaceApiKey('');
-    setIsHuggingFaceApiKeyValidated(false);
-    deleteHuggingFaceApiKeyFromStorage();
-  };
-
   return (
     <Card className="shadow-md hover:shadow-lg transition-all duration-300 relative z-[100]">
       <CardHeader>
@@ -70,7 +64,7 @@ export const HuggingFaceApiKeyManager: React.FC<HuggingFaceApiKeyManagerProps> =
             </Button>
           </div>
           <div className="flex space-x-2 mt-2">
-            <Button onClick={handleDelete} size="sm" variant="destructive" className="w-full">
+            <Button onClick={deleteHuggingFaceApiKeyFromStorage} size="sm" variant="destructive" className="w-full">
               키 삭제
             </Button>
           </div>

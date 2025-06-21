@@ -1,186 +1,121 @@
-import { useState, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { useAppStateManager } from '@/hooks/useAppStateManager';
+import { useAuth } from '@/hooks/useAuth';
 import { useAllApiKeysManager } from '@/hooks/useAllApiKeysManager';
+import { useOneClick } from '@/hooks/useOneClick';
 import { useTopicGenerator } from '@/hooks/useTopicGenerator';
 import { useArticleGenerator } from '@/hooks/useArticleGenerator';
 import { useImagePromptGenerator } from '@/hooks/useImagePromptGenerator';
 import { useTopicControls } from '@/hooks/useTopicControls';
 import { useAppUtils } from '@/hooks/useAppUtils';
-import { useOneClick } from '@/hooks/useOneClick';
 import { useUserAccess } from '@/hooks/useUserAccess';
 
 export const useRefactoredAppController = () => {
+  const { toast } = useToast();
+  const { appState, saveAppState, deleteApiKeyFromStorage, resetApp, preventDuplicates, setPreventDuplicates } = useAppStateManager();
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { appState, saveAppState, resetAppState } = useAppStateManager();
-  
-  // useAllApiKeysManager에 안전한 상태 전달
-  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
-    appState,
-    saveAppState,
-  });
-  
-  const [preventDuplicates, setPreventDuplicates] = useState(appState.preventDuplicates || false);
   const { hasAccess } = useUserAccess();
-
-  // API 키 검증 상태를 더 안전하게 확인
-  const isAllApiKeysValidated = Boolean(
-    geminiManager.isGeminiApiKeyValidated && 
-    pixabayManager.isPixabayApiKeyValidated && 
-    huggingFaceManager.isHuggingFaceApiKeyValidated
-  );
-
-  console.log('🔍 API 키 검증 상태 확인:', {
-    gemini: geminiManager.isGeminiApiKeyValidated,
-    pixabay: pixabayManager.isPixabayApiKeyValidated,
-    huggingface: huggingFaceManager.isHuggingFaceApiKeyValidated,
-    allValidated: isAllApiKeysValidated
-  });
-
+  const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({ appState, saveAppState });
+  
+  // 접근 권한이 없으면 기능을 비활성화
+  const canUseFeatures = hasAccess || isAdmin;
+  
   const { isGeneratingTopics, generateTopics } = useTopicGenerator(appState, saveAppState);
-  const { isGeneratingContent, generateArticle, stopArticleGeneration } = useArticleGenerator(appState, saveAppState);
-  const { isGeneratingImage: isGeneratingPrompt, createImagePrompt: generateImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(appState, saveAppState, huggingFaceManager.huggingFaceApiKey, hasAccess || isAdmin);
-
-  // topicControls에 올바른 파라미터 전달 (appState, saveAppState)
-  const topicControls = useTopicControls(appState, saveAppState);
-  const { copyToClipboard, downloadHTML, openWhisk } = useAppUtils({ appState });
+  const { isGeneratingContent, generateArticle } = useArticleGenerator(appState, saveAppState);
+  const { isGeneratingImage, createImagePrompt, isDirectlyGenerating, generateDirectImage } = useImagePromptGenerator(
+    appState,
+    saveAppState
+  );
+  
+  const {
+    manualTopic,
+    setManualTopic,
+    selectTopic,
+    handleManualTopicAdd,
+  } = useTopicControls({ 
+    appState, 
+    saveAppState, 
+    preventDuplicates: appState.preventDuplicates,
+    canUseFeatures 
+  });
 
   const {
-    isOneClickGenerating,
-    handleLatestIssueOneClick,
-    handleEvergreenKeywordOneClick,
-    handleStopOneClick,
-    showTopicSelectionDialog,
-    setShowTopicSelectionDialog,
-    showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog
-  } = useOneClick(
+    copyToClipboard,
+    openWhisk,
+    downloadHTML,
+  } = useAppUtils({ appState });
+
+  const handleResetApp = () => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+    resetApp();
+    setManualTopic('');
+  };
+
+  useEffect(() => {
+    if (!appState.preventDuplicates) {
+      console.log('중복 허용 모드 활성화 - 모든 중복 제한 해제');
+    }
+  }, [appState.preventDuplicates]);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      saveAppState({ isLoggedIn: true, currentUser: session.user.email });
+    } else {
+      saveAppState({ isLoggedIn: false, currentUser: '' });
+    }
+  }, [session?.user?.email, saveAppState]);
+
+  const generateArticleWithPixabay = (options?: { topic?: string; keyword?: string }): Promise<string> => {
+    if (!canUseFeatures) {
+      toast({
+        title: "접근 제한",
+        description: "이 기능을 사용할 권한이 없습니다.",
+        variant: "destructive"
+      });
+      return Promise.resolve('');
+    }
+    
+    return generateArticle({
+      ...options,
+      pixabayConfig: { 
+        key: pixabayManager.pixabayApiKey, 
+        validated: pixabayManager.isPixabayApiKeyValidated 
+      },
+    });
+  };
+  
+  const { isOneClickGenerating, handleLatestIssueOneClick, handleEvergreenKeywordOneClick, handleStopOneClick } = useOneClick(
     appState,
     saveAppState,
     generateTopics,
-    topicControls.selectTopic,
-    generateArticle,
+    selectTopic,
+    generateArticleWithPixabay,
     profile,
     preventDuplicates,
-    hasAccess || isAdmin
+    canUseFeatures
   );
 
-  // 주제 확인 다이얼로그 상태 - 중복 실행 방지 개선
-  const [showTopicConfirmDialog, setShowTopicConfirmDialog] = useState(false);
-  const [pendingTopic, setPendingTopic] = useState<string>('');
-  const isConfirming = useRef(false); // 중복 실행 방지
+  const generationStatus = { isGeneratingTopics, isGeneratingContent, isGeneratingImage, isDirectlyGenerating };
 
-  // 주제 선택 시 확인 다이얼로그 표시
-  const handleTopicSelect = (topic: string) => {
-    console.log('주제 선택됨:', topic);
-    if (isConfirming.current) {
-      console.log('이미 처리 중 - 무시');
-      return;
-    }
-    setPendingTopic(topic);
-    setShowTopicConfirmDialog(true);
+  const generateArticleForManual = (topic?: string): Promise<string> => {
+    return generateArticleWithPixabay({ topic: topic || appState.selectedTopic, keyword: appState.keyword });
   };
 
-  // 주제 확인 다이얼로그에서 "네, 작성하겠습니다" 클릭 시 - 중복 실행 방지
-  const handleTopicConfirm = () => {
-    console.log('주제 확인 버튼 클릭:', pendingTopic, '처리중:', isConfirming.current);
-    
-    if (!pendingTopic || isConfirming.current) {
-      console.log('처리 조건 불만족 - 무시');
-      return;
-    }
-    
-    isConfirming.current = true;
-    console.log('주제 확인 처리 시작:', pendingTopic);
-    
-    // 1. 즉시 다이얼로그 닫기
-    setShowTopicConfirmDialog(false);
-    
-    // 2. 주제 선택
-    topicControls.selectTopic(pendingTopic);
-    
-    // 3. 상태 초기화
-    const currentTopic = pendingTopic;
-    setPendingTopic('');
-    
-    // 4. 글 생성 시작 (약간의 딜레이)
-    setTimeout(() => {
-      console.log('자동 글 생성 시작:', { topic: currentTopic, keyword: appState.keyword });
-      generateArticle({ topic: currentTopic, keyword: appState.keyword });
-      isConfirming.current = false; // 처리 완료
-    }, 100);
-  };
-
-  // 주제 확인 다이얼로그 취소
-  const handleTopicCancel = () => {
-    console.log('주제 선택 취소');
-    setShowTopicConfirmDialog(false);
-    setPendingTopic('');
-    isConfirming.current = false;
-  };
-
-  const convertToMarkdown = () => {
-    const markdown = `# ${appState.selectedTopic}\n\n${appState.generatedContent}`;
-    copyToClipboard(markdown, "마크다운");
-  };
-
-  // 통합된 중단 기능 - 원클릭과 일반 글 생성 모두 중단
-  const handleUnifiedStop = () => {
-    console.log('통합 중단 버튼 클릭 - 상태:', { 
-      isOneClickGenerating, 
-      isGeneratingContent 
-    });
-    
-    if (isOneClickGenerating) {
-      handleStopOneClick();
-    }
-    
-    if (isGeneratingContent) {
-      stopArticleGeneration();
-    }
-  };
-
-  // 초기화 함수 개선 - 편집기에 이벤트 발송
-  const enhancedResetApp = () => {
-    console.log('🔄 향상된 초기화 시작');
-    
-    // 편집기에 초기화 이벤트 발송
-    window.dispatchEvent(new Event('app-reset'));
-    
-    // 기존 초기화 실행 (resetAppState 사용)
-    resetAppState();
-    
-    console.log('✅향상된 초기화 완료');
-  };
-
-  const generationStatus = {
-    isGeneratingTopics,
-    isGeneratingContent,
-    isGeneratingImage: isGeneratingPrompt,
-    isDirectlyGenerating,
-    isOneClickGenerating,
-  };
-
-  const generationFunctions = {
-    generateTopics: () => generateTopics(),
-    generateArticle,
-    createImagePrompt: generateImagePrompt,
-    generateDirectImage,
-    stopArticleGeneration,
-  };
-
-  const utilityFunctions = {
-    copyToClipboard,
-    downloadHTML,
-    openWhisk,
-  };
+  const generationFunctions = { generateTopics, generateArticle: generateArticleForManual, createImagePrompt, generateDirectImage };
+  const topicControls = { manualTopic, setManualTopic, handleManualTopicAdd, selectTopic };
+  const utilityFunctions = { copyToClipboard, openWhisk, downloadHTML };
 
   return {
-    appState: {
-      ...appState,
-      // API 키 검증 상태를 올바르게 업데이트
-      isApiKeyValidated: isAllApiKeysValidated,
-    },
+    appState,
     saveAppState,
     session,
     profile,
@@ -192,29 +127,18 @@ export const useRefactoredAppController = () => {
     geminiManager,
     pixabayManager,
     huggingFaceManager,
-    preventDuplicates,
+    deleteApiKeyFromStorage,
+    preventDuplicates: appState.preventDuplicates,
     setPreventDuplicates,
-    handleResetApp: enhancedResetApp,
+    handleResetApp,
     isOneClickGenerating,
     handleLatestIssueOneClick,
     handleEvergreenKeywordOneClick,
-    handleStopOneClick: handleUnifiedStop,
+    handleStopOneClick,
     generationStatus,
     generationFunctions,
-    topicControls: {
-      ...topicControls,
-      selectTopic: handleTopicSelect,
-    },
+    topicControls,
     utilityFunctions,
-    handleTopicConfirm,
-    showTopicSelectionDialog,
-    setShowTopicSelectionDialog,
-    showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog,
-    showTopicConfirmDialog,
-    setShowTopicConfirmDialog,
-    pendingTopic,
-    handleTopicCancel,
-    convertToMarkdown,
+    canUseFeatures,
   };
 };

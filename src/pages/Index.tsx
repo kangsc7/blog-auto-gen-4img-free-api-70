@@ -9,9 +9,6 @@ import { RefactoredApiKeysSection } from '@/components/sections/RefactoredApiKey
 import { OneClickSection } from '@/components/sections/OneClickSection';
 import { MainContentSection } from '@/components/sections/MainContentSection';
 import { ScrollToTopButton } from '@/components/layout/ScrollToTopButton';
-import { TopicSelectionNotification } from '@/components/dialog/TopicSelectionNotification';
-import { DuplicateErrorDialog } from '@/components/dialog/DuplicateErrorDialog';
-import { TopicConfirmDialog } from '@/components/dialog/TopicConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -43,27 +40,9 @@ const Index = () => {
     generationFunctions,
     topicControls,
     utilityFunctions,
-    handleTopicConfirm,
-    showTopicSelectionDialog,
-    setShowTopicSelectionDialog,
-    showDuplicateErrorDialog,
-    setShowDuplicateErrorDialog,
-    showTopicConfirmDialog,
-    setShowTopicConfirmDialog,
-    pendingTopic,
-    handleTopicCancel,
-    convertToMarkdown,
   } = useRefactoredAppController();
 
   const { hasAccess, isCheckingAccess } = useUserAccess();
-
-  // 참조 데이터 삭제 함수
-  const deleteReferenceData = () => {
-    saveAppState({ 
-      referenceLink: '', 
-      referenceSentence: '' 
-    });
-  };
 
   console.log('Index 컴포넌트 렌더링 상태:', {
     session: !!session,
@@ -72,9 +51,7 @@ const Index = () => {
     preventDuplicates,
     profile: !!profile,
     authLoading,
-    isCheckingAccess,
-    showTopicConfirmDialog,
-    pendingTopic
+    isCheckingAccess
   });
 
   if (authLoading || isCheckingAccess) {
@@ -121,7 +98,7 @@ const Index = () => {
     const { title, description, icon } = getStatusMessage();
 
     return (
-      <div className="min-h-screen bg-gray-100 w-full">
+      <div className="min-h-screen bg-gray-100">
         <TopNavigation />
         <AppHeader
           currentUser={profile?.email || appState.currentUser}
@@ -152,7 +129,7 @@ const Index = () => {
   console.log('메인 화면 렌더링 시작');
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <TopNavigation />
       <AppHeader
         currentUser={profile?.email || appState.currentUser}
@@ -160,37 +137,17 @@ const Index = () => {
       />
       
       <RefactoredApiKeysSection 
-        geminiApiKey={geminiManager.geminiApiKey}
-        setGeminiApiKey={geminiManager.setGeminiApiKey}
-        isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
-        setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
-        isGeminiValidating={geminiManager.isGeminiValidating}
-        validateGeminiApiKey={geminiManager.validateGeminiApiKey}
-        deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
-        
-        pixabayApiKey={pixabayManager.pixabayApiKey}
-        setPixabayApiKey={pixabayManager.setPixabayApiKey}
-        isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
-        setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
-        isPixabayValidating={pixabayManager.isPixabayValidating}
-        validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
-        deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
-        
-        huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
-        setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
-        isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
-        setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
-        isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
-        validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
-        deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
+        geminiManager={geminiManager}
+        pixabayManager={pixabayManager}
+        huggingFaceManager={huggingFaceManager}
       />
 
-      {/* 컨트롤 섹션 - 전체 width 사용 */}
-      <div className="content-container mt-4 mb-3">
+      {/* 컨트롤 섹션 - 모든 접근 권한이 있는 사용자에게 표시 */}
+      <div className="container mx-auto mt-4 mb-3">
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="flex items-center justify-between flex-wrap gap-6">
             
-            {/* 사용자 현황 링크 */}
+            {/* 사용자 현황 링크 - 모든 로그인한 사용자에게 표시 */}
             <div className="flex-shrink-0">
               <Link
                 to="/admin/users"
@@ -203,7 +160,7 @@ const Index = () => {
               </Link>
             </div>
             
-            {/* 중복 설정 토글 */}
+            {/* 중복 설정 토글 - 접근 권한이 있는 사용자에게 표시 */}
             <div className="text-center">
               <div className="mb-3">
                 <span className="text-lg font-bold text-gray-800">중복 주제 설정</span>
@@ -240,7 +197,7 @@ const Index = () => {
               </p>
             </div>
             
-            {/* 초기화 버튼 */}
+            {/* 초기화 버튼 - 크기 조정 */}
             <div className="text-center">
               <Button
                 onClick={handleResetApp}
@@ -251,7 +208,7 @@ const Index = () => {
                 <RefreshCw className="h-6 w-6 mr-2" />
                 <span className="font-bold text-lg">초기화</span>
               </Button>
-              <p className="text-sm text-gray-600 mt-2 font-semibold">블로그 글 초기화</p>
+              <p className="text-sm text-gray-600 mt-2 font-semibold">모든 데이터 초기화</p>
             </div>
           </div>
         </div>
@@ -263,7 +220,6 @@ const Index = () => {
         isOneClickGenerating={isOneClickGenerating}
         handleStopOneClick={handleStopOneClick}
         appState={appState}
-        isGeneratingContent={generationStatus.isGeneratingContent}
       />
       
       <MainContentSection
@@ -274,38 +230,6 @@ const Index = () => {
         topicControls={topicControls}
         utilityFunctions={utilityFunctions}
         preventDuplicates={preventDuplicates}
-        handleTopicConfirm={handleTopicConfirm}
-        deleteReferenceData={deleteReferenceData}
-      />
-
-      {/* 주제 확인 다이얼로그 */}
-      <TopicConfirmDialog
-        isOpen={showTopicConfirmDialog}
-        topic={pendingTopic}
-        onConfirm={() => {
-          console.log('TopicConfirmDialog onConfirm 호출됨:', pendingTopic);
-          handleTopicConfirm();
-        }}
-        onCancel={() => {
-          console.log('TopicConfirmDialog onCancel 호출됨');
-          handleTopicCancel();
-        }}
-        onClose={() => {
-          console.log('TopicConfirmDialog onClose 호출됨');
-          setShowTopicConfirmDialog(false);
-        }}
-      />
-
-      {/* 주제 선택 알림 팝업 */}
-      <TopicSelectionNotification
-        open={showTopicSelectionDialog}
-        onOpenChange={setShowTopicSelectionDialog}
-      />
-
-      {/* 중복 오류 다이얼로그 */}
-      <DuplicateErrorDialog
-        open={showDuplicateErrorDialog}
-        onOpenChange={setShowDuplicateErrorDialog}
       />
       
       <ScrollToTopButton />

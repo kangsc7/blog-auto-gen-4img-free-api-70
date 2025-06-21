@@ -1,3 +1,4 @@
+
 import { getColors } from './promptUtils';
 import { getHtmlTemplate } from './htmlTemplate';
 
@@ -18,16 +19,7 @@ export const getArticlePrompt = ({
 }: ArticlePromptParams): string => {
   const colors = getColors(selectedColorTheme);
   const refLink = referenceLink || 'https://worldpis.com';
-  const refText = referenceSentence || '워드프레스 꿀팁 더 보러가기';
-  
-  // 빈 배열로 전달하여 기본 템플릿 사용
-  const htmlTemplate = getHtmlTemplate(
-    topic,
-    `[콘텐츠가 여기에 들어갑니다]`,
-    '',
-    '',
-    ''
-  );
+  const htmlTemplate = getHtmlTemplate(colors, topic, keyword, refLink, referenceSentence);
   const currentYear = new Date().getFullYear();
 
   return `
@@ -53,7 +45,7 @@ export const getArticlePrompt = ({
         
         - 대상 독자: 한국어 사용자
         - **시의성**: 글의 내용이 최신 정보를 반영해야 할 경우, 현재 년도(${currentYear}년)를 자연스럽게 언급하여 정보의 신뢰도를 높일 수 있습니다. 제목에도 필요하다면 년도를 포함해도 좋습니다.
-        - **콘텐츠 분량 (매우 중요)**: 전체 글자 수는 반드시 **600자에서 700자 사이**여야 합니다. 이 분량 제한을 엄격하게 지켜주세요.
+        - **콘텐츠 분량 (매우 중요)**: 전체 글자 수는 반드시 **140자에서 190자 사이**여야 합니다. 이 분량 제한을 엄격하게 지켜주세요.
         - **키워드 활용**: 핵심 키워드 '${keyword}'를 글 전체에 자연스럽게 녹여내세요. 목표 키워드 밀도는 1.5% ~ 2.5%를 지향하지만, 가장 중요한 것은 **글의 가독성과 자연스러움**입니다. 독자가 읽기에 불편할 정도로 키워드를 억지로 반복해서는 안 됩니다. 의미 있는 맥락에서만 키워드를 사용해주세요.
         - 콘텐츠 스타일: 제공된 HTML 템플릿과 스타일을 정확히 사용해야 합니다. 모든 섹션('[ ]'으로 표시된 부분)을 실제 가치를 제공하는 풍부하고 자연스러운 콘텐츠로 채워주세요.
         - 문체: 전체 글의 어조를 일관되게 유지해주세요. 독자에게 말을 거는 듯한 인간적이고 친근한 구어체('~해요', '~죠' 체)를 사용해주세요. **'~입니다', '~습니다'와 같은 격식체는 글의 어떤 부분에서도 절대 사용하지 마세요.** 개인적인 경험이나 스토리를 섞어 독자의 공감을 얻고, 이모지(예: 😊, 💡, 😥)를 적절히 사용하여 글의 생동감을 더해주세요.
@@ -66,11 +58,7 @@ export const getArticlePrompt = ({
         - 올바른 형식: \`<a href="https://www.mw.go.kr" target="_blank" rel="noopener" style="color: ${colors.link}; text-decoration: underline;">보건복지부</a>\`
         - 절대 사용 금지: "보건복지부(https://www.mw.go.kr/)" 형식이나 단순 URL만 쓰는 것은 절대 금지
         
-        - **참조 링크 텍스트 (매우 중요)**: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트는 "${refText}"로 설정되어 있습니다. 이 텍스트를 그대로 사용해주세요.
-        
-        ${referenceLink ? `- **외부 참조 링크 활용**: 제공된 참조 링크 "${referenceLink}"의 내용을 분석하여 글에 자연스럽게 반영해주세요.` : ''}
-        ${referenceSentence ? `- **참조 문장 활용**: 제공된 참조 문장 "${referenceSentence}"을 글의 맥락에 맞게 자연스럽게 포함하거나 연관된 내용을 작성해주세요.` : ''}
-        
+        - **참조 링크 텍스트 (매우 중요)**: HTML 템플릿의 끝에 위치한 참조 링크의 앵커 텍스트는 "${referenceSentence || '더 많은 정보 확인하기'}"로 설정되어 있습니다. 이 텍스트를 그대로 사용해주세요.
         - **가장 중요한 최종 규칙**: 위에서 **(매우 중요)** 또는 **(가장 중요한 규칙)**이라고 표시된 **콘텐츠 분량**과 **키워드 밀도** 지침은 이 작업에서 가장 중요합니다. 어떤 경우에도 이 두 가지 규칙을 어겨서는 안 됩니다.
 
         사용할 변수:
@@ -83,7 +71,7 @@ export const getArticlePrompt = ({
         - Warn Border Color: ${colors.warnBorder}
         - Link Color: ${colors.link}
         - Reference Link: ${refLink}
-        - Reference Text: ${refText}
+        - Reference Sentence: ${referenceSentence || '더 많은 정보 확인하기'}
         - Topic: ${topic}
         - Main Keyword: ${keyword}
 
@@ -93,50 +81,4 @@ export const getArticlePrompt = ({
 ${htmlTemplate}
 --- HTML TEMPLATE END ---
       `;
-};
-
-export const createImagePrompt = async (
-  text: string,
-  geminiApiKey: string,
-  targetLanguage: string = 'English',
-  style: string = 'modern digital art',
-  mood: string = 'professional',
-  additionalContext: string = ''
-): Promise<string> => {
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
-  
-  const prompt = `다음 한국어 텍스트를 ${targetLanguage} 이미지 생성 프롬프트로 변환해주세요.
-  스타일: ${style}
-  분위기: ${mood}
-  추가 컨텍스트: ${additionalContext}
-  
-  텍스트: "${text}"
-  
-  요구사항:
-  - 구체적이고 시각적인 묘사
-  - 이미지 생성 AI가 이해하기 쉬운 형태
-  - 색상, 구도, 조명 등 세부사항 포함
-  - 불필요한 텍스트나 문자 제외
-  
-  ${targetLanguage} 프롬프트만 출력해주세요:`;
-
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('API 호출 실패');
-    }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  } catch (error) {
-    console.error('이미지 프롬프트 생성 오류:', error);
-    return '';
-  }
 };

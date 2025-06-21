@@ -5,55 +5,13 @@ import { Button } from '@/components/ui/button';
 import { ImageUp, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const STORAGE_KEY = 'imagePaster_state';
-
-interface ImagePasterState {
-  convertedImage: string | null;
-  imageBlob: string | null; // base64로 저장
-}
-
 export const ImagePaster = () => {
     const [convertedImage, setConvertedImage] = useState<string | null>(null);
-    const [imageBlob, setImageBlob] = useState<Blob | null>(null);
     const { toast } = useToast();
-
-    // 초기화 시 localStorage에서 상태 복원
-    useEffect(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const state: ImagePasterState = JSON.parse(saved);
-                setConvertedImage(state.convertedImage);
-                
-                // base64를 다시 Blob으로 변환
-                if (state.imageBlob) {
-                    fetch(state.imageBlob)
-                        .then(res => res.blob())
-                        .then(blob => setImageBlob(blob))
-                        .catch(console.error);
-                }
-            }
-        } catch (error) {
-            console.error('이미지 상태 복원 실패:', error);
-        }
-    }, []);
-
-    // 상태 변경 시 localStorage에 저장
-    useEffect(() => {
-        if (convertedImage) {
-            const state: ImagePasterState = {
-                convertedImage,
-                imageBlob: convertedImage // dataURL 자체를 저장
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
-    }, [convertedImage]);
 
     useEffect(() => {
         const handleAppReset = () => {
             setConvertedImage(null);
-            setImageBlob(null);
-            localStorage.removeItem(STORAGE_KEY);
         };
         window.addEventListener('app-reset', handleAppReset);
         return () => {
@@ -61,7 +19,7 @@ export const ImagePaster = () => {
         };
     }, []);
 
-    const convertToJpeg = (file: File): Promise<{ dataUrl: string; blob: Blob }> => {
+    const convertToJpeg = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -80,14 +38,8 @@ export const ImagePaster = () => {
                         return reject(new Error('Could not get canvas context'));
                     }
                     ctx.drawImage(img, 0, 0);
-                    
-                    canvas.toBlob((blob) => {
-                        if (!blob) {
-                            return reject(new Error('Canvas toBlob failed'));
-                        }
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                        resolve({ dataUrl, blob });
-                    }, 'image/jpeg', 0.95);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95); // High quality JPEG
+                    resolve(dataUrl);
                 };
                 img.onerror = (error) => reject(error);
             };
@@ -115,91 +67,44 @@ export const ImagePaster = () => {
         if (imageFile) {
             toast({ title: "이미지 처리 중", description: "이미지를 JPG로 변환하고 있습니다..." });
             try {
-                const { dataUrl, blob } = await convertToJpeg(imageFile);
-                setConvertedImage(dataUrl);
-                setImageBlob(blob);
+                const jpegDataUrl = await convertToJpeg(imageFile);
+                setConvertedImage(jpegDataUrl);
                 toast({ title: "변환 완료", description: "이미지를 성공적으로 붙여넣고 변환했습니다." });
             } catch (error) {
                 console.error("Image conversion error:", error);
                 toast({ title: "변환 실패", description: "이미지를 변환하는 중 오류가 발생했습니다.", variant: "destructive" });
             }
         } else {
-            toast({ 
-                title: "이미지만 붙여넣기 가능", 
-                description: "Whisk에서 이미지를 우클릭 → '이미지 복사'를 선택한 후 붙여넣어 주세요.", 
-                variant: "destructive" 
-            });
+            toast({ title: "붙여넣기 오류", description: "클립보드에서 이미지를 찾을 수 없습니다. 이미지 파일을 복사했는지 확인해주세요.", variant: "destructive" });
         }
     }, [toast]);
 
-    const handleCopyImageLikePaint = async () => {
-        if (!imageBlob) {
-            toast({ title: "복사 실패", description: "복사할 이미지가 없습니다.", variant: "destructive" });
-            return;
-        }
+    const handleCopyHtml = async () => {
+        if (!convertedImage) return;
 
+        const imgTag = `<img src="${convertedImage}" alt="pasted_and_converted_image" style="max-width: 100%; height: auto;">`;
         try {
+            const response = await fetch(convertedImage);
+            const imageBlob = await response.blob();
+            
             const clipboardItem = new ClipboardItem({
-                [imageBlob.type]: imageBlob
+                [imageBlob.type]: imageBlob,
+                'text/html': new Blob([imgTag], { type: 'text/html' }),
+                'text/plain': new Blob([imgTag], { type: 'text/plain' }),
             });
 
             await navigator.clipboard.write([clipboardItem]);
-            
-            toast({ 
-                title: "✅ 이미지 복사 완료!", 
-                description: "그림판 방식으로 이미지가 복사되었습니다. 블로그 글 미리보기 창에서 Ctrl+V로 붙여넣으세요!" 
-            });
-
+            toast({ title: "복사 완료", description: "이미지 및 HTML 태그가 복사되었습니다. 블로그, 그림판 등에 붙여넣으세요." });
         } catch (error) {
-            console.error('그림판 방식 복사 실패:', error);
-            
+            console.error('Failed to copy image and HTML: ', error);
             try {
-                const img = new Image();
-                img.src = convertedImage!;
-                
-                const tempDiv = document.createElement('div');
-                tempDiv.contentEditable = 'true';
-                tempDiv.appendChild(img);
-                document.body.appendChild(tempDiv);
-                
-                const range = document.createRange();
-                range.selectNode(img);
-                const selection = window.getSelection();
-                if (selection) {
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                    
-                    const success = document.execCommand('copy');
-                    if (success) {
-                        toast({ 
-                            title: "✅ 이미지 복사 완료 (대안방법)", 
-                            description: "이미지가 복사되었습니다. 블로그 글에 붙여넣어보세요!" 
-                        });
-                    } else {
-                        throw new Error('execCommand copy failed');
-                    }
-                }
-                
-                document.body.removeChild(tempDiv);
-                selection?.removeAllRanges();
-                
-            } catch (fallbackError) {
-                console.error('대안 복사 방법도 실패:', fallbackError);
-                
-                toast({ 
-                    title: "수동 복사 필요", 
-                    description: "아래 이미지를 우클릭하여 '이미지 복사'를 선택한 후 블로그에 붙여넣으세요.", 
-                    variant: "destructive"
-                });
+                await navigator.clipboard.writeText(imgTag);
+                toast({ title: "복사 완료 (Fallback)", description: "HTML 코드가 복사되었습니다. 그림판에 붙여넣으려면 이미지 위에서 우클릭 후 '이미지 복사'를 이용해주세요." });
+            } catch (copyError) {
+                console.error('Failed to copy HTML as text: ', copyError);
+                toast({ title: "복사 실패", description: "클립보드 복사에 실패했습니다.", variant: "destructive" });
             }
         }
-    };
-
-    const handleClear = () => {
-        setConvertedImage(null);
-        setImageBlob(null);
-        localStorage.removeItem(STORAGE_KEY);
-        toast({ title: "초기화 완료", description: "이미지가 초기화되었습니다." });
     };
 
     return (
@@ -217,44 +122,27 @@ export const ImagePaster = () => {
                     className="w-full min-h-[150px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center p-4 cursor-pointer hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                     {convertedImage ? (
-                        <img 
-                            src={convertedImage} 
-                            alt="Pasted and converted" 
-                            className="max-w-full max-h-[200px] rounded"
-                            onContextMenu={(e) => {
-                                e.stopPropagation();
-                            }}
-                        />
+                        <img src={convertedImage} alt="Pasted and converted" className="max-w-full max-h-[200px] rounded" />
                     ) : (
                         <div className="text-gray-500">
                             <ImageUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
                             <p className="font-semibold">이곳에 이미지를 붙여넣으세요 (Ctrl+V)</p>
-                            <p className="text-sm">Whisk에서 이미지를 우클릭 → '이미지 복사' 후 붙여넣으세요.</p>
+                            <p className="text-sm">Whisk에서 복사한 이미지가 JPG로 변환됩니다.</p>
                         </div>
                     )}
                 </div>
 
-                {convertedImage && imageBlob && (
+                {convertedImage && (
                     <div className="flex flex-col space-y-2">
                         <Button 
-                            onClick={handleCopyImageLikePaint}
+                            onClick={handleCopyHtml}
                             className="w-full bg-purple-600 hover:bg-purple-700"
                         >
                             <Copy className="h-4 w-4 mr-2" />
-                            그림판 방식으로 이미지 복사
+                            블로그용 이미지 복사 (HTML)
                         </Button>
-                        <div className="text-xs text-gray-600 bg-green-50 p-3 rounded border-l-4 border-green-400">
-                            <p className="font-bold text-green-700 mb-1">🎯 사용법 (그림판 방식)</p>
-                            <p className="mb-1">1. 위 버튼 클릭하여 이미지를 클립보드에 복사</p>
-                            <p className="mb-1">2. 블로그 글 미리보기 창에서 <kbd className="bg-gray-200 px-1 rounded">Ctrl+V</kbd>로 붙여넣기</p>
-                            <p className="text-green-600 font-medium">✅ 코드가 아닌 실제 이미지가 삽입됩니다!</p>
-                        </div>
-                        <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                            <p className="font-bold mb-1">💡 문제 해결 팁:</p>
-                            <p>복사가 안 될 경우 위 이미지를 우클릭 → '이미지 복사'를 선택하세요.</p>
-                        </div>
-                        <Button 
-                            onClick={handleClear}
+                         <Button 
+                            onClick={() => setConvertedImage(null)}
                             variant="outline"
                             className="w-full"
                         >

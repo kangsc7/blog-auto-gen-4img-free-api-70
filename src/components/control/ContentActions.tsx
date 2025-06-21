@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Copy, Download } from 'lucide-react';
 
 interface ContentActionsProps {
   generatedContent: string;
@@ -15,29 +14,11 @@ export const ContentActions: React.FC<ContentActionsProps> = ({
   copyToClipboard,
   downloadHTML,
 }) => {
-  const navigate = useNavigate();
-
   if (!generatedContent) return null;
-
-  // 인포그래픽 페이지로 이동하는 함수
-  const goToInfographic = () => {
-    console.log('📊 인포그래픽 페이지로 이동');
-    navigate('/infographic-generator');
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex gap-2 justify-center mb-4">
-        <Button
-          onClick={goToInfographic}
-          disabled={!generatedContent}
-          variant="outline"
-          size="sm"
-          className="text-purple-600 border-purple-600 hover:bg-purple-50"
-        >
-          <ExternalLink className="h-4 w-4 mr-1" />
-          인포그래픽 페이지 이동
-        </Button>
         <Button
           onClick={() => copyToClipboard(generatedContent, 'HTML')}
           disabled={!generatedContent}

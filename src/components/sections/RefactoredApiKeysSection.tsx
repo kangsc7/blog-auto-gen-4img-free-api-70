@@ -1,120 +1,94 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Key, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { GeminiApiKeyManager } from '@/components/control/GeminiApiKeyManager';
 import { PixabayApiKeyManager } from '@/components/control/PixabayApiKeyManager';
 import { HuggingFaceApiKeyManager } from '@/components/control/HuggingFaceApiKeyManager';
 
 interface RefactoredApiKeysSectionProps {
-  geminiApiKey: string;
-  setGeminiApiKey: (key: string) => void;
-  isGeminiApiKeyValidated: boolean;
-  setIsGeminiApiKeyValidated: (validated: boolean) => void;
-  isGeminiValidating: boolean;
-  validateGeminiApiKey: (key: string) => Promise<boolean>;
-  deleteGeminiApiKeyFromStorage: () => void;
-  
-  pixabayApiKey: string;
-  setPixabayApiKey: (key: string) => void;
-  isPixabayApiKeyValidated: boolean;
-  setIsPixabayApiKeyValidated: (validated: boolean) => void;
-  isPixabayValidating: boolean;
-  validatePixabayApiKey: (key: string) => Promise<boolean>;
-  deletePixabayApiKeyFromStorage: () => void;
-  
-  huggingFaceApiKey: string;
-  setHuggingFaceApiKey: (key: string) => void;
-  isHuggingFaceApiKeyValidated: boolean;
-  setIsHuggingFaceApiKeyValidated: (validated: boolean) => void;
-  isHuggingFaceValidating: boolean;
-  validateHuggingFaceApiKey: (key: string) => Promise<boolean>;
-  deleteHuggingFaceApiKeyFromStorage: () => void;
+  geminiManager: any;
+  pixabayManager: any;
+  huggingFaceManager: any;
 }
 
 export const RefactoredApiKeysSection: React.FC<RefactoredApiKeysSectionProps> = ({
-  geminiApiKey,
-  setGeminiApiKey,
-  isGeminiApiKeyValidated,
-  setIsGeminiApiKeyValidated,
-  isGeminiValidating,
-  validateGeminiApiKey,
-  deleteGeminiApiKeyFromStorage,
-  
-  pixabayApiKey,
-  setPixabayApiKey,
-  isPixabayApiKeyValidated,
-  setIsPixabayApiKeyValidated,
-  isPixabayValidating,
-  validatePixabayApiKey,
-  deletePixabayApiKeyFromStorage,
-  
-  huggingFaceApiKey,
-  setHuggingFaceApiKey,
-  isHuggingFaceApiKeyValidated,
-  setIsHuggingFaceApiKeyValidated,
-  isHuggingFaceValidating,
-  validateHuggingFaceApiKey,
-  deleteHuggingFaceApiKeyFromStorage,
+  geminiManager,
+  pixabayManager,
+  huggingFaceManager
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleDoubleClick = () => {
-    setIsCollapsed(!isCollapsed);
+  // 클릭으로 확장/축소 토글
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded);
   };
 
+  // 컴포넌트 마운트 시 초기 상태 설정
+  useEffect(() => {
+    setIsExpanded(false);
+  }, []);
+
+  console.log('RefactoredApiKeysSection 렌더링 - 매니저 상태:', {
+    gemini: { key: geminiManager.geminiApiKey, validated: geminiManager.isGeminiApiKeyValidated },
+    pixabay: { key: pixabayManager.pixabayApiKey, validated: pixabayManager.isPixabayApiKeyValidated },
+    huggingface: { key: huggingFaceManager.huggingFaceApiKey, validated: huggingFaceManager.isHuggingFaceApiKeyValidated }
+  });
+
   return (
-    <Card className="shadow-md border-2 border-blue-200">
-      <CardHeader 
-        className="bg-blue-50 cursor-pointer select-none" 
-        onDoubleClick={handleDoubleClick}
-        title="더블클릭하여 접기/펼치기"
+    <div className={`container mx-auto mt-2 relative z-[200] transition-all duration-500 ease-in-out ${
+      isExpanded ? 'mb-4' : 'mb-1'
+    }`}>
+      <div 
+        onClick={handleToggle}
+        className={`cursor-pointer transition-all duration-500 ease-in-out transform ${
+          isExpanded 
+            ? 'opacity-100 max-h-96 scale-100' 
+            : 'opacity-70 max-h-12 scale-95 overflow-hidden'
+        }`}
       >
-        <CardTitle className="flex items-center justify-between text-blue-700">
-          <div className="flex items-center">
-            <Key className="h-5 w-5 mr-2" />
-            🔑 API 키 관리
+        <div className="flex flex-wrap gap-3 justify-center">
+          <div className="relative z-[200]">
+            <GeminiApiKeyManager
+              geminiApiKey={geminiManager.geminiApiKey}
+              setGeminiApiKey={geminiManager.setGeminiApiKey}
+              isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
+              setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
+              isGeminiValidating={geminiManager.isGeminiValidating}
+              validateGeminiApiKey={geminiManager.validateGeminiApiKey}
+              deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
+            />
           </div>
-          {isCollapsed ? (
-            <ChevronDown className="h-5 w-5" />
-          ) : (
-            <ChevronUp className="h-5 w-5" />
-          )}
-        </CardTitle>
-      </CardHeader>
-      {!isCollapsed && (
-        <CardContent className="space-y-6 p-6">
-          <GeminiApiKeyManager
-            geminiApiKey={geminiApiKey}
-            setGeminiApiKey={setGeminiApiKey}
-            isGeminiApiKeyValidated={isGeminiApiKeyValidated}
-            setIsGeminiApiKeyValidated={setIsGeminiApiKeyValidated}
-            isGeminiValidating={isGeminiValidating}
-            validateGeminiApiKey={validateGeminiApiKey}
-            deleteGeminiApiKeyFromStorage={deleteGeminiApiKeyFromStorage}
-          />
           
-          <PixabayApiKeyManager
-            pixabayApiKey={pixabayApiKey}
-            setPixabayApiKey={setPixabayApiKey}
-            isPixabayApiKeyValidated={isPixabayApiKeyValidated}
-            setIsPixabayApiKeyValidated={setIsPixabayApiKeyValidated}
-            isPixabayValidating={isPixabayValidating}
-            validatePixabayApiKey={validatePixabayApiKey}
-            deletePixabayApiKeyFromStorage={deletePixabayApiKeyFromStorage}
-          />
+          <div className="relative z-[200]">
+            <PixabayApiKeyManager
+              pixabayApiKey={pixabayManager.pixabayApiKey}
+              setPixabayApiKey={pixabayManager.setPixabayApiKey}
+              isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
+              setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+              isPixabayValidating={pixabayManager.isPixabayValidating}
+              validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
+              deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
+            />
+          </div>
           
-          <HuggingFaceApiKeyManager
-            huggingFaceApiKey={huggingFaceApiKey}
-            setHuggingFaceApiKey={setHuggingFaceApiKey}
-            isHuggingFaceApiKeyValidated={isHuggingFaceApiKeyValidated}
-            setIsHuggingFaceApiKeyValidated={setIsHuggingFaceApiKeyValidated}
-            isHuggingFaceValidating={isHuggingFaceValidating}
-            validateHuggingFaceApiKey={validateHuggingFaceApiKey}
-            deleteHuggingFaceApiKeyFromStorage={deleteHuggingFaceApiKeyFromStorage}
-          />
-        </CardContent>
-      )}
-    </Card>
+          <div className="relative z-[200]">
+            <HuggingFaceApiKeyManager
+              huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+              setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
+              isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+              setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+              isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
+              validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
+              deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
+            />
+          </div>
+        </div>
+        
+        {!isExpanded && (
+          <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2 mt-2 border border-gray-200">
+            💡 클릭해서 API 키 설정 보기
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

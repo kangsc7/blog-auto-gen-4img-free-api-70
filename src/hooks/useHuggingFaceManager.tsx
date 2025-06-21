@@ -45,40 +45,38 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
             return false;
         }
         
-        // 기본 키인 경우 바로 검증 성공 처리
-        if (key === DEFAULT_API_KEYS.HUGGING_FACE) {
-            console.log('🔧 기본 HuggingFace 키 자동 검증 완료');
-            setIsHuggingFaceApiKeyValidated(true);
-            saveValidationStatusToStorage('HUGGING_FACE', true);
-            props?.onValidationChange?.(true);
-            return true;
-        }
-        
         console.log('🔍 HuggingFace API 키 검증 시작:', key.substring(0, 20) + '...');
         setIsHuggingFaceValidating(true);
         
         try {
-            // 실제 API 검증은 타임아웃을 추가하여 안전하게 처리
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
-
             const response = await fetch('https://huggingface.co/api/whoami-v2', {
                 headers: {
                     'Authorization': `Bearer ${key}`
-                },
-                signal: controller.signal
+                }
             });
 
-            clearTimeout(timeoutId);
             console.log('📡 HuggingFace API 응답:', response.status, response.statusText);
 
             if (!response.ok) {
-                throw new Error(`API 요청 실패 (상태 코드: ${response.status})`);
+                let errorMessage = `API 요청 실패 (상태 코드: ${response.status})`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // JSON 파싱 실패 시 기본 에러 메시지 유지
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
             console.log('✅ HuggingFace API 검증 성공:', data);
             
+            if (data.auth?.accessToken?.role !== 'read' && data.auth?.accessToken?.role !== 'write') {
+                throw new Error('유효하지 않은 API 키입니다.');
+            }
+
             setIsHuggingFaceApiKeyValidated(true);
             saveValidationStatusToStorage('HUGGING_FACE', true);
             props?.onValidationChange?.(true);
@@ -94,16 +92,6 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
             
         } catch (error) {
             console.error('❌ HuggingFace API 키 검증 실패:', error);
-            
-            // 네트워크 오류인 경우 기본값으로 처리 (무한 루프 방지)
-            if (error instanceof Error && error.name === 'AbortError') {
-                console.log('⏰ HuggingFace API 검증 타임아웃 - 기본값으로 처리');
-                setIsHuggingFaceApiKeyValidated(true);
-                saveValidationStatusToStorage('HUGGING_FACE', true);
-                props?.onValidationChange?.(true);
-                return true;
-            }
-            
             setIsHuggingFaceApiKeyValidated(false);
             saveValidationStatusToStorage('HUGGING_FACE', false);
             props?.onValidationChange?.(false);
@@ -111,7 +99,7 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
             if (!silent) {
                 toast({ 
                   title: "Hugging Face API 키 검증 실패", 
-                  description: `키가 유효하지 않거나 네트워크 문제가 발생했습니다.`, 
+                  description: `키가 유효하지 않거나 문제가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`, 
                   variant: "destructive",
                   duration: 5000
                 });
@@ -130,6 +118,14 @@ export const useHuggingFaceManager = (props?: UseHuggingFaceManagerProps) => {
         props?.onApiKeyChange?.(key);
         props?.onValidationChange?.(false);
     };
+
+    // 기본 키인 경우 자동 검증
+    useEffect(() => {
+      if (huggingFaceApiKey === DEFAULT_API_KEYS.HUGGING_FACE && !isHuggingFaceApiKeyValidated) {
+        console.log('🔧 기본 HuggingFace 키 자동 검증 시작');
+        validateHuggingFaceApiKeyCallback(huggingFaceApiKey, true);
+      }
+    }, [huggingFaceApiKey, isHuggingFaceApiKeyValidated, validateHuggingFaceApiKeyCallback]);
 
     return {
         huggingFaceApiKey,

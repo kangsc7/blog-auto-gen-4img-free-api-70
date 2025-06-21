@@ -1,60 +1,43 @@
 
-import React, { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useMemo } from 'react';
+import { differenceInSeconds, addDays } from 'date-fns';
 
-interface RemainingTimeProps {
-  approvedAt: string | null;
-  expiresAt: string | null;
-}
+const RemainingTime = ({ approvedAt }: { approvedAt: string | null }) => {
+    const expiryDate = useMemo(() => {
+        if (!approvedAt) return null;
+        return addDays(new Date(approvedAt), 30);
+    }, [approvedAt]);
 
-const RemainingTime: React.FC<RemainingTimeProps> = ({ approvedAt, expiresAt }) => {
-  const [timeLeft, setTimeLeft] = useState<string>('');
+    const calculateRemainingTime = () => {
+        if (!expiryDate) return { expired: true, text: '' };
 
-  useEffect(() => {
-    if (!expiresAt) {
-      setTimeLeft('무제한');
-      return;
-    }
+        const now = new Date();
+        const totalSeconds = differenceInSeconds(expiryDate, now);
 
-    const updateTimeLeft = () => {
-      const now = new Date();
-      const expiry = new Date(expiresAt);
-      const diff = expiry.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeLeft('만료됨');
-      } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
-        if (days > 0) {
-          setTimeLeft(`${days}일 ${hours}시간`);
-        } else if (hours > 0) {
-          setTimeLeft(`${hours}시간 ${minutes}분`);
-        } else {
-          setTimeLeft(`${minutes}분`);
+        if (totalSeconds <= 0) {
+            return { expired: true, text: '만료됨' };
         }
-      }
+
+        const days = Math.floor(totalSeconds / (3600 * 24));
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        return { expired: false, text: `${days}일 ${hours}시간 ${minutes}분 남음` };
     };
 
-    updateTimeLeft();
-    const interval = setInterval(updateTimeLeft, 60000); // 1분마다 업데이트
+    const [remaining, setRemaining] = useState(calculateRemainingTime());
 
-    return () => clearInterval(interval);
-  }, [expiresAt]);
+    useEffect(() => {
+        if (!approvedAt || remaining.expired) return;
 
-  const getBadgeVariant = () => {
-    if (timeLeft === '만료됨') return 'destructive';
-    if (timeLeft === '무제한') return 'secondary';
-    return 'default';
-  };
+        const timer = setInterval(() => {
+            setRemaining(calculateRemainingTime());
+        }, 1000 * 60); // 1분마다 업데이트
 
-  return (
-    <Badge variant={getBadgeVariant()}>
-      {timeLeft}
-    </Badge>
-  );
+        return () => clearInterval(timer);
+    }, [approvedAt, remaining.expired]);
+
+    return <span>{remaining.text}</span>;
 };
 
 export default RemainingTime;

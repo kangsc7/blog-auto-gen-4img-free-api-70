@@ -98,28 +98,12 @@
     @apply border-border;
   }
 
-  html {
-    width: 100% !important;
-    max-width: none !important;
-    overflow-x: auto;
-  }
-
   body {
     @apply bg-background text-foreground;
     font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 500;
     color: #1f2937;
     line-height: 1.6;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0;
-    padding: 0;
-  }
-
-  #root {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 100vw;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -184,22 +168,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 
-/* 전체 화면 width 보장 */
+/* 모바일 최적화 - 좌우 여백 줄이기 */
 @layer components {
-  .full-width-container {
-    width: 100vw !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .content-container {
-    width: 100% !important;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
+  .container {
+    @apply mx-auto px-2 sm:px-4 md:px-6 lg:px-8;
   }
   
   /* 모바일에서 카드 여백 조정 */
@@ -215,7 +187,7 @@
 
 /* 모바일 전용 스타일 */
 @media (max-width: 640px) {
-  .content-container {
+  .container {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
@@ -229,3 +201,4 @@
     gap: 0.5rem !important;
   }
 }
+

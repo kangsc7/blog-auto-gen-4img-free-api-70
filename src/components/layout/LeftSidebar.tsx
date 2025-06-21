@@ -1,121 +1,91 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TopicGenerator } from '@/components/control/TopicGenerator';
 import { ArticleGenerator } from '@/components/control/ArticleGenerator';
 import { ImageCreation } from '@/components/control/ImageCreation';
-import { HuggingFaceImageGenerator } from '@/components/display/HuggingFaceImageGenerator';
-import { ExternalReferenceInput } from '@/components/control/ExternalReferenceInput';
+import { ImagePaster } from '@/components/control/ImagePaster';
 import { AppState } from '@/types';
 
-interface LeftSidebarProps {
-  appState: AppState;
-  saveAppState: (newState: Partial<AppState>) => void;
-  generationStatus: {
+interface GenerationStatus {
     isGeneratingTopics: boolean;
     isGeneratingContent: boolean;
     isGeneratingImage: boolean;
     isDirectlyGenerating: boolean;
-  };
-  generationFunctions: {
-    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
-    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
-    createImagePrompt: (inputText: string) => Promise<boolean>;
+}
+
+interface GenerationFunctions {
+    generateTopics: () => Promise<string[] | null>;
+    generateArticle: (topic?: string) => Promise<string | null>;
+    createImagePrompt: (text: string) => Promise<boolean>;
     generateDirectImage: () => Promise<string | null>;
-    stopArticleGeneration: () => void;
-  };
-  topicControls: {
+}
+
+interface TopicControls {
     manualTopic: string;
-    setManualTopic: React.Dispatch<React.SetStateAction<string>>;
+    setManualTopic: (topic: string) => void;
     handleManualTopicAdd: () => void;
     selectTopic: (topic: string) => void;
-  };
-  utilityFunctions: {
+}
+
+interface UtilityFunctions {
     copyToClipboard: (text: string, type: string) => void;
     openWhisk: () => void;
     downloadHTML: () => void;
-  };
-  preventDuplicates: boolean;
-  deleteReferenceData?: () => void;
+}
+
+interface LeftSidebarProps {
+    appState: AppState;
+    saveAppState: (newState: Partial<AppState>) => void;
+    generationStatus: GenerationStatus;
+    generationFunctions: GenerationFunctions;
+    topicControls: TopicControls;
+    utilityFunctions: UtilityFunctions;
+    preventDuplicates: boolean;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
-  appState,
-  saveAppState,
-  generationStatus,
-  generationFunctions,
-  topicControls,
-  utilityFunctions,
-  preventDuplicates,
-  deleteReferenceData,
+    appState,
+    saveAppState,
+    generationStatus,
+    generationFunctions,
+    topicControls,
+    utilityFunctions,
+    preventDuplicates,
 }) => {
-  const [isHuggingFaceExpanded, setIsHuggingFaceExpanded] = useState(false);
-
-  const handleHuggingFaceDoubleClick = () => {
-    setIsHuggingFaceExpanded(!isHuggingFaceExpanded);
-  };
-
-  return (
-    <div className="space-y-6">
-      <TopicGenerator
-        appState={appState}
-        saveAppState={saveAppState}
-        isGeneratingTopics={generationStatus.isGeneratingTopics}
-        manualTopic={topicControls.manualTopic}
-        setManualTopic={topicControls.setManualTopic}
-        handleManualTopicAdd={topicControls.handleManualTopicAdd}
-        preventDuplicates={preventDuplicates}
-        generateTopicsFromKeyword={generationFunctions.generateTopics}
-      />
-
-      <ArticleGenerator
-        appState={appState}
-        saveAppState={saveAppState}
-        isGeneratingContent={generationStatus.isGeneratingContent}
-        stopArticleGeneration={generationFunctions.stopArticleGeneration}
-        selectTopic={topicControls.selectTopic}
-        generateArticleContent={generationFunctions.generateArticle}
-      />
-
-      <div className="space-y-4">
-        <ImageCreation
-          appState={appState}
-          isGeneratingImage={generationStatus.isGeneratingImage}
-          isDirectlyGenerating={generationStatus.isDirectlyGenerating}
-          createImagePrompt={generationFunctions.createImagePrompt}
-          generateDirectImage={generationFunctions.generateDirectImage}
-          copyToClipboard={utilityFunctions.copyToClipboard}
-          openWhisk={utilityFunctions.openWhisk}
-        />
-
-        {/* Hugging Face 이미지 생성기 - 더블클릭으로 접기/펼치기 */}
-        <div 
-          onDoubleClick={handleHuggingFaceDoubleClick}
-          className={`cursor-pointer transition-all duration-300 ${
-            isHuggingFaceExpanded ? 'opacity-100' : 'opacity-70'
-          }`}
-        >
-          <div className={`transition-all duration-300 overflow-hidden ${
-            isHuggingFaceExpanded ? 'max-h-[800px]' : 'max-h-16'
-          }`}>
-            <HuggingFaceImageGenerator
-              huggingFaceApiKey={appState.huggingFaceApiKey}
-              isApiKeyValidated={appState.isHuggingFaceApiKeyValidated}
-              hasAccess={true}
+    return (
+        <div className="lg:col-span-4 space-y-6">
+            <TopicGenerator
+                appState={appState}
+                saveAppState={saveAppState}
+                isGeneratingTopics={generationStatus.isGeneratingTopics}
+                generateTopicsFromKeyword={generationFunctions.generateTopics}
+                manualTopic={topicControls.manualTopic}
+                setManualTopic={topicControls.setManualTopic}
+                handleManualTopicAdd={topicControls.handleManualTopicAdd}
+                preventDuplicates={preventDuplicates}
             />
-          </div>
-          {!isHuggingFaceExpanded && (
-            <div className="text-center text-xs text-gray-500 bg-gray-50 rounded p-2 mt-1">
-              💡 더블클릭해서 Hugging Face 이미지 생성기 열기
-            </div>
-          )}
-        </div>
-      </div>
 
-      <ExternalReferenceInput
-        appState={appState}
-        saveAppState={saveAppState}
-        deleteReferenceData={deleteReferenceData}
-      />
-    </div>
-  );
+            <ArticleGenerator
+                appState={appState}
+                saveAppState={saveAppState}
+                selectTopic={topicControls.selectTopic}
+                isGeneratingContent={generationStatus.isGeneratingContent}
+                generateArticleContent={generationFunctions.generateArticle}
+            />
+
+            <div className="sticky top-6 space-y-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-lg pr-2">
+              <ImageCreation
+                  appState={appState}
+                  isGeneratingImage={generationStatus.isGeneratingImage}
+                  isDirectlyGenerating={generationStatus.isDirectlyGenerating}
+                  createImagePrompt={generationFunctions.createImagePrompt}
+                  generateDirectImage={generationFunctions.generateDirectImage}
+                  copyToClipboard={utilityFunctions.copyToClipboard}
+                  openWhisk={utilityFunctions.openWhisk}
+              />
+
+              <ImagePaster />
+            </div>
+        </div>
+    );
 };

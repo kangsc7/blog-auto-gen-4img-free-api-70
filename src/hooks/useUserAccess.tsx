@@ -32,42 +32,22 @@ export const useUserAccess = () => {
         return;
       }
 
-      // 일반 사용자는 승인 상태와 시간 기반 만료 여부 확인
-      if (profile.status === 'approved' && profile.access_expires_at) {
+      // 일반 사용자는 승인 상태와 만료 여부 확인
+      if (profile.status === 'approved' && profile.approved_at) {
+        const approvedDate = new Date(profile.approved_at);
+        const expiryDate = new Date(approvedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
         const now = new Date();
-        const expiresAt = new Date(profile.access_expires_at);
 
-        if (now <= expiresAt) {
+        if (now <= expiryDate) {
           setHasAccess(true);
         } else {
-          // 시간이 만료된 경우 상태를 expired로 업데이트
-          const { error } = await supabase
-            .from('profiles')
-            .update({ 
-              status: 'expired',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-          if (error) {
-            console.error('Failed to update expired status:', error);
-          }
-
           setHasAccess(false);
           toast({
-            title: "⏰ 이용 기간 만료",
-            description: "설정된 이용 기간이 만료되었습니다. 관리자에게 연장을 요청하세요.",
-            variant: "destructive",
-            duration: 5000
+            title: "접근 만료",
+            description: "30일 이용 기간이 만료되었습니다. 관리자에게 문의하세요.",
+            variant: "destructive"
           });
         }
-      } else if (profile.status === 'expired') {
-        setHasAccess(false);
-        toast({
-          title: "⏰ 이용 기간 만료",
-          description: "이용 기간이 만료되었습니다. 관리자에게 연장을 요청하세요.",
-          variant: "destructive"
-        });
       } else {
         setHasAccess(false);
         if (profile.status === 'pending') {
@@ -89,11 +69,6 @@ export const useUserAccess = () => {
     };
 
     checkUserAccess();
-
-    // 1분마다 접근 권한 재확인
-    const interval = setInterval(checkUserAccess, 60000);
-
-    return () => clearInterval(interval);
   }, [user, profile, toast]);
 
   return { hasAccess, isCheckingAccess };
