@@ -1,107 +1,76 @@
+
 import React from 'react';
-import { TopicGenerator } from '@/components/control/TopicGenerator';
-import { ArticleGenerator } from '@/components/control/ArticleGenerator';
-import { ImageCreation } from '@/components/control/ImageCreation';
-import { TopicList } from '@/components/display/TopicList';
-import { ArticlePreview } from '@/components/display/ArticlePreview';
-import { SeoAnalyzer } from '@/components/display/SeoAnalyzer';
+import { LeftSidebar } from '@/components/layout/LeftSidebar';
+import { RightContent } from '@/components/layout/RightContent';
 import { AppState } from '@/types';
 
-interface GenerationStatus {
+interface MainContentSectionProps {
+  appState: AppState;
+  saveAppState: (newState: Partial<AppState>) => void;
+  generationStatus: {
     isGeneratingTopics: boolean;
     isGeneratingContent: boolean;
     isGeneratingImage: boolean;
-}
-
-interface GenerationFunctions {
-    generateTopics: () => Promise<string[] | null>;
-    generateArticle: (topic?: string) => Promise<string | null>;
-    createImagePrompt: () => Promise<boolean>;
-}
-
-interface TopicControls {
+    isDirectlyGenerating: boolean;
+  };
+  generationFunctions: {
+    generateTopics: (keywordOverride?: string) => Promise<string[] | null>;
+    generateArticle: (options?: { topic?: string; keyword?: string }) => Promise<string | null>;
+    createImagePrompt: (inputText: string) => Promise<boolean>;
+    generateDirectImage: () => Promise<string | null>;
+    stopArticleGeneration: () => void;
+  };
+  topicControls: {
     manualTopic: string;
-    setManualTopic: (topic: string) => void;
+    setManualTopic: React.Dispatch<React.SetStateAction<string>>;
     handleManualTopicAdd: () => void;
     selectTopic: (topic: string) => void;
-}
-
-interface UtilityFunctions {
+  };
+  utilityFunctions: {
     copyToClipboard: (text: string, type: string) => void;
     openWhisk: () => void;
     downloadHTML: () => void;
+  };
+  preventDuplicates: boolean;
+  handleTopicConfirm?: (topic: string) => void;
 }
-
-interface MainContentSectionProps {
-    appState: AppState;
-    saveAppState: (newState: Partial<AppState>) => void;
-    generationStatus: GenerationStatus;
-    generationFunctions: GenerationFunctions;
-    topicControls: TopicControls;
-    utilityFunctions: UtilityFunctions;
-}
-
 
 export const MainContentSection: React.FC<MainContentSectionProps> = ({
-    appState,
-    saveAppState,
-    generationStatus,
-    generationFunctions,
-    topicControls,
-    utilityFunctions,
+  appState,
+  saveAppState,
+  generationStatus,
+  generationFunctions,
+  topicControls,
+  utilityFunctions,
+  preventDuplicates,
+  handleTopicConfirm,
 }) => {
-    return (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-4 space-y-6">
-                <TopicGenerator
-                    appState={appState}
-                    saveAppState={saveAppState}
-                    isGeneratingTopics={generationStatus.isGeneratingTopics}
-                    generateTopicsFromKeyword={generationFunctions.generateTopics}
-                    manualTopic={topicControls.manualTopic}
-                    setManualTopic={topicControls.setManualTopic}
-                    handleManualTopicAdd={topicControls.handleManualTopicAdd}
-                />
-
-                <ArticleGenerator
-                    appState={appState}
-                    saveAppState={saveAppState}
-                    selectTopic={topicControls.selectTopic}
-                    isGeneratingContent={generationStatus.isGeneratingContent}
-                    generateArticleContent={generationFunctions.generateArticle}
-                />
-
-                <ImageCreation
-                    appState={appState}
-                    saveAppState={saveAppState}
-                    isGeneratingImage={generationStatus.isGeneratingImage}
-                    createImagePromptFromTopic={generationFunctions.createImagePrompt}
-                    copyToClipboard={utilityFunctions.copyToClipboard}
-                    openWhisk={utilityFunctions.openWhisk}
-                />
-            </div>
-
-            <div className="lg:col-span-8 space-y-6">
-                <TopicList
-                    topics={appState.topics}
-                    selectedTopic={appState.selectedTopic}
-                    selectTopic={topicControls.selectTopic}
-                />
-
-                <ArticlePreview
-                    generatedContent={appState.generatedContent}
-                    isGeneratingContent={generationStatus.isGeneratingContent}
-                    selectedTopic={appState.selectedTopic}
-                />
-
-                {appState.generatedContent && !generationStatus.isGeneratingContent && (
-                    <SeoAnalyzer 
-                        generatedContent={appState.generatedContent}
-                        keyword={appState.keyword}
-                        selectedTopic={appState.selectedTopic}
-                    />
-                )}
-            </div>
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4">
+          <LeftSidebar
+            appState={appState}
+            saveAppState={saveAppState}
+            generationStatus={generationStatus}
+            generationFunctions={generationFunctions}
+            topicControls={topicControls}
+            utilityFunctions={utilityFunctions}
+            preventDuplicates={preventDuplicates}
+          />
+        </div>
+        <div className="lg:col-span-8">
+          <RightContent
+            appState={appState}
+            saveAppState={saveAppState}
+            selectTopic={topicControls.selectTopic}
+            copyToClipboard={utilityFunctions.copyToClipboard}
+            downloadHTML={utilityFunctions.downloadHTML}
+            isGeneratingContent={generationStatus.isGeneratingContent}
+            onTopicConfirm={handleTopicConfirm}
+          />
+        </div>
       </div>
-    );
+    </div>
+  );
 };

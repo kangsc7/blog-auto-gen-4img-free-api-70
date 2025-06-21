@@ -9,6 +9,10 @@ export interface AppState {
   currentUser: string;
   apiKey: string;
   isApiKeyValidated: boolean;
+  pixabayApiKey: string;
+  isPixabayApiKeyValidated: boolean;
+  huggingFaceApiKey: string;
+  isHuggingFaceApiKeyValidated: boolean;
   keyword: string;
   topicCount: number;
   topics: string[];
@@ -19,5 +23,19 @@ export interface AppState {
   generatedContent: string;
   imageStyle: string;
   imagePrompt: string;
+  generatedImageUrl: string;
+  preventDuplicates: boolean;
   saveReferenceTrigger?: boolean;
+}
+
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type AppRole = 'admin' | 'user';
+
+export interface Profile {
+  id: string;
+  email: string;
+  status: UserStatus;
+  created_at: string;
+  updated_at: string;
+  approved_at: string | null;
 }
