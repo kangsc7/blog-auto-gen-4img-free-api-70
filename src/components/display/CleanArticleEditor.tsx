@@ -291,19 +291,48 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // HTML 복사 - SCRIPT 태그 제거
+  // HTML 복사 - SCRIPT 태그 및 JavaScript 코드 완전 제거 (티스토리 전용)
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    console.log('🚫 티스토리용 HTML 복사 - SCRIPT 태그 강력 제거 시작');
+    
+    // SCRIPT 태그와 모든 JavaScript 코드 완전 제거
+    let cleanContent = editorContent;
+    
+    // 1. <script> 태그 완전 제거 (다양한 패턴 대응)
+    cleanContent = cleanContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleanContent = cleanContent.replace(/<script[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<\/script>/gi, '');
+    
+    // 2. JavaScript 이벤트 핸들러 제거
+    cleanContent = cleanContent.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+    
+    // 3. javascript: 프로토콜 제거
+    cleanContent = cleanContent.replace(/javascript:[^"']*/gi, '');
+    
+    // 4. 인라인 JavaScript 코드 제거
+    cleanContent = cleanContent.replace(/\s*javascript\s*:\s*[^;]+;?/gi, '');
+    
+    // 5. 추가 보안: script 관련 모든 잔여물 제거
+    cleanContent = cleanContent.replace(/script/gi, '');
+    
+    console.log('✅ SCRIPT 태그 제거 완료 - 티스토리 안전 복사 준비됨');
     
     navigator.clipboard.writeText(cleanContent).then(() => {
       toast({ 
-        title: "✅ HTML 복사 완료 (SCRIPT 태그 제거됨)", 
-        description: "티스토리 코드 편집창에 안전하게 붙여넣으세요." 
+        title: "✅ 티스토리용 HTML 복사 완료!", 
+        description: "모든 SCRIPT 태그와 JavaScript가 완전히 제거되어 티스토리에 안전하게 붙여넣을 수 있습니다.",
+        duration: 4000
+      });
+    }).catch(() => {
+      toast({ 
+        title: "❌ 복사 실패", 
+        description: "다시 시도해주세요.", 
+        variant: "destructive" 
       });
     });
   };
@@ -365,10 +394,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                     onClick={handleCopyToClipboard}
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    className="text-green-600 border-green-600 hover:bg-green-50 font-semibold"
                   >
                     <ClipboardCopy className="h-4 w-4 mr-1" />
-                    HTML 복사
+                    티스토리용 HTML 복사
                   </Button>
                   <Button 
                     onClick={handleDownloadHTML}
@@ -444,6 +473,7 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <p className="font-bold mb-1">📝 편집 가능한 블로그 글을 자유롭게 수정하세요.</p>
+                  <p className="text-xs text-green-600 mt-1">🛡️ HTML 복사 시 SCRIPT 태그가 자동으로 제거되어 티스토리에 안전하게 붙여넣을 수 있습니다.</p>
                   {isCommandExecutingRef.current && (
                     <p className="text-xs text-orange-600 mt-1">⚠️ 명령 실행 중 - 자동 복원이 차단됩니다</p>
                   )}

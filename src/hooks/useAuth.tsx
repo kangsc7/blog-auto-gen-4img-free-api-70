@@ -100,15 +100,20 @@ export const useAuth = () => {
         return false;
       }
 
-      // 회원가입 성공 시 즉시 승인된 상태로 프로필 생성
+      // 테스트 기간 중 자동 승인: 회원가입 성공 시 즉시 승인된 상태로 프로필 생성
       if (data.user) {
+        const now = new Date();
+        const accessExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30일 후 만료
+
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
             id: data.user.id,
             email: data.user.email,
-            status: 'approved',
-            approved_at: new Date().toISOString(),
+            status: 'approved', // 테스트 기간 중 자동 승인
+            approved_at: now.toISOString(),
+            access_expires_at: accessExpiresAt.toISOString(),
+            remaining_access_days: 30,
           });
 
         if (profileError) {
@@ -122,7 +127,11 @@ export const useAuth = () => {
         });
 
         if (loginResult) {
-          toast({ title: "회원가입 및 로그인 성공", description: "환영합니다!" });
+          toast({ 
+            title: "🎉 회원가입 및 자동 승인 완료!", 
+            description: "테스트 기간 중 자동으로 승인되어 30일간 이용하실 수 있습니다.",
+            duration: 5000
+          });
           return true;
         }
       }
