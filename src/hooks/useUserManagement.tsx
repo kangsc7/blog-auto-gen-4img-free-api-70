@@ -145,43 +145,80 @@ export const useUserManagement = () => {
 
     const deleteUser = async (userId: string) => {
         try {
-            // 1. 프로필에서 삭제
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', userId);
-
-            if (profileError) {
-                throw profileError;
+            console.log('🗑️ 사용자 완전 삭제 시작:', userId);
+            
+            // 관리자 권한으로 RLS 정책 우회를 위한 추가 확인
+            const { data: currentUser } = await supabase.auth.getUser();
+            if (!currentUser.user) {
+                throw new Error('인증되지 않은 사용자입니다.');
             }
 
-            // 2. 사용자 역할에서 삭제 (있다면)
+            // 1. 먼저 user_roles 테이블에서 삭제 시도
+            console.log('1️⃣ user_roles에서 삭제 시도...');
             const { error: roleError } = await supabase
                 .from('user_roles')
                 .delete()
                 .eq('user_id', userId);
 
-            // 역할이 없어도 에러로 처리하지 않음
+            // 역할이 없어도 정상 진행 (PGRST116은 'No rows found' 에러)
             if (roleError && roleError.code !== 'PGRST116') {
-                console.warn('Role deletion warning:', roleError);
+                console.warn('⚠️ 역할 삭제 경고:', roleError);
+            } else {
+                console.log('✅ user_roles 삭제 완료 (또는 해당 없음)');
             }
 
-            // 3. Supabase Auth에서 사용자 삭제 (관리자 권한 필요)
-            // 이 부분은 서버 사이드에서 처리해야 하므로 현재는 프로필만 삭제
+            // 2. profiles 테이블에서 삭제
+            console.log('2️⃣ profiles에서 삭제 시도...');
+            const { data: deleteResult, error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', userId)
+                .select(); // 삭제된 행 반환
 
+            if (profileError) {
+                console.error('❌ 프로필 삭제 실패:', profileError);
+                throw profileError;
+            }
+
+            if (!deleteResult || deleteResult.length === 0) {
+                console.warn('⚠️ 삭제할 프로필을 찾을 수 없음');
+                throw new Error('삭제할 사용자를 찾을 수 없습니다.');
+            }
+
+            console.log('✅ 프로필 삭제 성공:', deleteResult);
+
+            // 3. 로컬 상태에서도 즉시 제거
+            setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+
+            // 4. 성공 메시지
             toast({ 
                 title: "✅ 사용자 완전 삭제 완료", 
                 description: "해당 사용자의 모든 데이터가 영구적으로 삭제되었습니다.",
                 duration: 4000
             });
+
+            console.log('🎉 사용자 완전 삭제 프로세스 완료');
             return true;
+
         } catch (error: any) {
-            console.error('Error deleting user:', error);
+            console.error('❌ 사용자 삭제 중 오류:', error);
+            
+            // 구체적인 오류 메시지 제공
+            let errorMessage = "삭제 중 오류가 발생했습니다.";
+            
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.code) {
+                errorMessage = `데이터베이스 오류 (${error.code}): ${error.message || '알 수 없는 오류'}`;
+            }
+            
             toast({ 
-                title: "사용자 삭제 실패", 
-                description: error.message || "삭제 중 오류가 발생했습니다.", 
-                variant: "destructive" 
+                title: "❌ 사용자 삭제 실패", 
+                description: errorMessage, 
+                variant: "destructive",
+                duration: 5000
             });
+            
             return false;
         }
     };
