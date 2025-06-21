@@ -1,10 +1,63 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
 import { colorThemes } from '@/data/constants';
 import { getEnhancedArticlePrompt } from '@/lib/enhancedPrompts';
 import { integratePixabayImages, generateMetaDescription } from '@/lib/pixabay';
+
+// 후처리용 템플릿 변수 치환 함수
+const postProcessContent = (content: string, keyword: string): string => {
+  console.log('🔧 후처리 시작 - 템플릿 변수 치환');
+  
+  // 미치환된 대괄호 패턴 감지
+  const bracketMatches = content.match(/\[[^\]]+\]/g);
+  if (bracketMatches) {
+    console.warn('⚠️ 미치환된 템플릿 변수 발견:', bracketMatches);
+  }
+  
+  // 일반적인 fallback 매핑
+  const fallbackReplacements: Record<string, string> = {
+    '[챗봇 이름]': '파코월드',
+    '[설정 단계 1]': '첫 번째 단계',
+    '[설정 단계 2]': '두 번째 단계',
+    '[설정 단계 3]': '세 번째 단계',
+    '[퍼센트]': '80',
+    '[기간]': '1개월',
+    '[금액]': '적정 금액',
+    '[주요 내용 요약]': `${keyword}의 핵심 포인트를 확인하세요`,
+    '[실제 활용 방법]': `${keyword}을 단계별로 진행하세요`,
+    '[주의할 점]': `${keyword} 사용 시 주의사항을 꼼꼼히 확인하세요`,
+    '[예상되는 효과]': `${keyword}을 통해 긍정적인 결과를 기대할 수 있습니다`,
+    '[추천 대상]': `${keyword}에 관심 있는 모든 분들께 추천합니다`,
+    '[항목1]': '주요 항목',
+    '[내용1]': '상세 내용'
+  };
+  
+  let processedContent = content;
+  let replacementCount = 0;
+  
+  // 정확한 매칭부터 치환
+  Object.entries(fallbackReplacements).forEach(([placeholder, replacement]) => {
+    const beforeCount = processedContent.split(placeholder).length - 1;
+    processedContent = processedContent.replace(new RegExp(placeholder.replace(/[[\]]/g, '\\$&'), 'g'), replacement);
+    const afterCount = processedContent.split(replacement).length - 1;
+    if (beforeCount > 0) {
+      replacementCount += beforeCount;
+      console.log(`✅ 치환 완료: ${placeholder} → ${replacement} (${beforeCount}개)`);
+    }
+  });
+  
+  // 여전히 남은 대괄호 패턴을 일반적인 텍스트로 치환
+  const remainingBrackets = processedContent.match(/\[[^\]]+\]/g);
+  if (remainingBrackets) {
+    console.warn('🔄 남은 대괄호 패턴을 기본값으로 치환:', remainingBrackets);
+    processedContent = processedContent.replace(/\[[^\]]+\]/g, '관련 정보');
+    replacementCount += remainingBrackets.length;
+  }
+  
+  console.log(`🎯 후처리 완료 - 총 ${replacementCount}개 치환됨`);
+  return processedContent;
+};
 
 export const useArticleGenerator = (
   appState: AppState,
@@ -126,11 +179,15 @@ export const useArticleGenerator = (
       
       const rawContent = data.candidates[0].content.parts[0].text;
       const htmlContent = rawContent.trim().replace(/^```html\s*\n?|```\s*$/g, '').trim();
-      let finalHtml = htmlContent;
+      
+      // 🔧 후처리: 템플릿 변수 치환
+      const processedContent = postProcessContent(htmlContent, coreKeyword);
+      
+      let finalHtml = processedContent;
       let pixabayImagesAdded = false;
       let imageCount = 0;
 
-      console.log('✅ 기본 블로그 글 생성 완료');
+      console.log('✅ 기본 블로그 글 생성 완료 (후처리 포함)');
 
       if (cancelArticleGeneration.current) {
         throw new Error("사용자에 의해 중단되었습니다.");
@@ -154,7 +211,7 @@ export const useArticleGenerator = (
         
         try {
           const { finalHtml: htmlWithImages, imageCount: addedImages, clipboardImages } = await integratePixabayImages(
-            htmlContent,
+            finalHtml,
             pixabayApiKey,
             appState.apiKey!
           );
@@ -194,7 +251,7 @@ export const useArticleGenerator = (
 
       // 메타 설명 생성
       try {
-        const metaDescription = await generateMetaDescription(htmlContent, appState.apiKey!);
+        const metaDescription = await generateMetaDescription(finalHtml, appState.apiKey!);
         if (metaDescription && !cancelArticleGeneration.current) {
           const sanitizedMeta = metaDescription.replace(/-->/g, '-- >');
           const metaComment = `<!-- META DESCRIPTION: ${sanitizedMeta} -->`;

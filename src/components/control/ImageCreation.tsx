@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ interface ImageCreationProps {
   isGeneratingImage: boolean;
   isDirectlyGenerating: boolean;
   createImagePrompt: (text: string) => Promise<boolean>;
-  generateDirectImage: () => Promise<string | null>;
+  generateDirectImage: (refinedPrompt?: string) => Promise<string | null>;
   copyToClipboard: (text: string, type: string) => void;
   openWhisk: () => void;
 }
@@ -34,9 +33,10 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
   const handleGeneratePrompt = () => {
     createImagePrompt(manualInput);
   };
-  
+
   const handleGenerateImage = async () => {
-    const image = await generateDirectImage();
+    const refinedPrompt = appState.imagePrompt + ' high detail, photorealistic, accurate, matching blog description';
+    const image = await generateDirectImage(refinedPrompt);
     setGeneratedImage(image);
   };
 
@@ -45,44 +45,40 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
 
     const altText = appState.selectedTopic || appState.keyword || 'generated_image_from_prompt';
     const sanitizedAltText = altText.replace(/[<>]/g, '').trim();
-    
-    try {
-        // 1. 이미지를 파일로 복사 (대표이미지 설정용)
-        const response = await fetch(generatedImage);
-        const imageBlob = await response.blob();
-        
-        const clipboardItem = new ClipboardItem({
-            [imageBlob.type]: imageBlob
-        });
 
-        await navigator.clipboard.write([clipboardItem]);
-        
-        toast({ 
-          title: "✅ 티스토리 대표이미지용 복사 완료", 
-          description: "1️⃣ 티스토리에 Ctrl+V로 붙여넣기 → 2️⃣ 이미지 클릭 → 3️⃣ '대표 이미지로 설정' 버튼 클릭",
-          duration: 8000
-        });
-        
+    try {
+      const response = await fetch(generatedImage);
+      const imageBlob = await response.blob();
+
+      const clipboardItem = new ClipboardItem({
+        [imageBlob.type]: imageBlob
+      });
+
+      await navigator.clipboard.write([clipboardItem]);
+
+      toast({
+        title: '✅ 티스토리 대표이미지용 복사 완료',
+        description: '1️⃣ 티스토리에 Ctrl+V로 붙여넣기 → 2️⃣ 이미지 클릭 → 3️⃣ \u0027대표 이미지로 설정\' 버튼 클릭',
+        duration: 8000
+      });
     } catch (error) {
-        console.error('Failed to copy image: ', error);
-        
-        // 폴백: HTML 태그만 복사
-        try {
-            const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" style="max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px;">`;
-            await navigator.clipboard.writeText(imgTag);
-            
-            toast({ 
-              title: "HTML 태그 복사 완료", 
-              description: "티스토리 HTML 모드에서 붙여넣으세요. (대표이미지 설정은 수동으로 해야 합니다)",
-              duration: 5000
-            });
-        } catch (copyError) {
-            toast({ 
-              title: "복사 실패", 
-              description: "클립보드 복사에 실패했습니다. 우클릭으로 이미지를 저장해서 사용하세요.", 
-              variant: "destructive" 
-            });
-        }
+      console.error('Failed to copy image: ', error);
+      try {
+        const imgTag = `<img src="${generatedImage}" alt="${sanitizedAltText}" style="max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 8px;">`;
+        await navigator.clipboard.writeText(imgTag);
+
+        toast({
+          title: 'HTML 태그 복사 완료',
+          description: '티스토리 HTML 모드에서 붙여넣으세요. (대표이미지 설정은 수동으로 해야 합니다)',
+          duration: 5000
+        });
+      } catch (copyError) {
+        toast({
+          title: '복사 실패',
+          description: '클립보드 복사에 실패했습니다. 우클릭으로 이미지를 저장해서 사용하세요.',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -149,7 +145,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
               </div>
             )}
           </div>
-          
+
           {(isDirectlyGenerating || generatedImage) && (
             <div className="mt-4 border-t pt-4">
               <h4 className="text-md font-semibold text-gray-800 mb-2">생성된 이미지</h4>
@@ -158,7 +154,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
               ) : generatedImage ? (
                 <div className="space-y-3">
                   <img src={generatedImage} alt="Generated from prompt" className="rounded-lg w-full" />
-                  
+
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                     <div className="flex items-start space-x-2">
                       <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -170,7 +166,7 @@ export const ImageCreation: React.FC<ImageCreationProps> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700 text-primary-foreground"
                     onClick={handleCopyImageForTistory}

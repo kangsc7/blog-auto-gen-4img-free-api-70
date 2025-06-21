@@ -1,8 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
+import { Edit, Download, Loader2, ClipboardCopy, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface CleanArticleEditorProps {
   generatedContent: string;
@@ -20,13 +22,16 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
   onContentChange,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
   const initLockRef = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  const isCommandExecutingRef = useRef(false);
+  const lastUserActionRef = useRef<'typing' | 'command' | 'loading'>('typing');
 
-  // 안전한 localStorage 저장
   const saveToStorage = (content: string) => {
     try {
       localStorage.setItem(UNIFIED_EDITOR_KEY, content);
@@ -36,8 +41,12 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 안전한 localStorage 로드
   const loadFromStorage = (): string => {
+    if (isCommandExecutingRef.current) {
+      console.log('🚫 명령 실행 중 - 자동 복원 차단');
+      return '';
+    }
+    
     try {
       const saved = localStorage.getItem(UNIFIED_EDITOR_KEY);
       console.log('📖 편집기 내용 로드:', saved ? saved.length + '자' : '없음');
@@ -48,14 +57,35 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 편집기 내용 업데이트 (중복 방지)
+  const detectCommand = (content: string): boolean => {
+    const commandPatterns = [
+      /\/생성/,
+      /\/새글/,
+      /\/초기화/,
+      /\/저장/,
+      /\/복원/,
+      /\/삭제/,
+    ];
+    
+    return commandPatterns.some(pattern => pattern.test(content));
+  };
+
   const updateEditorContent = (content: string, source: string) => {
+    console.log(`🔄 편집기 내용 업데이트 시도 - ${source}:`, {
+      contentLength: content.length,
+      isCommandExecuting: isCommandExecutingRef.current,
+      lastUserAction: lastUserActionRef.current
+    });
+
+    if (isCommandExecutingRef.current && (source === '초기로드' || source === '글로벌이벤트')) {
+      console.log(`🚫 명령 실행 중 자동 복원 차단 - ${source}`);
+      return;
+    }
+
     if (content === editorContent) {
       console.log(`⏭️ 편집기 내용 동일 - ${source} 건너뜀`);
       return;
     }
-
-    console.log(`🔄 편집기 내용 업데이트 - ${source}:`, content.length + '자');
     
     setEditorContent(content);
     
@@ -66,16 +96,16 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     
     onContentChange(content);
     
-    // 디바운스된 저장
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    if (!isCommandExecutingRef.current) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        saveToStorage(content);
+      }, 500);
     }
-    saveTimeoutRef.current = setTimeout(() => {
-      saveToStorage(content);
-    }, 500);
   };
 
-  // 초기 로드 (한 번만 실행)
   useEffect(() => {
     if (!isInitialized && !initLockRef.current) {
       initLockRef.current = true;
@@ -90,26 +120,38 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   }, []);
 
-  // 새 생성 콘텐츠 처리 (생성 완료 시에만)
   useEffect(() => {
     if (!isGeneratingContent && generatedContent && generatedContent.length > 100 && isInitialized) {
-      console.log('🎯 새 생성 콘텐츠 감지:', generatedContent.length + '자');
-      updateEditorContent(generatedContent, '새생성');
+      console.log('🎯 새 생성 콘텐츠 감지:', {
+        contentLength: generatedContent.length,
+        isCommandExecuting: isCommandExecutingRef.current
+      });
+      
+      if (!isCommandExecutingRef.current) {
+        updateEditorContent(generatedContent, '새생성');
+        lastUserActionRef.current = 'loading';
+      }
     }
   }, [isGeneratingContent, generatedContent, isInitialized]);
 
-  // 글로벌 이벤트 리스너
   useEffect(() => {
     const handleContentUpdate = (event: CustomEvent) => {
       const newContent = event.detail.content;
       if (newContent && isInitialized) {
-        console.log('📢 글로벌 콘텐츠 업데이트 이벤트:', newContent.length + '자');
-        updateEditorContent(newContent, '글로벌이벤트');
+        console.log('📢 글로벌 콘텐츠 업데이트 이벤트:', {
+          contentLength: newContent.length,
+          isCommandExecuting: isCommandExecutingRef.current
+        });
+        
+        if (!isCommandExecutingRef.current) {
+          updateEditorContent(newContent, '글로벌이벤트');
+        }
       }
     };
 
     const handleAppReset = () => {
       console.log('🔄 앱 리셋 이벤트');
+      isCommandExecutingRef.current = false;
       updateEditorContent('', '앱리셋');
       localStorage.removeItem(UNIFIED_EDITOR_KEY);
     };
@@ -123,16 +165,15 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [isInitialized]);
 
-  // 페이지 종료 시 저장
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (editorContent) {
+      if (editorContent && !isCommandExecutingRef.current) {
         saveToStorage(editorContent);
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && editorContent) {
+      if (document.hidden && editorContent && !isCommandExecutingRef.current) {
         saveToStorage(editorContent);
       }
     };
@@ -149,7 +190,6 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     };
   }, [editorContent]);
 
-  // 향상된 이미지 클릭 핸들러 - 불필요한 정보 제거
   const addImageClickHandlers = () => {
     if (editorRef.current) {
       const images = editorRef.current.querySelectorAll('img');
@@ -201,34 +241,71 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     }
   };
 
-  // 사용자 편집 처리
   const handleInput = () => {
     if (editorRef.current && !isGeneratingContent) {
       const newContent = editorRef.current.innerHTML;
+      
+      const isCommand = detectCommand(newContent);
+      
+      if (isCommand) {
+        console.log('🎯 명령어 감지됨:', newContent.substring(0, 50) + '...');
+        isCommandExecutingRef.current = true;
+        lastUserActionRef.current = 'command';
+        
+        setTimeout(() => {
+          if (isCommandExecutingRef.current) {
+            console.log('⏰ 명령 실행 타임아웃 - 상태 자동 해제');
+            isCommandExecutingRef.current = false;
+          }
+        }, 5000);
+      } else {
+        if (lastUserActionRef.current === 'command') {
+          console.log('✏️ 명령어 → 일반 타이핑으로 전환');
+          isCommandExecutingRef.current = false;
+        }
+        lastUserActionRef.current = 'typing';
+      }
+      
       updateEditorContent(newContent, '사용자편집');
       setTimeout(() => addImageClickHandlers(), 100);
     }
   };
 
-  // HTML 복사 - SCRIPT 태그만 제거
   const handleCopyToClipboard = () => {
     if (!editorContent) {
       toast({ title: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
       return;
     }
     
-    // HTML 복사 시에만 SCRIPT 태그 제거
-    const cleanContent = editorContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    console.log('🚫 티스토리용 HTML 복사 - SCRIPT 태그 강력 제거 시작');
+    
+    let cleanContent = editorContent;
+    
+    cleanContent = cleanContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleanContent = cleanContent.replace(/<script[^>]*>/gi, '');
+    cleanContent = cleanContent.replace(/<\/script>/gi, '');
+    cleanContent = cleanContent.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+    cleanContent = cleanContent.replace(/javascript:[^"']*/gi, '');
+    cleanContent = cleanContent.replace(/\s*javascript\s*:\s*[^;]+;?/gi, '');
+    cleanContent = cleanContent.replace(/script/gi, '');
+    
+    console.log('✅ SCRIPT 태그 제거 완료 - 티스토리 안전 복사 준비됨');
     
     navigator.clipboard.writeText(cleanContent).then(() => {
       toast({ 
-        title: "✅ HTML 복사 완료 (SCRIPT 태그 제거됨)", 
-        description: "티스토리 코드 편집창에 붙여넣으세요." 
+        title: "✅ 티스토리용 HTML 복사 완료!", 
+        description: "모든 SCRIPT 태그와 JavaScript가 완전히 제거되어 티스토리에 안전하게 붙여넣을 수 있습니다.",
+        duration: 4000
+      });
+    }).catch(() => {
+      toast({ 
+        title: "❌ 복사 실패", 
+        description: "다시 시도해주세요.", 
+        variant: "destructive" 
       });
     });
   };
 
-  // HTML 다운로드
   const handleDownloadHTML = () => {
     if (!editorContent) {
       toast({ title: "다운로드할 콘텐츠가 없습니다.", variant: "destructive" });
@@ -248,6 +325,11 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
     toast({ title: "📥 다운로드 완료" });
   };
 
+  const goToInfographic = () => {
+    console.log('📊 인포그래픽 페이지로 이동');
+    navigate('/infographic-generator');
+  };
+
   return (
     <div className="w-full max-w-full">
       <Card className="shadow-md w-full">
@@ -255,19 +337,34 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           <CardTitle className="flex items-center justify-between flex-wrap gap-2">
             <span className="flex items-center text-green-700">
               <Edit className="h-5 w-5 mr-2" />
-              블로그 글 편집기 (API 키와 동일한 영구 보존)
+              블로그 글 편집기
+              {isCommandExecutingRef.current && (
+                <span className="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded">
+                  명령 실행 중
+                </span>
+              )}
             </span>
-            <div className="flex flex-wrap gap-2">
+            <div style={{ height: '10px' }}></div>
+            <div className="flex flex-wrap gap-2 justify-center w-full">
               {editorContent && !isGeneratingContent && (
                 <>
+                  <Button 
+                    onClick={goToInfographic}
+                    size="sm"
+                    variant="outline"
+                    className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    인포그래픽 페이지 이동
+                  </Button>
                   <Button 
                     onClick={handleCopyToClipboard}
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    className="text-green-600 border-green-600 hover:bg-green-50 font-semibold"
                   >
                     <ClipboardCopy className="h-4 w-4 mr-1" />
-                    HTML 복사
+                    티스토리용 HTML 복사
                   </Button>
                   <Button 
                     onClick={handleDownloadHTML}
@@ -342,8 +439,10 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
             <div className="space-y-4 w-full">
               <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded flex justify-between items-center flex-wrap gap-2">
                 <div>
-                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글 (API키와 동일한 영구 보존)</p>
-                  <p>자유롭게 수정하세요. HTML 복사시 SCRIPT 태그만 자동 제거, 창 전환/새로고침해도 내용 영구 보존됨</p>
+                  <p className="font-bold mb-1">📝 편집 가능한 블로그 글을 자유롭게 수정하세요.</p>
+                  {isCommandExecutingRef.current && (
+                    <p className="text-xs text-orange-600 mt-1">⚠️ 명령 실행 중 - 자동 복원이 차단됩니다</p>
+                  )}
                 </div>
               </div>
               <div
@@ -356,13 +455,14 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
                 }}
                 suppressContentEditableWarning={true}
                 style={{
-                  lineHeight: '1.6',
+                  lineHeight: '1.7',
                   fontFamily: 'inherit',
                   width: '100%',
                   maxWidth: '100%',
                   wordWrap: 'break-word',
                   overflowWrap: 'break-word',
-                  minWidth: '0'
+                  minWidth: '0',
+                  fontSize: '18px'
                 }}
                 dangerouslySetInnerHTML={{ __html: editorContent }}
               />
@@ -376,6 +476,41 @@ export const CleanArticleEditor: React.FC<CleanArticleEditorProps> = ({
           )}
         </CardContent>
       </Card>
+      
+      <style>{`
+        .prose * {
+          text-align: left !important;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+          text-align: left !important;
+        }
+        
+        .prose p {
+          text-align: left !important;
+          line-height: 1.7 !important;
+          margin-bottom: 18px !important;
+          font-size: 18px !important;
+        }
+        
+        @media (max-width: 768px) {
+          .prose {
+            max-width: 680px !important;
+            padding: 16px !important;
+            font-size: 18px !important;
+          }
+          
+          .prose h1, .prose h2, .prose h3 {
+            text-align: left !important;
+          }
+          
+          .prose p {
+            text-align: left !important;
+            line-height: 1.7 !important;
+            margin-bottom: 18px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

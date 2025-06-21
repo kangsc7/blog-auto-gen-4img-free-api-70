@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Quote, Save, Trash2, ChevronUp, ChevronDown, Shield } from 'lucide-react';
+import { ExternalLink, Quote, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { AppState } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,74 +14,128 @@ interface ExternalReferenceInputProps {
   deleteReferenceData?: () => void;
 }
 
-// 영구 저장을 위한 localStorage 키 - API 키처럼 안전한 저장
-const REFERENCE_STORAGE_KEYS = {
-  LINK: 'blog_reference_link_permanent_v4_secure',
-  SENTENCE: 'blog_reference_sentence_permanent_v4_secure'
+// 다중 보안 저장소 키들
+const STORAGE_KEYS = {
+  LINK: [
+    'blog_ref_link_permanent_v1', 
+    'blog_ref_link_permanent_v2', 
+    'blog_ref_link_backup_v1',
+    'blog_ref_link_backup_v2',
+    'blog_ref_link_session_v1'
+  ],
+  SENTENCE: [
+    'blog_ref_sentence_permanent_v1', 
+    'blog_ref_sentence_permanent_v2', 
+    'blog_ref_sentence_backup_v1',
+    'blog_ref_sentence_backup_v2',
+    'blog_ref_sentence_session_v1'
+  ],
 };
 
-// 백업 저장소 키
-const BACKUP_STORAGE_KEYS = {
-  LINK: 'blog_reference_link_backup_v4_secure',
-  SENTENCE: 'blog_reference_sentence_backup_v4_secure'
-};
-
-// 영구 저장 보안 강화 함수
-const secureStorageSet = (key: string, value: string): boolean => {
-  try {
-    console.log(`🔒 보안 저장 시도: ${key}`);
+// 강화된 영구 저장소
+const securePermanentStorage = {
+  set: (value: string, type: 'LINK' | 'SENTENCE') => {
+    console.log(`🔒 영구 저장 시작 - ${type}:`, value);
+    let successCount = 0;
     
-    // 1차 저장: localStorage
-    localStorage.setItem(key, value);
+    STORAGE_KEYS[type].forEach(key => {
+      try {
+        localStorage.setItem(key, value);
+        sessionStorage.setItem(key, value);
+        successCount++;
+      } catch (error) {
+        console.error(`❌ 저장 실패 - ${key}:`, error);
+      }
+    });
     
-    // 2차 저장: sessionStorage (백업용)
-    sessionStorage.setItem(`backup_${key}`, value);
+    // 추가 보안 저장 - 타임스탬프와 함께
+    const timestampedValue = JSON.stringify({
+      value,
+      timestamp: Date.now(),
+      userAgent: navigator.userAgent.substring(0, 50)
+    });
     
-    // 3차 저장: 추가 백업 키
-    const backupKey = key.replace('permanent', 'backup');
-    localStorage.setItem(backupKey, value);
-    
-    // 저장 검증
-    const stored = localStorage.getItem(key);
-    if (stored === value) {
-      console.log(`✅ 보안 저장 성공: ${key}`);
-      return true;
-    } else {
-      console.error(`❌ 보안 저장 검증 실패: ${key}`);
-      return false;
-    }
-  } catch (error) {
-    console.error(`❌ 보안 저장 실패: ${key}`, error);
-    return false;
-  }
-};
-
-// 영구 저장 복구 함수
-const secureStorageGet = (key: string): string => {
-  try {
-    console.log(`🔓 보안 복구 시도: ${key}`);
-    
-    // 1차 시도: localStorage
-    let value = localStorage.getItem(key) || '';
-    
-    // 1차 실패 시 2차 시도: sessionStorage 백업
-    if (!value) {
-      value = sessionStorage.getItem(`backup_${key}`) || '';
-      console.log(`📂 sessionStorage 백업에서 복구: ${value ? '성공' : '실패'}`);
+    try {
+      localStorage.setItem(`${type.toLowerCase()}_secure_backup`, timestampedValue);
+      sessionStorage.setItem(`${type.toLowerCase()}_secure_backup`, timestampedValue);
+      successCount++;
+    } catch (error) {
+      console.error('❌ 타임스탬프 저장 실패:', error);
     }
     
-    // 2차 실패 시 3차 시도: 추가 백업 키
-    if (!value) {
-      const backupKey = key.replace('permanent', 'backup');
-      value = localStorage.getItem(backupKey) || '';
-      console.log(`📂 백업 키에서 복구: ${value ? '성공' : '실패'}`);
+    console.log(`✅ ${type} 영구 저장 완료 - 성공: ${successCount}개`);
+  },
+  
+  get: (type: 'LINK' | 'SENTENCE'): string => {
+    console.log(`🔍 영구 저장소에서 ${type} 복원 시도`);
+    
+    // 기본 키들에서 복원 시도
+    for (const key of STORAGE_KEYS[type]) {
+      const value = localStorage.getItem(key) || sessionStorage.getItem(key);
+      if (value && value.trim()) {
+        console.log(`✅ ${type} 복원 성공 - ${key}:`, value);
+        return value;
+      }
     }
     
-    console.log(`✅ 보안 복구 결과: ${key} - ${value ? '데이터 있음' : '데이터 없음'}`);
-    return value;
-  } catch (error) {
-    console.error(`❌ 보안 복구 실패: ${key}`, error);
+    // 타임스탬프 백업에서 복원 시도
+    try {
+      const backupKey = `${type.toLowerCase()}_secure_backup`;
+      const backup = localStorage.getItem(backupKey) || sessionStorage.getItem(backupKey);
+      if (backup) {
+        const parsed = JSON.parse(backup);
+        if (parsed.value && parsed.value.trim()) {
+          console.log(`✅ ${type} 타임스탬프 백업에서 복원:`, parsed.value);
+          return parsed.value;
+        }
+      }
+    } catch (error) {
+      console.error('❌ 타임스탬프 백업 복원 실패:', error);
+    }
+    
+    console.log(`⚠️ ${type} 복원 실패 - 저장된 데이터 없음`);
     return '';
+  },
+  
+  clear: () => {
+    console.log('🗑️ 영구 저장소 완전 삭제 시작');
+    let deletedCount = 0;
+    
+    [...STORAGE_KEYS.LINK, ...STORAGE_KEYS.SENTENCE].forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+        deletedCount++;
+      } catch (error) {
+        console.error(`❌ 삭제 실패 - ${key}:`, error);
+      }
+    });
+    
+    // 타임스탬프 백업도 삭제
+    try {
+      localStorage.removeItem('link_secure_backup');
+      localStorage.removeItem('sentence_secure_backup');
+      sessionStorage.removeItem('link_secure_backup');
+      sessionStorage.removeItem('sentence_secure_backup');
+      deletedCount += 4;
+    } catch (error) {
+      console.error('❌ 타임스탬프 백업 삭제 실패:', error);
+    }
+    
+    console.log(`✅ 영구 저장소 삭제 완료 - 삭제된 항목: ${deletedCount}개`);
+  },
+  
+  // 기본값 설정 함수
+  setDefaults: () => {
+    const defaultLink = 'https://worldpis.com/';
+    const defaultSentence = '👉 워드프레스 꿀팁 더 보러가기';
+    
+    console.log('🔧 기본값 설정 중');
+    securePermanentStorage.set(defaultLink, 'LINK');
+    securePermanentStorage.set(defaultSentence, 'SENTENCE');
+    console.log('✅ 기본값 설정 완료');
+    
+    return { defaultLink, defaultSentence };
   }
 };
 
@@ -94,291 +148,161 @@ export const ExternalReferenceInput: React.FC<ExternalReferenceInputProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 컴포넌트 마운트 시 보안 강화된 데이터 로드
   useEffect(() => {
-    if (isInitialized) return; // 중복 초기화 방지
-    
-    const loadSecureData = () => {
-      try {
-        console.log('🔒 외부 링크 설정 - 보안 강화된 데이터 로드 시작');
-        
-        const storedLink = secureStorageGet(REFERENCE_STORAGE_KEYS.LINK);
-        const storedSentence = secureStorageGet(REFERENCE_STORAGE_KEYS.SENTENCE);
-        
-        console.log('🔓 보안 데이터 로드 결과:', {
-          link: storedLink ? '있음' : '없음',
-          sentence: storedSentence ? '있음' : '없음',
-          linkLength: storedLink.length,
-          sentenceLength: storedSentence.length
-        });
-        
-        // 저장된 데이터가 현재 앱 상태와 다르면 동기화
-        if (storedLink !== (appState.referenceLink || '') || 
-            storedSentence !== (appState.referenceSentence || '')) {
-          
-          console.log('🔄 앱 상태와 저장된 데이터 동기화 중...');
-          saveAppState({
-            referenceLink: storedLink,
-            referenceSentence: storedSentence
-          });
-          
-          toast({
-            title: "🔒 외부 링크 데이터 복구",
-            description: "영구 저장된 외부 링크 설정이 복구되었습니다.",
-            duration: 2000
-          });
-        }
-        
-        setIsInitialized(true);
-        console.log('✅ 보안 강화된 데이터 로드 완료');
-      } catch (error) {
-        console.error('❌ 보안 데이터 로드 실패:', error);
-        setIsInitialized(true);
-      }
-    };
-
-    loadSecureData();
-  }, [appState.referenceLink, appState.referenceSentence, saveAppState, toast, isInitialized]);
-
-  // 실시간 보안 저장 함수
-  const performSecureSave = (link: string, sentence: string) => {
-    console.log('🔒 실시간 보안 저장 시작:', { linkLength: link.length, sentenceLength: sentence.length });
-    
-    const linkSaved = secureStorageSet(REFERENCE_STORAGE_KEYS.LINK, link);
-    const sentenceSaved = secureStorageSet(REFERENCE_STORAGE_KEYS.SENTENCE, sentence);
-    
-    if (linkSaved && sentenceSaved) {
-      console.log('✅ 실시간 보안 저장 완료');
-    } else {
-      console.error('❌ 실시간 보안 저장 부분 실패');
-    }
-  };
-
-  const handleReferenceLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    console.log('📝 참조 링크 변경 (즉시 보안 저장):', value);
-    
-    // 즉시 보안 저장
-    performSecureSave(value, appState.referenceSentence || '');
-    
-    // 앱 상태 업데이트
-    saveAppState({ referenceLink: value });
-  };
-
-  const handleReferenceSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    console.log('📝 참조 문장 변경 (즉시 보안 저장):', value.substring(0, 50) + '...');
-    
-    // 즉시 보안 저장
-    performSecureSave(appState.referenceLink || '', value);
-    
-    // 앱 상태 업데이트
-    saveAppState({ referenceSentence: value });
-  };
-
-  const handleSave = () => {
-    console.log('💾 수동 저장 확인 버튼 클릭');
-    
-    // 현재 상태 강제 저장
-    const currentLink = appState.referenceLink || '';
-    const currentSentence = appState.referenceSentence || '';
-    
-    performSecureSave(currentLink, currentSentence);
-    
-    // 추가 검증 저장
-    setTimeout(() => {
-      const verifyLink = secureStorageGet(REFERENCE_STORAGE_KEYS.LINK);
-      const verifySentence = secureStorageGet(REFERENCE_STORAGE_KEYS.SENTENCE);
+    if (!isInitialized) {
+      console.log('🚀 외부링크 컴포넌트 초기화 시작');
       
-      if (verifyLink === currentLink && verifySentence === currentSentence) {
-        toast({
-          title: "✅ 영구 저장 검증 완료",
-          description: "참조 링크와 문장이 안전하게 영구 저장되었습니다. API 키처럼 절대 삭제되지 않습니다.",
-          duration: 3000
-        });
-        console.log('✅ 영구 저장 검증 성공');
-      } else {
-        toast({
-          title: "⚠️ 저장 검증 실패",
-          description: "저장 과정에서 문제가 발생했습니다. 다시 시도해주세요.",
-          variant: "destructive",
-          duration: 3000
-        });
-        console.error('❌ 영구 저장 검증 실패');
+      let link = securePermanentStorage.get('LINK');
+      let sentence = securePermanentStorage.get('SENTENCE');
+      
+      // 기본값이 없으면 설정
+      if (!link && !sentence) {
+        console.log('📝 기본값 없음 - 기본값 설정');
+        const defaults = securePermanentStorage.setDefaults();
+        link = defaults.defaultLink;
+        sentence = defaults.defaultSentence;
       }
-    }, 500);
+
+      if (link || sentence) {
+        console.log('🔄 복원된 데이터로 상태 업데이트:', { link, sentence });
+        saveAppState({ 
+          referenceLink: link || 'https://worldpis.com/', 
+          referenceSentence: sentence || '👉 워드프레스 꿀팁 더 보러가기'
+        });
+        
+        toast({ 
+          title: '✅ 외부링크 복원됨', 
+          description: '영구 저장된 참조 정보가 자동으로 복원되었습니다.',
+          duration: 3000
+        });
+      } else {
+        // 완전히 없으면 기본값으로 설정
+        const defaults = securePermanentStorage.setDefaults();
+        saveAppState({ 
+          referenceLink: defaults.defaultLink, 
+          referenceSentence: defaults.defaultSentence
+        });
+      }
+      
+      setIsInitialized(true);
+      console.log('✅ 외부링크 컴포넌트 초기화 완료');
+    }
+  }, [isInitialized, saveAppState, toast]);
+
+  const saveSecure = (link: string, sentence: string) => {
+    securePermanentStorage.set(link, 'LINK');
+    securePermanentStorage.set(sentence, 'SENTENCE');
+  };
+
+  const handleChange = (field: 'referenceLink' | 'referenceSentence', value: string) => {
+    const newState = { 
+      ...appState, 
+      [field]: value 
+    };
+    
+    saveAppState(newState);
+    
+    // 즉시 영구 저장
+    saveSecure(
+      field === 'referenceLink' ? value : (appState.referenceLink || ''),
+      field === 'referenceSentence' ? value : (appState.referenceSentence || '')
+    );
+    
+    console.log(`💾 ${field} 자동 저장됨:`, value);
   };
 
   const handleDelete = () => {
-    console.log('🗑️ 참조 정보 영구 삭제 시작');
+    console.log('🗑️ 참조 정보 완전 삭제 요청');
+    securePermanentStorage.clear();
+    saveAppState({ referenceLink: '', referenceSentence: '' });
+    deleteReferenceData?.();
+    toast({ 
+      title: '🗑️ 완전 삭제됨', 
+      description: '모든 참조 정보가 영구적으로 삭제되었습니다.',
+      duration: 3000
+    });
+  };
+
+  const handleSave = () => {
+    const link = appState.referenceLink || '';
+    const sentence = appState.referenceSentence || '';
     
-    try {
-      // 모든 저장소에서 완전 삭제
-      localStorage.removeItem(REFERENCE_STORAGE_KEYS.LINK);
-      localStorage.removeItem(REFERENCE_STORAGE_KEYS.SENTENCE);
-      localStorage.removeItem(BACKUP_STORAGE_KEYS.LINK);
-      localStorage.removeItem(BACKUP_STORAGE_KEYS.SENTENCE);
-      
-      // sessionStorage에서도 삭제
-      sessionStorage.removeItem(`backup_${REFERENCE_STORAGE_KEYS.LINK}`);
-      sessionStorage.removeItem(`backup_${REFERENCE_STORAGE_KEYS.SENTENCE}`);
-      
-      // 앱 상태 초기화
-      saveAppState({ 
-        referenceLink: '', 
-        referenceSentence: '' 
-      });
-      
-      // deleteReferenceData 콜백도 호출 (호환성)
-      if (deleteReferenceData) {
-        deleteReferenceData();
-      }
-      
-      // 삭제 검증
-      setTimeout(() => {
-        const verifyLink = secureStorageGet(REFERENCE_STORAGE_KEYS.LINK);
-        const verifySentence = secureStorageGet(REFERENCE_STORAGE_KEYS.SENTENCE);
-        
-        if (!verifyLink && !verifySentence) {
-          toast({
-            title: "🗑️ 영구 삭제 완료",
-            description: "참조 링크와 문장이 모든 저장소에서 완전히 삭제되었습니다.",
-          });
-          console.log('✅ 영구 삭제 검증 성공');
-        } else {
-          console.error('❌ 영구 삭제 검증 실패');
-        }
-      }, 500);
-      
-    } catch (error) {
-      console.error('❌ 영구 삭제 실패:', error);
-      toast({
-        title: "❌ 삭제 실패",
-        description: "삭제 과정에서 오류가 발생했습니다.",
-        variant: "destructive"
-      });
-    }
+    saveSecure(link, sentence);
+    toast({ 
+      title: '💾 영구 저장됨', 
+      description: '참조 정보가 모든 저장소에 안전하게 저장되었습니다.',
+      duration: 3000
+    });
   };
 
-  const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  // 페이지 언로드 시 최종 저장
+  // 자동 저장 (실시간)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      console.log('💾 페이지 언로드 - 외부 링크 최종 보안 저장');
-      if (appState.referenceLink || appState.referenceSentence) {
-        performSecureSave(appState.referenceLink || '', appState.referenceSentence || '');
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [appState.referenceLink, appState.referenceSentence]);
+    if (isInitialized && (appState.referenceLink || appState.referenceSentence)) {
+      const timeoutId = setTimeout(() => {
+        saveSecure(
+          appState.referenceLink || '',
+          appState.referenceSentence || ''
+        );
+      }, 1000); // 1초 디바운스
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [appState.referenceLink, appState.referenceSentence, isInitialized]);
 
   return (
     <Card className="shadow-md border-2 border-green-200">
-      <CardHeader 
-        className="cursor-pointer bg-green-50" 
-        onDoubleClick={handleToggleCollapse}
-      >
+      <CardHeader onDoubleClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer bg-green-50">
         <CardTitle className="flex items-center justify-between text-purple-700">
           <span className="flex items-center">
             <ExternalLink className="h-5 w-5 mr-2" />
-            <Shield className="h-4 w-4 mr-1 text-green-600" />
-            외부 링크 설정 (API 키급 영구 저장)
+            외부링크 설정 (영구저장)
             {isCollapsed ? <ChevronDown className="h-4 w-4 ml-2" /> : <ChevronUp className="h-4 w-4 ml-2" />}
           </span>
           <div className="flex space-x-2">
-            <Button
-              onClick={handleSave}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              저장 확인
+            <Button onClick={handleSave} size="sm" className="bg-green-600 text-white hover:bg-green-700">
+              <Save className="h-4 w-4 mr-1" /> 저장 확인
             </Button>
-            <Button
-              onClick={handleDelete}
-              size="sm"
-              variant="destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              영구 삭제
+            <Button onClick={handleDelete} size="sm" variant="destructive">
+              <Trash2 className="h-4 w-4 mr-1" /> 완전 삭제
             </Button>
           </div>
         </CardTitle>
-        <p className="text-xs text-gray-500 mt-1">
-          💡 헤더를 더블클릭하면 창을 접거나 펼칠 수 있습니다
+        <p className="text-xs text-gray-600 mt-1">
+          💾 자동 영구저장 | 헤더를 더블클릭하면 창을 접거나 펼칠 수 있습니다
         </p>
       </CardHeader>
-      
       {!isCollapsed && (
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              <Shield className="h-4 w-4 inline mr-1 text-green-600" />
-              참조 링크 (API 키급 보안 저장)
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">참조 링크</label>
             <Input
               type="url"
-              placeholder="https://example.com"
               value={appState.referenceLink || ''}
-              onChange={handleReferenceLinkChange}
-              className="w-full"
+              onChange={(e) => handleChange('referenceLink', e.target.value)}
+              placeholder="https://worldpis.com/"
+              className="border-green-300 focus:border-green-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              참조할 웹페이지 URL을 입력하면 해당 내용을 분석하여 글에 반영합니다
-            </p>
+            <p className="text-xs text-gray-500 mt-1">기본값: https://worldpis.com/</p>
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-              <Quote className="h-4 w-4 mr-1" />
-              <Shield className="h-4 w-4 mr-1 text-green-600" />
-              참조 문장 (API 키급 보안 저장)
+              <Quote className="h-4 w-4 mr-1" /> 참조 문장
             </label>
             <Textarea
-              placeholder="참조하고 싶은 특정 문장이나 내용을 입력하세요... (예: 👉 워드프레스 꿀팁 더 보러가기)"
               value={appState.referenceSentence || ''}
-              onChange={handleReferenceSentenceChange}
-              className="w-full min-h-[80px] resize-none"
+              onChange={(e) => handleChange('referenceSentence', e.target.value)}
+              placeholder="👉 워드프레스 꿀팁 더 보러가기"
               rows={3}
+              className="border-green-300 focus:border-green-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              특정 문장이나 내용을 참조하여 관련된 글을 작성하고, 이 문장이 하이퍼링크로 표시됩니다
+            <p className="text-xs text-gray-500 mt-1">기본값: 👉 워드프레스 꿀팁 더 보러가기</p>
+          </div>
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-700 font-semibold">💡 영구 저장 기능</p>
+            <p className="text-xs text-blue-600 mt-1">
+              입력한 내용은 자동으로 여러 저장소에 백업되어 재로그인, 새로고침, 초기화에도 유지됩니다.
             </p>
           </div>
-
-          <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
-            💡 참조 링크와 문장은 AI가 글을 작성할 때 추가적인 맥락과 정보로 활용되며, 
-            저장된 참조 링크는 블로그 글 본문 끝에 "이 글과 관련된 다른 정보가 궁금하다면?" 스타일로 자동 추가됩니다.
-            <br />
-            🔒 <strong>API 키급 보안 저장</strong>: 입력과 동시에 다중 백업으로 저장되며, API 키처럼 절대 삭제되지 않습니다.
-          </div>
-
-          {(appState.referenceLink || appState.referenceSentence) && (
-            <div className="text-xs text-green-600 bg-green-50 p-3 rounded border border-green-200">
-              ✅ 현재 API 키급 보안 저장된 참조 정보:
-              {appState.referenceLink && (
-                <div className="mt-1">
-                  <strong>🔗 링크:</strong> {appState.referenceLink}
-                </div>
-              )}
-              {appState.referenceSentence && (
-                <div className="mt-1">
-                  <strong>📝 문장:</strong> {appState.referenceSentence.substring(0, 50)}...
-                </div>
-              )}
-              <div className="mt-2 text-xs text-blue-600">
-                🛡️ 이 데이터는 API 키와 동일한 보안 수준으로 저장되어 있습니다.
-              </div>
-            </div>
-          )}
         </CardContent>
       )}
     </Card>

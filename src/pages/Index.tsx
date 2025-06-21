@@ -160,9 +160,29 @@ const Index = () => {
       />
       
       <RefactoredApiKeysSection 
-        geminiManager={geminiManager}
-        pixabayManager={pixabayManager}
-        huggingFaceManager={huggingFaceManager}
+        geminiApiKey={geminiManager.geminiApiKey}
+        setGeminiApiKey={geminiManager.setGeminiApiKey}
+        isGeminiApiKeyValidated={geminiManager.isGeminiApiKeyValidated}
+        setIsGeminiApiKeyValidated={geminiManager.setIsGeminiApiKeyValidated}
+        isGeminiValidating={geminiManager.isGeminiValidating}
+        validateGeminiApiKey={geminiManager.validateGeminiApiKey}
+        deleteGeminiApiKeyFromStorage={geminiManager.deleteGeminiApiKeyFromStorage}
+        
+        pixabayApiKey={pixabayManager.pixabayApiKey}
+        setPixabayApiKey={pixabayManager.setPixabayApiKey}
+        isPixabayApiKeyValidated={pixabayManager.isPixabayApiKeyValidated}
+        setIsPixabayApiKeyValidated={pixabayManager.setIsPixabayApiKeyValidated}
+        isPixabayValidating={pixabayManager.isPixabayValidating}
+        validatePixabayApiKey={pixabayManager.validatePixabayApiKey}
+        deletePixabayApiKeyFromStorage={pixabayManager.deletePixabayApiKeyFromStorage}
+        
+        huggingFaceApiKey={huggingFaceManager.huggingFaceApiKey}
+        setHuggingFaceApiKey={huggingFaceManager.setHuggingFaceApiKey}
+        isHuggingFaceApiKeyValidated={huggingFaceManager.isHuggingFaceApiKeyValidated}
+        setIsHuggingFaceApiKeyValidated={huggingFaceManager.setIsHuggingFaceApiKeyValidated}
+        isHuggingFaceValidating={huggingFaceManager.isHuggingFaceValidating}
+        validateHuggingFaceApiKey={huggingFaceManager.validateHuggingFaceApiKey}
+        deleteHuggingFaceApiKeyFromStorage={huggingFaceManager.deleteHuggingFaceApiKeyFromStorage}
       />
 
       {/* 컨트롤 섹션 - 전체 width 사용 */}
@@ -231,7 +251,7 @@ const Index = () => {
                 <RefreshCw className="h-6 w-6 mr-2" />
                 <span className="font-bold text-lg">초기화</span>
               </Button>
-              <p className="text-sm text-gray-600 mt-2 font-semibold">모든 데이터 초기화</p>
+              <p className="text-sm text-gray-600 mt-2 font-semibold">블로그 글 초기화</p>
             </div>
           </div>
         </div>

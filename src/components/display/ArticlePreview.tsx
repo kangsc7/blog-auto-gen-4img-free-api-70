@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,30 +19,21 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
 }) => {
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
-  
-  // 상태 관리 단순화
+
   const [isUpdatingFromProps, setIsUpdatingFromProps] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  
-  // 디바운싱을 위한 단일 타이머
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // 커서 위치를 텍스트 오프셋으로 저장 (더 안정적)
   const [cursorPosition, setCursorPosition] = useState<number>(0);
 
-  // 현재 커서 위치 저장
   const saveCursorPosition = () => {
     if (!editableDivRef.current) return;
-    
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
-    
     try {
       const range = selection.getRangeAt(0);
       const preCaretRange = range.cloneRange();
       preCaretRange.selectNodeContents(editableDivRef.current);
       preCaretRange.setEnd(range.endContainer, range.endOffset);
-      
       const textContent = preCaretRange.toString();
       setCursorPosition(textContent.length);
     } catch (error) {
@@ -51,28 +41,22 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     }
   };
 
-  // 커서 위치 복원
   const restoreCursorPosition = (position: number) => {
     if (!editableDivRef.current || isComposing || isUpdatingFromProps) return;
-    
     try {
       const selection = window.getSelection();
       if (!selection) return;
-      
       const walker = document.createTreeWalker(
         editableDivRef.current,
         NodeFilter.SHOW_TEXT,
         null
       );
-      
       let currentPosition = 0;
       let targetNode: Node | null = null;
       let targetOffset = 0;
-      
       while (walker.nextNode()) {
         const node = walker.currentNode;
         const nodeLength = node.textContent?.length || 0;
-        
         if (currentPosition + nodeLength >= position) {
           targetNode = node;
           targetOffset = position - currentPosition;
@@ -80,12 +64,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
         }
         currentPosition += nodeLength;
       }
-      
       if (targetNode) {
         const range = document.createRange();
         range.setStart(targetNode, Math.min(targetOffset, targetNode.textContent?.length || 0));
         range.collapse(true);
-        
         selection.removeAllRanges();
         selection.addRange(range);
       }
@@ -94,12 +76,10 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     }
   };
 
-  // 컨텐츠 업데이트 디바운싱
   const debouncedContentUpdate = (content: string) => {
     if (updateTimerRef.current) {
       clearTimeout(updateTimerRef.current);
     }
-    
     updateTimerRef.current = setTimeout(() => {
       if (!isComposing && !isUpdatingFromProps) {
         onContentChange(content);
@@ -107,90 +87,68 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
     }, 300);
   };
 
-  // 외부 컨텐츠 변경 처리
   useEffect(() => {
-    if (!editableDivRef.current || isUpdatingFromProps || isComposing) {
-      return;
-    }
-
+    if (!editableDivRef.current || isUpdatingFromProps || isComposing) return;
     const currentContent = editableDivRef.current.innerHTML;
-    if (currentContent === generatedContent) {
-      return;
-    }
-
+    if (currentContent === generatedContent) return;
     setIsUpdatingFromProps(true);
-    
-    // 현재 커서 위치 저장
     saveCursorPosition();
-    
-    // DOM 업데이트
     editableDivRef.current.innerHTML = generatedContent;
-    
-    // 다음 프레임에서 커서 복원
     requestAnimationFrame(() => {
-      restoreCursorPosition(cursorPosition);
-      setIsUpdatingFromProps(false);
+      requestAnimationFrame(() => {
+        restoreCursorPosition(cursorPosition);
+        setIsUpdatingFromProps(false);
+      });
     });
-    
   }, [generatedContent, cursorPosition]);
 
-  // 한글 입력 시작
   const handleCompositionStart = () => {
     setIsComposing(true);
     saveCursorPosition();
   };
 
-  // 한글 입력 완료
   const handleCompositionEnd = () => {
-    setIsComposing(false);
-    
-    if (editableDivRef.current) {
-      saveCursorPosition();
-      const content = editableDivRef.current.innerHTML;
-      debouncedContentUpdate(content);
-    }
+    setTimeout(() => {
+      setIsComposing(false);
+      if (editableDivRef.current) {
+        saveCursorPosition();
+        const content = editableDivRef.current.innerHTML;
+        debouncedContentUpdate(content);
+      }
+    }, 20);
   };
 
-  // 입력 처리 - 단순화된 로직
   const handleInput = () => {
     if (isComposing || isUpdatingFromProps) return;
-    
     saveCursorPosition();
-    
     if (editableDivRef.current) {
       const content = editableDivRef.current.innerHTML;
       debouncedContentUpdate(content);
     }
   };
 
-  // 키보드 이벤트 - 최소한의 처리만
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (isUpdatingFromProps) {
       event.preventDefault();
       return;
     }
-    
-    // 특수 키들에 대한 즉시 위치 저장
-    if (event.key === ' ' || event.key === 'Backspace' || event.key === 'Delete') {
+    if ([' ', 'Backspace', 'Delete'].includes(event.key)) {
       setTimeout(() => {
         saveCursorPosition();
       }, 0);
     }
   };
 
-  // 마우스 클릭
   const handleClick = () => {
     setTimeout(() => {
       saveCursorPosition();
     }, 0);
   };
 
-  // 포커스 이벤트
   const handleFocus = () => {
     saveCursorPosition();
   };
 
-  // 클린업
   useEffect(() => {
     return () => {
       if (updateTimerRef.current) {
@@ -201,8 +159,8 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
 
   const handleCopyToClipboard = () => {
     if (!editableDivRef.current?.innerHTML) {
-        toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
-        return;
+      toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
+      return;
     }
     const htmlToCopy = editableDivRef.current.innerHTML;
     navigator.clipboard.writeText(htmlToCopy).then(() => {
@@ -218,7 +176,6 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
       return;
     }
     const htmlToDownload = editableDivRef.current.innerHTML;
-
     const blob = new Blob([htmlToDownload], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

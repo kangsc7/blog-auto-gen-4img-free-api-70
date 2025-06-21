@@ -9,7 +9,7 @@ interface GuidelineValidation {
 
 // 핵심 지침 요소들 - 절대 변경 금지
 export const CORE_GUIDELINES = {
-  WORD_COUNT: "190자에서 250자 사이",
+  WORD_COUNT: "600자에서 700자 사이",
   KEYWORD_EMPHASIS: "<strong> 태그로 정확히 1번만 강조",
   COLOR_THEME: "선택된 컬러테마를 반드시 모든 스타일에 정확히 적용",
   VISUALIZATION_CARD: "티스토리 호환 시각화 요약 카드 필수 삽입",
