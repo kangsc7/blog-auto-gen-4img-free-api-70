@@ -1,11 +1,14 @@
-
 interface DynamicHeading {
   title: string;
   emoji: string;
   content: string;
 }
 
-export const generateDynamicHeadings = async (keyword: string, topic: string, apiKey: string): Promise<DynamicHeading[]> => {
+export const generateDynamicHeadings = async (
+  keyword: string,
+  topic: string,
+  apiKey: string
+): Promise<DynamicHeading[]> => {
   const prompt = `
 당신은 블로그 콘텐츠 전문가입니다. 
 
@@ -46,17 +49,20 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 `;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: 1024,
-        },
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.9,
+            maxOutputTokens: 1024,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error('소제목 생성 API 요청 실패');
@@ -64,89 +70,154 @@ export const generateDynamicHeadings = async (keyword: string, topic: string, ap
 
     const data = await response.json();
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!generatedText) {
       throw new Error('소제목 생성 응답이 비어있습니다');
     }
 
-    const lines = generatedText.split('\n').filter(line => line.trim() && line.includes('|'));
-    
-    // 기존 템플릿 키워드가 포함된 소제목 필터링 및 40자 제한
-    const filteredLines = lines.filter(line => {
+    const lines = generatedText.split('\n').filter(
+      (line) => line.trim() && line.includes('|')
+    );
+
+    const filteredLines = lines.filter((line) => {
       const title = line.split('|')[0]?.toLowerCase() || '';
       const titleLength = line.split('|')[0]?.trim().length || 0;
-      
-      // 기존 템플릿 키워드 필터링
-      const bannedKeywords = ['신청 방법', '자격 조건', '필요 서류', '기본 정보', '지원 대상', '혜택 내용', 'faq', '자주', '질문', 'q&a', '묻는'];
-      const hasBannedKeyword = bannedKeywords.some(keyword => title.includes(keyword));
-      
+      const bannedKeywords = [
+        '신청 방법',
+        '자격 조건',
+        '필요 서류',
+        '기본 정보',
+        '지원 대상',
+        '혜택 내용',
+        'faq',
+        '자주',
+        '질문',
+        'q&a',
+        '묻는'
+      ];
+      const hasBannedKeyword = bannedKeywords.some((keyword) =>
+        title.includes(keyword)
+      );
+
       return !hasBannedKeyword && titleLength <= 40;
     });
-    
-    const headings: DynamicHeading[] = filteredLines.slice(0, 7).map(line => {
+
+    const headings: DynamicHeading[] = filteredLines.slice(0, 7).map((line) => {
       const parts = line.split('|');
       let title = parts[0]?.trim() || `${keyword} 관련 정보`;
-      
-      // 제목이 40자를 초과하면 자르기
       if (title.length > 40) {
         title = title.substring(0, 37) + '...';
       }
-      
+
       return {
         title,
         emoji: parts[1]?.trim() || '💡',
-        content: parts[2]?.trim() || '관련 정보를 제공합니다'
+        content: parts[2]?.trim() || '관련 정보를 제공합니다',
       };
     });
 
-    // 7개가 안 되면 창의적인 기본 소제목으로 채우기
     const creativeDefaultHeadings = [
-      { title: `${keyword} 시작하기 전 꼭 알아야 할 점`, emoji: '💡', content: '기초 지식을 제공합니다' },
-      { title: `전문가가 추천하는 ${keyword} 활용법`, emoji: '👨‍💼', content: '전문가 팁을 공유합니다' },
-      { title: `${keyword} 실패 사례와 해결책`, emoji: '⚠️', content: '실패를 예방하는 방법을 알려드립니다' },
-      { title: `${keyword} 최신 트렌드 분석`, emoji: '📈', content: '최근 동향을 분석합니다' },
-      { title: `${keyword} 비용 절약하는 꿀팁`, emoji: '💰', content: '경제적인 활용법을 제공합니다' },
-      { title: `${keyword} 실제 후기와 평가`, emoji: '📝', content: '실사용자 후기를 공유합니다' },
-      { title: `${keyword} 향후 전망과 발전 방향`, emoji: '🔮', content: '미래 전망을 분석합니다' }
+      {
+        title: `${keyword} 시작하기 전 꼭 알아야 할 점`,
+        emoji: '💡',
+        content: '기초 지식을 제공합니다',
+      },
+      {
+        title: `전문가가 추천하는 ${keyword} 활용법`,
+        emoji: '👨‍💼',
+        content: '전문가 팁을 공유합니다',
+      },
+      {
+        title: `${keyword} 실패 사례와 해결책`,
+        emoji: '⚠️',
+        content: '실패를 예방하는 방법을 알려드립니다',
+      },
+      {
+        title: `${keyword} 최신 트렌드 분석`,
+        emoji: '📈',
+        content: '최근 동향을 분석합니다',
+      },
+      {
+        title: `${keyword} 비용 절약하는 꿀팁`,
+        emoji: '💰',
+        content: '경제적인 활용법을 제공합니다',
+      },
+      {
+        title: `${keyword} 실제 후기와 평가`,
+        emoji: '📝',
+        content: '실사용자 후기를 공유합니다',
+      },
+      {
+        title: `${keyword} 향후 전망과 발전 방향`,
+        emoji: '🔮',
+        content: '미래 전망을 분석합니다',
+      },
     ];
-    
+
     while (headings.length < 7) {
       const missingIndex = headings.length;
       if (missingIndex < creativeDefaultHeadings.length) {
         let defaultTitle = creativeDefaultHeadings[missingIndex].title;
-        // 기본 제목도 40자 제한 적용
         if (defaultTitle.length > 40) {
           defaultTitle = defaultTitle.substring(0, 37) + '...';
         }
         headings.push({
           ...creativeDefaultHeadings[missingIndex],
-          title: defaultTitle
+          title: defaultTitle,
         });
       } else {
         break;
       }
     }
 
-    console.log('✅ 창의적 동적 소제목 생성 완료 (40자 제한 적용):', headings.map(h => `${h.title} (${h.title.length}자)`));
     return headings;
   } catch (error) {
     console.error('동적 소제목 생성 오류:', error);
-    
-    // 오류 시 창의적인 기본 소제목 반환
+
     const fallbackHeadings = [
-      { title: `${keyword} 시작하기 전 준비사항`, emoji: '🚀', content: '시작 전 알아야 할 정보를 제공합니다' },
-      { title: `${keyword} 선택할 때 고려사항`, emoji: '🤔', content: '올바른 선택을 위한 가이드입니다' },
-      { title: `${keyword} 실제 사용 후기 분석`, emoji: '📊', content: '실사용자 경험을 분석합니다' },
-      { title: `${keyword} 문제 발생 시 해결법`, emoji: '🔧', content: '문제 해결 방법을 제시합니다' },
-      { title: `${keyword} 효과적인 활용 전략`, emoji: '💪', content: '효과를 극대화하는 방법입니다' },
-      { title: `${keyword} 최신 업데이트 소식`, emoji: '📰', content: '최근 변화와 소식을 전달합니다' },
-      { title: `${keyword} 향후 계획과 준비`, emoji: '📅', content: '미래를 위한 준비 방법입니다' }
-    ].map(heading => ({
+      {
+        title: `${keyword} 시작하기 전 준비사항`,
+        emoji: '🚀',
+        content: '시작 전 알아야 할 정보를 제공합니다',
+      },
+      {
+        title: `${keyword} 선택할 때 고려사항`,
+        emoji: '🤔',
+        content: '올바른 선택을 위한 가이드입니다',
+      },
+      {
+        title: `${keyword} 실제 사용 후기 분석`,
+        emoji: '📊',
+        content: '실사용자 경험을 분석합니다',
+      },
+      {
+        title: `${keyword} 문제 발생 시 해결법`,
+        emoji: '🔧',
+        content: '문제 해결 방법을 제시합니다',
+      },
+      {
+        title: `${keyword} 효과적인 활용 전략`,
+        emoji: '💪',
+        content: '효과를 극대화하는 방법입니다',
+      },
+      {
+        title: `${keyword} 최신 업데이트 소식`,
+        emoji: '📰',
+        content: '최근 변화와 소식을 전달합니다',
+      },
+      {
+        title: `${keyword} 향후 계획과 준비`,
+        emoji: '📅',
+        content: '미래를 위한 준비 방법입니다',
+      },
+    ].map((heading) => ({
       ...heading,
-      title: heading.title.length > 40 ? heading.title.substring(0, 37) + '...' : heading.title
+      title:
+        heading.title.length > 40
+          ? heading.title.substring(0, 37) + '...'
+          : heading.title,
     }));
 
-    console.log('⚠️ 창의적 기본 소제목 사용 (40자 제한 적용):', fallbackHeadings.map(h => `${h.title} (${h.title.length}자)`));
     return fallbackHeadings;
   }
 };
