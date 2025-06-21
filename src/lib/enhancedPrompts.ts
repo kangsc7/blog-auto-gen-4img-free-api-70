@@ -12,7 +12,7 @@ interface EnhancedArticlePromptParams {
 }
 
 const PROTECTED_GUIDELINES = {
-  WORD_COUNT_LIMIT: "각 H2 섹션 190-250자",
+  WORD_COUNT_LIMIT: "각 H2 섹션 270-350자",
   KEYWORD_EMPHASIS: "키워드 강조 필수",
   COLOR_THEME_MANDATORY: "컬러테마 엄격 적용",
   VISUALIZATION_CARD_REQUIRED: "시각화 카드 필수",
