@@ -100,11 +100,17 @@ export const createBlogHtmlTemplate = async (
     processedContent = firstLine + '\n<p data-ke-size="size16">&nbsp;</p>\n' + restContent;
   }
 
-  // 외부 링크를 태그 바로 위에 추가 (새로운 스타일로 적용)
+  // 외부 링크를 태그 바로 위에 추가 - 강화된 버전
   let finalContent = processedContent;
   if (referenceLink && referenceLink.trim()) {
+    console.log('🔗 외부링크 연동 시작:', { referenceLink, referenceSentence });
+    
+    //default 값 적용
+    const safeReferenceLink = referenceLink || 'https://worldpis.com/';
+    const safeReferenceSentence = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
+    
     // 태그들을 찾아서 그 위에 외부 링크 삽입
-    const tagPattern = /<p[^>]*style="text-align: center[^"]*"[^>]*>(?!.*<a)[^<]*<\/p>\s*$/i;
+    const tagPattern = /<p[^>]*style="[^"]*text-align:\s*center[^"]*"[^>]*>(?!.*<a)[^<]*<\/p>\s*<\/article>\s*$/i;
     const tagMatch = finalContent.match(tagPattern);
     
     if (tagMatch) {
@@ -112,39 +118,52 @@ export const createBlogHtmlTemplate = async (
       const beforeTags = finalContent.substring(0, tagStartIndex);
       const tagsSection = finalContent.substring(tagStartIndex);
       
-      // 참조문장 가져오기 (기본값 설정)
-      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
-      
       const referenceLinkHtml = `
-<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
-  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
-  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
-    <b>${displayText}</b>
+<div style="text-align: center; margin: 35px 0 25px 0; padding: 25px; background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border-radius: 15px; border: 2px solid #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);">
+  <h4 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; font-weight: 700;">💡 이 글과 관련된 더 많은 정보가 궁금하다면?</h4>
+  <a style="display: inline-block; color: #ffffff; background: linear-gradient(135deg, #3498db, #2980b9); text-decoration: none; font-weight: 700; font-size: 18px; padding: 12px 30px; border-radius: 25px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); border: 2px solid transparent;" 
+     href="${safeReferenceLink}" 
+     target="_blank" 
+     rel="noopener"
+     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)';"
+     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(52, 152, 219, 0.3)';">
+    ${safeReferenceSentence}
   </a>
-</p>
+  <p style="margin: 15px 0 0 0; color: #7f8c8d; font-size: 14px;">클릭하여 더 많은 유용한 정보를 확인해보세요!</p>
+</div>
 
 <p data-ke-size="size16">&nbsp;</p>`;
       
       finalContent = beforeTags + referenceLinkHtml + tagsSection;
-      console.log('🔗 외부 링크가 태그 위에 추가됨:', referenceLink);
+      console.log('✅ 외부 링크가 태그 위에 성공적으로 추가됨');
     } else {
-      // 태그가 없는 경우 콘텐츠 끝에 추가
-      const displayText = referenceSentence || '👉 워드프레스 꿀팁 더 보러가기';
-      
-      const referenceLinkHtml = `
+      // 태그가 없는 경우 </article> 태그 바로 앞에 추가
+      const articleEndIndex = finalContent.lastIndexOf('</article>');
+      if (articleEndIndex !== -1) {
+        const beforeEnd = finalContent.substring(0, articleEndIndex);
+        const afterEnd = finalContent.substring(articleEndIndex);
+        
+        const referenceLinkHtml = `
+<div style="text-align: center; margin: 35px 0 25px 0; padding: 25px; background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border-radius: 15px; border: 2px solid #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);">
+  <h4 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; font-weight: 700;">💡 이 글과 관련된 더 많은 정보가 궁금하다면?</h4>
+  <a style="display: inline-block; color: #ffffff; background: linear-gradient(135deg, #3498db, #2980b9); text-decoration: none; font-weight: 700; font-size: 18px; padding: 12px 30px; border-radius: 25px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); border: 2px solid transparent;" 
+     href="${safeReferenceLink}" 
+     target="_blank" 
+     rel="noopener"
+     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)';"
+     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(52, 152, 219, 0.3)';">
+    ${safeReferenceSentence}
+  </a>
+  <p style="margin: 15px 0 0 0; color: #7f8c8d; font-size: 14px;">클릭하여 더 많은 유용한 정보를 확인해보세요!</p>
+</div>
+
 <p data-ke-size="size16">&nbsp;</p>
 
-<p style="text-align: center; font-size: 18px; margin-bottom: 30px;" data-ke-size="size16">
-  <b>이 글과 관련된 다른 정보가 궁금하다면?</b><br />
-  <a style="color: #009688; text-decoration: underline; font-weight: bold;" href="${referenceLink}" target="_blank" rel="noopener">
-    <b>${displayText}</b>
-  </a>
-</p>
-
-<p data-ke-size="size16">&nbsp;</p>`;
-      
-      finalContent = finalContent + referenceLinkHtml;
-      console.log('🔗 외부 링크가 콘텐츠 끝에 추가됨:', referenceLink);
+`;
+        
+        finalContent = beforeEnd + referenceLinkHtml + afterEnd;
+        console.log('✅ 외부 링크가 article 끝에 성공적으로 추가됨');
+      }
     }
   }
 
@@ -249,25 +268,13 @@ export const createBlogHtmlTemplate = async (
             line-height: 16px;
             font-size: 16px;
         }
-        /* 외부 링크 스타일 */
-        .reference-link-container {
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
-            border-radius: 10px;
-            border: 2px solid #3498db;
+        /* 외부 링크 호버 효과 개선 */
+        .reference-link-enhanced {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .reference-link-container a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            transition: color 0.3s ease;
-        }
-        .reference-link-container a:hover {
-            color: #0056b3;
-            text-decoration: underline;
+        .reference-link-enhanced:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5) !important;
         }
     </style>
 </head>
@@ -279,6 +286,6 @@ export const createBlogHtmlTemplate = async (
 </body>
 </html>`;
 
-  console.log('✅ 블로그 HTML 템플릿 생성 완료');
+  console.log('✅ 블로그 HTML 템플릿 생성 완료 (외부링크 포함)');
   return htmlTemplate;
 };

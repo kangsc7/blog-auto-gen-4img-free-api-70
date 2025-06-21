@@ -49,7 +49,7 @@ ${externalReferencePrompt}
 1. **전체 구조**:
    - 매력적인 제목 (H1)
    - 서론 (공백 포함 정확히 120-150자 이내 - 최고 우선순위)
-   - 7개의 H2 소제목과 본문 (마지막은 "여러분도 할 수 있습니다" 류의 격려)
+   - 7개의 H2 소제목과 본문 (마지막은 "여러분도 할 수 있습니다" 류의 주제별 맞춤 격려)
    - 테이블, 시각화 카드, 주의 카드, 태그만 포함
    - 결론 섹션 절대 작성 금지
    - 참고 자료 섹션 절대 작성 금지
@@ -129,74 +129,223 @@ ${externalReferencePrompt}
       justify-content: center;
       align-items: center;
       padding: 25px 15px;
-      background-color: ${secondaryColor}20;
+      background: linear-gradient(135deg, ${secondaryColor}40, ${secondaryColor}20);
       margin: 25px 0;
+      border-radius: 12px;
   }
   .single-summary-card {
       width: 100%;
       max-width: 700px;
-      background-color: #ffffff;
-      border-radius: 15px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      padding: 30px;
+      background: linear-gradient(135deg, #ffffff, #f8faff);
+      border-radius: 20px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.1);
+      padding: 35px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border: 1px solid ${primaryColor}40;
+      border: 2px solid ${primaryColor}30;
       box-sizing: border-box;
+      position: relative;
+  }
+  .single-summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor}, ${primaryColor});
+      border-radius: 20px 20px 0 0;
   }
   .single-summary-card .card-header {
       display: flex;
       align-items: center;
-      border-bottom: 2px solid ${primaryColor};
-      padding-bottom: 15px;
-      margin-bottom: 15px;
+      border-bottom: 3px solid ${primaryColor};
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, ${secondaryColor}15, transparent);
+      margin: -35px -35px 20px -35px;
+      padding: 25px 35px 18px 35px;
+      border-radius: 20px 20px 0 0;
   }
   .single-summary-card .card-header-icon {
-      font-size: 38px;
-      color: ${primaryColor};
-      margin-right: 16px;
+      font-size: 42px;
+      background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-right: 18px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
   }
   .single-summary-card .card-header h3 {
-      font-size: 28px;
-      color: ${primaryColor};
+      font-size: 32px;
+      background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin: 0;
-      line-height: 1.3;
-      font-weight: 700;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.5px;
   }
   .single-summary-card .card-content {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      font-size: 18px;
-      line-height: 1.7;
-      color: #333;
+      font-size: 19px;
+      line-height: 1.8;
+      color: #2c3e50;
   }
   .single-summary-card .card-content .section {
-      margin-bottom: 12px;
-      line-height: 1.7;
+      margin-bottom: 16px;
+      line-height: 1.8;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      border-left: 4px solid ${primaryColor};
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }
   .single-summary-card .card-content .section:last-child {
       margin-bottom: 0;
   }
-  .single-summary-card .card-content strong {
+  .single-summary-card .card-content .section b {
       color: ${primaryColor};
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 20px;
   }
   .single-summary-card .card-content .highlight {
-      background-color: ${secondaryColor}60;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: bold;
+      background: linear-gradient(135deg, ${secondaryColor}80, ${secondaryColor}60);
+      color: #2c3e50;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border: 1px solid ${primaryColor}40;
+  }
+  .single-summary-card .card-content .formula {
+      background: linear-gradient(135deg, ${secondaryColor}30, ${secondaryColor}20);
+      color: ${primaryColor};
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 17px;
+      text-align: center;
+      margin-top: 12px;
+      font-weight: 600;
+      border: 2px dashed ${primaryColor}60;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
   }
   .single-summary-card .card-footer {
-      font-size: 15px;
-      color: #777;
+      font-size: 16px;
+      color: #7f8c8d;
       text-align: center;
-      padding-top: 15px;
-      border-top: 1px dashed ${primaryColor}40;
-      margin-top: auto;
+      padding-top: 20px;
+      border-top: 2px dashed ${primaryColor}40;
+      margin-top: 20px;
+      font-weight: 600;
+      background: linear-gradient(135deg, ${secondaryColor}10, transparent);
+      margin-left: -35px;
+      margin-right: -35px;
+      margin-bottom: -35px;
+      padding: 20px 35px 25px 35px;
+      border-radius: 0 0 20px 20px;
+  }
+
+  /* 모바일 최적화 */
+  @media (max-width: 768px) {
+      .single-summary-card-container {
+          padding: 20px 10px;
+      }
+      .single-summary-card {
+          padding: 25px 20px;
+          border-radius: 16px;
+      }
+      .single-summary-card .card-header {
+          margin: -25px -20px 15px -20px;
+          padding: 20px 20px 15px 20px;
+          border-radius: 16px 16px 0 0;
+      }
+      .single-summary-card .card-header-icon {
+          font-size: 36px;
+          margin-right: 14px;
+      }
+      .single-summary-card .card-header h3 {
+          font-size: 26px;
+      }
+      .single-summary-card .card-content {
+          font-size: 17px;
+          line-height: 1.7;
+      }
+      .single-summary-card .card-content .section {
+          margin-bottom: 14px;
+          padding: 10px 14px;
+          font-size: 16px;
+      }
+      .single-summary-card .card-content .section b {
+          font-size: 17px;
+      }
+      .single-summary-card .card-content .highlight {
+          padding: 3px 10px;
+          font-size: 16px;
+      }
+      .single-summary-card .card-content .formula {
+          padding: 10px 14px;
+          font-size: 15px;
+      }
+      .single-summary-card .card-footer {
+          font-size: 14px;
+          padding: 15px 20px 20px 20px;
+          margin-left: -20px;
+          margin-right: -20px;
+          margin-bottom: -25px;
+      }
+  }
+
+  @media (max-width: 480px) {
+      .single-summary-card {
+          padding: 20px 15px;
+          border-radius: 12px;
+      }
+      .single-summary-card .card-header {
+          margin: -20px -15px 12px -15px;
+          padding: 15px 15px 12px 15px;
+          border-radius: 12px 12px 0 0;
+      }
+      .single-summary-card .card-header-icon {
+          font-size: 32px;
+          margin-right: 12px;
+      }
+      .single-summary-card .card-header h3 {
+          font-size: 22px;
+      }
+      .single-summary-card .card-content {
+          font-size: 16px;
+          line-height: 1.6;
+      }
+      .single-summary-card .card-content .section {
+          margin-bottom: 12px;
+          padding: 8px 12px;
+          font-size: 15px;
+      }
+      .single-summary-card .card-content .section b {
+          font-size: 16px;
+      }
+      .single-summary-card .card-content .highlight {
+          padding: 2px 8px;
+          font-size: 15px;
+      }
+      .single-summary-card .card-content .formula {
+          padding: 8px 12px;
+          font-size: 14px;
+      }
+      .single-summary-card .card-footer {
+          font-size: 13px;
+          padding: 12px 15px 15px 15px;
+          margin-left: -15px;
+          margin-right: -15px;
+          margin-bottom: -20px;
+      }
   }
   </style>
   
@@ -209,15 +358,18 @@ ${externalReferencePrompt}
       <div class="card-content">
         <div class="section"><b>핵심 포인트 1:</b> <span class="highlight">주요 내용</span></div>
         <div class="section"><b>핵심 포인트 2:</b> <span class="highlight">주요 내용</span></div>
-        <div class="section"><b>핵심 포인트 3:</b> <span class="highlight">주요 내용</span></div>
+        <div class="section"><b>실무 활용법:</b>
+          <div class="formula">구체적인 방법론 또는 공식</div>
+        </div>
+        <div class="section"><b>사용자 경험:</b> <span class="highlight">실제 효과</span></div>
       </div>
       <div class="card-footer">이 정보로 더 나은 결과를 얻으세요!</div>
     </div>
   </div>
 
-  <!-- 태그 섹션 (관련 태그 텍스트 없이) -->
+  <!-- 태그 섹션 ("관련 태그" 텍스트 없이) -->
   <div style="margin: 30px 0;">
-    <p style="font-size: 16px; color: #666;">${keyword}, 관련태그1, 관련태그2, 관련태그3, 관련태그4, 관련태그5, 관련태그6</p>
+    <p style="font-size: 16px; color: #666; text-align: center;">${keyword}, 관련태그1, 관련태그2, 관련태그3, 관련태그4, 관련태그5, 관련태그6</p>
   </div>
 </article>
 \`\`\`
@@ -229,11 +381,12 @@ ${externalReferencePrompt}
 - 모든 H2 소제목에 이모지 포함 및 컬러테마 밑줄
 - 7번째 H2는 주제에 맞는 격려 내용으로 맞춤 제목 생성
 - 테이블, 시각화 카드, 주의카드, 태그 모두 포함
-- 태그는 쉼표로 구분하여 7개 작성
+- 태그는 쉼표로 구분하여 7개 작성 ("관련 태그" 텍스트 제외)
 - 결론 섹션 작성 금지
 - 참고 자료 섹션 작성 금지
 - 각 섹션당 중요 키워드 1개에만 컬러 적용
 - 2-3개 공식/공인 사이트를 자연스럽게 하이퍼링크로 추가
+- 시각화 요약 카드는 첨부 이미지와 완전히 동일한 디자인으로 구현
 
 이제 위 규칙을 정확히 따라 완성된 HTML 블로그 글을 작성해주세요.`;
 };

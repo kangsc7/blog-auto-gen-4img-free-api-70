@@ -13,7 +13,7 @@ import { useUserAccess } from '@/hooks/useUserAccess';
 
 export const useRefactoredAppController = () => {
   const { session, profile, loading: authLoading, handleLogin, handleSignUp, handleLogout, isAdmin } = useAuth();
-  const { appState, saveAppState, resetApp: handleResetApp } = useAppStateManager();
+  const { appState, saveAppState, resetAppState } = useAppStateManager();
   
   // useAllApiKeysManager 올바른 단일 파라미터 전달
   const { geminiManager, pixabayManager, huggingFaceManager } = useAllApiKeysManager({
@@ -134,8 +134,8 @@ export const useRefactoredAppController = () => {
     // 편집기에 초기화 이벤트 발송
     window.dispatchEvent(new Event('app-reset'));
     
-    // 기존 초기화 실행
-    handleResetApp();
+    // 기존 초기화 실행 (resetAppState 사용)
+    resetAppState();
     
     console.log('✅ 향상된 초기화 완료');
   };
