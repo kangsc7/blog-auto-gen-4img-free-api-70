@@ -81,9 +81,18 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
     }
   };
 
+  // 승인 취소 (거절로 상태 변경)
+  const handleApprovalCancel = async (userId: string, userEmail: string) => {
+    if (window.confirm(`정말로 ${userEmail} 사용자의 승인을 취소하시겠습니까?`)) {
+      console.log('🔄 승인 취소 처리 시작:', { userId, userEmail });
+      await updateUserStatus(userId, 'rejected');
+    }
+  };
+
   // 사용자 삭제
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (window.confirm(`정말로 ${userEmail} 사용자를 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+      console.log('🗑️ 사용자 삭제 처리 시작:', { userId, userEmail });
       await deleteUser(userId);
     }
   };
@@ -192,7 +201,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                 <TableHead>이메일</TableHead>
                 <TableHead>남은 기간</TableHead>
                 <TableHead>상태</TableHead>
-                <TableHead>기간 설정</TableHead>
+                {isAdmin && <TableHead>기간 설정</TableHead>}
                 <TableHead className="text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
@@ -206,27 +215,45 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({ isAdmi
                       {user.email}
                       {isAdminUser(user.email) && <Badge variant="secondary" className="ml-2">관리자</Badge>}
                     </TableCell>
-                    <TableCell><RemainingTime approvedAt={user.approved_at} expiresAt={user.access_expires_at} /></TableCell>
-                    <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{getStatusLabel(user.status)}</Badge></TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          placeholder="일수"
-                          className="w-16"
-                          value={accessDays[user.id] || ''}
-                          onChange={(e) => setAccessDays(prev => ({ ...prev, [user.id]: e.target.value }))}
-                          min="0"
-                        />
-                        <Button size="sm" onClick={() => handleSetAccessDays(user.id)}>
-                          <Clock className="h-3 w-3 mr-1" />
-                          설정
-                        </Button>
-                      </div>
+                      {isAdminUser(user.email) ? (
+                        <Badge variant="outline" className="text-green-600 border-green-600">무제한</Badge>
+                      ) : (
+                        <RemainingTime approvedAt={user.approved_at} expiresAt={user.access_expires_at} />
+                      )}
                     </TableCell>
+                    <TableCell><Badge variant={getStatusBadgeVariant(user.status)}>{getStatusLabel(user.status)}</Badge></TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        {!isAdminUser(user.email) ? (
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="number"
+                              placeholder="일수"
+                              className="w-16"
+                              value={accessDays[user.id] || ''}
+                              onChange={(e) => setAccessDays(prev => ({ ...prev, [user.id]: e.target.value }))}
+                              min="0"
+                            />
+                            <Button size="sm" onClick={() => handleSetAccessDays(user.id)}>
+                              <Clock className="h-3 w-3 mr-1" />
+                              설정
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right space-x-2">
                       {!isAdminUser(user.email) && (
-                        <Button size="sm" variant="destructive" onClick={() => updateUserStatus(user.id, 'rejected')}>승인 취소</Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => handleApprovalCancel(user.id, user.email)}
+                        >
+                          승인 취소
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>

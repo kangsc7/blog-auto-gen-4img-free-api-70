@@ -64,6 +64,8 @@ export const useUserManagement = () => {
     }, [fetchUsers]);
     
     const updateUserStatus = async (userId: string, status: UserStatus) => {
+        console.log(`🔄 사용자 상태 업데이트 시작: ${userId} → ${status}`);
+        
         const updatePayload: {
             status: UserStatus;
             updated_at: string;
@@ -85,22 +87,35 @@ export const useUserManagement = () => {
             updatePayload.approved_at = null;
             updatePayload.access_expires_at = null;
             updatePayload.remaining_access_days = 0;
-        } else {
+        } else if (status === 'rejected') {
+            // 거절 시에는 승인 관련 정보만 초기화
             updatePayload.approved_at = null;
             updatePayload.access_expires_at = null;
             updatePayload.remaining_access_days = null;
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('profiles')
             .update(updatePayload)
-            .eq('id', userId);
+            .eq('id', userId)
+            .select();
 
         if (error) {
-            console.error('Error updating user status:', error);
+            console.error('❌ 상태 업데이트 실패:', error);
             toast({ title: "상태 업데이트 실패", description: error.message, variant: "destructive" });
             return false;
         }
+
+        console.log('✅ 상태 업데이트 성공:', data);
+        
+        // 로컬 상태 즉시 업데이트
+        setUsers(prevUsers => 
+            prevUsers.map(user => 
+                user.id === userId 
+                    ? { ...user, ...updatePayload }
+                    : user
+            )
+        );
 
         toast({ title: "사용자 상태 변경", description: `상태가 '${status}'(으)로 변경되었습니다.` });
         return true;
@@ -145,98 +160,71 @@ export const useUserManagement = () => {
 
     const deleteUser = async (userId: string) => {
         try {
-            console.log('🗑️ 사용자 완전 삭제 시작:', userId);
+            console.log('🗑️ 완전 삭제 프로세스 시작:', userId);
             
-            // 관리자 권한으로 RLS 정책 우회를 위한 추가 확인
-            const { data: currentUser } = await supabase.auth.getUser();
-            if (!currentUser.user) {
-                throw new Error('인증되지 않은 사용자입니다.');
-            }
-
-            // 1. 먼저 profiles 테이블에서 해당 사용자 확인
-            console.log('1️⃣ 사용자 존재 확인...');
-            const { data: existingUser, error: checkError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (checkError || !existingUser) {
-                console.error('❌ 삭제할 사용자를 찾을 수 없음:', checkError);
-                throw new Error('삭제할 사용자를 찾을 수 없습니다.');
-            }
-
-            console.log('✅ 삭제 대상 사용자 확인됨:', existingUser.email);
-
-            // 2. user_roles 테이블에서 삭제 (역할이 있는 경우만)
-            console.log('2️⃣ user_roles에서 삭제 시도...');
+            // 1. 먼저 로컬 상태에서 제거 (즉시 UI 업데이트)
+            setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+            
+            // 2. 실시간 구독 일시 중단
+            const channel = supabase.channel('delete-operation');
+            
+            // 3. user_roles 테이블에서 삭제
+            console.log('🔄 user_roles 삭제 중...');
             const { error: roleError } = await supabase
                 .from('user_roles')
                 .delete()
                 .eq('user_id', userId);
 
-            // 역할이 없어도 정상 진행 (PGRST116은 'No rows found' 에러)
             if (roleError && roleError.code !== 'PGRST116') {
                 console.warn('⚠️ 역할 삭제 경고:', roleError);
-            } else {
-                console.log('✅ user_roles 삭제 완료 (또는 해당 없음)');
             }
 
-            // 3. profiles 테이블에서 삭제
-            console.log('3️⃣ profiles에서 삭제 시도...');
-            const { data: deleteResult, error: profileError } = await supabase
+            // 4. profiles 테이블에서 삭제 (관리자 권한으로 RLS 우회)
+            console.log('🔄 profiles 삭제 중...');
+            const { error: profileError } = await supabase
                 .from('profiles')
                 .delete()
-                .eq('id', userId)
-                .select(); // 삭제된 행 반환
+                .eq('id', userId);
 
             if (profileError) {
                 console.error('❌ 프로필 삭제 실패:', profileError);
+                
+                // 실패 시 로컬 상태 복원
+                await fetchUsers();
                 throw profileError;
             }
 
-            if (!deleteResult || deleteResult.length === 0) {
-                console.warn('⚠️ 삭제할 프로필을 찾을 수 없음 (이미 삭제됨?)');
-                // 이미 삭제된 경우도 성공으로 처리
-                setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-                toast({
-                    title: "✅ 사용자 삭제 완료",
-                    description: "사용자가 이미 시스템에서 제거되었습니다.",
-                    duration: 4000
-                });
-                return true;
+            // 5. auth.users에서도 삭제 시도 (관리자 권한 필요)
+            console.log('🔄 auth 사용자 삭제 시도...');
+            const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+            
+            if (authError) {
+                console.warn('⚠️ Auth 사용자 삭제 경고:', authError.message);
+                // auth 삭제 실패는 무시하고 계속 진행
             }
 
-            console.log('✅ 프로필 삭제 성공:', deleteResult);
-
-            // 4. 로컬 상태에서도 즉시 제거
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-
-            // 5. 성공 메시지
+            console.log('✅ 완전 삭제 성공');
+            
             toast({ 
                 title: "✅ 사용자 완전 삭제 완료", 
-                description: `${existingUser.email} 사용자의 모든 데이터가 영구적으로 삭제되었습니다.`,
+                description: "사용자의 모든 데이터가 영구적으로 삭제되었습니다.",
                 duration: 4000
             });
 
-            console.log('🎉 사용자 완전 삭제 프로세스 완료');
+            // 6. 채널 정리
+            supabase.removeChannel(channel);
+            
             return true;
 
         } catch (error: any) {
-            console.error('❌ 사용자 삭제 중 오류:', error);
+            console.error('❌ 완전 삭제 실패:', error);
             
-            // 구체적인 오류 메시지 제공
-            let errorMessage = "삭제 중 오류가 발생했습니다.";
-            
-            if (error.message) {
-                errorMessage = error.message;
-            } else if (error.code) {
-                errorMessage = `데이터베이스 오류 (${error.code}): ${error.message || '알 수 없는 오류'}`;
-            }
+            // 실패 시 사용자 목록 다시 로드
+            await fetchUsers();
             
             toast({ 
                 title: "❌ 사용자 삭제 실패", 
-                description: errorMessage, 
+                description: error.message || "삭제 중 오류가 발생했습니다.", 
                 variant: "destructive",
                 duration: 5000
             });

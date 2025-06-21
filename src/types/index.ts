@@ -29,4 +29,5 @@ export interface AppState {
   referenceLink: string;
   referenceSentence: string;
   preventDuplicates: boolean;
+  topicCount: number;
 }
