@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Download, Loader2, ClipboardCopy } from 'lucide-react';
@@ -8,159 +9,26 @@ interface ArticlePreviewProps {
   generatedContent: string;
   isGeneratingContent: boolean;
   selectedTopic: string;
-  onContentChange: (content: string) => void;
 }
 
 export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   generatedContent,
   isGeneratingContent,
   selectedTopic,
-  onContentChange,
 }) => {
   const { toast } = useToast();
   const editableDivRef = useRef<HTMLDivElement>(null);
 
-  const [isUpdatingFromProps, setIsUpdatingFromProps] = useState(false);
-  const [isComposing, setIsComposing] = useState(false);
-  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [cursorPosition, setCursorPosition] = useState<number>(0);
-
-  const saveCursorPosition = () => {
-    if (!editableDivRef.current) return;
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    try {
-      const range = selection.getRangeAt(0);
-      const preCaretRange = range.cloneRange();
-      preCaretRange.selectNodeContents(editableDivRef.current);
-      preCaretRange.setEnd(range.endContainer, range.endOffset);
-      const textContent = preCaretRange.toString();
-      setCursorPosition(textContent.length);
-    } catch (error) {
-      console.warn('Failed to save cursor position:', error);
-    }
-  };
-
-  const restoreCursorPosition = (position: number) => {
-    if (!editableDivRef.current || isComposing || isUpdatingFromProps) return;
-    try {
-      const selection = window.getSelection();
-      if (!selection) return;
-      const walker = document.createTreeWalker(
-        editableDivRef.current,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
-      let currentPosition = 0;
-      let targetNode: Node | null = null;
-      let targetOffset = 0;
-      while (walker.nextNode()) {
-        const node = walker.currentNode;
-        const nodeLength = node.textContent?.length || 0;
-        if (currentPosition + nodeLength >= position) {
-          targetNode = node;
-          targetOffset = position - currentPosition;
-          break;
-        }
-        currentPosition += nodeLength;
-      }
-      if (targetNode) {
-        const range = document.createRange();
-        range.setStart(targetNode, Math.min(targetOffset, targetNode.textContent?.length || 0));
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    } catch (error) {
-      console.warn('Failed to restore cursor position:', error);
-    }
-  };
-
-  const debouncedContentUpdate = (content: string) => {
-    if (updateTimerRef.current) {
-      clearTimeout(updateTimerRef.current);
-    }
-    updateTimerRef.current = setTimeout(() => {
-      if (!isComposing && !isUpdatingFromProps) {
-        onContentChange(content);
-      }
-    }, 300);
-  };
-
   useEffect(() => {
-    if (!editableDivRef.current || isUpdatingFromProps || isComposing) return;
-    const currentContent = editableDivRef.current.innerHTML;
-    if (currentContent === generatedContent) return;
-    setIsUpdatingFromProps(true);
-    saveCursorPosition();
-    editableDivRef.current.innerHTML = generatedContent;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        restoreCursorPosition(cursorPosition);
-        setIsUpdatingFromProps(false);
-      });
-    });
-  }, [generatedContent, cursorPosition]);
-
-  const handleCompositionStart = () => {
-    setIsComposing(true);
-    saveCursorPosition();
-  };
-
-  const handleCompositionEnd = () => {
-    setTimeout(() => {
-      setIsComposing(false);
-      if (editableDivRef.current) {
-        saveCursorPosition();
-        const content = editableDivRef.current.innerHTML;
-        debouncedContentUpdate(content);
-      }
-    }, 20);
-  };
-
-  const handleInput = () => {
-    if (isComposing || isUpdatingFromProps) return;
-    saveCursorPosition();
     if (editableDivRef.current) {
-      const content = editableDivRef.current.innerHTML;
-      debouncedContentUpdate(content);
+      editableDivRef.current.innerHTML = generatedContent;
     }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (isUpdatingFromProps) {
-      event.preventDefault();
-      return;
-    }
-    if ([' ', 'Backspace', 'Delete'].includes(event.key)) {
-      setTimeout(() => {
-        saveCursorPosition();
-      }, 0);
-    }
-  };
-
-  const handleClick = () => {
-    setTimeout(() => {
-      saveCursorPosition();
-    }, 0);
-  };
-
-  const handleFocus = () => {
-    saveCursorPosition();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (updateTimerRef.current) {
-        clearTimeout(updateTimerRef.current);
-      }
-    };
-  }, []);
+  }, [generatedContent]);
 
   const handleCopyToClipboard = () => {
     if (!editableDivRef.current?.innerHTML) {
-      toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
-      return;
+        toast({ title: "복사 오류", description: "복사할 콘텐츠가 없습니다.", variant: "destructive" });
+        return;
     }
     const htmlToCopy = editableDivRef.current.innerHTML;
     navigator.clipboard.writeText(htmlToCopy).then(() => {
@@ -176,6 +44,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
       return;
     }
     const htmlToDownload = editableDivRef.current.innerHTML;
+
     const blob = new Blob([htmlToDownload], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -190,7 +59,7 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
   };
 
   return (
-    <Card id="article-preview" className="shadow-md">
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center text-green-700">
@@ -228,28 +97,17 @@ export const ArticlePreview: React.FC<ArticlePreviewProps> = ({
           <div className="text-center py-8 text-gray-500 flex flex-col items-center justify-center min-h-[200px]">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
             <p className="font-semibold text-lg">
-              <span className="font-bold text-blue-600 animate-pulse inline-block transform transition-all duration-500 hover:scale-110">
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite]">파</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.05s]">코</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.1s]">월</span>
-                <span className="inline-block animate-[bounce_1s_ease-in-out_infinite_0.15s]">드</span>
-              </span>가 글을 생성하고 있습니다...
+              <span className="font-bold text-blue-600">파코월드</span>가 글을 생성하고 있습니다...
             </p>
-            <p className="text-sm animate-fade-in">잠시만 기다려주세요.</p>
+            <p className="text-sm">잠시만 기다려주세요.</p>
           </div>
         ) : generatedContent ? (
           <div
             ref={editableDivRef}
             contentEditable={true}
-            className="border p-4 rounded bg-gray-50 min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            suppressContentEditableWarning={true}
-            onCompositionStart={handleCompositionStart}
-            onCompositionEnd={handleCompositionEnd}
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onClick={handleClick}
-            onFocus={handleFocus}
             dangerouslySetInnerHTML={{ __html: generatedContent }}
+            className="border p-4 rounded bg-gray-50 max-h-[60vh] min-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-auto"
+            suppressContentEditableWarning={true}
           />
         ) : (
           <div className="text-center py-8 text-gray-500">

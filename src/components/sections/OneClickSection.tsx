@@ -11,7 +11,6 @@ interface OneClickSectionProps {
     isOneClickGenerating: boolean;
     handleStopOneClick: () => void;
     appState: AppState;
-    isGeneratingContent?: boolean; // 글 작성 중 상태 추가
 }
 
 export const OneClickSection: React.FC<OneClickSectionProps> = ({
@@ -20,43 +19,36 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
     isOneClickGenerating,
     handleStopOneClick,
     appState,
-    isGeneratingContent = false,
 }) => {
-    // 원클릭 버튼들은 원클릭 생성 중이거나 글 작성 중일 때 비활성화
-    const shouldDisableOneClickButtons = isOneClickGenerating || isGeneratingContent || !appState.isApiKeyValidated;
-    
-    // 중단 버튼은 원클릭 생성 중이거나 글 작성 중일 때 표시
-    const shouldShowStopButton = isOneClickGenerating || isGeneratingContent;
-
     return (
-        <div className="max-w-7xl mx-auto my-4">
-            <div className="flex justify-between items-center gap-4 p-6 rounded-xl shadow-lg bg-white border border-gray-200">
+        <div className="max-w-7xl mx-auto my-6">
+            <div className="flex justify-between items-center gap-4 p-4 rounded-lg shadow bg-white">
                 <Button 
                     onClick={handleLatestIssueOneClick} 
-                    disabled={shouldDisableOneClickButtons} 
-                    className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
+                    disabled={isOneClickGenerating || !appState.isApiKeyValidated} 
+                    className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300"
                 >
-                    <Zap className="mr-3 h-7 w-7" />
-                    <span className="text-center leading-tight">
+                    <Zap className="mr-2 h-6 w-6" />
+                    <span className="text-center">
                         최신 이슈
                         <br />
                         원클릭 생성
                     </span>
                 </Button>
                 
-                <div className="flex-grow px-4 max-w-2xl">
+                <div className="flex-grow px-4">
                     <ProgressTracker
                         topics={appState.topics}
                         generatedContent={appState.generatedContent}
                         imagePrompt={appState.imagePrompt}
                     />
-                    {shouldShowStopButton && (
+                    {isOneClickGenerating && (
                          <Button 
                             variant="destructive" 
                             onClick={handleStopOneClick}
-                            className="w-full mt-3 py-3 text-lg font-semibold bg-red-500 hover:bg-red-600"
+                            className="w-full mt-2"
                         >
-                            <StopCircle className="mr-2 h-5 w-5" />
+                            <StopCircle className="mr-2 h-4 w-4" />
                             즉시 중단
                         </Button>
                     )}
@@ -64,11 +56,11 @@ export const OneClickSection: React.FC<OneClickSectionProps> = ({
 
                 <Button 
                     onClick={handleEvergreenKeywordOneClick} 
-                    disabled={shouldDisableOneClickButtons}
-                    className="px-8 py-14 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300 h-28 min-w-[200px] shadow-lg hover:shadow-xl"
+                    disabled={isOneClickGenerating || !appState.isApiKeyValidated}
+                    className="px-8 py-12 text-xl font-bold bg-gradient-to-r from-green-500 to-teal-600 text-white hover:from-green-600 hover:to-teal-700 transition-all duration-300"
                 >
-                    <RefreshCw className="mr-3 h-7 w-7" />
-                    <span className="text-center leading-tight">
+                    <RefreshCw className="mr-2 h-6 w-6" />
+                    <span className="text-center">
                         평생 키워드
                         <br />
                         원클릭 생성

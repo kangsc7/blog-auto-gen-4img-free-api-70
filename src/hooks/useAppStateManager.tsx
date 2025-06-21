@@ -1,86 +1,147 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { AppState } from '@/types';
-import { DEFAULT_API_KEYS } from '@/config/apiKeys';
 
-const defaultAppState: AppState = {
+const initialAppState: AppState = {
+  isLoggedIn: false,
   currentUser: '',
+  apiKey: '',
+  isApiKeyValidated: false,
   keyword: '',
+  topicCount: 3,
   topics: [],
   selectedTopic: '',
-  generatedContent: '',
-  apiKey: DEFAULT_API_KEYS.GEMINI,
-  isApiKeyValidated: true,
-  imagePrompt: '',
-  pixabayApiKey: DEFAULT_API_KEYS.PIXABAY,
-  isPixabayApiKeyValidated: true,
-  huggingFaceApiKey: DEFAULT_API_KEYS.HUGGING_FACE,
-  isHuggingFaceApiKeyValidated: true,
-  colorTheme: 'classic-blue',
+  colorTheme: '',
   referenceLink: '',
   referenceSentence: '',
-  preventDuplicates: true,
-  topicCount: 10,
+  generatedContent: '',
+  imageStyle: '',
+  imagePrompt: '',
+  saveReferenceTrigger: false,
 };
 
 export const useAppStateManager = () => {
-  const [appState, setAppState] = useState<AppState>(() => {
-    try {
-      const saved = localStorage.getItem('blog_app_state_v2');
-      if (saved) {
-        const parsedState = JSON.parse(saved);
-        // API 키들이 없는 경우 기본값으로 설정
-        return { 
-          ...defaultAppState, 
-          ...parsedState,
-          // 필수 API 키들 보장
-          apiKey: parsedState.apiKey || DEFAULT_API_KEYS.GEMINI,
-          pixabayApiKey: parsedState.pixabayApiKey || DEFAULT_API_KEYS.PIXABAY,
-          huggingFaceApiKey: parsedState.huggingFaceApiKey || DEFAULT_API_KEYS.HUGGING_FACE,
-          // 검증 상태도 안전하게 설정
-          isApiKeyValidated: parsedState.isApiKeyValidated ?? true,
-          isPixabayApiKeyValidated: parsedState.isPixabayApiKeyValidated ?? true,
-          isHuggingFaceApiKeyValidated: parsedState.isHuggingFaceApiKeyValidated ?? true,
-        };
-      }
-    } catch (error) {
-      console.error('Failed to load app state:', error);
-    }
-    return defaultAppState;
-  });
-
-  const saveAppState = (newState: Partial<AppState>) => {
-    const updatedState = { ...appState, ...newState };
-    setAppState(updatedState);
-    
-    try {
-      localStorage.setItem('blog_app_state_v2', JSON.stringify(updatedState));
-      console.log('💾 앱 상태 저장 완료:', Object.keys(newState));
-    } catch (error) {
-      console.error('Failed to save app state:', error);
-    }
-  };
-
-  const resetAppState = () => {
-    console.log('🔄 앱 상태 초기화 시작');
-    setAppState(defaultAppState);
-    try {
-      localStorage.removeItem('blog_app_state_v2');
-      localStorage.removeItem('blog_editor_content_permanent_v3');
-      window.dispatchEvent(new CustomEvent('app-reset'));
-      console.log('✅ 앱 상태 초기화 완료');
-    } catch (error) {
-      console.error('Failed to reset app state:', error);
-    }
-  };
+  const { toast } = useToast();
+  const [appState, setAppState] = useState<AppState>(initialAppState);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('blog_app_state_v2', JSON.stringify(appState));
-    } catch (error) {
-      console.error('Failed to save app state:', error);
-    }
-  }, [appState]);
+    loadAppState();
+  }, []);
 
-  return { appState, saveAppState, resetAppState };
+  const loadAppState = () => {
+    try {
+      const savedState = localStorage.getItem('blog_app_state');
+      let parsedState: Partial<AppState> = {};
+      if (savedState) {
+        parsedState = JSON.parse(savedState);
+        delete parsedState.apiKey;
+        delete parsedState.isApiKeyValidated;
+      }
+      
+      const savedApiKey = localStorage.getItem('blog_api_key') || '';
+      const savedApiKeyValidated = localStorage.getItem('blog_api_key_validated') === 'true';
+
+      const savedReferenceLink = localStorage.getItem('blog_reference_link') || '';
+      const savedReferenceSentence = localStorage.getItem('blog_reference_sentence') || '';
+
+      setAppState(prev => ({ 
+        ...prev, 
+        ...parsedState, 
+        apiKey: savedApiKey, 
+        isApiKeyValidated: savedApiKeyValidated && !!savedApiKey,
+        referenceLink: savedReferenceLink,
+        referenceSentence: savedReferenceSentence,
+      }));
+    } catch (error) {
+      console.error('앱 상태 로드 오류:', error);
+    }
+  };
+
+  const saveAppState = useCallback((newState: Partial<AppState>) => {
+    if (newState.saveReferenceTrigger) {
+      try {
+        setAppState(prevState => {
+          localStorage.setItem('blog_reference_link', prevState.referenceLink);
+          localStorage.setItem('blog_reference_sentence', prevState.referenceSentence);
+          toast({ title: "저장 완료", description: "참조 정보가 브라우저에 저장되었습니다." });
+          
+          const updatedState = { ...prevState, saveReferenceTrigger: false };
+          const stateToSave = { ...updatedState };
+          delete stateToSave.apiKey;
+          delete stateToSave.isApiKeyValidated;
+          localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
+          return updatedState;
+        });
+      } catch (error) {
+        console.error('참조 정보 저장 오류:', error);
+        toast({ title: "저장 실패", description: "참조 정보 저장 중 오류가 발생했습니다.", variant: "destructive" });
+      }
+      return;
+    }
+
+    try {
+      setAppState(prevState => {
+        const updatedState = { ...prevState, ...newState };
+        const stateToSave = { ...updatedState };
+        delete stateToSave.apiKey;
+        delete stateToSave.isApiKeyValidated;
+        localStorage.setItem('blog_app_state', JSON.stringify(stateToSave));
+        return updatedState;
+      });
+    } catch (error) {
+      console.error('앱 상태 저장 오류:', error);
+    }
+  }, [toast]);
+
+  const saveApiKeyToStorage = () => {
+    if (!appState.apiKey.trim()) {
+      toast({ title: "저장 오류", description: "API 키를 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    try {
+      localStorage.setItem('blog_api_key', appState.apiKey);
+      localStorage.setItem('blog_api_key_validated', String(appState.isApiKeyValidated));
+      toast({ title: "저장 완료", description: "API 키가 브라우저에 저장되었습니다." });
+    } catch (error) {
+      console.error("API 키 저장 오류:", error);
+      toast({ title: "저장 실패", description: "API 키 저장 중 오류가 발생했습니다.", variant: "destructive" });
+    }
+  };
+
+  const deleteApiKeyFromStorage = () => {
+    try {
+      localStorage.removeItem('blog_api_key');
+      localStorage.removeItem('blog_api_key_validated');
+      saveAppState({ apiKey: '', isApiKeyValidated: false });
+      toast({ title: "삭제 완료", description: "저장된 API 키가 삭제되었습니다." });
+    } catch (error) {
+      console.error("API 키 삭제 오류:", error);
+      toast({ title: "삭제 실패", description: "API 키 삭제 중 오류가 발생했습니다.", variant: "destructive" });
+    }
+  };
+
+  const resetApp = () => {
+    const savedApiKey = localStorage.getItem('blog_api_key') || '';
+    const savedApiKeyValidated = (localStorage.getItem('blog_api_key_validated') === 'true') && !!savedApiKey;
+
+    saveAppState({
+      keyword: '',
+      topicCount: 3,
+      topics: [],
+      selectedTopic: '',
+      colorTheme: '',
+      generatedContent: '',
+      imageStyle: '',
+      imagePrompt: '',
+      apiKey: savedApiKey,
+      isApiKeyValidated: savedApiKeyValidated,
+    });
+    
+    toast({
+      title: "초기화 완료",
+      description: "앱 데이터가 초기화되었습니다. 브라우저에 저장된 API 키와 참조 정보는 유지됩니다.",
+    });
+  };
+
+  return { appState, saveAppState, saveApiKeyToStorage, deleteApiKeyFromStorage, resetApp };
 };

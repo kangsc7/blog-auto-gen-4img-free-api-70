@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +9,10 @@ interface TopicGeneratorProps {
   appState: AppState;
   saveAppState: (newState: Partial<AppState>) => void;
   isGeneratingTopics: boolean;
-  generateTopicsFromKeyword: (keywordOverride?: string) => Promise<string[] | null>;
+  generateTopicsFromKeyword: () => void;
   manualTopic: string;
   setManualTopic: React.Dispatch<React.SetStateAction<string>>;
   handleManualTopicAdd: () => void;
-  preventDuplicates: boolean;
 }
 
 export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
@@ -25,7 +23,6 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
   manualTopic,
   setManualTopic,
   handleManualTopicAdd,
-  preventDuplicates,
 }) => {
   return (
     <Card className="shadow-md">
@@ -42,10 +39,8 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
             placeholder="예: 프로그래밍, 요리, 투자, 건강 등"
             value={appState.keyword}
             onChange={(e) => saveAppState({ keyword: e.target.value })}
-            disabled={true}
-            className="bg-gray-100 cursor-not-allowed"
           />
-          <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다 (수동 입력 불가)</p>
+          <p className="text-xs text-gray-500 mt-1">SEO에 최적화된 주제를 생성합니다</p>
         </div>
         
         <div>
@@ -64,32 +59,12 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
           </div>
         </div>
 
-        {/* 중복 설정 상태 표시 */}
-        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-          현재 설정: {preventDuplicates ? '중복 금지 (70% 유사도 기준)' : '중복 허용'}
-        </div>
-
         <Button 
           onClick={() => generateTopicsFromKeyword()}
           disabled={!appState.keyword.trim() || isGeneratingTopics || !appState.isApiKeyValidated}
-          className={`w-full transition-all duration-300 ${
-            isGeneratingTopics 
-              ? 'bg-orange-500 hover:bg-orange-600 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+          className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          {isGeneratingTopics ? (
-            <span className="flex items-center">
-              주제 생성 중
-              <span className="ml-1 animate-pulse">
-                <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
-                <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
-                <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
-              </span>
-            </span>
-          ) : (
-            '주제 생성하기'
-          )}
+          {isGeneratingTopics ? '주제 생성 중...' : '주제 생성하기'}
         </Button>
 
         <div className="border-t pt-4">
@@ -99,13 +74,13 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({
               placeholder="직접 주제를 입력해주세요"
               value={manualTopic}
               onChange={(e) => setManualTopic(e.target.value)}
-              className="flex-1 border-2 border-blue-500 shadow-md focus:border-blue-700 focus:ring-2 focus:ring-blue-200"
+              className="flex-1"
             />
             <Button 
               onClick={handleManualTopicAdd}
               disabled={!manualTopic.trim()}
               variant="outline"
-              className="text-blue-600 border-2 border-blue-600 hover:bg-blue-50 shadow-md font-bold"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
             >
               추가
             </Button>
